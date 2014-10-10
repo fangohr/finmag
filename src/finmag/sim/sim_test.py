@@ -860,6 +860,13 @@ class TestSimulation(object):
                        unit_length=1e-9, A=13.0e-12, demag_solver='FK')
         sim.save_restart_data('my_restart_data.npz')
 
+    def test_length_scales(self):
+        """
+        Test that we can call sim.length_scales() without error and it returns a string.
+        """
+        info_string = self.sim.length_scales()
+        assert isinstance(info_string, str)
+
 
 def test_sim_with(tmpdir):
     """

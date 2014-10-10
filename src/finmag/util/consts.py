@@ -4,6 +4,7 @@ A collection of constants we use (in SI units).
 """
 from __future__ import division
 from math import pi, sqrt
+import numbers
 
 mu0 = 4 * pi * 1e-7  # Vs/(Am)
 k_B = 1.3806488e-23  # Boltzmann constant in J / K
@@ -21,7 +22,9 @@ def exchange_length(A, Ms):
     and the saturation magnetisation Ms.
 
     """
-    return sqrt(2 * A / (mu0 * Ms.value ** 2))
+    assert isinstance(A, numbers.Number)
+    assert isinstance(Ms, numbers.Number)
+    return sqrt(2 * A / (mu0 * Ms ** 2))
 
 
 def bloch_parameter(A, K1):
