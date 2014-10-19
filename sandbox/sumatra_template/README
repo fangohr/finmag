@@ -27,3 +27,53 @@ Once this is done, you can run simulations like this:
 See the Sumatra webpage for details: http://pythonhosted.org/Sumatra/
 
   -- Max, 18.3.2014
+
+
+
+* If sumatra hangs, read this (October 2014):
+
+
+** Solution: 2014-10-13 14:54 GMT+01:00 Bisotti M. <mb8g11@soton.ac.uk>:
+Hi Rebecca (and Max and Hans CC’ed)
+
+thanks for getting me on the right track concerning fenicstools and scitools interrupting python’s termination when imported in a certain order.
+
+I couldn’t find out the root cause of the issue.
+However, if you switch the scitools backend to matplotlib (the default is gnuplot) the problem disappears.
+Hope that helps with Sumatra.
+
+Kind regards
+Marc-Antonio
+
+p.s. to change the backend, copy the scitools.cfg in your scitools distribution to ~/.scitools.cfg and change the backend value in the easyviz section to matplotlib.
+
+** Problem: From: Rebecca Carey<mailto:R.Carey@soton.ac.uk>
+Sent: ‎Thursday‎, ‎9‎ ‎October‎ ‎2014 ‎15‎:‎32
+To: Marc-Antonio Bisotti<mailto:mb8g11@soton.ac.uk>
+Cc: Albert M.H.<mailto:maximilian.albert@soton.ac.uk>
+
+Hey MA,
+
+When Max was doing the debugging on the Sumatra issue he narrowed the problem down to a conflict between two imports (when Sumtra checks all the dependencies/imports before the simulation actually begins). The issue was with scitools and fenicstools.
+
+If you open up an ipython session do
+
+[1] import fenicstools
+[2] import scitools
+[3] exit
+
+There is no problem
+
+If you reverse the import order to
+
+[1] import scitools
+[2] import fenicstools
+[3] exit
+
+it gets stuck and doesn't exit. When sumatra is checking the dependencies they occur in this problematic order. So it seems this is part of the problem...
+
+Beckie
+
+** Confirmed 19 October 2014
+
+Hans: just tested, the problems I had with Sumatra have disappeared as well with this.
