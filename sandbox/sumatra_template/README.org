@@ -1,3 +1,5 @@
+* Introduction Sumatra
+
 The two files in this directory illustrate my template for a simple
 simulation setup with Sumatra (whenever I need to set up a new
 simulation that uses Sumatra I essentially just copy and paste them
