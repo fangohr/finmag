@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pylab
+import pytest
 import dolfin as df
 from finmag.field import Field
 from finmag.physics.llg import LLG
@@ -9,7 +10,9 @@ from finmag.drivers.llg_integrator import llg_integrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def test_external_field_depends_on_t(with_plots=False):
+
+@pytest.mark.requires_X_display
+def test_external_field_depends_on_t():
     tfinal = 0.3*1e-9
     dt = 0.001e-9
 
@@ -57,26 +60,25 @@ def test_external_field_depends_on_t(with_plots=False):
     my = [tmp[1] for tmp in mlist]
     mz = [tmp[2] for tmp in mlist]
 
-    if with_plots:
-        pylab.plot(tlist,mx,label='m_x')
-        pylab.plot(tlist,my,label='m_y')
-        pylab.plot(tlist,mz,label='m_z')
-        pylab.xlabel('time [s]')
-        pylab.legend()
-        pylab.savefig(os.path.join(MODULE_DIR, 'results.png'))
-        pylab.close()
+    pylab.plot(tlist,mx,label='m_x')
+    pylab.plot(tlist,my,label='m_y')
+    pylab.plot(tlist,mz,label='m_z')
+    pylab.xlabel('time [s]')
+    pylab.legend()
+    pylab.savefig(os.path.join(MODULE_DIR, 'results.png'))
+    pylab.close()
 
-        #if max_step is not provided, or chosen too large,
-        #the external field appears not smooth in this plot.
-        #What seems to happen is that the ode integrator
-        #returns the solution without calling the rhs side again
-        #if we request very small time steps.
-        #This is only for debugging.
-        pylab.plot(tlist,hext,'-x')
-        pylab.ylabel('external field [A/m]')
-        pylab.xlabel('time [s]')
-        pylab.savefig(os.path.join(MODULE_DIR, 'hext.png'))
-        pylab.close()
+    #if max_step is not provided, or chosen too large,
+    #the external field appears not smooth in this plot.
+    #What seems to happen is that the ode integrator
+    #returns the solution without calling the rhs side again
+    #if we request very small time steps.
+    #This is only for debugging.
+    pylab.plot(tlist,hext,'-x')
+    pylab.ylabel('external field [A/m]')
+    pylab.xlabel('time [s]')
+    pylab.savefig(os.path.join(MODULE_DIR, 'hext.png'))
+    pylab.close()
 
     #Then try to fit sinusoidal curve through results
     def sinusoidalfit(t,omega,phi,A,B):
@@ -104,14 +106,13 @@ def test_external_field_depends_on_t(with_plots=False):
         print >>f, "Fitted phi             : %9f" % (fittedphi)
         print >>f, "Fitted Amplitude (A)   : %9f" % (fittedA)
         print >>f, "Fitted Amp-offset (B)  : %9f" % (fittedB)
-        if with_plots:
-            pylab.plot(tlist,my,label='my - simulated')
-            pylab.plot(tlist,
-                       sinusoidalfit(np.array(tlist),*popt),
-                       '-x',label='m_y - fit')
-            pylab.xlabel('time [s]')
-            pylab.legend()
-            pylab.savefig(os.path.join(MODULE_DIR, 'fit.png'))
+        pylab.plot(tlist,my,label='my - simulated')
+        pylab.plot(tlist,
+                   sinusoidalfit(np.array(tlist),*popt),
+                   '-x',label='m_y - fit')
+        pylab.xlabel('time [s]')
+        pylab.legend()
+        pylab.savefig(os.path.join(MODULE_DIR, 'fit.png'))
         deviation = np.sqrt(sum((sinusoidalfit(np.array(tlist),*popt)-my)**2))/len(tlist)
         print >>f, "stddev=%g" % deviation
         f.close()
