@@ -161,6 +161,7 @@ def test_ellipsoid():
     assert(abs(vol_mesh - vol_exact) / vol_exact < TOLERANCE)
 
 
+@pytest.mark.requires_X_display
 def test_plot_mesh_regions():
     """
     This test simply calls the function

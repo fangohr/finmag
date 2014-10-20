@@ -11,7 +11,7 @@ Trying to test spatially varying anisotropy.
 """
 
 
-def run_simulation():
+def run_simulation(debug_plots=False):
 
     mu0 = 4.0 * np.pi * 10 ** -7  # vacuum permeability             N/A^2
     Ms = 1.0e6                 # saturation magnetisation        A/m
@@ -54,19 +54,20 @@ def run_simulation():
         Mx.append(sim.m_field.probe(pos)[0])
         ax.append(a(pos)[0])
 
-    pylab.plot(xs, Mx, '-o', label='Mx')
-    pylab.plot(xs, ax, '-x', label='ax')
-    pylab.savefig(os.path.join(MODULE_DIR, 'profile.png'))
-    print "Note that the alignment is pretty good everywhere, but not at x=0. Why?"
-    print "It also seems that Mx is ever so slightly greater than ax -- why?"
-    print "Uncomment the show() command to see this."
-    # pylab.show()
+    if debug_plots:
+        pylab.plot(xs, Mx, '-o', label='Mx')
+        pylab.plot(xs, ax, '-x', label='ax')
+        pylab.savefig(os.path.join(MODULE_DIR, 'profile.png'))
+        print "Note that the alignment is pretty good everywhere, but not at x=0. Why?"
+        print "It also seems that Mx is ever so slightly greater than ax -- why?"
+        print "Uncomment the show() command to see this."
+        # pylab.show()
 
     return sim, a
 
 
 def test_spatially_varying_anisotropy_direction_a(tmpdir, debug=False):
-    sim, a = run_simulation()
+    sim, a = run_simulation(debug)
 
     # Interpolate a on mesh of M
     diff = (a.vector().array() - sim.m)

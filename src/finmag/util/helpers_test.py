@@ -450,6 +450,7 @@ def test_binary_tarball_name(tmpdir):
                                suffix='_foobar') == expected_tarball_name)
 
 
+@pytest.mark.requires_X_display
 def test_plot_ndt_columns_and_plot_dynamics(tmpdir):
     """
     Simply check that we can call the command `plot_ndt_columns` with some arguments
