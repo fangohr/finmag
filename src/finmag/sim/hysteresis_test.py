@@ -38,6 +38,7 @@ def test_hysteresis(tmpdir):
     assert(len(res2) == N)
 
 
+@pytest.mark.requires_X_display
 def test_hysteresis_loop_and_plotting(tmpdir):
     """
     Call the hysteresis loop with various combinations for saving

@@ -602,7 +602,7 @@ class TestSimulation(object):
 
         assert np.array_equal(sim.m, expect_m)
 
-    def test_set_stt(self):
+    def test_set_stt(self, debug=False):
         """
         Simple macrospin simulation with STT where the current density
         changes sign halfway through the simulation.
@@ -623,14 +623,15 @@ class TestSimulation(object):
         sim.run_until(5e-9)
 
         ts, xs, ys, zs = np.loadtxt('macrospin_with_stt.ndt').T[:4]
-        fig = plt.figure(figsize=(20, 5))
-        ax1 = fig.add_subplot(131)
-        ax1.plot(ts, xs)
-        ax2 = fig.add_subplot(132)
-        ax2.plot(ts, ys)
-        ax3 = fig.add_subplot(133)
-        ax3.plot(ts, zs)
-        fig.savefig('macrospin_with_stt.png')
+        if debug:
+            fig = plt.figure(figsize=(20, 5))
+            ax1 = fig.add_subplot(131)
+            ax1.plot(ts, xs)
+            ax2 = fig.add_subplot(132)
+            ax2.plot(ts, ys)
+            ax3 = fig.add_subplot(133)
+            ax3.plot(ts, zs)
+            fig.savefig('macrospin_with_stt.png')
 
         # Assert that the dynamics of m_z are symmetric over time. In
         # theory, this should also be true of m_x and m_y, but since
@@ -1080,6 +1081,9 @@ def test_sim_relax_accepts_filename(tmpdir):
     assert(not os.path.exists('barmini_relaxed.pvd'))
 
 
+# TODO: Separate the plotting code out so that we can run the
+#       remaining tests without X display. (Max, 20.10.2014)
+@pytest.mark.requires_X_display
 def test_NormalModeSimulation(tmpdir):
     os.chdir(str(tmpdir))
     nx = ny = nz = 2
@@ -1387,7 +1391,7 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     #assert_define_same_eigenspace(w4b, w1)
 
 
-@pytest.mark.xfail("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
+@pytest.mark.requires_X_display
 def test_plot_spatially_resolved_normal_modes(tmpdir):
     """
     Test plotting of spatially resolved normal mode profiles
@@ -1403,6 +1407,7 @@ def test_plot_spatially_resolved_normal_modes(tmpdir):
 
 
 @pytest.mark.skipif("True")
+@pytest.mark.requires_X_display
 def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
     os.chdir(str(tmpdir))
 
@@ -1614,7 +1619,7 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                     sim.compute_energy(name), a ** exponent * energies[name], atol=0, rtol=1e-12))
 
 
-@pytest.mark.skipif("LooseVersion(df.__version__) <= LooseVersion('1.2.0')")
+@pytest.mark.requires_X_display
 def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     """
     Create a simulation with two mesh regions, where the magnetisation
@@ -1720,7 +1725,7 @@ def test_regression_schedule_switch_off_field(tmpdir):
     sim.run_until(5e-12)
 
 
-def test_document_intended_behaviour_for_H_ext(tmpdir):
+def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     """
     The purpose of this test is simply to document how the argument
     H_ext is interpreted in the run_ringdown method of the
@@ -1769,11 +1774,12 @@ def test_document_intended_behaviour_for_H_ext(tmpdir):
     f = Tablereader('precession2.ndt')
     ts, m_x, m_y, m_z = f['time', 'm_x', 'm_y', 'm_z']
 
-    fig = plt.figure()
-    ax = fig.gca()
-    ax.plot(ts, m_x)
-    ax.plot(ts, np.cos(2. * pi * freq * ts))
-    fig.savefig('dynamics2.png')
+    if debug:
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.plot(ts, m_x)
+        ax.plot(ts, np.cos(2. * pi * freq * ts))
+        fig.savefig('dynamics2.png')
 
     # Check that we get sinusoidal dynamics of the correct frequency
     TOL = 1e-3
@@ -1887,6 +1893,7 @@ def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
         assert np.allclose(omega, a * omega_ref)
 
 
+@pytest.mark.requires_X_display
 def test_plot_dynamics(tmpdir):
     """
     Check whether we can call the functions `sim.plot_dynamics`
