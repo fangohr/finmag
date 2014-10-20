@@ -98,7 +98,6 @@ test-fast: create-dirs make-modules
 
 # only run tests marked as slow
 test-slow: create-dirs make-modules
-================================================================================
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and slow" \
 		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
