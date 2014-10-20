@@ -15,7 +15,7 @@ pages 127-128, equations B.16-B.18.
 
 """
 
-def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
+def compare_with_analytic_solution(alpha=0.5, max_t=1e-9, plot_solution=False):
     """
     Compares the C/dolfin/odeint solution to the analytical one.
 
@@ -40,7 +40,8 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])
     tsfine = numpy.linspace(0, max_t, num=1000)
     m_analytical = make_analytic_solution(1e6, alpha, sim.gamma)
-    save_plot(ts, ys, tsfine, m_analytical, alpha)
+    if plot_solution:
+        save_plot(ts, ys, tsfine, m_analytical, alpha)
 
     TOLERANCE = 1e-6  # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
 
