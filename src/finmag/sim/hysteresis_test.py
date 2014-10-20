@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import pytest
 import os
 from glob import glob
 from finmag import sim_with
