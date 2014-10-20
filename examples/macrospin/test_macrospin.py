@@ -2,6 +2,7 @@ import dolfin
 import os
 import py
 import numpy
+import pytest
 from finmag import Simulation
 from finmag.energies import Zeeman
 from finmag.util.macrospin import make_analytic_solution
@@ -15,7 +16,7 @@ pages 127-128, equations B.16-B.18.
 
 """
 
-def compare_with_analytic_solution(alpha=0.5, max_t=1e-9, plot_solution=False):
+def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     """
     Compares the C/dolfin/odeint solution to the analytical one.
 
@@ -40,8 +41,7 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9, plot_solution=False):
     ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])
     tsfine = numpy.linspace(0, max_t, num=1000)
     m_analytical = make_analytic_solution(1e6, alpha, sim.gamma)
-    if plot_solution:
-        save_plot(ts, ys, tsfine, m_analytical, alpha)
+    save_plot(ts, ys, tsfine, m_analytical, alpha)
 
     TOLERANCE = 1e-6  # tolerance on Ubuntu 11.10, VM Hans, 25/02/2012
 
@@ -95,26 +95,32 @@ def save_plot(ts, ys, ts_ref, m_ref, alpha):
     plt.close()
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_alpha_0_00001():
     compare_with_analytic_solution(alpha=0.00001, max_t=1e-11)
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_alpha_0_001():
     compare_with_analytic_solution(alpha=0.001, max_t=1e-11)
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_very_low_damping():
     compare_with_analytic_solution(alpha=0.02, max_t=0.5e-9)
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_low_damping():
     compare_with_analytic_solution(alpha=0.1, max_t=4e-10)
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_standard_damping():
     compare_with_analytic_solution(alpha=0.5, max_t=1e-10)
 
 
+@pytest.mark.requires_X_display
 def test_macrospin_higher_damping():
     compare_with_analytic_solution(alpha=1, max_t=1e-10)
 
