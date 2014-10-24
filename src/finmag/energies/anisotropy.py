@@ -3,6 +3,7 @@ import dolfin as df
 import numpy as np
 from aeon import mtimed
 from energy_base import EnergyBase
+from finmag.field import Field
 from finmag.util import helpers
 from finmag.util.consts import mu0
 from finmag.native import llg as native_llg
@@ -69,13 +70,13 @@ class UniaxialAnisotropy(EnergyBase):
         varying anisotropy by using df.Functions.
 
         """
-        self.K1_waiting_for_mesh = K1
-        self.axis_waiting_for_mesh = axis
+        self.K1_value = K1
+        self.axis_value = axis
         self.name = name
         super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
         self.assemble = assemble
 
-        self.K2_input = K2
+        self.K2_value = K2
         if K2 != 0:
             self.assemble = False
 
@@ -103,26 +104,23 @@ class UniaxialAnisotropy(EnergyBase):
         # I wonder why there is the distinction betwen the __init__() and the
         # setup() methods anyway? It feels a bit artifial to me.  -- Max,
         # 23.9.2013
-        dofmap = m.functionspace.dofmap()
-        S1 = df.FunctionSpace(
-            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+        dg_scalar_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
+        self.K1 = Field(dg_scalar_functionspace, self.K1_value, name='K1')
+        self.K2 = Field(dg_scalar_functionspace, self.K2_value, name='K2')
 
+        dg_vector_functionspace = df.VectorFunctionSpace(m.mesh(), 'DG', 0, 3)
+        self.axis = Field(dg_vector_functionspace, self.axis_value, name='axis')
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
         # the Scholz-Magpar method. Should anyway be a an easy fix when we
         # decide on method.
         # FIXME: we should use DG0 space here?
-        self.K1 = helpers.scalar_valued_function(self.K1_waiting_for_mesh, S1)
-        self.K1.rename('K1', 'uniaxial anisotropy constant')
-        self.K2 = helpers.scalar_valued_function(self.K2_input, S1)
-        self.axis = helpers.vector_valued_function(
-            self.axis_waiting_for_mesh, m.functionspace, normalise=True)
-        self.axis.rename('K1_axis', 'anisotropy axis')
-        E_integrand = self.K1 * \
-            (df.Constant(1) - (df.dot(self.axis, m.f)) ** 2)
-        if self.K2_input != 0:
-            E_integrand -= self.K2 * df.dot(self.axis, m.f) ** 4
+        
+        E_integrand = self.K1.f * \
+            (df.Constant(1) - (df.dot(self.axis.f, m.f)) ** 2)
+        if self.K2_value != 0:
+            E_integrand -= self.K2.f * df.dot(self.axis.f, m.f) ** 4
 
         super(UniaxialAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
 

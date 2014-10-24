@@ -2,6 +2,7 @@ import os
 import pylab
 import numpy as np
 import dolfin as df
+from finmag.field import Field
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy
 
@@ -35,8 +36,8 @@ def run_simulation(debug_plots=False):
     # is a good choice here (see example in manual) but for the test we use
     # CG1 space.
 
-    V3_CG1 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    a = df.interpolate(expr_a, V3_CG1)
+    V3_DG0 = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
+    a = Field(V3_DG0, expr_a)
 
     sim = Simulation(mesh, Ms)
     sim.set_m((1, 1, 0))
@@ -46,13 +47,21 @@ def run_simulation(debug_plots=False):
     # create simple plot
     xpos = []
     Mx = []
+    My = []
+    Mz = []
     ax = []
+    ay = []
+    az = []
 
     xs = np.linspace(0, Lx, 200)
     for x in xs:
         pos = (x,)
         Mx.append(sim.m_field.probe(pos)[0])
-        ax.append(a(pos)[0])
+        My.append(sim.m_field.probe(pos)[1])
+        Mz.append(sim.m_field.probe(pos)[2])
+        ax.append(a.probe(pos)[0])
+        ay.append(a.probe(pos)[1])
+        az.append(a.probe(pos)[2])
 
     if debug_plots:
         pylab.plot(xs, Mx, '-o', label='Mx')
@@ -63,18 +72,23 @@ def run_simulation(debug_plots=False):
         print "Uncomment the show() command to see this."
         # pylab.show()
 
-    return sim, a
+    return sim, a, Mx, My, Mz, ax, ay, az
 
 
 def test_spatially_varying_anisotropy_direction_a(tmpdir, debug=False):
-    sim, a = run_simulation(debug)
+    sim, a, Mx, My, Mz, ax, ay, az = run_simulation(debug)
 
     # Interpolate a on mesh of M
-    diff = (a.vector().array() - sim.m)
-    maxdiff = max(abs(diff))
-    print "maxdiff=", maxdiff
-    print "The fairly large error seems to come from x=0. Why?"
-    assert maxdiff < 0.018
+    diffx = (np.array(ax) - np.array(Mx))
+    diffy = (np.array(ay) - np.array(My))
+    diffz = (np.array(az) - np.array(Mz))
+    maxdiffx = max(abs(diffx))
+    maxdiffy = max(abs(diffy))
+    maxdiffz = max(abs(diffz))
+    
+    assert maxdiffx < 0.04
+    assert maxdiffy < 0.04
+    assert maxdiffz < 0.04
 
     if debug:
         # Save field for debugging (will be stored in /tmp/pytest-USERNAME/)
