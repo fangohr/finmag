@@ -104,12 +104,12 @@ class UniaxialAnisotropy(EnergyBase):
         # I wonder why there is the distinction betwen the __init__() and the
         # setup() methods anyway? It feels a bit artifial to me.  -- Max,
         # 23.9.2013
-        dg_scalar_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
-        self.K1 = Field(dg_scalar_functionspace, self.K1_value, name='K1')
-        self.K2 = Field(dg_scalar_functionspace, self.K2_value, name='K2')
+        cg_scalar_functionspace = df.FunctionSpace(m.mesh(), 'CG', 1)
+        self.K1 = Field(cg_scalar_functionspace, self.K1_value, name='K1')
+        self.K2 = Field(cg_scalar_functionspace, self.K2_value, name='K2')
 
-        dg_vector_functionspace = df.VectorFunctionSpace(m.mesh(), 'DG', 0, 3)
-        self.axis = Field(dg_vector_functionspace, self.axis_value, name='axis')
+        cg_vector_functionspace = df.VectorFunctionSpace(m.mesh(), 'CG', 1, 3)
+        self.axis = Field(cg_vector_functionspace, self.axis_value, name='axis')
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
@@ -126,11 +126,11 @@ class UniaxialAnisotropy(EnergyBase):
 
         if not self.assemble:
             self.H = self.m.get_numpy_array_debug()
-            self.Ms = self.Ms.vector().array()
-            self.u = self.axis.vector().array()
-            self.K1_arr = self.K1.vector().array()
-            self.K2_arr = self.K2.vector().array()
-            self.volumes = df.assemble(df.TestFunction(S1) * df.dx)
+            self.Ms = self.Ms.get_numpy_array_debug()
+            self.u = self.axis.get_numpy_array_debug()
+            self.K1_arr = self.K1.get_numpy_array_debug()
+            self.K2_arr = self.K2.get_numpy_array_debug()
+            self.volumes = df.assemble(df.TestFunction(cg_scalar_functionspace) * df.dx)
             self.compute_field = self.__compute_field_directly
 
     def __compute_field_directly(self):
