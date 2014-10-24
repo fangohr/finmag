@@ -13,7 +13,6 @@ logger = logging.getLogger('finmag')
 
 
 class UniaxialAnisotropy(EnergyBase):
-
     """
     Compute the uniaxial anisotropy field.
 
@@ -24,6 +23,8 @@ class UniaxialAnisotropy(EnergyBase):
     *Arguments*
         K1
             The anisotropy constant
+        K2
+            The anisotropy constant (default=0)
         axis
             The easy axis. Should be a unit vector.
         Ms
@@ -38,7 +39,8 @@ class UniaxialAnisotropy(EnergyBase):
             import dolfin as df
             from finmag import UniaxialAnisotropy
 
-            L = 1e-8; nL = 5;
+            L = 1e-8;
+            nL = 5;
             mesh = df.BoxMesh(0, L, 0, L, 0, L, nL, nL, nL)
 
             S3 = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
@@ -49,7 +51,7 @@ class UniaxialAnisotropy(EnergyBase):
             Ms = 1e6
 
             anisotropy = UniaxialAnisotropy(K, a)
-            anisotropy.setup(S3, m, Ms)
+            anisotropy.setup(S3, m)
 
             # Print energy
             print anisotropy.compute_energy()
@@ -71,12 +73,12 @@ class UniaxialAnisotropy(EnergyBase):
 
         """
         self.K1_value = K1
+        self.K2_value = K2
         self.axis_value = axis
         self.name = name
-        super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
         self.assemble = assemble
+        super(UniaxialAnisotropy, self).__init__(method, in_jacobian=True)
 
-        self.K2_value = K2
         if K2 != 0:
             self.assemble = False
 
@@ -91,7 +93,7 @@ class UniaxialAnisotropy(EnergyBase):
                 magnetisation field (usually normalised)
 
             Ms
-                Saturation magnetisation (scalar, or scalar dolfin function)
+                Saturation magnetisation field
 
             unit_length
                 real length of 1 unit in the mesh
@@ -100,10 +102,6 @@ class UniaxialAnisotropy(EnergyBase):
         assert isinstance(m, Field)
         assert isinstance(Ms, Field)
 
-        # The following two lines are duplicated again in EnergyBase.setup().
-        # I wonder why there is the distinction betwen the __init__() and the
-        # setup() methods anyway? It feels a bit artifial to me.  -- Max,
-        # 23.9.2013
         cg_scalar_functionspace = df.FunctionSpace(m.mesh(), 'CG', 1)
         self.K1 = Field(cg_scalar_functionspace, self.K1_value, name='K1')
         self.K2 = Field(cg_scalar_functionspace, self.K2_value, name='K2')
@@ -113,7 +111,7 @@ class UniaxialAnisotropy(EnergyBase):
         # Anisotropy energy
         # HF's version inline with nmag, breaks comparison with analytical
         # solution in the energy density test for anisotropy, as this uses
-        # the Scholz-Magpar method. Should anyway be a an easy fix when we
+        # the Scholz-Magpar method. Should anyway be an easy fix when we
         # decide on method.
         # FIXME: we should use DG0 space here?
         
@@ -121,6 +119,10 @@ class UniaxialAnisotropy(EnergyBase):
             (df.Constant(1) - (df.dot(self.axis.f, m.f)) ** 2)
         if self.K2_value != 0:
             E_integrand -= self.K2.f * df.dot(self.axis.f, m.f) ** 4
+
+        del(self.K1_value)
+        del(self.K2_value)
+        del(self.axis_value)
 
         super(UniaxialAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
 
