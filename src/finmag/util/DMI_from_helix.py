@@ -10,7 +10,6 @@ import dolfin as df
 import finmag
 
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize
 
 
@@ -177,6 +176,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
 
     # Do some plotting.
     if plot is True:
+        import matplotlib.pyplot as plt
         meshXs = np.linspace(-meshXHalf * plotFactor, meshXHalf * plotFactor,
                              meshN * plotFactor)
 
