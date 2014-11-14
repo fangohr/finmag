@@ -27,3 +27,4 @@ doc/ipython_notebooks_dest
 tmp
 .pydevproject
 .project
+src/finmag/physics/build
