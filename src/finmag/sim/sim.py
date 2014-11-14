@@ -21,7 +21,6 @@ from finmag.util.meshes import mesh_volume, mesh_size_plausible, \
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.helpers import plot_dynamics, plot_dynamics_3d
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
@@ -1137,6 +1136,7 @@ class Simulation(object):
         self.logging_handler = None
 
     def plot_dynamics(self, components='xyz', **kwargs):
+        from finmag.util.plot_helpers import plot_dynamics
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
             raise RuntimeError(
@@ -1144,6 +1144,7 @@ class Simulation(object):
         return plot_dynamics(ndt_file, components=components, **kwargs)
 
     def plot_dynamics_3d(self, **kwargs):
+        from finmag.util.plot_helpers import plot_dynamics_3d
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
             raise RuntimeError(

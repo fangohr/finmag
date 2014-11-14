@@ -5,7 +5,7 @@ import os
 from glob import glob
 from finmag import sim_with
 from finmag.example import barmini
-from finmag.util.helpers import plot_hysteresis_loop
+from finmag.util.plot_helpers import plot_hysteresis_loop
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
