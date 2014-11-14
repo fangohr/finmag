@@ -26,6 +26,23 @@ import sh
 logger = logging.getLogger("finmag")
 
 
+class ExpressionFromPythonFunction(df.Expression):
+    """
+    Turn a python function to a dolfin expression over given functionspace.
+
+    """
+    def __init__(self, python_function, functionspace):
+        self.func = python_function
+        self.functionspace = functionspace
+
+    def eval(self, eval_result, x):
+        eval_result[:] = self.func(x)
+
+    def value_shape(self):
+        # () for scalar field, (N,) for N dimensional vector field
+        return self.functionspace.ufl_element().value_shape()
+
+
 def create_missing_directory_components(filename):
     """
     Creates any directory components in 'filename' which don't exist yet.

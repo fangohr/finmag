@@ -1,165 +1,146 @@
+"""
+Representation of scalar and vector fields, as well as
+operations on them backed by a dolfin function.
+
+This module exists because things like per-node operations or exporting of
+field values to convenient formats are awkward to do in dolfin currently.
+Additionally, some things are non-trivial to get right, especially in parallel.
+This class therefore acts as a "single point of contant", so that we don't
+duplicate code all over the FinMag code base.
+
+"""
+import logging
 import dolfin as df
 import numpy as np
+from finmag.util.helpers import ExpressionFromPythonFunction
+
+log = logging.getLogger(name="finmag")
 
 
 class Field(object):
+    """
+    Representation of scalar and vector fields using a dolfin function.
+
+    You can set the field values using a wide range of object types:
+        - tuples, lists, ints, floats, basestrings, numpy arrrays
+        - dolfin constants, expressions and functions
+        - callables
+        - files in hdf5
+
+    The Field class provides raw access to the field at some particular point
+    or all nodes. It also computes derived entities of the field, such as
+    spatially averaged energy. It outputs data suited for visualisation
+    or storage.
 
     """
-    A thin wrapper around the dolfin function for unified and convenient
-    operations on scalar and vector fields.
-
-    The Field class represents all scalar and vector fields that need to
-    be represented as dolfin functions (i.e. discretized fields on a mesh).
-    It is always tied to a specific mesh and choice of function space.
-
-    There are two reasons Field class exists:
-
-      - Certain things are awkward (or currently impossible) when using
-        dolfin.Functions directly (for example, per-node operations on
-        vector fields or storing a dolfin.Function in a format convenient
-        for use in Finmag).
-
-      - Even if things are possible, sometimes they are non-trivial to
-        get right, especially in parallel. Therefore this class acts as
-        a "single point of contact" so that we don't duplicate
-        functionality all over the Finmag code base.
-
-    What does the field class do?
-
-      - Set field values:
-        - from constant (dolfin constant, tuple, list, int, float, basestring)
-        - from dolfin expression
-        - from python function
-        - from files (hdf5)
-
-      - Retrieve field values:
-        - derived entities such as spatially averaged energy.
-        - raw access to field at some particular point or raw data for
-          all nodes
-
-      - Output data:
-        - for visualisation
-        - for data storage
-
-    """
-
-    def __init__(self, functionspace, value=None, normalised=False,
-                 name=None, unit=None):
+    def __init__(self, functionspace, value=None, normalised=False, name=None, unit=None):
         self.functionspace = functionspace
-        self.f = df.Function(self.functionspace)  # Create a zero-function.
+        self.f = df.Function(self.functionspace)
+        self.name = name
 
         if value is not None:
-            self.value = value
             self.set(value, normalised=normalised)
 
-        self.name = name
         if name is not None:
-            self.f.rename(name, name)  # Rename function's name and label.
+            self.f.rename(name, name)  # set function's name and label
 
         self.unit = unit
 
-    def set(self, value, normalised=False):
-        """
-        Set the field value f and normalise the field if specified in __init__.
-
-        Args:
-          value: The value for setting the field.
-                 The type of value argument can be:
-                   - Scalar field: int, float, basestring, df.Constant,
-                                   df.Expression, python function
-                   - Vector field: tuple, list, numpy array, df.Constant,
-                                   df.Expression, python function
-
-        """
-        # Dolfin Constant and Expression type values
-        # appropriate for both scalar and vector fields.
-        if isinstance(value, (df.Constant, df.Expression)):
-            self.f = df.interpolate(value, self.functionspace)
-
-        # Dolfin function type value
-        # appropriate for both scalar and vector field.
-        elif isinstance(value, df.Function):
-            if value.function_space() == self.functionspace:
-                self.f = value
-            else:
-                raise TypeError('Function and field functionspaces '
-                                'do not match')
-
-        elif isinstance(value, Field):
-            #if value.functionspace == self.functionspace:
-            self.f = value.f
-            #else:
-            #    raise TypeError('Functionspaces do not match')
-
-        # Generic vector type value
-        # appropriate for both scalar and vector fields.
-        elif isinstance(value, df.GenericVector):
-            self.f.vector()[:] = value
-
-        # Int, float, and basestring (str and unicode) type values
-        # appropriate only for scalar fields.
-        elif isinstance(value, (int, float)):
-            if isinstance(self.functionspace, df.FunctionSpace):
-                self.f = df.interpolate(df.Constant(value), self.functionspace)
-            else:
-                raise TypeError('{} inappropriate for setting the vector '
-                                'field value.'.format(type(value)))
-        elif isinstance(value, basestring):
-            value = str(value)  # df.Expression does not like unicode strings
-            if isinstance(self.functionspace, df.FunctionSpace):
-                self.f = df.interpolate(df.Expression(value), self.functionspace)
-            else:
-                raise TypeError('{} inappropriate for setting the vector '
-                                'field value.'.format(type(value)))
-
-        # Tuple, list, and numpy array type values
-        # appropriate only for vector fields.
-        elif isinstance(value, (tuple, list, np.ndarray)):
-            # Dimensions of value and vector field must be equal.
-            if isinstance(self.functionspace, df.VectorFunctionSpace) and \
-                    len(value) == self.value_dim():
-                self.f = df.interpolate(df.Constant(value), self.functionspace)
-
-            elif len(value) != self.value_dim():
-                raise ValueError('Vector function space value dimension ({}) '
-                                 'and value dimension ({}) are not '
-                                 'equal.'.format(len(value), self.value_dim()))
-
-            else:
-                raise TypeError('{} inappropriate for setting the scalar '
-                                'field  value.'.format(type(value)))
-
-        # Python function type values
-        # appropriate for both vector and scalar fields.
-        elif hasattr(value, '__call__'):
-            # Functionspace is made visible to WrappedExpression class.
-            fspace_for_wexp = self.functionspace
-
-            class WrappedExpression(df.Expression):
-
-                def __init__(self, value):
-                    self.fun = value
-
-                def eval(self, eval_result, x):
-                    eval_result[:] = self.fun(x)
-
-                def value_shape(self):
-                    # Return the dimension of field value as a tuple.
-                    # For instance:
-                    # () for scalar field and
-                    # (N,) for N dimensional vector field
-                    return fspace_for_wexp.ufl_element().value_shape()
-
-            wrapped_expression = WrappedExpression(value)
-            self.f = df.interpolate(wrapped_expression, self.functionspace)
-
-        # The value type cannot be used for neither scalar
-        # nor vector field setting.
+    def from_array(self, arr):
+        assert isinstance(arr, np.array)
+        if arr.shape == (3,) and isinstance(self.functionspace, df.VectorFunctionSpace):
+            self.from_constant(df.Constant(arr))
         else:
-            raise TypeError('{} inappropriate for setting the field '
-                            'value.'.format(type(value)))
+            if arr.shape[0] == self.f.vector().local_size():
+                self.f.vector().set_local(arr)
+            else:
+                # in serial, local_size == size, so this will only warn in parallel
+                log.warning("Global setting of field values by overwriting with np.array.")
+                self.f.vector()[:] = arr
 
-        # Normalise the function if required.
+    def from_callable(self, func):
+        assert hasattr("__call__", func) and not isinstance(func, df.Function)
+        expr = ExpressionFromPythonFunction(func, self.functionspace)
+        self.from_expression(expr)
+
+    def from_constant(self, constant):
+        assert isinstance(constant, df.Constant)
+        self.f.assign(constant)
+
+    def from_expression(self, expr, **kwargs):
+        """
+        Set field values using dolfin expression or the ingredients for one,
+        in which case it will build the dolfin expression for you.
+
+        """
+        if not isinstance(expr, df.Expression):
+            if isinstance(self.functionspace, df.FunctionSpace):
+                assert (isinstance(expr, basestring) or
+                        isinstance(expr, (tuple, list)) and len(expr) == 1)
+                expr = str(expr)  # dolfin does not like unicode in the expression
+            if isinstance(self.functionspace, df.VectorFunctionSpace):
+                assert isinstance(expr, (tuple, list)) and len(expr) == 3
+                assert all(isinstance(item, basestring) for item in expr)
+                map(str, expr)  # dolfin does not like unicode in the expression
+            expr = df.Expression(expr, **kwargs)
+        temp_function = df.interpolate(expr, self.functionspace)
+        self.f.vector().set_local(temp_function.vector().get_local())
+
+    def from_field(self, field):
+        assert isinstance(field, Field)
+        assert self.functionspace == field.functionspace
+        self.f.vector().set_local(field.f.vector().get_local())
+
+    def from_function(self, function):
+        assert isinstance(function, df.Function)
+        self.f.vector().set_local(function.vector().get_local())
+
+    def from_generic_vector(self, vector):
+        assert isinstance(vector, df.GenericVector)
+        self.f.vector().set_local(vector.get_local())
+
+    def from_sequence(self, seq):
+        assert isinstance(self.functionspace, df.VectorFunctionSpace)
+        assert isinstance(seq, (tuple, list))
+        assert len(seq) == 3
+        self.from_constant(df.Constant(seq))
+
+    def set(self, value, normalised=False, **kwargs):
+        """
+        Set field values using `value` and normalise if `normalised` is True.
+
+        The parameter `value` can be one of many different types,
+        as described in the class docstring. This method avoids the user
+        having to find the correct `from_*` method to call.
+
+        """
+        if isinstance(value, df.Constant):
+            self.from_constant(value)
+        elif isinstance(value, df.Expression):
+            self.from_expression(value)
+        elif isinstance(value, df.Function):
+            self.from_function(value)
+        elif isinstance(value, Field):
+            self.from_field(value)
+        elif isinstance(value, df.GenericVector):
+            self.from_generic_vector(value)
+        elif isinstance(value, (int, float)):
+            self.from_constant(df.Constant(value))
+        elif (isinstance(value, basestring) or
+              isinstance(value, (tuple, list)) and
+                all(isinstance(item, basestring) for item in value)):
+            self.from_expression(value, **kwargs)
+        elif isinstance(value, (tuple, list)):
+            self.from_sequence(value)
+        elif isinstance(value, np.array):
+            self.from_array(value)
+        elif hasattr(value, '__call__'):
+            # this matches df.Function as well, so this clause needs to
+            # be after the one checking for df.Function
+            self.from_callable(value)
+        else:
+            raise TypeError("Can't set field values using {}.".format(type(value)))
+
         if normalised:
             self.normalise()
 
