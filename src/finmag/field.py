@@ -46,6 +46,13 @@ class Field(object):
 
         self.unit = unit
 
+    def __call__(self, x):
+        """
+        Shorthand so user can do field(x) instead of field.f(x) to interpolate.
+
+        """
+        return self.f(x)
+
     def from_array(self, arr):
         assert isinstance(arr, np.array)
         if arr.shape == (3,) and isinstance(self.functionspace, df.VectorFunctionSpace):
