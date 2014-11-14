@@ -11,7 +11,8 @@ from matplotlib import cm
 # don't let the pyflakes error "unused import" in the next line fool you
 from mpl_toolkits.mplot3d import axes3d  # used in fig.gca(projection="3d")
 from finmag.util.fileio import Tablereader
-
+import types
+from .helpers import *
 
 def surface_2d(x, y, u, labels=("", "", ""), title="",
                ylim=None, xlim=None, clim=None, path="", **kwargs):

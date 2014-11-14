@@ -1056,7 +1056,7 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     sim.initialise_vortex('simple', r=5, center=(2, 0, 0), right_handed=False)
     save_debugging_snapshots(sim, 'barmini_with_vortex')
 
-@pytest.mark.xfail
+
 def test_set_m_after_relaxation(tmpdir):
     """
     Check that Simulation.set_m changes the magnetisation for relaxation
@@ -1075,25 +1075,21 @@ def test_set_m_after_relaxation(tmpdir):
     os.chdir(str(tmpdir))
 
     # Construct a 2D simulation with two obvious optima.
-    mesh = df.RectangleMesh(-1, -1, 1, 1, 1, 1, "crossed")
-    sim = finmag.Simulation(mesh, 1e5, unit_length=1e-9)
-    sim.add(finmag.energies.UniaxialAnisotropy(1.5e4, np.array([0, 0, 1])))
+    mesh = df.RectangleMesh(0, 0, 1, 1, 1, 1)
+    sim = finmag.Simulation(mesh, Ms=1, unit_length=1e-9)
+    sim.add(finmag.energies.UniaxialAnisotropy(1, np.array([0, 0, 1])))
 
     # Set the spins so that they will point in +Z upon relaxation.
-    sim.set_m(lambda pos: np.array([0.25, 0.25, 1]))
+    sim.set_m((0.1, 0.1, 1))
     sim.relax()
-    mz_centre_first_relaxation = sim.m_field.f(0, 0)[2]  # This should be close
-                                                         # to 1.
+    assert sim.m_average[2] >= 0.9
 
     # Set the spins again so that they will point in -Z upon relaxation.
-    sim.set_m(lambda pos: np.array([0.25, 0.25, -1]))
+    print sim.integrator.m
+    sim.set_m((0.2, 0.2, -1))
+    print sim.integrator.m
     sim.relax()
-    mz_centre_second_relaxation = sim.m_field.f(0, 0)[2]  # This should be
-                                                          # close to -1.
-
-    # Assert that the relaxed states (at the centre at least) are
-    # different by a sizeable margin.
-    assert abs(mz_centre_first_relaxation - mz_centre_second_relaxation) > 1
+    assert sim.m_average[2] <= 0.1
 
 
 def test_sim_relax_accepts_filename(tmpdir):
