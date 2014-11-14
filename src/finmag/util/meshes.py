@@ -23,9 +23,6 @@ import hashlib
 import tempfile
 import dolfin as df
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 from types import ListType, TupleType
 from math import sin, cos, pi
 
@@ -965,6 +962,10 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None, **kwa
     The Axes object in which the mesh was plotted (either the one
     provided by the user or the one which was automatically created).
     """
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+    from mpl_toolkits.mplot3d import Axes3D
+
     dim = mesh.topology().dim()
 
     # If the user doesn't explicitly specify a linewidth, we
@@ -1190,6 +1191,9 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
     The Axes object in which the mesh was plotted (either the one
     provided by the user or the one which was automatically created).
     """
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+
     def _ensure_is_list(arg):
         res = arg
         if res == None:
