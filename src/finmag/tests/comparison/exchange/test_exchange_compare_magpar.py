@@ -74,11 +74,3 @@ if __name__ == '__main__':
     print "magpar:", res["magpar_exch"]
     print "rel_diff:", res["rel_diff"]
     print "max rel_diff", np.max(res["rel_diff"])
-
-    """
-    prefix = os.path.join(MODULE_DIR, "_exch_")
-    quiver(res["m0"], res["mesh"], prefix+"m0.png")
-    quiver(res["exch"], res["mesh"], prefix+"exch.png")
-    quiver(res["diff"], res["mesh"], prefix+"diff.png")
-    boxplot(res["diff"], prefix+"rel_diff_box.png")
-    """
