@@ -81,6 +81,64 @@ def test_set_with_another_field():
     assert np.allclose(function_of_field2(1), (1, 2, 3))
 
 
+def test_set_with_another_field_new_but_same_function_space():
+    mesh = df.UnitIntervalMesh(1)
+    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    fieldV = Field(V)
+    fieldV.set(df.Constant((1, 2, 3)))
+
+    W = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    fieldW = Field(W)
+    function_of_fieldW = fieldW.f
+    assert function_of_fieldW.vector().array().all() == 0
+    fieldW.set(fieldV)
+    assert np.allclose(function_of_fieldW(1), (1, 2, 3))
+
+
+def test_assumption_that_interpolate_better_than_project_same_vectorspace():
+    mesh = df.UnitCubeMesh(2, 2, 2)
+
+    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    f = df.Function(V)
+    f.vector()[:] = np.random.rand(len(f.vector().array()))
+
+    W = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    w1 = df.interpolate(f, W)
+    w2 = df.project(f, W)
+
+    diff_w1 = f.vector() - w1.vector()
+    diff_w2 = f.vector() - w2.vector()
+    diff_w1.abs()
+    diff_w2.abs()
+    assert diff_w1.array().max() <= diff_w2.array().max()
+
+
+def test_assumption_that_interpolate_better_than_project_different_vectorspace(do_plot=False):
+    mesh = df.UnitSquareMesh(5, 5)
+
+    V = df.FunctionSpace(mesh, "DG", 0)
+    # models use case of material parameter
+    f = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1"), V)  
+
+    W = df.FunctionSpace(mesh, "CG", 1)
+    w_i = df.interpolate(f, W)
+    w_p = df.project(f, W)
+    w_e = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1"), W)
+
+    if do_plot:  # proof by "looking at the picture" /s
+        df.plot(f, title="original")
+        df.plot(w_i, title="interpolate")
+        df.plot(w_p, title="project")
+        df.plot(w_e, title="from same expression")
+        df.interactive()
+
+    diff_w_i = w_e.vector() - w_i.vector()
+    diff_w_p = w_e.vector() - w_p.vector()
+    diff_w_i.abs()
+    diff_w_p.abs()
+    assert diff_w_i.array().max() <= diff_w_p.array().max()
+
+
 def test_set_with_dolfin_generic_vector():
     mesh = df.UnitIntervalMesh(1)
     F = df.FunctionSpace(mesh, "CG", 1)

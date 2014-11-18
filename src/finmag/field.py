@@ -12,7 +12,7 @@ duplicate code all over the FinMag code base.
 import logging
 import dolfin as df
 import numpy as np
-from finmag.util.helpers import ExpressionFromPythonFunction
+from finmag.util.helpers import expression_from_python_function
 
 log = logging.getLogger(name="finmag")
 
@@ -39,6 +39,7 @@ class Field(object):
         self.name = name
 
         if value is not None:
+            self.value = value
             self.set(value, normalised=normalised)
 
         if name is not None:
@@ -54,7 +55,7 @@ class Field(object):
         return self.f(x)
 
     def from_array(self, arr):
-        assert isinstance(arr, np.array)
+        assert isinstance(arr, np.ndarray)
         if arr.shape == (3,) and isinstance(self.functionspace, df.VectorFunctionSpace):
             self.from_constant(df.Constant(arr))
         else:
@@ -66,8 +67,8 @@ class Field(object):
                 self.f.vector()[:] = arr
 
     def from_callable(self, func):
-        assert hasattr("__call__", func) and not isinstance(func, df.Function)
-        expr = ExpressionFromPythonFunction(func, self.functionspace)
+        assert hasattr(func, "__call__") and not isinstance(func, df.Function)
+        expr = expression_from_python_function(func, self.functionspace)
         self.from_expression(expr)
 
     def from_constant(self, constant):
@@ -95,8 +96,11 @@ class Field(object):
 
     def from_field(self, field):
         assert isinstance(field, Field)
-        assert self.functionspace == field.functionspace
-        self.f.vector().set_local(field.f.vector().get_local())
+        if self.functionspace == field.functionspace:
+            self.f.vector().set_local(field.f.vector().get_local())
+        else:
+            temp_function = df.interpolate(field.f, self.functionspace)
+            self.f.vector().set_local(temp_function.vector().get_local())
 
     def from_function(self, function):
         assert isinstance(function, df.Function)
@@ -109,7 +113,7 @@ class Field(object):
     def from_sequence(self, seq):
         assert isinstance(self.functionspace, df.VectorFunctionSpace)
         assert isinstance(seq, (tuple, list))
-        assert len(seq) == 3
+        assert len(seq) == self.functionspace.num_sub_spaces()
         self.from_constant(df.Constant(seq))
 
     def set(self, value, normalised=False, **kwargs):
@@ -139,7 +143,7 @@ class Field(object):
             self.from_expression(value, **kwargs)
         elif isinstance(value, (tuple, list)):
             self.from_sequence(value)
-        elif isinstance(value, np.array):
+        elif isinstance(value, np.ndarray):
             self.from_array(value)
         elif hasattr(value, '__call__'):
             # this matches df.Function as well, so this clause needs to

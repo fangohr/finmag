@@ -26,21 +26,22 @@ import sh
 logger = logging.getLogger("finmag")
 
 
-class ExpressionFromPythonFunction(df.Expression):
-    """
-    Turn a python function to a dolfin expression over given functionspace.
+def expression_from_python_function(func, function_space):
+    class ExpressionFromPythonFunction(df.Expression):
+        """
+        Turn a python function to a dolfin expression over given functionspace.
 
-    """
-    def __init__(self, python_function, functionspace):
-        self.func = python_function
-        self.functionspace = functionspace
+        """
+        def __init__(self, python_function):
+            self.func = python_function
 
-    def eval(self, eval_result, x):
-        eval_result[:] = self.func(x)
+        def eval(self, eval_result, x):
+            eval_result[:] = self.func(x)
 
-    def value_shape(self):
-        # () for scalar field, (N,) for N dimensional vector field
-        return self.functionspace.ufl_element().value_shape()
+        def value_shape(self):
+            # () for scalar field, (N,) for N dimensional vector field
+            return function_space.ufl_element().value_shape()
+    return ExpressionFromPythonFunction(func)
 
 
 def create_missing_directory_components(filename):
