@@ -1,12 +1,14 @@
 import dolfin as df
 import numpy as np
 import pytest
-import mshr
 import os
 from meshes import *
 from mesh_templates import *
 from math import sin, cos, pi
-
+# For the newest version of dolfin (1.4.0), where CGAL is moved from
+# dolfin to mshr, mshr must be imported (the following line uncommented)
+# (Marijan 26/11/2014)
+#import mshr
 
 def test_mesh_size():
     """
