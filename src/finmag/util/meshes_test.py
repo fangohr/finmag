@@ -1,6 +1,7 @@
 import dolfin as df
 import numpy as np
 import pytest
+import mshr
 import os
 from meshes import *
 from mesh_templates import *
@@ -93,15 +94,26 @@ def test_build_mesh():
     mesh1 = df.RectangleMesh(0, 0, 20, 10, 12, 8)
     assert_mesh_builds_correctly(mesh1)
 
+    # For the newest version of dolfin (1.4.0), where CGAL is moved from
+    # dolfin to mshr, the following two lines should be replaced commented
+    # lines below. (Marijan 26/11/2014)
     mesh2 = df.CircleMesh(df.Point(2.0, -3.0), 10.0, 3.0)
     assert_mesh_builds_correctly(mesh2)
+
+    #mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
+    #mesh2 = mshr.generate_mesh(mesh_temp, 10)
 
     mesh3 = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
     assert_mesh_builds_correctly(mesh3)
 
+    # For the newest version of dolfin (1.4.0), where CGAL is moved from
+    # dolfin to mshr, the following two lines should be replaced commented
+    # lines below. (Marijan 26/11/2014)
     mesh4 = df.SphereMesh(df.Point(2.0, 3.0, -4.0), 10.0, 3.0)
     assert_mesh_builds_correctly(mesh4)
-
+    
+    #mesh_temp = mshr.Sphere(df.Point(2.0, 3.0, -4.0), 10)
+    #mesh4 = mshr.generate_mesh(mesh_temp, 10)
 
 def create_periodic_mesh(periodicity='none', dim=3):
     """

@@ -6,6 +6,7 @@ from finmag import sim_with, normal_mode_simulation
 from math import pi
 import logging
 import pytest
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger("finmag")
 
