@@ -5,8 +5,9 @@ import os
 from meshes import *
 from mesh_templates import *
 from math import sin, cos, pi
-if df.__version__ == '1.4.0':
-    import mshr
+# In dolfin 1.4.0, CGAL is removed from dolfin to mshr.
+# So, the following line should be uncommented. (Marijan, 26/11/2014)
+#import mshr
 
 def test_mesh_size():
     """
@@ -95,14 +96,14 @@ def test_build_mesh():
     assert_mesh_builds_correctly(mesh1)
 
     # In dolfin 1.4.0, CGAL is removed from dolfin to mshr.
-    # So, mesh is created differently depending on the dolfin
-    # version. (Marijan, 26/11/2014)
-    if df.__version__ == '1.4.0':
-        mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
-        mesh2 = mshr.generate_mesh(mesh_temp, 10)
-    else:
-        mesh2 = df.CircleMesh(df.Point(2.0, -3.0), 10.0, 3.0)
-        assert_mesh_builds_correctly(mesh2)
+    # So, the following two lines should be replaced with
+    # the commented lines below. (Marijan, 26/11/2014)
+    mesh2 = df.CircleMesh(df.Point(2.0, -3.0), 10.0, 3.0)
+    assert_mesh_builds_correctly(mesh2)
+
+    #mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
+    #mesh2 = mshr.generate_mesh(mesh_temp, 10)
+    
 
     mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
     mesh2 = mshr.generate_mesh(mesh_temp, 10)
@@ -111,14 +112,14 @@ def test_build_mesh():
     assert_mesh_builds_correctly(mesh3)
 
     # In dolfin 1.4.0, CGAL is removed from dolfin to mshr.
-    # So, mesh is created differently depending on the dolfin
-    # version. (Marijan, 26/11/2014)
-    if df.__version__ == '1.4.0':
-        mesh_temp = mshr.Sphere(df.Point(2.0, 3.0, -4.0), 10)
-        mesh4 = mshr.generate_mesh(mesh_temp, 10)
-    else:
-        mesh4 = df.SphereMesh(df.Point(2.0, 3.0, -4.0), 10.0, 3.0)
-        assert_mesh_builds_correctly(mesh4)
+    # So, the following two lines should be replaced with
+    # the commented lines below. (Marijan, 26/11/2014)
+    mesh4 = df.SphereMesh(df.Point(2.0, 3.0, -4.0), 10.0, 3.0)
+    assert_mesh_builds_correctly(mesh4)
+
+    #mesh_temp = mshr.Sphere(df.Point(2.0, 3.0, -4.0), 10)
+    #mesh4 = mshr.generate_mesh(mesh_temp, 10)
+        
 
 def create_periodic_mesh(periodicity='none', dim=3):
     """
