@@ -103,10 +103,6 @@ def test_build_mesh():
 
     #mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
     #mesh2 = mshr.generate_mesh(mesh_temp, 10)
-    
-
-    mesh_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
-    mesh2 = mshr.generate_mesh(mesh_temp, 10)
 
     mesh3 = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
     assert_mesh_builds_correctly(mesh3)
