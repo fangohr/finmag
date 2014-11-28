@@ -205,7 +205,8 @@ class Simulation(object):
 
         """
         self.llg.set_m(value, normalise=normalise, **kwargs)
-        self.reinit_integrator()
+        if self.has_integrator():
+            self.reinit_integrator()
 
     m = property(__get_m, set_m)
 
