@@ -29,16 +29,12 @@ class CubicAnisotropy(EnergyBase):
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy', assemble=False):
         """
-        Define a cubic anisotropy with (fourth/six/eigth order) anisotropy
-        constants `K1`, `K2`, `K3` (in J/m^3) and corresponding axes
+        Define a cubic anisotropy with anisotropy constants
+        `K1`, `K2`, `K3` (in J/m^3) and corresponding axes
         `u1`, `u2` and `u3`.
 
         if assemble = True, the box-assemble will be used, seems that box-assemble 
         method has introduced extra error!!!
-
-        The constants and axes can be passed as df.Constant or df.Function or
-        a general function, It is possible to specify spatially
-        varying anisotropy by using df.Functions.
 
         """
 
@@ -61,27 +57,27 @@ class CubicAnisotropy(EnergyBase):
     @mtimed
     def setup(self, m, Ms, unit_length=1):
         dofmap = m.functionspace.dofmap()
-        S1 = df.FunctionSpace(
+        cg_scalar_functionspace = df.FunctionSpace(
             m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
 
-        S3 = df.VectorFunctionSpace(
+        cg_vector_functionspace = df.VectorFunctionSpace(
             m.mesh(), "Lagrange", 1, 3, constrained_domain=dofmap.constrained_domain)
 
-        self.K1_field = Field(S1, self.K1_value, name='K1')
-        self.K2_field = Field(S1, self.K2_value, name='K2')
-        self.K3_field = Field(S1, self.K3_value, name='K3')
+        self.K1_field = Field(cg_scalar_functionspace, self.K1_value, name='K1')
+        self.K2_field = Field(cg_scalar_functionspace, self.K2_value, name='K2')
+        self.K3_field = Field(cg_scalar_functionspace, self.K3_value, name='K3')
 
-        self.u1_field = Field(S3, self.u1_value, name='u1')
-        self.u2_field = Field(S3, self.u2_value, name='u2')
-        self.u3_field = Field(S3, self.u3_value, name='u3')
+        self.u1_field = Field(cg_vector_functionspace, self.u1_value, name='u1')
+        self.u2_field = Field(cg_vector_functionspace, self.u2_value, name='u2')
+        self.u3_field = Field(cg_vector_functionspace, self.u3_value, name='u3')
         
-        self.volumes = df.assemble(df.TestFunction(S1) * df.dx)
+        self.volumes = df.assemble(df.TestFunction(cg_scalar_functionspace) * df.dx)
         self.K1 = df.assemble(
-            self.K1_field.f * df.TestFunction(S1) * df.dx).array() / self.volumes
+            self.K1_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
         self.K2 = df.assemble(
-            self.K2_field.f * df.TestFunction(S1) * df.dx).array() / self.volumes
+            self.K2_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
         self.K3 = df.assemble(
-            self.K3_field.f * df.TestFunction(S1) * df.dx).array() / self.volumes
+            self.K3_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
 
         u1msq = df.dot(self.u1_field.f, m.f) ** 2
         u2msq = df.dot(self.u2_field.f, m.f) ** 2
@@ -89,9 +85,8 @@ class CubicAnisotropy(EnergyBase):
 
         E_term1 = self.K1_field.f * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq)
         E_term2 = self.K2_field.f * (u1msq * u2msq * u3msq)
-        E_term3 = self.K3_field.f * \
-            (u1msq ** 2 * u2msq ** 2 + u2msq **
-             2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
+        E_term3 = self.K3_field.f * (u1msq ** 2 * u2msq ** 2 + u2msq ** \
+                                     2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
 
         E_integrand = E_term1
 
