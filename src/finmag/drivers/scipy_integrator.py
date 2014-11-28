@@ -1,5 +1,8 @@
+import logging
 import numpy as np
 from scipy.integrate import ode
+
+log = logging.getLogger(name="finmag")
 
 
 class ScipyIntegrator(object):
