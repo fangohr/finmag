@@ -1,6 +1,7 @@
 import logging
 import dolfin as df
 import numpy as np
+from finmag.field import Field
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
@@ -19,7 +20,7 @@ class Zeeman(object):
         'finmag.util.helpers.vector_valued_function' (see its docstring for details).
 
         """
-        self.value = H
+        self.H_value = H
         self.name = name
         self.kwargs = kwargs
         self.in_jacobian = False
@@ -50,7 +51,7 @@ class Zeeman(object):
         # self.dim = S3.mesh().topology().dim()
         # self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
 
-        self.set_value(self.value, **self.kwargs)
+        self.set_value(self.H_value, **self.kwargs)
 
     def set_value(self, value, **kwargs):
         """
@@ -62,10 +63,10 @@ class Zeeman(object):
 
         """
         self.value = value
-        self.H = helpers.vector_valued_function(
-            value, self.m.functionspace, **self.kwargs)
-        self.H.rename('H_ext', 'H_ext')
-        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H)  # Energy density.
+        dofmap = self.m.functionspace.dofmap()
+        dg_vector_functionspace = df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain)
+        self.H = Field(dg_vector_functionspace, value, name='H_ext')
+        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H.f)  # Energy density.
 
     def average_field(self):
         """
@@ -74,7 +75,7 @@ class Zeeman(object):
         return helpers.average_field(self.compute_field())
 
     def compute_field(self):
-        return self.H.vector().array()
+        return self.H.get_numpy_array_debug()
 
     def compute_energy(self, dx=df.dx):
         dim = self.m.mesh_dim()
@@ -82,7 +83,7 @@ class Zeeman(object):
         return E
 
     def energy_density(self):
-        return df.project(df.dot(self.m.f, self.H) * self.Ms.f * -mu0, self.S1).vector().array()
+        return df.project(df.dot(self.m.f, self.H.f) * self.Ms.f * -mu0, self.S1).vector().array()
 
     def energy_density_function(self):
         if not hasattr(self, "E_density_function"):
@@ -183,8 +184,8 @@ class TimeZeeman(Zeeman):
                 self.switch_off()
                 return
             self.value.t = t
-            self.H = df.interpolate(self.value, self.m.functionspace)
-            self.H.rename('H_ext', 'H_ext')  # set short and long name
+            self.H.set(self.value)
+            self.H.name = 'H_ext'
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman
@@ -192,7 +193,8 @@ class TimeZeeman(Zeeman):
         # provide an option to do so) in order to avoid computing the
         # Zeeman energy at all once the field is switched off.
         log.debug("Switching external field off.")
-        self.H.assign(df.Constant((0, 0, 0)))
+        dofmap = self.m.functionspace.dofmap()
+        self.H = Field(df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain), (0, 0, 0))
         self.value = None
         self.switched_off = True
 
@@ -231,8 +233,9 @@ class DiscreteTimeZeeman(TimeZeeman):
                 dt_since_last_update = t - self.t_last_update
                 if dt_since_last_update >= self.dt_update:
                     self.value.t = t
-                    self.H = df.interpolate(self.value, self.m.functionspace)
-                    self.H.rename('H_ext', 'H_ext')
+                    dofmap = self.m.functionspace.dofmap()
+                    dg_vector_functionspace = df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain)
+                    self.H = Field(dg_vector_functionspace, self.value, name='H_ext')
                     log.debug("At t={}, after dt={}, update external field again.".format(
                         t, dt_since_last_update))
 
