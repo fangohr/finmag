@@ -3,8 +3,7 @@ from scipy.integrate import ode
 
 
 class ScipyIntegrator(object):
-
-    def __init__(self, llg, m0, reltol=1e-8, abstol=1e-8, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
+    def __init__(self, llg, m0, reltol=1e-6, abstol=1e-6, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
         assert isinstance(m0, np.ndarray)
         self.llg = llg
         self.cur_t = 0.0
