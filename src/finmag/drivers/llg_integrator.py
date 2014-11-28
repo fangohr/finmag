@@ -6,7 +6,7 @@ from finmag.drivers.scipy_integrator import ScipyIntegrator
 log = logging.getLogger(name='finmag')
 
 
-def llg_integrator(llg, m0, backend="sundials", **kwargs):
+def llg_integrator(physics, m, backend="sundials", **kwargs):
     # XXX TODO: Passing the tablewriter argument on like this is a
     #           complete hack and this should be refactored. The same
     #           is true with saving snapshots. Neither saving average
@@ -18,12 +18,12 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
     #           simulation class.
     #             -- Hans, 17/12/2012
     #
-    assert isinstance(m0, Field)
-
     log.info("Creating integrator with backend {} and arguments {}.".format(backend, kwargs))
+    assert isinstance(m, Field)
+
     if backend == "scipy":
-        return ScipyIntegrator(llg, m0, **kwargs)
+        return ScipyIntegrator(physics.hooks_scipy, m, **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0.as_array(), **kwargs)
+        return SundialsIntegrator(physics.hooks_sundials, m, **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")

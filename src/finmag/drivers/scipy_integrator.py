@@ -7,14 +7,12 @@ log = logging.getLogger(name="finmag")
 
 
 class ScipyIntegrator(object):
-    def __init__(self, llg, m0, reltol=1e-6, abstol=1e-6, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
-        self.m_field = m0
-        self.solve_for = llg.solve_for
+    def __init__(self, hooks, m0, reltol=1e-6, abstol=1e-6, nsteps=10000, method="bdf", tablewriter=None, **kwargs):
+        self.solve, self.overwrite_m = hooks
         self.cur_t = 0.0
         self.ode = ode(self.rhs, jac=None)
-        self.ode.set_integrator(
-            "vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
-        self.ode.set_initial_value(self.m_field.as_array(), 0)
+        self.ode.set_integrator("vode", method=method, rtol=reltol, atol=abstol, nsteps=nsteps, **kwargs)
+        self.ode.set_initial_value(m0.as_array(), 0)
         self._n_rhs_evals = 0
         self.tablewriter = tablewriter
 
@@ -23,7 +21,7 @@ class ScipyIntegrator(object):
 
     def rhs(self, t, y):
         self._n_rhs_evals += 1
-        return self.solve_for(y, t)
+        return self.solve(y, t)
 
     def advance_time(self, t):
         if t == 0 and abs(t - self.cur_t) < EPSILON:
@@ -33,9 +31,8 @@ class ScipyIntegrator(object):
 
         new_m = self.ode.integrate(t)
         assert self.ode.successful()
-        self.m_field.from_array(new_m)
+        self.overwrite_m(new_m)
         self.cur_t = t
 
     def reinit(self):
-        log.debug("{}: This integrator doesn't support reinitialisation.".format(
-            self.__class__.__name__))
+        log.debug("{}: This integrator doesn't support reinitialisation.".format(self.__class__.__name__))

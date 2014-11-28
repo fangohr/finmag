@@ -29,13 +29,11 @@ def compare_with_analytic_solution(alpha=0.5, max_t=1e-9):
     nx = ny = nz = 1
     mesh = dolfin.BoxMesh(x0, x1, y0, y1, z0, z1, nx, ny, nz)
 
-    sim = Simulation(mesh, Ms=1)
+    sim = Simulation(mesh, Ms=1, integrator_backend="scipy")
+    sim.set_tol(abstol=1e-12, reltol=1e-12)
     sim.alpha = alpha
     sim.set_m((1, 0, 0))
     sim.add(Zeeman((0, 0, 1e6)))
-
-    # plug in an integrator with lower tolerances
-    sim.set_tol(abstol=1e-12, reltol=1e-12)
 
     ts = numpy.linspace(0, max_t, num=100)
     ys = numpy.array([(sim.advance_time(t), sim.m.copy())[1] for t in ts])

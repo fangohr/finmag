@@ -32,8 +32,8 @@ namespace dolfin { namespace finmag {
             void set_do_precession(bool value);
 
             void slonczewski(double d, double P, Array<double> const& p, double lambda, double epsilonprime);
-            void slonczewski_disable();
-            bool slonczewski_status() const;
+            bool get_slonczewski_status() const;
+            void set_slonczewski_status(bool status);
 
             void zhangli(double u_0, double beta);
             void zhangli_disable();

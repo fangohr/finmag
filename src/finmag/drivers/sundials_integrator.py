@@ -15,34 +15,32 @@ class SundialsIntegrator(object):
         cur_t       The time up to which integration has been carried out.
     """
 
-    def __init__(self, llg, m0, t0=0.0, reltol=1e-6, abstol=1e-6,
+    def __init__(self, hooks, m0, t0=0.0, reltol=1e-6, abstol=1e-6,
                  nsteps=10000, method="bdf_gmres_prec_id", tablewriter=None):
-        assert method in ("adams", "bdf_diag",
-                          "bdf_gmres_no_prec", "bdf_gmres_prec_id")
-        self.llg = llg
+        assert method in ("adams", "bdf_diag", "bdf_gmres_no_prec", "bdf_gmres_prec_id")
+
+        self.rhs, self.jtimes, self.psetup, self.psolve, self.overwrite_m = hooks
         self.cur_t = t0
-        self.m = m0.copy()
+        self.m = m0  # TODO: before, we were keeping a copy, was that better?
         self.tablewriter = tablewriter
 
         if method == "adams":
-            integrator = sundials.cvode(
-                sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
+            integrator = sundials.cvode(sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         else:
             integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         self.integrator = integrator
 
-        integrator.init(llg.sundials_rhs, self.cur_t, self.m)
+        integrator.init(self.rhs, self.cur_t, m0.as_array())
 
         if method == "bdf_diag":
             integrator.set_linear_solver_diag()
         elif method == "bdf_gmres_no_prec":
             integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-            integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
+            integrator.set_spils_jac_times_vec_fn(self.jtimes)
         elif method == "bdf_gmres_prec_id":
             integrator.set_linear_solver_sp_gmr(sundials.PREC_LEFT)
-            integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
-            integrator.set_spils_preconditioner(
-                llg.sundials_psetup, llg.sundials_psolve)
+            integrator.set_spils_jac_times_vec_fn(self.jtimes)
+            integrator.set_spils_preconditioner(self.psetup, self.psolve)
 
         integrator.set_scalar_tolerances(reltol, abstol)
         self.max_steps = nsteps
@@ -87,7 +85,7 @@ class SundialsIntegrator(object):
                 "into the past?".format(t, self.cur_t))
 
         try:
-            self.integrator.advance_time(t, self.m)
+            self.integrator.advance_time(t, self.m.as_array())
         except RuntimeError, msg:
             # if we have reached max_num_steps, the error message will read
             # something like "Error in CVODE:CVode (CV_TOO_MUCH_WORK):
@@ -111,11 +109,7 @@ class SundialsIntegrator(object):
             self.cur_t = t
             reached_tout = True
 
-        # in any case: put integrated degrees of freedom from cvode object
-        # back into llg object
-        # Weiwei: change the default m to sundials_m since sometimes we need to
-        # extend the default equation.
-        self.llg.sundials_m = self.m  # actually writes to the field class (c.f. llg.py)
+        # TODO: If we copy like before, we will need to overwrite m.
         return reached_tout
 
     def advance_steps(self, steps):
@@ -129,14 +123,14 @@ class SundialsIntegrator(object):
             # we can't tell sundials to run a certain number of steps
             # so we try integrating for a very long time but set it to
             # stop after the specified number of steps
-            self.integrator.advance_time(self.cur_t + 1, self.m)
+            self.integrator.advance_time(self.cur_t + 1, self.m.as_array())
         except RuntimeError, msg:
             if "CV_TOO_MUCH_WORK" in msg.message:
                 pass  # this is the error we expect
             else:
                 raise
         self.cur_t = self.integrator.get_current_time()
-        self.llg.sundials_m = self.m
+        # TODO: If we copy like before, we will need to overwrite m.
         self.max_steps = old_max_steps
 
     def reinit(self):
@@ -148,10 +142,10 @@ class SundialsIntegrator(object):
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
         log.debug("Re-initialising CVODE integrator.")
-        self.integrator.reinit(self.cur_t, self.llg.sundials_m)  # FIXME: rename sundials_m
+        self.integrator.reinit(self.cur_t, self.m.as_array())
 
-    n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(
-    ), "Number of function evaluations performed")
+    n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(),
+                           "number of function evaluations performed")
 
     def stats(self):
         """ Return integrator stats as dictionary. Keys are

@@ -58,8 +58,8 @@ namespace dolfin { namespace finmag {
         stt_slonczewski.reset(new Slonczewski(d, P, p, lambda, epsilonprime));
         do_slonczewski = true;
     }
-    void Equation::slonczewski_disable() { do_slonczewski = false; }
-    bool Equation::slonczewski_status() const { return do_slonczewski && current_density && saturation_magnetisation; }
+    void Equation::set_slonczewski_disable(bool status) { do_slonczewski = status; }
+    bool Equation::get_slonczewski_status() const { return do_slonczewski && current_density && saturation_magnetisation; }
     void Equation::zhangli(double u_0, double beta) {
         stt_zhangli.reset(new ZhangLi(u_0, beta));
         do_zhangli = true;

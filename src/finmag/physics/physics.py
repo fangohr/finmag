@@ -5,6 +5,7 @@ Derives physical quantities from the primary simulation state.
 import logging
 import dolfin as df
 import finmag.util.consts as consts
+from ..field import Field
 from effective_field import EffectiveField
 from equation import Equation
 
@@ -12,22 +13,23 @@ logger = logging.getLogger(name="finmag")
 
 
 class Physics(object):
-    def __init__(self, mesh, unit_length):
+    def __init__(self, mesh, unit_length, periodic_bc):
         self.mesh = mesh
         self.unit_length = unit_length
-        self.S1 = df.FunctionSpace(mesh, "CG", 1)
-        self.S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+        self.S1 = df.FunctionSpace(mesh, "CG", 1, constrained_domain=periodic_bc)
+        self.S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3, constrained_domain=periodic_bc)
 
-        self.alpha = Field(S1, name="alpha")
-        self.dmdt = Field(S3, name="dmdt")
-        self.H = Field(S3, name="H")  # TODO: connect effective field to H
-        self.m = Field(S3, name="m")
-        self.Ms = Field(S1, name="Ms")
+        self.alpha = Field(self.S1, name="alpha")
+        self.dmdt = Field(self.S3, name="dmdt")
+        self.H = Field(self.S3, name="H")  # TODO: connect effective field to H
+        self.m = Field(self.S3, name="m")
+        self.Ms = Field(self.S1, name="Ms")
         self.pins = []  # TODO: connect pins to instant code
 
         self.effective_field = EffectiveField(self.m, self.Ms, self.unit_length)
+        self.update = []
 
-        self.eq = Equation(m.as_vector(), H.as_vector(), dmdt.as_vector())
+        self.eq = Equation(self.m.as_vector(), self.H.as_vector(), self.dmdt.as_vector())
         self.eq.set_alpha(self.alpha.as_vector())
         self.eq.set_gamma(consts.gamma)
         self.eq.set_saturation_magnetisation(self.Ms.as_vector())
@@ -62,6 +64,8 @@ class Physics(object):
         return ()
 
     def solve(self, t):
+        for update in self.update:
+            update(t)
         self.effective_field.update(t)
         self.H.set(self.effective_field.H_eff)  # FIXME: remove double book-keeping
         self.eq.solve()
@@ -119,18 +123,22 @@ class Physics(object):
 
         .. math::
 
-             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m} + [\\frac{\\partial LLG(m, H)}{\\partial H}] [\\frac{\\partial H(m)}{\\partial m}].
+             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m}\
+             + [\\frac{\\partial LLG(m, H)}{\\partial H}]\
+             [\\frac{\\partial H(m)}{\\partial m}].
 
 
-        This is a matrix identity, so to make the derivations easier (and since we don't need the full Jacobian matrix) we can write the Jacobian-times-vector product as a directional derivative:
+        This is a matrix identity, so to make the derivations easier (and since
+        we don't need the full Jacobian matrix) we can write the
+        Jacobian-times-vector product as a directional derivative:
 
         .. math::
 
              J m' = \\frac{d LLG(m + a m',H(m + a m'))}{d a}|_{a=0}
 
-
-        The code to compute this derivative is in ``llg.cc`` but you can see that the derivative will depend
-        on m, m', H(m), and dH(m+a m')/da [which is labelled H' in the code].
+        The code to compute this derivative is in ``equation.cpp`` but you can
+        see that the derivative will depend on m, m', H(m), and dH(m+a m')/da
+        [which is labelled H' in the code].
 
         Most of the components of the effective field are linear in m; if that's the case,
         the directional derivative H' is just H(m')
@@ -180,3 +188,8 @@ class Physics(object):
         """
         ydot[:] = self.solve_for(y, t)
         return 0
+
+    def set_slonczewski(J, P, p, d, with_time_update):
+        self.eq.slonczewski(d, P, p, 2, 0)
+        if with_time_update is not None:
+            self.update.append(with_time_update)

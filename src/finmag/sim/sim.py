@@ -10,7 +10,7 @@ import cProfile
 import pstats
 from aeon import mtimed
 from finmag.field import Field
-from finmag.physics.llg import LLG
+from finmag.physics.physics import Physics
 from finmag.physics.llg_stt import LLG_STT
 from finmag.physics.llb.sllg import SLLG
 from finmag.sim import sim_details
@@ -98,45 +98,38 @@ class Simulation(object):
 
         self.pbc = pbc
         if pbc == '2d':
-            log.debug(
-                'Setting 2d periodic boundary conditions (in the xy-plane).')
+            log.debug('Setting 2d periodic boundary conditions (in the xy-plane).')
             self.pbc = PeriodicBoundary2D(mesh)
         elif pbc == '1d':
-            log.debug(
-                'Setting 1d periodic boundary conditions (along the x-axis)')
+            log.debug('Setting 1d periodic boundary conditions (along the x-axis)')
             self.pbc = PeriodicBoundary1D(mesh)
-        elif pbc != None:
+        elif pbc is not None:
             raise ValueError("Argument 'pbc' must be one of None, '1d', '2d'.")
 
         if not mesh_size_plausible(mesh, unit_length):
-            log.warning(
-                "The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
-            log.warning(
-                "unit_length is set to {}. Are you sure this is correct?".format(unit_length))
+            log.warning(("The mesh is {} but unit_length is set to {}."
+                         "Are you sure this is correct?").format(
+                describe_mesh_size(mesh, unit_length), unit_length))
 
         self.mesh = mesh
-        self.Ms = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
         self.unit_length = unit_length
+        self.physics = Physics(mesh, unit_length, self.pbc)
+
         self.integrator_backend = integrator_backend
         self._integrator = None
-        self.S1 = df.FunctionSpace(
-            mesh, "Lagrange", 1, constrained_domain=self.pbc)
-        self.S3 = df.VectorFunctionSpace(
-            mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
 
         if kernel == 'llg':
-            self.llg = LLG(
-                self.S1, self.S3, average=average, unit_length=unit_length)
-        elif kernel == 'sllg':
-            self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
-        elif kernel == 'llg_stt':
-            self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
+            pass  # replaced by Physics
         else:
-            raise ValueError("kernel must be one of llg, sllg or llg_stt.")
-
+            if kernel == 'sllg':
+                self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
+            elif kernel == 'llg_stt':
+                self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
+            else:
+                raise ValueError("kernel must be one of llg, sllg or llg_stt.")
+            self.llg.Ms = self.Ms
         self.kernel = kernel
 
-        self.llg.Ms = self.Ms
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
@@ -186,8 +179,8 @@ class Simulation(object):
         return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
 
     def __get_m(self):
-        """The unit magnetisation"""
-        return self.llg._m_field.get_numpy_array_debug()
+        """ Return unit magnetisation field. """
+        return self.physics.m
 
     def set_m(self, value, normalise=True, **kwargs):
         """
@@ -204,28 +197,11 @@ class Simulation(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self.llg.set_m(value, normalise=normalise, **kwargs)
+        self.physics.m.set(value, normalise=normalise, **kwargs)
         if self.has_integrator():
             self.reinit_integrator()
 
     m = property(__get_m, set_m)
-
-    @property
-    def m_field(self):
-        return self.llg.m_field
-
-    @property
-    def m_average(self):
-        """
-        Compute and return the average magnetisation over the entire
-        mesh, according to the formula :math:`\\langle m \\rangle =
-        \\frac{1}{V} \int m \: \mathrm{d}V`
-        """
-        return self.llg.m_average
-
-    # @property
-    # def _m(self):
-    #     return self.llg._m
 
     def save_m_in_region(self, region, name='unnamed'):
 
@@ -240,7 +216,7 @@ class Simulation(object):
         region_id = self.region_id
         self.tablewriter.entities[name] = {
             'unit': '<>',
-            'get': lambda sim: sim.llg.m_average_fun(dx=self.dx(region_id)),
+            'get': lambda sim: sim.m.average(dx=self.dx(region_id)),
             'header': (name + '_m_x', name + '_m_y', name + '_m_z')}
 
         self.tablewriter.update_entity_order()
@@ -263,7 +239,7 @@ class Simulation(object):
         this max occurs.
         """
         # FIXME:error here
-        dmdts = self.llg.dmdt.reshape((3, -1))
+        dmdts = self.physics.effective_field.H_eff.reshape((3, -1))
         norms = np.sqrt(np.sum(dmdts ** 2, axis=0))
         index = norms.argmax()
         dmdt_x = dmdts[0][index]
@@ -279,7 +255,7 @@ class Simulation(object):
         *** What is the best format (e.g. numpy of dolfin) for this? ***
 
         """
-        return self.llg.dmdt
+        return self.physics.effective_field.H_eff
 
     def add(self, interaction, with_time_update=None):
         """
@@ -297,7 +273,7 @@ class Simulation(object):
              `t` as its only single parameter and updates the internal
              state of the interaction accordingly.
         """
-        self.llg.effective_field.add(interaction, with_time_update)
+        self.physics.effective_field.add(interaction, with_time_update)
 
         if isinstance(interaction, TimeZeeman):
             # The following line ensures that the field value is updated
@@ -322,7 +298,7 @@ class Simulation(object):
         Compute and return the effective field.
 
         """
-        return self.llg.effective_field.compute(self.t)
+        return self.physics.effective_field.compute(self.t)
 
     def total_energy(self):
         """
@@ -330,7 +306,7 @@ class Simulation(object):
         the simulation.
 
         """
-        return self.llg.effective_field.total_energy()
+        return self.physics.effective_field.total_energy()
 
     def compute_energy(self, name="total"):
         """
@@ -366,11 +342,11 @@ class Simulation(object):
             Name of the interaction.
 
         """
-        return self.llg.effective_field.exists(interaction_name)
+        return self.physics.effective_field.exists(interaction_name)
 
     def interactions(self):
         """ Return the names of the known interactions. """
-        return self.llg.effective_field.all()
+        return self.physics.effective_field.all()
 
     def get_interaction(self, interaction_name):
         """
@@ -388,7 +364,7 @@ class Simulation(object):
         interaction is found, a ValueError is raised.
 
         """
-        return self.llg.effective_field.get(interaction_name)
+        return self.physics.effective_field.get(interaction_name)
 
     def get_interaction_list(self):
         """
@@ -398,7 +374,7 @@ class Simulation(object):
 
         A list of strings, each string corresponding to the name of one interaction.
         """
-        return self.llg.effective_field.all()
+        return self.physics.effective_field.all()
 
     def remove_interaction(self, interaction_type):
         """
@@ -420,7 +396,7 @@ class Simulation(object):
         self.tablewriter.delete_entity_get_method(E_name)
         self.tablewriter.delete_entity_get_method(H_name)
 
-        return self.llg.effective_field.remove(interaction_type)
+        return self.physics.effective_field.remove(interaction_type)
 
     def set_H_ext(self, H_ext):
         """
@@ -478,9 +454,9 @@ class Simulation(object):
 
         """
         if field_type == 'm':
-            field = self.llg._m_field.f
+            field = self.physics.m.f
         else:
-            field = self.llg.effective_field.get_dolfin_function(field_type)
+            field = self.physics.effective_field.get_dolfin_function(field_type)
         res = field
 
         if region:
@@ -590,8 +566,7 @@ class Simulation(object):
                 # HF, the reason for commenting out the line below is that
                 # cython fails to compile the file otherwise. Will all be
                 # fixed when the parallel sundials is completed. Sep 2014
-                raise Exception(
-                    "The next line has been deactivated - fix to proceed with parallel")
+                raise Exception("The next line has been deactivated - fix to proceed with parallel")
                 #self._integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
             elif self.kernel == 'llg_stt':
                 self._integrator = SundialsIntegrator(
@@ -600,7 +575,7 @@ class Simulation(object):
                 self._integrator = self.llg
             else:
                 self._integrator = llg_integrator(
-                    self.llg, self.llg._m_field, backend=self.integrator_backend,
+                    self.physics, self.physics.m, backend=self.integrator_backend,
                     reltol=self.reltol, abstol=self.abstol, **kwargs)
 
             # HF: the following code works only for sundials, i.e. not for
@@ -716,26 +691,20 @@ class Simulation(object):
             raise NotImplementedError(
                 "Unknown driver `{}` for restarting.".format(data["driver"]))
 
-        self.llg._m_field.set_with_numpy_array_debug(data['m'])
+        self.physics.m.from_array(data['m'])
 
         self.reset_time(data["simtime"] if (t0 == None) else t0)
 
         log.info("Reloaded and set m (<m>=%s) and time=%s from %s." %
-                 (self.llg.m_average, self.t, filename))
+                 (self.physics.m.average(), self.t, filename))
 
     def reset_time(self, t0):
         """
         Reset the internal clock time of the simulation to `t0`.
+        This creates a new time integrator.
 
-        This also adjusts the internal time of the scheduler and time integrator.
         """
-        # WW: Is it good to create a new integrator and with the name of reset_time? this
-        # is a bit confusing and dangerous because the user doesn't know a new integrator
-        # is created and the other setting that the user provided such as the tolerances
-        # actually doesn't have influence at all.
-        self.integrator = llg_integrator(self.llg, self.llg._m_field,
-                                          backend=self.integrator_backend, t0=t0)
-
+        self.integrator = llg_integrator(self.physics, self.physics.m, backend=self.integrator_backend, t0=t0)
         self.set_tol(self.reltol, self.abstol)
         self.scheduler.reset(t0)
         assert self.t == t0  # self.t is read from integrator
@@ -755,7 +724,7 @@ class Simulation(object):
     skyrmion_number_density_function = sim_helpers.skyrmion_number_density_function
 
     def __get_pins(self):
-        return self.llg.pins
+        return self.physics.pins
 
     def __set_pins(self, nodes):
         pinlist = []
@@ -773,51 +742,47 @@ class Simulation(object):
 
     @property
     def do_precession(self):
-        return self.llg.do_precession
+        return self.physics.eq.get_do_precession()
 
     @do_precession.setter
     def do_precession(self, value):
-        self.llg.do_precession = value
+        self.physics.eq.set_do_precession(value)
 
     @property
     def alpha(self):
         """
-        The damping constant :math:`\\alpha`.
-
-        It is stored as a scalar valued df.Function. However, it can be set
-        using any type accepted by the function
-        :py:func:`finmag.util.helpers.scalar_valued_function`.
+        The damping constant :math:`\\alpha` field.
 
         """
-        return self.llg.alpha
+        return self.physics.alpha
 
     @alpha.setter
     def alpha(self, value):
-        self.llg.set_alpha(value)
+        self.physics.alpha.set(value)
 
-    def __get_gamma(self):
-        return self.llg.gamma
+    @property
+    def gamma(self):
+        return self.physics.eq.get_gamma()
 
-    def __set_gamma(self, value):
-        self.llg.gamma = value
+    @gamma.setter
+    def gamma(self, value):
+        self.physics.eq.set_gamma(value)
 
-    gamma = property(__get_gamma, __set_gamma)
-
-    def __get_dt(self):
+    @property
+    def dt(self):
         return self.llg.dt
 
-    def __set_dt(self, value):
+    @property.setter
+    def dt(self, value):
         self.llg.dt = value
 
-    dt = property(__get_dt, __set_dt)
-
-    def __get_T(self):
+    @property
+    def T(self):
         return self.llg.T
 
-    def __set_T(self, value):
+    @property.setter
+    def T(self, value):
         self.llg.T = value
-
-    T = property(__get_T, __set_T)
 
     run_normal_modes_computation = sim_helpers.run_normal_modes_computation
 
@@ -859,8 +824,8 @@ class Simulation(object):
                    constant (and only varying with time).
 
         """
-        self.llg.use_slonczewski(current_density, polarisation, thickness,
-                                 direction, with_time_update=with_time_update)
+        self.physics.slonczewski(current_density, polarisation, direction,
+                                 thickness, with_time_update=with_time_update)
 
     def toggle_stt(self, new_state=None):
         """
@@ -869,9 +834,9 @@ class Simulation(object):
         You can optionally pass in a new state.
         """
         if new_state:
-            self.llg.do_slonczewski = new_state
+            self.physics.eq.get_slonczewski_status() = new_state
         else:
-            self.llg.do_slonczewski = not self.llg.do_slonczewski
+            self.physics.eq.set_slonczewski_status(not self.physics.eq.get_slonczewski_status)
 
     def clear_schedule(self):
         self.scheduler.clear()
