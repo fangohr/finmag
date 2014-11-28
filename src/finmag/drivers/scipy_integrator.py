@@ -30,5 +30,5 @@ class ScipyIntegrator(object):
         self.cur_t = t
 
     def reinit(self):
-        raise NotImplementedError(
-            "{}: This integrator doesn't support the reinit method.".format(self.__class__.__name__))
+        log.debug("{}: This integrator doesn't support reinitialisation.".format(
+            self.__class__.__name__))
