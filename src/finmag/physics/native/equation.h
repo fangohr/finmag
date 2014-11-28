@@ -14,6 +14,7 @@ namespace dolfin { namespace finmag {
 
             void solve();
             void solve_with(PETScVector const& vec_m, PETScVector const& vec_H, PETScVector &vec_dmdt);
+            void sundials_jtimes_serial(Array<double> const& mp, Array<double> const& Hp, Array<double>& jtimes);
            
             std::shared_ptr<GenericVector> get_pinned_nodes() const;
             void set_pinned_nodes(std::shared_ptr<GenericVector> const& value);
