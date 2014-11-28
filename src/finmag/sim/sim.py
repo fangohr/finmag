@@ -181,13 +181,6 @@ class Simulation(object):
             self.m_petsc = self.llg._m_field.petsc_vector()
             #df.parameters.reorder_dofs_serial = True
 
-        # We used to only create the integrator when needed. However, this can
-        # lead to a bug when the user saves information to an .ndt file before
-        # a time integrator exists because some columns will be missing (as the
-        # time integrator creates additional columns in the .ndt file). Therefore
-        # we play it safe and create the time integrator here at the beginning.
-        # self.create_integrator()
-
     def __str__(self):
         """String briefly describing simulation object"""
         return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
@@ -588,12 +581,12 @@ class Simulation(object):
     integrator = property(_get_integrator, _set_integrator)
 
     def create_integrator(self, backend=None, **kwargs):
+        if backend is not None:
+            self.integrator_backend = backend
 
         if not self.has_integrator():
-            if backend == None:
-                backend = self.integrator_backend
-            log.info(
-                "Create integrator {} with kwargs={}".format(backend, kwargs))
+            log.info("Create integrator {} with kwargs={}".format(
+                self.integrator_backend, kwargs))
             if self.parallel:
                 # HF, the reason for commenting out the line below is that
                 # cython fails to compile the file otherwise. Will all be
@@ -608,9 +601,8 @@ class Simulation(object):
                 self._integrator = self.llg
             else:
                 self._integrator = llg_integrator(
-                    self.llg, self.llg._m_field, backend=backend, **kwargs)
-                self._integrator.integrator.set_scalar_tolerances(
-                    self.reltol, self.abstol)
+                    self.llg, self.llg._m_field, backend=backend,
+                    reltol=self.reltol, abstol=self.abstol, **kwargs)
 
             # HF: the following code works only for sundials, i.e. not for
             # scipy.integrate.vode.
