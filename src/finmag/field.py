@@ -162,6 +162,12 @@ class Field(object):
         if normalised:
             self.normalise()
 
+    def as_array(self):
+        return self.f.vector().array()
+
+    def as_vector(self):
+        return self.f.vector()
+
     def get_numpy_array_debug(self):
         """ONLY for debugging"""
         return self.f.vector().array()
