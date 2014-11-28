@@ -586,8 +586,6 @@ class Simulation(object):
             self.integrator_backend = backend
 
         if not self.has_integrator():
-            log.info("Create integrator {} with kwargs={}".format(
-                self.integrator_backend, kwargs))
             if self.parallel:
                 # HF, the reason for commenting out the line below is that
                 # cython fails to compile the file otherwise. Will all be
@@ -602,7 +600,7 @@ class Simulation(object):
                 self._integrator = self.llg
             else:
                 self._integrator = llg_integrator(
-                    self.llg, self.llg._m_field, backend=backend,
+                    self.llg, self.llg._m_field, backend=self.integrator_backend,
                     reltol=self.reltol, abstol=self.abstol, **kwargs)
 
             # HF: the following code works only for sundials, i.e. not for
