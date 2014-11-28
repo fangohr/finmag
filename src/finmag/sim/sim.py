@@ -639,13 +639,12 @@ class Simulation(object):
         self.reltol = reltol
         self.abstol = abstol
 
-        if hasattr(self, "integrator"):
+        if self.has_integrator():
             if self.parallel:
                 #self.integrator.set_options(reltol, abstol)
                 pass
             else:
-                self.integrator.integrator.set_scalar_tolerances(
-                    reltol, abstol)
+                self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
     def advance_time(self, t):
         """
