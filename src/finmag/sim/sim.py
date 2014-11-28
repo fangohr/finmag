@@ -1312,6 +1312,8 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         demag = Demag(solver=demag_solver, macrogeometry=mg,
                       solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)
+    else:
+        log.debug("Not adding demag to simulation '{}'".format(sim.name))
     log.debug("Successfully created simulation '{}'".format(sim.name))
 
     return sim
