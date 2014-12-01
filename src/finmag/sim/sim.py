@@ -772,7 +772,7 @@ class Simulation(object):
     def dt(self):
         return self.llg.dt
 
-    @property.setter
+    @dt.setter
     def dt(self, value):
         self.llg.dt = value
 
@@ -780,7 +780,7 @@ class Simulation(object):
     def T(self):
         return self.llg.T
 
-    @property.setter
+    @T.setter
     def T(self, value):
         self.llg.T = value
 
