@@ -834,9 +834,9 @@ class Simulation(object):
         You can optionally pass in a new state.
         """
         if new_state:
-            self.physics.eq.get_slonczewski_status() = new_state
+            self.physics.eq.set_slonczewski_status(new_state)
         else:
-            self.physics.eq.set_slonczewski_status(not self.physics.eq.get_slonczewski_status)
+            self.physics.eq.set_slonczewski_status(not self.physics.eq.get_slonczewski_status())
 
     def clear_schedule(self):
         self.scheduler.clear()
