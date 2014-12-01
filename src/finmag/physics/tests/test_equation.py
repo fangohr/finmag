@@ -130,8 +130,8 @@ def test_slonczewski(setup):
     J = df.Function(V)
     J.assign(df.Constant(1))
     equation.slonczewski(5e-9, 0.4, np.array((1.0, 0.0, 0.0)), 1, 0)
-    assert equation.slonczewski_status() is False  # missing J, Ms
+    assert equation.get_slonczewski_status() is False  # missing J, Ms
     equation.set_saturation_magnetisation(Ms.vector())
     equation.set_current_density(J.vector())
-    assert equation.slonczewski_status() is True
+    assert equation.get_slonczewski_status() is True
     equation.solve()

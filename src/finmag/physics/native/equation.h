@@ -36,8 +36,8 @@ namespace dolfin { namespace finmag {
             void set_slonczewski_status(bool status);
 
             void zhangli(double u_0, double beta);
-            void zhangli_disable();
-            bool zhangli_status() const;
+            bool get_zhangli_status() const;
+            void set_zhangli_status(bool status);
 
 
         private:
