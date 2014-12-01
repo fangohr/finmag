@@ -52,10 +52,6 @@ namespace finmag { namespace llg {
 
                 t += dt;
             }
-
-            void helloWorld() {
-                printf("This is the StochasticHeunIntegrator.\n");
-            }
         private:
             int length;
             const np_array<double> y;
@@ -72,7 +68,6 @@ namespace finmag { namespace llg {
 
         class_<StochasticHeunIntegrator>("StochasticHeunIntegrator",
             init<np_array<double>, object, object, double>())
-            .def("helloWorld", &StochasticHeunIntegrator::helloWorld)
             .def("step", &StochasticHeunIntegrator::step)
             .def("run_until", &StochasticHeunIntegrator::run_until);
     }
