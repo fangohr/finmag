@@ -44,14 +44,14 @@ def test_zhangli():
 
     sim.llg.set_parameters(J_profile=init_J, speedup=50)
 
-    p0 = sim.m_average
+    p0 = sim.m.average()
 
     sim.run_until(5e-12)
-    p1 = sim.m_average
+    p1 = sim.m.average()
     print sim.integrator.stats()
     print p0, p1
     sim.run_until(1e-11)
-    p1 = sim.m_average
+    p1 = sim.m.average()
     print sim.integrator.stats()
     print p0, p1
 

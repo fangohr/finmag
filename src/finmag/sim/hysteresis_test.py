@@ -35,7 +35,7 @@ def test_hysteresis(tmpdir):
     sim2 = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0,
                     unit_length=1e-9, A=None, demag_solver=None)
     res2 = sim2.hysteresis(H_ext_list=H_ext_list,
-                           fun=lambda sim: sim.m_average[0])
+                           fun=lambda sim: sim.m.average()[0])
     assert(len(res2) == N)
 
 

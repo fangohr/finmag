@@ -34,7 +34,7 @@ dt=0.01*ns
 v=df.plot(sim.llg._m)
 for time in np.arange(0,150.5*dt,dt):
     print "time=",time,"m=",
-    print sim.llg.m_average
+    print sim.llg.m.average()
     sim.run_until(time)
     v.update(sim.llg._m)
 

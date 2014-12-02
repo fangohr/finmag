@@ -38,7 +38,7 @@ def t_test_sim_ode_parallel(do_plot=False):
         mm = sim.m.copy()
 
         # mm.shape=(3,-1)
-        # mx,my,mz = mm[:,0] # same as m_average for this macrospin problem
+        # mx,my,mz = mm[:,0] # same as m.average() for this macrospin problem
         mzs.append(mm[-1])
         #length = np.sqrt(mx**2+my**2+mz**2)
         # length_error.append(abs(length-1.0))

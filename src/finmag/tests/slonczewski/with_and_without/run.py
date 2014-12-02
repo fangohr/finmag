@@ -33,7 +33,7 @@ def run_sim_without_stt():
         t_max = 10e-9
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
-            f.write("{} {} {} {}\n".format(t, *sim.m_average))
+            f.write("{} {} {} {}\n".format(t, *sim.m.average()))
 
 
 def run_sim_with_stt():
@@ -61,7 +61,7 @@ def run_sim_with_stt():
         t_max = 10e-9
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
-            f.write("{} {} {} {}\n".format(t, *sim.m_average))
+            f.write("{} {} {} {}\n".format(t, *sim.m.average()))
 
 if __name__ == "__main__":
     print "Running sim without STT."

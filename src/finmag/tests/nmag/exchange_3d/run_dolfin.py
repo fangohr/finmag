@@ -27,7 +27,7 @@ def run_simulation():
 
     fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     while t <= tmax:
-        mx, my, mz = sim.m_average
+        mx, my, mz = sim.m.average()
         fh.write(str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
         t += dt
         sim.run_until(t)

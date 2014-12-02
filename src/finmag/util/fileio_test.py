@@ -33,7 +33,7 @@ def test_Table_writer_and_reader(tmpdir):
     print data.timesteps() - times
     print("III")
     assert np.all(np.abs(data.timesteps() - times)) < 1e-25
-    mx, my, mz = sim.m_average
+    mx, my, mz = sim.m.average()
     assert abs(data['m_x'][-1] - mx) < 1e-11
     assert abs(data['m_y'][-1] - my) < 1e-11
     assert abs(data['m_z'][-1] - mz) < 1e-11

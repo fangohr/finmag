@@ -9,7 +9,7 @@ import numpy as np
 
 set_log_level(21)
 
-def m_average(y, V, vol):
+def m.average()(y, V, vol):
     m = Function(V)
     m.vector()[:] = y
 
@@ -105,7 +105,7 @@ r.set_initial_value(M.vector().array(), t0)
 fh = open("averages_dolfin.txt", "w")
 while r.successful() and r.t <= t1:
     print "Integrating time = %gs" % (r.t)
-    mx, my, mz = m_average(r.y, V, Volume)
+    mx, my, mz = m.average()(r.y, V, Volume)
     print str(r.t), " ", str(mx), " ",  str(my), " ", str(mz)
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     r.integrate(r.t + dt)

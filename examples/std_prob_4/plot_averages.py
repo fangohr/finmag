@@ -6,7 +6,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # plots of average magnetisation components
 
-averages_martinez = os.path.join(MODULE_DIR, "m_averages_ref_martinez.txt")
+averages_martinez = os.path.join(MODULE_DIR, "m.average()s_ref_martinez.txt")
 ref_t, ref_mx, ref_my, ref_mz = np.loadtxt(averages_martinez, unpack=True)
 plt.plot(ref_t, ref_mx, "r-", label="$m_\mathrm{x}\,\mathrm{Martinez\, et\, al.}$")
 plt.plot(ref_t, ref_my, "r:", label="$m_\mathrm{y}$")
@@ -23,4 +23,4 @@ plt.xlabel("$\mathrm{time}\, (\mathrm{ns})$")
 plt.ylabel("$<m_i> = <M_i>/M_\mathrm{S}$")
 plt.legend()
 plt.xlim([0, 2])
-plt.savefig(os.path.join(MODULE_DIR, "m_averages.pdf"))
+plt.savefig(os.path.join(MODULE_DIR, "m.average()s.pdf"))

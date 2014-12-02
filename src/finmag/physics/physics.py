@@ -162,7 +162,7 @@ class Physics(object):
                 self.m.from_array(m)
                 self.effective_field.update(t)
 
-        eq.sundials_jtimes_serial(mp, Hp, J_mp)
+        self.eq.sundials_jtimes_serial(mp, Hp, J_mp)
         return 0
 
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):

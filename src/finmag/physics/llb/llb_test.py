@@ -42,7 +42,7 @@ def test_llb_sundials(do_plot=False):
         sim.run_until(t)
         real_ts.append(sim.t)
         mz_ref.append(np.tanh(precession_coeff * mat.alpha * H0 * sim.t))
-        mz.append(sim.m[-1])  # same as m_average for this macrospin problem
+        mz.append(sim.m[-1])  # same as m.average() for this macrospin problem
 
         sim.m.shape = (3, -1)
         mxyz.append(sim.m[:, -1].copy())
@@ -98,8 +98,8 @@ def sim_llb_100(do_plot=False):
         sim.run_until(t)
         real_ts.append(sim.t)
         mz_ref.append(np.tanh(precession_coeff * mat.alpha * H0 * sim.t))
-        # same as m_average for this macrospin problem
-        mz.append(sim.m_average)
+        # same as m.average() for this macrospin problem
+        mz.append(sim.m.average())
 
     mz = np.array(mz)
     print mz

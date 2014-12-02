@@ -65,7 +65,7 @@ def test_sim_ode(do_plot=False):
         print mm
 
         mm.shape=(3,-1)
-        mx,my,mz = mm[:,-1] # same as m_average for this macrospin problem
+        mx,my,mz = mm[:,-1] # same as m.average() for this macrospin problem
         mm.shape=(-1,)
         mzs.append(mz)
 

@@ -56,10 +56,10 @@ def test_zhangli():
 
     sim.set_zhangli(init_J, 0.5, 0.02)
 
-    p0 = sim.m_average
+    p0 = sim.m.average()
 
     sim.run_until(2e-12)
-    p1 = sim.m_average
+    p1 = sim.m.average()
 
     # print p0,p1
 
@@ -82,10 +82,10 @@ def test_zhangli_sllg():
 
     sim.set_zhangli(init_J, 0.5, 0.02)
 
-    p0 = sim.m_average
+    p0 = sim.m.average()
 
     sim.run_until(2e-12)
-    p1 = sim.m_average
+    p1 = sim.m.average()
 
     # print p0,p1
 

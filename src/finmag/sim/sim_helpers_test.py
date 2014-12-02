@@ -59,7 +59,7 @@ def test_try_to_restart_a_simulation(tmpdir):
     print "Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t)
     assert abs(sim1.t - sim2.t) < 1e-16
     print "Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
-        sim1.m_average, sim2.m_average)
+        sim1.m.average(), sim2.m.average())
     assert np.allclose(sim1.m, sim2.m, atol=5e-6, rtol=1e-8)
 
     # Check that sim2 had less work to do, since it got the

@@ -47,7 +47,7 @@ def setup_module(module=None):
     dt = 5e-12
     # s
     while t <= t_max:
-        mx, my, mz = sim.m_average
+        mx, my, mz = sim.m.average()
         averages.append([t, mx, my, mz])
         av_f.write(
             str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")

@@ -7,7 +7,7 @@ import finmag.util.consts as consts
 import os
 import numpy as np
 
-def m_average(y, V, vol):
+def m.average()(y, V, vol):
     m = Function(V)
     m.vector()[:] = y
 
@@ -107,7 +107,7 @@ r.set_initial_value(m_func.vector().array(), t0)
 fh = open("averages_c.txt", "w")
 while r.successful() and r.t <= t1:
     print "Integrating time = %gs" % (r.t)
-    mx, my, mz = m_average(r.y, V, Volume)
+    mx, my, mz = m.average()(r.y, V, Volume)
     fh.write(str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
     r.integrate(r.t + dt)
     plot(m_func)

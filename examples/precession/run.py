@@ -23,7 +23,7 @@ def run_simulation(do_precession):
     averages = []
     for t in ts:
         sim.run_until(t)
-        averages.append(sim.m_average)
+        averages.append(sim.m.average())
     return np.array(averages)
 
 subfigures = ("without precession", "with precession")

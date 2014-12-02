@@ -121,7 +121,7 @@ class LLB(object):
 
     @property
     def M_average(self):
-        """The average magnetisation, computed with m_average()."""
+        """The average magnetisation, computed with m.average()()."""
 
         tmp=self.M
         tmp.shape=(3,-1)

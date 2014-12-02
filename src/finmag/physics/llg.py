@@ -144,10 +144,10 @@ class LLG(object):
 
     @property
     def M_average(self):
-        """The average magnetisation, computed with m_average()."""
+        """The average magnetisation, computed with m.average()()."""
         volume_Ms = df.assemble(self._Ms_dg * df.dx)
         volume = df.assemble(self._Ms_dg * df.dx)
-        return self.m_average * volume_Ms / volume
+        return self.m.average() * volume_Ms / volume
 
     @property
     def m(self):
@@ -188,7 +188,7 @@ class LLG(object):
         # used to copy back from sundials cvode
         self._m_field.set_with_numpy_array_debug(value)
 
-    def m_average_fun(self, dx=df.dx):
+    def m.average()_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -202,7 +202,7 @@ class LLG(object):
         #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m_average = property(m_average_fun)
+    m.average() = property(m.average()_fun)
 
     def set_m(self, value, normalise=True, **kwargs):
         """

@@ -65,7 +65,7 @@ def run_simulation():
 
     fh = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
     while r.successful() and r.t <= t1:
-        mx, my, mz = llg.m_average
+        mx, my, mz = llg.m.average()
         fh.write(
             str(r.t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
         r.integrate(r.t + dt)

@@ -56,7 +56,7 @@ class Tablewriter(object):
                                      'get': lambda sim: sim.t,
                                      'header': 'time'})
             self.add_entity('m', {'unit': '<>',
-                                  'get': lambda sim: sim.m_average,
+                                  'get': lambda sim: sim.m.average(),
                                   'header': ('m_x', 'm_y', 'm_z')})
 
             # add time integrator dummy tokens than return NAN as we haven't got
@@ -119,7 +119,7 @@ class Tablewriter(object):
             name = 'm'
 
             dic = {'unit': '<>',
-                  'get': lambda sim: sim.m_average,
+                  'get': lambda sim: sim.m.average(),
                   'header': ('m_x', 'm_y', 'm_z')}
         """
         if self.save_head:

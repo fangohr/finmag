@@ -37,7 +37,7 @@ def test_sim(do_plot=False):
         sim.run_until(t)
         real_ts.append(sim.t)
         mz_ref.append(np.tanh(precession_coeff * alpha * H0 * sim.t))
-        mz.append(sim.m[-1]) # same as m_average for this macrospin problem
+        mz.append(sim.m[-1]) # same as m.average() for this macrospin problem
     
     mz=np.array(mz)
 

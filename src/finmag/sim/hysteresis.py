@@ -47,7 +47,7 @@ def hysteresis(sim, H_ext_list, fun=None, **kwargs):
             called after each relaxation and determines the return
             value (see below). For example, if
 
-               fun = (lambda sim: sim.m_average[0])
+               fun = (lambda sim: sim.m.average()[0])
 
             then the return value is a list of values representing the
             average x-component of the magnetisation at the end of
@@ -133,7 +133,7 @@ def hysteresis_loop(sim, H_max, direction, N, **kwargs):
     H_norms = list(np.linspace(H_max, -H_max, N)) + \
         list(np.linspace(-H_max, H_max, N))
     H_vals = [h * H_dir for h in H_norms]
-    m_avg = hysteresis(sim, H_vals, fun=lambda sim: sim.m_average, **kwargs)
+    m_avg = hysteresis(sim, H_vals, fun=lambda sim: sim.m.average(), **kwargs)
     # projected lengths of the averaged magnetisation values along the axis
     # `H_dir`
     m_vals = [np.dot(m, H_dir) for m in m_avg]

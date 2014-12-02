@@ -297,7 +297,7 @@ class LLB(object):
     
     
     @property
-    def m_average(self):        
+    def m.average()(self):        
 
         self._m.vector().set_local(helpers.fnormalise(self.M))
         

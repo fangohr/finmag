@@ -66,7 +66,7 @@ def create_initial_s_state():
 
     np.save(m_0_file, sim.m)
     print "Saved magnetisation to {}.".format(m_0_file)
-    print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m_average)
+    print "Average magnetisation is ({:.2g}, {:.2g}, {:.2g}).".format(*sim.m.average())
 
 
 def run_simulation(stop_when_mx_eq_zero):
@@ -108,7 +108,7 @@ def run_simulation(stop_when_mx_eq_zero):
     sim.add(Zeeman((Hx, Hy, Hz)))
 
     def check_if_crossed(sim):
-        mx, _, _ = sim.m_average
+        mx, _, _ = sim.m.average()
         if mx <= 0:
             print "The x-component of the spatially averaged magnetisation first crossed zero at t = {}.".format(sim.t)
             np.save(m_at_crossing_file, sim.m)

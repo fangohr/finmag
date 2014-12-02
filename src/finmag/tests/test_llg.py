@@ -17,7 +17,7 @@ def test_method_of_computing_the_average_matters():
         'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
         '0'), L=length)
 
-    average1 = llg.m_average
+    average1 = llg.m.average()
     average2 = np.mean(components(llg.m_numpy), axis=1)
     diff = np.abs(average1 - average2)
     assert diff.max() > 5e-2

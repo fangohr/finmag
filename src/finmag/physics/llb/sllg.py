@@ -212,7 +212,7 @@ class SLLG(object):
         #tmp = tmp / self.volumes
         #self._Ms[:] = tmp[:]
 
-    def m_average_fun(self, dx=df.dx):
+    def m.average()_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -226,7 +226,7 @@ class SLLG(object):
         #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m_average = property(m_average_fun)
+    m.average() = property(m.average()_fun)
 
     def compute_gradient_matrix(self):
         """
@@ -315,4 +315,4 @@ if __name__ == "__main__":
 
     for t in ts:
         sim.run_until(t)
-        print sim.m_average
+        print sim.m.average()

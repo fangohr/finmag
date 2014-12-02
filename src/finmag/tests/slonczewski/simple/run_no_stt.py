@@ -29,7 +29,7 @@ def run_simulation():
         t_max = 10e-9
         for t in np.arange(0, t_max, dt):
             sim.run_until(t)
-            f.write("{} {} {} {}\n".format(t, *sim.m_average))
+            f.write("{} {} {} {}\n".format(t, *sim.m.average()))
 
 if __name__ == "__main__":
     run_simulation()

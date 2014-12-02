@@ -34,12 +34,12 @@ def test_restart_same_simulation(tmpdir):
 
     # And show the average component values for future reference
 
-    print("t=%s, <m>=%s" % (sim.t, sim.m_average))
+    print("t=%s, <m>=%s" % (sim.t, sim.m.average()))
 
     # Then carry on with the time integration:
 
     sim.run_until(100e-12)
-    print("t=%s, <m>=%s" % (sim.t, sim.m_average))
+    print("t=%s, <m>=%s" % (sim.t, sim.m.average()))
 
     assert sim.t == 100e-12
 
@@ -60,7 +60,7 @@ def test_restart_same_simulation(tmpdir):
     # And just to convince us:
 
     print("time = %s " % sim.t)
-    print("<m> = %s" % sim.m_average)
+    print("<m> = %s" % sim.m.average())
     assert sim.t == 10e-12
     # check that this identical to before saving
     assert (sim.m == m_10em12).all
@@ -73,7 +73,7 @@ def test_restart_same_simulation(tmpdir):
 
     sim.restart('my-special-state.npz')
     print("time = %s " % sim.t)
-    print("<m> = %s" % sim.m_average)
+    print("<m> = %s" % sim.m.average())
     assert sim.t == 10e-12
     # check that this identical to before saving
     assert (sim.m == m_10em12).all
@@ -87,12 +87,12 @@ def test_restart_same_simulation(tmpdir):
 
     sim.restart('my-special-state.npz', t0=0.42e-12)
     print("time = %s " % sim.t)
-    print("<m> = %s" % sim.m_average)
+    print("<m> = %s" % sim.m.average())
     assert sim.t == 0.42e-12
     # check that this identical to before saving
     assert (sim.m == m_10em12).all
 
-    print("t=%s, <m>=%s" % (sim.t, sim.m_average))
+    print("t=%s, <m>=%s" % (sim.t, sim.m.average()))
 
     # Creating a new simulation from saved restart file
 
@@ -104,5 +104,5 @@ def test_restart_same_simulation(tmpdir):
     sim2 = finmag.example.barmini()
     sim2.restart('my-special-state.npz')
 
-    print("t=%s, <m>=%s" % (sim2.t, sim2.m_average))
+    print("t=%s, <m>=%s" % (sim2.t, sim2.m.average()))
     assert sim2.t == 10e-12

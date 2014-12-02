@@ -738,7 +738,7 @@ class TestSimulation(object):
             sim.run_until(t)
             real_ts.append(sim.t)
             mz_ref.append(np.tanh(precession_coeff * alpha * H0 * sim.t))
-            # same as m_average for this macrospin problem
+            # same as m.average() for this macrospin problem
             mz.append(sim.m[-1])
 
         mz = np.array(mz)
@@ -1082,14 +1082,14 @@ def test_set_m_after_relaxation(tmpdir):
     # Set the spins so that they will point in +Z upon relaxation.
     sim.set_m((0.1, 0.1, 1))
     sim.relax()
-    assert sim.m_average[2] >= 0.9
+    assert sim.maverage()[2] >= 0.9
 
     # Set the spins again so that they will point in -Z upon relaxation.
     print sim.integrator.m
     sim.set_m((0.2, 0.2, -1))
     print sim.integrator.m
     sim.relax()
-    assert sim.m_average[2] <= 0.1
+    assert sim.m.average()[2] <= 0.1
 
 
 def test_sim_relax_accepts_filename(tmpdir):
@@ -1822,7 +1822,7 @@ def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     assert(np.allclose(m_y, np.sin(2 * pi * freq * ts), atol=TOL))
 
 
-def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
+def test_m.average()_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
     """
     This test checks that the average magnetisation takes the
     different cell volumes in the mesh correctly into account, i.e. it
@@ -1890,12 +1890,12 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     sim = sim_with(mesh, Ms=8.6e5, m_init=m_init, unit_length=1e-9)
 
     # Check that the average magnetisation is close to zero
-    m_avg = sim.m_average
+    m_avg = sim.m.average()
     assert(np.allclose(m_avg, [0, 0, 0], atol=1e-3))
     logger.debug("m_avg: {}".format(m_avg))
 
     # Check that simply adding up the magnetization values at the vertices
-    m_avg_wrong = sim.m.reshape(3, -1).sum(axis=-1)
+    m_avg_wrong = sim.m.as_array().reshape(3, -1).sum(axis=-1)
     assert(not np.allclose(m_avg_wrong, [0, 0, 0], atol=10.0))
     logger.debug("m_avg_wrong: {}".format(m_avg_wrong))
 

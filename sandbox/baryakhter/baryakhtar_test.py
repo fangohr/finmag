@@ -42,7 +42,7 @@ def test_llb(do_plot=False):
         sim.run_until(t)
         real_ts.append(sim.t)
         mz_ref.append(np.tanh(precession_coeff * sim.alpha * H0 * sim.t))
-        #mz.append(sim.M[-1]/Ms) # same as m_average for this macrospin problem
+        #mz.append(sim.M[-1]/Ms) # same as m.average() for this macrospin problem
         mz.append(sim.m[-1])
     
     mz=np.array(mz)

@@ -37,7 +37,7 @@ for H in H_mult:
     ts = []; mzs = []
     while True:
         sim.run_until(t)
-        m = sim.m_average
+        m = sim.m.average()
         ts.append(t*1e9); mzs.append(m[2])		
 
         if t % dt_output:

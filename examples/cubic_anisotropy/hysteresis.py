@@ -31,7 +31,7 @@ sim.add(Exchange(A))
 sim.add(CubicAnisotropy(K1, u1, K2, u2, K3, u3))
 
 # this is not a hysteresis loop, but just a one-way swipe
-mzs = sim.hysteresis(fields, lambda sim: sim.m_average[2])
+mzs = sim.hysteresis(fields, lambda sim: sim.m.average()[2])
 result = np.zeros((250, 2))
 result[:, 0] = fields[:, 2]
 result[:, 1] = mzs

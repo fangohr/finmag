@@ -11,7 +11,7 @@ log.setLevel(logging.ERROR) # To better show output of this program.
 
 def progress(s):
     print "We have integrated up to t = {:.3f} ns.".format(1e9 * s.t)
-    print "Average magnetisation is m = {}.".format(s.m_average)
+    print "Average magnetisation is m = {}.".format(s.m.average())
 
 def halfway_done(s):
     print "We are halfway done!"

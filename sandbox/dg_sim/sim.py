@@ -164,7 +164,7 @@ class Sim(object):
 
     
     @property
-    def m_average(self):
+    def m.average()(self):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -202,4 +202,4 @@ if __name__ == "__main__":
     
     for t in ts:
         sim.run_until(t)
-        print sim.m_average
+        print sim.m.average()

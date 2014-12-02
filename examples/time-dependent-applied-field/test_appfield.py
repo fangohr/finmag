@@ -50,7 +50,7 @@ def test_external_field_depends_on_t():
     for t in times:
         integrator.advance_time(t)
         print "Integrating time: %g" % t
-        mlist.append(llg.m_average)
+        mlist.append(llg.m.average())
         tlist.append(t)
         hext.append(H_app.H((0)))
 
