@@ -168,7 +168,7 @@ class LLG_STT(object):
         self._m_field.set_with_numpy_array_debug(self.dy_m[0][:])
         self.dy_m.shape = (-1,)
 
-    def m.average()_fun(self, dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -182,7 +182,7 @@ class LLG_STT(object):
         #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m.average() = property(m.average()_fun)
+    m_average = property(m_average_fun)
 
     def set_m(self, value, normalise=True, **kwargs):
         """
