@@ -32,7 +32,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         integrator = scipy.integrate.ode(self.scipy_rhs)
         integrator.set_integrator(
             "vode", method=method, atol=1e-8, rtol=1e-8, nsteps=40000)
-        integrator.set_initial_value(self.llg.m_numpy)
+        integrator.set_initial_value(self.llg.m.as_array())
         t = datetime.now()
         ys = integrator.integrate(END_TIME)
         dt = datetime.now() - t
@@ -53,12 +53,12 @@ class JacobeanIntegrationTests(unittest.TestCase):
             integrator = sundials.cvode(
                 sundials.CV_ADAMS, sundials.CV_FUNCTIONAL)
         integrator.init(
-            scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m_numpy.copy())
+            scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.as_array().copy())
         if method == "bdf":
             integrator.set_linear_solver_diag()
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(40000)
-        ys = np.zeros(self.llg.m_numpy.shape)
+        ys = np.zeros(self.llg.m.as_array().shape)
         t = datetime.now()
         integrator.advance_time(END_TIME, ys)
         dt = datetime.now() - t
@@ -75,12 +75,12 @@ class JacobeanIntegrationTests(unittest.TestCase):
 
         integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
         integrator.init(
-            scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m_numpy.copy())
+            scipy_to_cvode_rhs(self.scipy_rhs), 0, self.llg.m.as_array().copy())
         integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
         integrator.set_spils_jac_times_vec_fn(self.llg.sundials_jtimes)
         integrator.set_scalar_tolerances(1e-8, 1e-8)
         integrator.set_max_num_steps(40000)
-        ys = np.zeros(self.llg.m_numpy.shape)
+        ys = np.zeros(self.llg.m.as_array().shape)
         t = datetime.now()
         integrator.advance_time(END_TIME, ys)
         dt = datetime.now() - t

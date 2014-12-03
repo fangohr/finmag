@@ -3,6 +3,7 @@ Derives physical quantities from the primary simulation state.
 
 """
 import logging
+import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
 from ..field import Field
@@ -13,7 +14,7 @@ logger = logging.getLogger(name="finmag")
 
 
 class Physics(object):
-    def __init__(self, mesh, unit_length, periodic_bc):
+    def __init__(self, mesh, unit_length=1, periodic_bc=None):
         self.mesh = mesh
         self.unit_length = unit_length
         self.S1 = df.FunctionSpace(mesh, "CG", 1, constrained_domain=periodic_bc)

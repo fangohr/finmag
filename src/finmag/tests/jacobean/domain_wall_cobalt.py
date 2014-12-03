@@ -1,7 +1,7 @@
 import numpy as np
 import dolfin as df
 import math
-from finmag.physics.llg import LLG
+from finmag.physics.physics import Physics
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import Exchange, UniaxialAnisotropy
 
@@ -30,18 +30,16 @@ def reference_mz(x):
 
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, do_precession=True):
     mesh = df.IntervalMesh(node_count - 1, 0, length)
-    S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    llg = LLG(S1, S3)
-    llg.set_m(np.array([initial_m(xi, node_count)
-                        for xi in xrange(node_count)]).T.reshape((-1,)))
+    physics = Physics(mesh)
+    physics.m.from_array((np.array(
+        [initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,))))
 
     exchange = Exchange(A)
-    llg.effective_field.add(exchange)
+    physics.effective_field.add(exchange)
     anis = UniaxialAnisotropy(K1, (0, 0, 1))
-    llg.effective_field.add(anis)
-    llg.pins = [0, node_count - 1]
-    return llg
+    physics.effective_field.add(anis)
+    physics.pins = [0, node_count - 1]  # FIXME: pins don't work yet
+    return physics
 
 
 def domain_wall_error(ys, node_count):
@@ -52,9 +50,9 @@ def domain_wall_error(ys, node_count):
 
 def compute_domain_wall_cobalt(end_time=1e-9):
     llg = setup_domain_wall_cobalt()
-    integrator = llg_integrator(llg, llg.m_field)
+    integrator = llg_integrator(llg, llg.m)
     integrator.advance_time(end_time)
-    return np.linspace(0, LENGTH, NODE_COUNT), llg.m.reshape((3, -1))
+    return np.linspace(0, LENGTH, NODE_COUNT), llg.m.as_array().reshape((3, -1))
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
