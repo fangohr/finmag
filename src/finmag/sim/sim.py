@@ -631,7 +631,7 @@ class Simulation(object):
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
-        self.llg.effective_field.update(t)
+        self.physics.effective_field.update(t)
 
     def run_until(self, t):
         """
@@ -989,7 +989,7 @@ class Simulation(object):
         return s
 
     def _save_m_to_vtk(self, vtk_saver):
-        vtk_saver.save_field(self.llg._m_field.f, self.t)
+        vtk_saver.save_field(self.m.f, self.t)
 
     def _save_field_to_vtk(self, field_name, vtk_saver, region=None):
         field_data = self.get_field_as_dolfin_function(
