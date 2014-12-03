@@ -188,7 +188,7 @@ class LLG(object):
         # used to copy back from sundials cvode
         self._m_field.set_with_numpy_array_debug(value)
 
-    def m.average()_fun(self, dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -202,7 +202,7 @@ class LLG(object):
         #
         # return np.array([mx, my, mz]) / volume
         return self._m_field.average(dx=dx)
-    m.average() = property(m.average()_fun)
+    m_average = property(m_average_fun)
 
     def set_m(self, value, normalise=True, **kwargs):
         """
