@@ -163,6 +163,9 @@ class Physics(object):
                 self.m.from_array(m)
                 self.effective_field.update(t)
 
+        print type(self), type(mp), type(J_mp), type(t), type(m), type(fy), type(tmp)
+        print type(mp), type(Hp), type(J_mp)
+        print J_mp.dtype, mp.dtype
         self.eq.sundials_jtimes_serial(mp, Hp, J_mp)
         return 0
 

@@ -1822,7 +1822,7 @@ def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     assert(np.allclose(m_y, np.sin(2 * pi * freq * ts), atol=TOL))
 
 
-def test_m.average()_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
+def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
     """
     This test checks that the average magnetisation takes the
     different cell volumes in the mesh correctly into account, i.e. it

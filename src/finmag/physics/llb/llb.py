@@ -300,7 +300,7 @@ class LLB(object):
             self._t = tp
         log.debug("Integrating dynamics up to t = %g" % t)
 
-    def m.average()_fun(self, dx=df.dx):
+    def m_average_fun(self, dx=df.dx):
         """
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
@@ -316,7 +316,7 @@ class LLB(object):
         volume = df.assemble(self.material._Ms_dg * dx)
 
         return np.array([mx, my, mz]) / volume
-    m.average() = property(m.average()_fun)
+    m_average = property(m_average_fun)
 
     def save_m_in_region(self, region, name='unnamed'):
 
@@ -331,7 +331,7 @@ class LLB(object):
         region_id = self.region_id
         self.tablewriter.add_entity(name, {
             'unit': '<>',
-            'get': lambda sim: sim.m.average()_fun(dx=self.dx(region_id)),
+            'get': lambda sim: sim.m_average_fun(dx=self.dx(region_id)),
             'header': (name + '_m_x', name + '_m_y', name + '_m_z')})
 
     def save_ndt(self):
