@@ -24,6 +24,7 @@ def llg_integrator(physics, m, backend="sundials", **kwargs):
     if backend == "scipy":
         return ScipyIntegrator(physics.hooks_scipy(), m, **kwargs)
     elif backend == "sundials":
+        print "will create sundialsintegrator\n", m.as_array()
         return SundialsIntegrator(physics.hooks_sundials(), m, **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")

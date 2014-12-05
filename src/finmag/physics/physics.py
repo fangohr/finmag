@@ -73,8 +73,13 @@ class Physics(object):
         return self.dmdt.as_array()
 
     def solve_for(self, m, t):
+        print "solve_for"
+        print m
         self.m.from_array(m)
-        return self.solve(t)
+        dmdt = self.solve(t)
+        print dmdt
+        print "<<<"
+        return dmdt
 
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         """
@@ -153,6 +158,10 @@ class Physics(object):
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
+        print "VORHER"
+        print self.m.as_array()
+        print mp
+
         # First, compute the derivative H' = dH_eff/dt
         self.m.from_array(mp)
         Hp = tmp.view()
@@ -164,6 +173,7 @@ class Physics(object):
                 self.effective_field.update(t)
 
         self.eq.sundials_jtimes_serial(mp, Hp, J_mp)
+        import sys; sys.exit()
         return 0
 
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
@@ -187,7 +197,12 @@ class Physics(object):
         Computes the dm/dt right hand side ODE term, as used by sundials cvode.
 
         """
+        print "sundials_rhs"
+        print self.m.as_array()
+        print y
+        print ydot
         ydot[:] = self.solve_for(y, t)
+        print ydot
         return 0
 
     def set_slonczewski(J, P, p, d, with_time_update):
