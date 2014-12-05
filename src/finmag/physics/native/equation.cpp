@@ -119,7 +119,7 @@ namespace dolfin { namespace finmag {
         derivative.apply("");
     }
 
-    void Equation::sundials_jtimes_serial(Array<double> const& mp, Array<double> const& Hp, Array<double>& jtimes) {
+    void Equation::sundials_jtimes_serial(double* mp, double* Hp, double* jtimes) {
         if (!alpha) throw std::runtime_error("alpha was not set");
 
         std::vector<double> a, m, H, dmdt, pinned, Ms, J;

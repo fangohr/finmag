@@ -46,7 +46,7 @@ END_TIME2 = END_TIME1 + 0.1e-10
 def run_test(backend, method, mode='onego', nsteps=40000):
     llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
     integrator = llg_integrator(
-        llg, llg.m_field, backend, method=method, nsteps=nsteps)
+        llg, llg.m, backend, method=method, nsteps=nsteps)
     t = datetime.now()
 
     if mode == 'onego':
