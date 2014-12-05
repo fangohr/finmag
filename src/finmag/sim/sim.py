@@ -659,7 +659,7 @@ class Simulation(object):
         # The following line is necessary because the time integrator may
         # slightly overshoot the requested end time, so here we make sure
         # that the field values represent that requested time exactly.
-        self.llg.effective_field.update(t)
+        self.physics.effective_field.update(t)
 
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
