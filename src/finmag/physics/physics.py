@@ -3,8 +3,10 @@ Derives physical quantities from the primary simulation state.
 
 """
 import logging
+import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
+from finmag.field import Field
 from effective_field import EffectiveField
 from equation import Equation
 
@@ -18,16 +20,16 @@ class Physics(object):
         self.S1 = df.FunctionSpace(mesh, "CG", 1)
         self.S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
 
-        self.alpha = Field(S1, name="alpha")
-        self.dmdt = Field(S3, name="dmdt")
-        self.H = Field(S3, name="H")  # TODO: connect effective field to H
-        self.m = Field(S3, name="m")
-        self.Ms = Field(S1, name="Ms")
+        self.alpha = Field(self.S1, name="alpha")
+        self.dmdt = Field(self.S3, name="dmdt")
+        self.H = Field(self.S3, name="H")  # TODO: connect effective field to H
+        self.m = Field(self.S3, name="m")
+        self.Ms = Field(self.S1, name="Ms")
         self.pins = []  # TODO: connect pins to instant code
 
         self.effective_field = EffectiveField(self.m, self.Ms, self.unit_length)
 
-        self.eq = Equation(m.as_vector(), H.as_vector(), dmdt.as_vector())
+        self.eq = Equation(self.m.as_vector(), self.H.as_vector(), self.dmdt.as_vector())
         self.eq.set_alpha(self.alpha.as_vector())
         self.eq.set_gamma(consts.gamma)
         self.eq.set_saturation_magnetisation(self.Ms.as_vector())
@@ -154,7 +156,7 @@ class Physics(object):
                 self.m.from_array(m)
                 self.effective_field.update(t)
 
-        eq.sundials_jtimes_serial(mp, Hp, J_mp)
+        self.eq.sundials_jtimes_serial(mp, Hp, J_mp)
         return 0
 
     def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
