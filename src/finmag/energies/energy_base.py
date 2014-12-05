@@ -91,7 +91,6 @@ class EnergyBase(object):
 
         """
         ###license_placeholder###
-
         assert isinstance(m, Field)
         assert isinstance(Ms, Field)
 

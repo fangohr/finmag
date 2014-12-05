@@ -114,6 +114,7 @@ class Simulation(object):
         self.mesh = mesh
         self.unit_length = unit_length
         self.physics = Physics(mesh, unit_length, self.pbc)
+        self.physics.Ms.set(Ms)
 
         self.integrator_backend = integrator_backend
         self._integrator = None
@@ -558,7 +559,6 @@ class Simulation(object):
     integrator = property(_get_integrator, _set_integrator)
 
     def create_integrator(self, backend=None, **kwargs):
-        print "create_integrator\n", self.m.as_array()
         if backend is not None:
             self.integrator_backend = backend
 
@@ -606,7 +606,6 @@ class Simulation(object):
             import ipdb; ipdb.set_trace()
             log.warning(
                 "Cannot create integrator - exists already: {}".format(self._integrator))
-        print "create_integrator\n", self.m.as_array()
         return self._integrator
 
     def set_tol(self, reltol=1e-6, abstol=1e-6):

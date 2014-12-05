@@ -22,7 +22,6 @@ class SundialsIntegrator(object):
         self.rhs, self.jtimes, self.psetup, self.psolve, self.overwrite_m = hooks
         self.cur_t = t0
         self.m = m0  # TODO: before, we were keeping a copy, was that better?
-        print "sundials init", self.m.as_array()
         self.tablewriter = tablewriter
 
         if method == "adams":
@@ -86,10 +85,7 @@ class SundialsIntegrator(object):
                 "into the past?".format(t, self.cur_t))
 
         try:
-            print "try advance_time"
-            print self.m.as_array()
             self.integrator.advance_time(t, self.m.as_array())
-            print self.m.as_array()
         except RuntimeError, msg:
             # if we have reached max_num_steps, the error message will read
             # something like "Error in CVODE:CVode (CV_TOO_MUCH_WORK):
