@@ -143,7 +143,7 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
                 return False
 
         # Update values for the next integration.
-        sim.relaxation['last_m'] = sim.m.copy()
+        sim.relaxation['last_m'] = sim.m.as_array().copy()
         sim.relaxation['last_time'] = sim.t
 
     dt_interval = functools.partial(dt_interval, sim)

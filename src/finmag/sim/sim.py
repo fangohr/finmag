@@ -735,9 +735,9 @@ class Simulation(object):
                 if nodes(c):
                     pinlist.append(i)
             pinlist = np.array(pinlist)
-            self.llg.pins = pinlist
+            self.physics.pins = pinlist
         else:
-            self.llg.pins = nodes
+            self.physics.pins = nodes
 
     pins = property(__get_pins, __set_pins)
 

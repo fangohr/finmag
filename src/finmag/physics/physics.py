@@ -25,7 +25,7 @@ class Physics(object):
         self.H = Field(self.S3, name="H")  # TODO: connect effective field to H
         self.m = Field(self.S3, name="m")
         self.Ms = Field(self.S1, name="Ms")
-        self.pins = []  # TODO: connect pins to instant code
+        self._pins = df.MeshFunctionBool(mesh, 0, False)
 
         self.effective_field = EffectiveField(self.m, self.Ms, self.unit_length)
         self.update = []
@@ -40,7 +40,7 @@ class Physics(object):
         Methods that scipy calls during time integration.
 
         """
-        return (self.solve_for,
+        return (self.scipy_rhs,
                 self.m.from_array)
 
     def hooks_sundials(self):
@@ -63,6 +63,23 @@ class Physics(object):
 
         """
         return ()
+
+    @property
+    def pins(self):
+        return self._pins
+
+    @pins.setter
+    def pins(self, value):
+        pass
+
+    def scipy_rhs(self, m, t):
+        """
+        Computes the dm/dt right hand side ODE term, as used by scipy.
+
+        """
+        self.m.from_array(m)
+        self.solve(t)
+        return self.dmdt.as_array()
 
     def solve(self, t):
         for update in self.update:

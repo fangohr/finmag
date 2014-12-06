@@ -25,7 +25,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
 
     def scipy_rhs(self, t, y):
         self.n_rhs_evals += 1
-        return self.llg.solve_for(y, t)
+        return self.llg.scipy_rhs(y, t)
 
     def run_scipy_test(self, method):
         self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
