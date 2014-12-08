@@ -1366,7 +1366,7 @@ def compute_dmdt(t0, m0, t1, m1):
         m0, m1: the magnetisation at t0, resp. t1 (np.arrays of shape 3*n)
 
     """
-    dm = (m1 - m0).reshape((3, -1))
+    dm = (m1.as_array() - m0).reshape((3, -1))
     max_dm = np.max(np.sqrt(np.sum(dm ** 2, axis=0)))  # max of L2-norm
     dt = abs(t1 - t0)
     max_dmdt = max_dm / dt
