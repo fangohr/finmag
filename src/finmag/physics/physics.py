@@ -20,11 +20,11 @@ class Physics(object):
         self.S1 = df.FunctionSpace(mesh, "CG", 1, constrained_domain=periodic_bc)
         self.S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3, constrained_domain=periodic_bc)
 
-        self.alpha = Field(self.S1, name="alpha")
+        self.alpha = Field(self.S1, value=0.5, name="alpha")
         self.dmdt = Field(self.S3, name="dmdt")
-        self.H = Field(self.S3, name="H")  # TODO: connect effective field to H
+        self.H = Field(self.S3, name="H")
         self.m = Field(self.S3, name="m")
-        self.Ms = Field(self.S1, name="Ms")
+        self.Ms = Field(self.S1, value=1, name="Ms")
         self._pins = df.MeshFunctionBool(mesh, 0, False)
 
         self.effective_field = EffectiveField(self.m, self.Ms, self.unit_length)

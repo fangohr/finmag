@@ -64,7 +64,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
         method,
         dt,
         integrator.n_rhs_evals,
-        domain_wall_error(integrator.m, NODE_COUNT))
+        domain_wall_error(integrator.m.as_array(), NODE_COUNT))
     if mode == 'onego':
         return integrator
 
@@ -82,7 +82,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
         method,
         dt,
         integrator.n_rhs_evals,
-        domain_wall_error(integrator.m, NODE_COUNT))
+        domain_wall_error(integrator.m.as_array(), NODE_COUNT))
     print("second call to integrator.n_rhs_evals ={}".format(
         integrator.n_rhs_evals))
     return integrator
@@ -102,25 +102,3 @@ if __name__ == '__main__':
     int = run_test("sundials", "bdf_diag", mode='twogoes')
     int = run_test("sundials", "bdf_gmres_no_prec", mode='twogoesreinit')
     int = run_test("sundials", "adams", mode='onego')
-
-
-# def not_used_here_test_scipy():
-#    return run_test("scipy", "bdf")
-
-# def test_scipy_bdf(self):
-#         self.run_test("scipy", "bdf")
-
-#     def test_scipy_adams(self):
-#         self.run_test("scipy", "adams")
-
-#     def test_sundials_adams(self):
-#         self.run_test("sundials", "bdf_diag")
-
-#     def test_sundials_bdf_diag(self):
-#         self.run_test("sundials", "adams")
-
-#     def test_sundials_bdf_gmres_no_prec(self):
-#         self.run_test("sundials", "bdf_gmres_no_prec")
-
-#     def test_sundials_bdf_gmres_prec_id(self):
-#         self.run_test("sundials", "bdf_gmres_prec_id")

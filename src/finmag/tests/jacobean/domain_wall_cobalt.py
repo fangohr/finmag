@@ -31,6 +31,7 @@ def reference_mz(x):
 def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, length=LENGTH, do_precession=True):
     mesh = df.IntervalMesh(node_count - 1, 0, length)
     physics = Physics(mesh)
+    physics.Ms.set(Ms_Co)
     physics.m.from_array((np.array(
         [initial_m(xi, node_count) for xi in xrange(node_count)]).T.reshape((-1,))))
 

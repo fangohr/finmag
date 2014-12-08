@@ -29,7 +29,7 @@ class IntegratorTests(unittest.TestCase):
             method,
             dt,
             integrator.n_rhs_evals,
-            domain_wall_error(llg.m_field.as_array(), NODE_COUNT))
+            domain_wall_error(llg.m.as_array(), NODE_COUNT))
 
     def test_scipy_bdf(self):
         self.run_test("scipy", "bdf")
