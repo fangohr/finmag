@@ -33,7 +33,7 @@ def test_sim_ode(do_plot=False):
     length_error = []
     for t in ts:
         sim.advance_time(t)
-        mm = sim.m.copy()
+        mm = sim.m.as_array().copy()
 
         mm.shape = (3, -1)
         mx, my, mz = mm[:, 0]  # same as m.average() for this macrospin problem

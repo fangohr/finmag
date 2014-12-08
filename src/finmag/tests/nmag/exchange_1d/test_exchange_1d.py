@@ -56,7 +56,7 @@ def setup_module(module=None):
         av_f.write(
             str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
 
-        mx, my, mz = h.components(sim.m)
+        mx, my, mz = h.components(sim.m.as_array())
         m2x, m2y, m2z = mx[2], my[2], mz[2]
         third_node.append([t, m2x, m2y, m2z])
         tn_f.write(

@@ -1082,7 +1082,7 @@ def test_set_m_after_relaxation(tmpdir):
     # Set the spins so that they will point in +Z upon relaxation.
     sim.set_m((0.1, 0.1, 1))
     sim.relax()
-    assert sim.maverage()[2] >= 0.9
+    assert sim.m.average()[2] >= 0.9
 
     # Set the spins again so that they will point in -Z upon relaxation.
     print sim.integrator.m
