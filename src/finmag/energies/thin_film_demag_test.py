@@ -33,13 +33,13 @@ def compare_with_demag_from_initial_m(H_gen, m_init, atol=0, rtol=0):
 
 def test_zero_thin_film_demag():
     compare_with_demag_from_initial_m(
-        lambda m: np.zeros(m.shape), (1, 0, 0), atol=1e-14)
+        lambda m: np.zeros(m.as_array().shape), (1, 0, 0), atol=1e-14)
     compare_with_demag_from_initial_m(
-        lambda m: np.zeros(m.shape), (1, 1, 0), atol=1e-14)
+        lambda m: np.zeros(m.as_array().shape), (1, 1, 0), atol=1e-14)
 
 
 def test_thin_film_demag():
-    compare_with_demag_from_initial_m(lambda m: -Ms * m, (0, 0, 1), rtol=1e-14)
+    compare_with_demag_from_initial_m(lambda m: -Ms * m.as_array(), (0, 0, 1), rtol=1e-14)
 
 
 @pytest.mark.slow
