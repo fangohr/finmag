@@ -30,7 +30,7 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
     sim.pins = pins
     sim.run_until(1e-9)
 
-    m = vectors(sim.m)
+    m = vectors(sim.m.as_array())
     angles = np.array([angle(m[i], m[i + 1]) for i in xrange(len(m) - 1)])
     return angles
 
