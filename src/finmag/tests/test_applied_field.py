@@ -10,13 +10,13 @@ def test_uniform_external_field():
     TOLERANCE = 3.5e-10
 
     mesh = df.UnitCubeMesh(2, 2, 2)
-    sim = Sim(mesh, Ms)
+    sim = Sim(mesh, Ms, unit_length=1e-9)
     sim.set_m((1, 0, 0))
     sim.add(Zeeman((0, Ms, 0)))
     sim.alpha = 1.0
     sim.run_until(1e-9)
 
-    m = sim.m.reshape((3, -1)).mean(-1)
+    m = sim.m.as_array().reshape((3, -1)).mean(-1)
     expected_m = np.array([0, 1, 0])
     diff = np.abs(m - expected_m)
     assert np.max(diff) < TOLERANCE
@@ -26,13 +26,13 @@ def test_negative_uniform_external_field():
     TOLERANCE = 1e-10
 
     mesh = df.UnitCubeMesh(2, 2, 2)
-    sim = Sim(mesh, Ms)
+    sim = Sim(mesh, Ms, unit_length=1e-9)
     sim.set_m((1, 0.1, 0))  # slightly misaligned
     sim.add(Zeeman((-1.0 * Ms, 0, 0)))
     sim.alpha = 1.0
     sim.run_until(1e-9)
 
-    m = sim.m.reshape((3, -1)).mean(-1)
+    m = sim.m.as_array().reshape((3, -1)).mean(-1)
     print "Average magnetisation ({:.2g}, {:.2g}, {:.2g}).".format(*m)
     expected_m = np.array([-1, 0, 0])
     diff = np.abs(m - expected_m)
@@ -56,7 +56,7 @@ def test_non_uniform_external_field():
     sim.alpha = 1.0
     sim.run_until(1e-9)
 
-    m = sim.m.reshape((3, -1)).mean(-1)
+    m = sim.m.as_array().reshape((3, -1)).mean(-1)
     expected_m = np.array([0, 0, 0])
     diff = np.abs(m - expected_m)
     assert np.max(diff) < TOLERANCE
