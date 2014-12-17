@@ -4,7 +4,6 @@ import types
 import logging
 import numpy as np
 import dolfin as df
-import matplotlib.pyplot as plt
 from finmag.sim.sim import Simulation, sim_with
 from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.util import helpers

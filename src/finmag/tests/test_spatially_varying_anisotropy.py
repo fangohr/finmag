@@ -1,83 +1,70 @@
 import os
-import pylab
 import numpy as np
 import dolfin as df
+import matplotlib.pyplot as plt
+from finmag.field import Field
 from finmag import Simulation
 from finmag.energies import UniaxialAnisotropy
+from finmag.util.consts import bloch_parameter
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
-"""
-Trying to test spatially varying anisotropy.
-"""
 
 
-def run_simulation():
+def test_spatially_varying_anisotropy_axis(tmpdir, debug=False):
+    Ms = 1e6
+    A = 1.3e-11
+    K1 = 6e5
+    lb = bloch_parameter(A, K1)
 
-    mu0 = 4.0 * np.pi * 10 ** -7  # vacuum permeability             N/A^2
-    Ms = 1.0e6                 # saturation magnetisation        A/m
-    A = 13.0e-12              # exchange coupling strength      J/m
-    Km = 0.5 * mu0 * Ms ** 2     # magnetostatic energy density scale   kg/ms^2
-    lexch = (A / Km) ** 0.5           # exchange length                 m
-    K1 = Km
-
-    L = lexch  # cube length in m
+    unit_length = 1e-9
     nx = 20
-    Lx = L * nx
+    Lx = nx * lb / unit_length
     mesh = df.IntervalMesh(nx, 0, Lx)
 
-    # anisotropy direction starts at [0,1,0] at x=0 and changes to [1,0,0] at
-    # x=Lx, but keep normalised
-    expr_a = df.Expression(("x[0]/sqrt(x[0]*x[0]+(Lx-x[0])*(Lx-x[0]))",
-                            "(Lx-x[0])/sqrt(x[0]*x[0]+(Lx-x[0])*(Lx-x[0]))",
+    # anisotropy axis goes from (0, 1, 0) at x=0 to (1, 0, 0) at x=Lx
+    expr_a = df.Expression(("x[0] / sqrt(pow(x[0], 2) + pow(Lx-x[0], 2))",
+                            "(Lx-x[0]) / sqrt(pow(x[0], 2) + pow(Lx-x[0], 2))",
                             "0"), Lx=Lx)
+    # in theory, a discontinuous Galerkin (constant over the cell) is a good
+    # choice to represent material parameters. In this case though, the
+    # parameter varies linearly, so we use the usual CG.
+    V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+    a = Field(V, expr_a)
 
-    # descritise material parameter. Generally a discontinous Galerkin order 0 basis function
-    # is a good choice here (see example in manual) but for the test we use
-    # CG1 space.
-
-    V3_CG1 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    a = df.interpolate(expr_a, V3_CG1)
-
-    sim = Simulation(mesh, Ms)
+    sim = Simulation(mesh, Ms, unit_length)
     sim.set_m((1, 1, 0))
     sim.add(UniaxialAnisotropy(K1, a))
-    sim.relax(stopping_dmdt=1)
+    sim.relax()
 
-    # create simple plot
-    xpos = []
-    Mx = []
-    ax = []
+    # probe the easy axis and the magnetisation along the interval
+    points = 100
+    xs = np.linspace(0, Lx, points)
+    axis_xs = np.zeros((points, 3))
+    m_xs = np.zeros((points, 3))
 
-    xs = np.linspace(0, Lx, 200)
-    for x in xs:
-        pos = (x,)
-        Mx.append(sim.m_field.probe(pos)[0])
-        ax.append(a(pos)[0])
+    for i, x in enumerate(xs):
+        axis_xs[i] = a(x)
+        m_xs[i] = sim.m_field(x)
 
-    pylab.plot(xs, Mx, '-o', label='Mx')
-    pylab.plot(xs, ax, '-x', label='ax')
-    pylab.savefig(os.path.join(MODULE_DIR, 'profile.png'))
-    print "Note that the alignment is pretty good everywhere, but not at x=0. Why?"
-    print "It also seems that Mx is ever so slightly greater than ax -- why?"
-    print "Uncomment the show() command to see this."
-    # pylab.show()
-
-    return sim, a
-
-
-def test_spatially_varying_anisotropy_direction_a(tmpdir, debug=False):
-    sim, a = run_simulation()
-
-    # Interpolate a on mesh of M
-    diff = (a.vector().array() - sim.m)
-    maxdiff = max(abs(diff))
-    print "maxdiff=", maxdiff
-    print "The fairly large error seems to come from x=0. Why?"
-    assert maxdiff < 0.018
+    # we want to the magnetisation to follow the easy axis
+    # it does so, except at x=0, what is happening there?
+    diff = np.abs(m_xs - axis_xs)
+    assert diff.max() < 0.02
 
     if debug:
-        # Save field for debugging (will be stored in /tmp/pytest-USERNAME/)
-        sim.m_field.save_pvd(os.path.join(os.chdir(str(tmpdir), 'test.pvd')))
+        old = os.getcwd()
+        os.chdir(tmpdir)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(xs, axis_xs[:, 0], "b+", label="a_x")
+        ax.plot(xs, m_xs[:, 0], "r--", label="m_x")
+        ax.legend(loc="upper left")
+        ax.set_ylim((0, 1.05))
+        ax.set_xlabel("x (nm)")
+        plt.savefig('spatially_varying_easy_axis.png')
+        plt.close()
+        sim.m_field.save_pvd('spatially_varying_easy_axis.pvd')
+        os.chdir(old)
 
 if __name__ == "__main__":
-    test_spatially_varying_anisotropy_direction_a()
+    test_spatially_varying_anisotropy_axis(".", debug=True)

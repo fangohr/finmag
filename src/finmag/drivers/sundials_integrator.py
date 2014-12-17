@@ -115,7 +115,7 @@ class SundialsIntegrator(object):
         # back into llg object
         # Weiwei: change the default m to sundials_m since sometimes we need to
         # extend the default equation.
-        self.llg.sundials_m = self.m
+        self.llg.sundials_m = self.m  # actually writes to the field class (c.f. llg.py)
         return reached_tout
 
     def advance_steps(self, steps):
@@ -148,7 +148,7 @@ class SundialsIntegrator(object):
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
         log.debug("Re-initialising CVODE integrator.")
-        self.integrator.reinit(self.cur_t, self.m)
+        self.integrator.reinit(self.cur_t, self.llg.sundials_m)  # FIXME: rename sundials_m
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(
     ), "Number of function evaluations performed")

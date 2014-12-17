@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pylab
+import pytest
 import dolfin as df
 from finmag.field import Field
 from finmag.physics.llg import LLG
@@ -9,6 +10,8 @@ from finmag.drivers.llg_integrator import llg_integrator
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
+@pytest.mark.requires_X_display
 def test_external_field_depends_on_t():
     tfinal = 0.3*1e-9
     dt = 0.001e-9

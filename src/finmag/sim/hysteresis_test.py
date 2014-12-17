@@ -1,10 +1,11 @@
 import dolfin as df
 import numpy as np
+import pytest
 import os
 from glob import glob
 from finmag import sim_with
 from finmag.example import barmini
-from finmag.util.helpers import plot_hysteresis_loop
+from finmag.util.plot_helpers import plot_hysteresis_loop
 
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
@@ -38,6 +39,7 @@ def test_hysteresis(tmpdir):
     assert(len(res2) == N)
 
 
+@pytest.mark.requires_X_display
 def test_hysteresis_loop_and_plotting(tmpdir):
     """
     Call the hysteresis loop with various combinations for saving

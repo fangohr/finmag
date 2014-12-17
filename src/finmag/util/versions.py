@@ -58,6 +58,10 @@ def get_version_numpy():
 
 
 def get_version_matplotlib():
+    # this will only do a look-up of matplotlib's version if it is already
+    # imported. If matplotlib hasn't been imported yet, it won't do so either.
+    if "matplotlib" not in sys.modules:
+        return "lazily loaded"
     return get_module_version('matplotlib')
 
 

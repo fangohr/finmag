@@ -5,7 +5,7 @@ import subprocess as sp
 from numpy import sqrt, sin, cos, pi, exp, real, conj
 
 
-def create_test_ndt_file(dirname, t_step, t_ini, t_end, omega, alpha, debug=True):
+def create_test_ndt_file(dirname, t_step, t_ini, t_end, omega, alpha, debug=False):
     """
     Create a .ndt file with a time series of artificial magnetisation
     data for testing purposes.

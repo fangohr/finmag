@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import fft_test_helpers
 
 
-def test_analytical_inverse_DFT():
+def test_analytical_inverse_DFT(tmpdir, debug=False):
     """
     We construct a simple signal as a superposition of two sinusoidal
     oscillations with different frequencies. Then filter this signal
@@ -26,6 +26,7 @@ def test_analytical_inverse_DFT():
        [1] http://docs.scipy.org/doc/numpy/reference/routines.fft.html
 
     """
+    os.chdir(str(tmpdir))
     n = 1000
     tmin = 0.23 * pi
     tmax = 4.23 * pi
@@ -37,13 +38,14 @@ def test_analytical_inverse_DFT():
     # Define a simple signal that is a superposition of two waves
     signal = sin(ts) + 2 * cos(3 * ts)
 
-    # Plot the signal and its sin/cos components
-    plt.figure()
-    plt.plot(signal, 'x-', label='signal')
-    plt.plot(sin(ts), label='sin(t)')
-    plt.plot(cos(3 * ts), label='cos(3t)')
-    plt.legend()
-    plt.savefig('fft_test_01_signal.pdf')
+    if debug:
+        # Plot the signal and its sin/cos components
+        plt.figure()
+        plt.plot(signal, 'x-', label='signal')
+        plt.plot(sin(ts), label='sin(t)')
+        plt.plot(cos(3 * ts), label='cos(3t)')
+        plt.legend()
+        plt.savefig('fft_test_01_signal.pdf')
 
     # Perform a (real-valued) Fourier transform. Also store the
     # frequencies corresponding to the Fourier coefficients.
@@ -87,15 +89,16 @@ def test_analytical_inverse_DFT():
         assert np.allclose(
             signal_filtered, signal_analytical_3, atol=1e-11, rtol=0)
 
-        plt.figure()
-        plt.plot(ts, base_oscillation, '-', label='sin(t)')
-        plt.plot(ts, signal_filtered, 'x', label='filtered (iDFT)')
-        plt.plot(
-            ts, signal_analytical_1, '-', label='filtered (analytical #1)')
-        plt.plot(
-            ts, signal_analytical_2, '.', label='filtered (analytical #1)')
-        plt.legend()
-        plt.savefig('fft_test_02_filtered_signal_for_k_{}.pdf'.format(k))
+        if debug:
+            plt.figure()
+            plt.plot(ts, base_oscillation, '-', label='sin(t)')
+            plt.plot(ts, signal_filtered, 'x', label='filtered (iDFT)')
+            plt.plot(
+                ts, signal_analytical_1, '-', label='filtered (analytical #1)')
+            plt.plot(
+                ts, signal_analytical_2, '.', label='filtered (analytical #1)')
+            plt.legend()
+            plt.savefig('fft_test_02_filtered_signal_for_k_{}.pdf'.format(k))
 
 
 def test_wrong_file_suffix_for_power_spectral_density():
@@ -164,7 +167,7 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     assert(np.allclose(freqs_res, freqs_np, atol=0, rtol=RTOL))
 
 
-def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
+def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir, debug=False):
     """
     First we write some 'forged' spatially resolved magnetisation
     dynamics to a bunch of .npy files (representing the time series).
@@ -233,20 +236,21 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir):
     assert(np.allclose(psd_my_expected, psd_my_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_mz_expected, psd_mz_computed, atol=0, rtol=RTOL))
 
-    # Plot the spectra for debugging
-    fig = plt.figure(figsize=(20, 5))
-    ax = fig.gca()
-    ax.plot(freqs_computed, psd_mx_expected, label='psd_mx_expected')
-    ax.plot(freqs_computed, psd_my_expected, label='psd_my_expected')
-    ax.plot(freqs_computed, psd_mz_expected, label='psd_mz_expected')
-    ax.plot(freqs_computed, psd_mx_computed, label='psd_mx_computed')
-    ax.plot(freqs_computed, psd_my_computed, label='psd_my_computed')
-    ax.plot(freqs_computed, psd_mz_computed, label='psd_mz_computed')
-    ax.legend(loc='best')
-    fig.savefig('psd_m_McMichaelStiles.png')
+    if debug:
+        # Plot the spectra for debugging
+        fig = plt.figure(figsize=(20, 5))
+        ax = fig.gca()
+        ax.plot(freqs_computed, psd_mx_expected, label='psd_mx_expected')
+        ax.plot(freqs_computed, psd_my_expected, label='psd_my_expected')
+        ax.plot(freqs_computed, psd_mz_expected, label='psd_mz_expected')
+        ax.plot(freqs_computed, psd_mx_computed, label='psd_mx_computed')
+        ax.plot(freqs_computed, psd_my_computed, label='psd_my_computed')
+        ax.plot(freqs_computed, psd_mz_computed, label='psd_mz_computed')
+        ax.legend(loc='best')
+        fig.savefig('psd_m_McMichaelStiles.png')
 
 
-def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_to_mesh_region(tmpdir):
+def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_to_mesh_region(tmpdir, debug=False):
     """
     First we write some 'forged' spatially resolved magnetisation
     dynamics to a bunch of .npy files (representing the time series).
@@ -318,17 +322,18 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
     assert(np.allclose(psd_my_expected, psd_my_computed, atol=0, rtol=RTOL))
     assert(np.allclose(psd_mz_expected, psd_mz_computed, atol=0, rtol=RTOL))
 
-    # Plot the spectra for debugging
-    fig = plt.figure(figsize=(20, 5))
-    ax = fig.gca()
-    ax.plot(freqs_computed, psd_mx_expected, label='psd_mx_expected')
-    ax.plot(freqs_computed, psd_my_expected, label='psd_my_expected')
-    ax.plot(freqs_computed, psd_mz_expected, label='psd_mz_expected')
-    ax.plot(freqs_computed, psd_mx_computed, label='psd_mx_computed')
-    ax.plot(freqs_computed, psd_my_computed, label='psd_my_computed')
-    ax.plot(freqs_computed, psd_mz_computed, label='psd_mz_computed')
-    ax.legend(loc='best')
-    fig.savefig('psd_m_McMichaelStiles.png')
+    if debug:
+        # Plot the spectra for debugging
+        fig = plt.figure(figsize=(20, 5))
+        ax = fig.gca()
+        ax.plot(freqs_computed, psd_mx_expected, label='psd_mx_expected')
+        ax.plot(freqs_computed, psd_my_expected, label='psd_my_expected')
+        ax.plot(freqs_computed, psd_mz_expected, label='psd_mz_expected')
+        ax.plot(freqs_computed, psd_mx_computed, label='psd_mx_computed')
+        ax.plot(freqs_computed, psd_my_computed, label='psd_my_computed')
+        ax.plot(freqs_computed, psd_mz_computed, label='psd_mz_computed')
+        ax.legend(loc='best')
+        fig.savefig('psd_m_McMichaelStiles.png')
 
 
 def test_find_peak_near_frequency(tmpdir, debug=False):
@@ -382,6 +387,7 @@ def test_find_peak_near_frequency(tmpdir, debug=False):
         find_peak_near_frequency(2.5e9, fft_freqs, fft_vals=[0, 1])
 
 
+@pytest.mark.requires_X_display
 def test_plot_power_spectral_density(tmpdir):
     os.chdir(str(tmpdir))
 

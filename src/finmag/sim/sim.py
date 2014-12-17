@@ -21,7 +21,6 @@ from finmag.util.meshes import mesh_volume, mesh_size_plausible, \
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
-from finmag.util.helpers import plot_dynamics, plot_dynamics_3d
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
@@ -182,13 +181,6 @@ class Simulation(object):
             self.m_petsc = self.llg._m_field.petsc_vector()
             #df.parameters.reorder_dofs_serial = True
 
-        # We used to only create the integrator when needed. However, this can
-        # lead to a bug when the user saves information to an .ndt file before
-        # a time integrator exists because some columns will be missing (as the
-        # time integrator creates additional columns in the .ndt file). Therefore
-        # we play it safe and create the time integrator here at the beginning.
-        # self.create_integrator()
-
     def __str__(self):
         """String briefly describing simulation object"""
         return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
@@ -213,6 +205,8 @@ class Simulation(object):
 
         """
         self.llg.set_m(value, normalise=normalise, **kwargs)
+        if self.has_integrator():
+            self.reinit_integrator()
 
     m = property(__get_m, set_m)
 
@@ -588,12 +582,10 @@ class Simulation(object):
     integrator = property(_get_integrator, _set_integrator)
 
     def create_integrator(self, backend=None, **kwargs):
+        if backend is not None:
+            self.integrator_backend = backend
 
         if not self.has_integrator():
-            if backend == None:
-                backend = self.integrator_backend
-            log.info(
-                "Create integrator {} with kwargs={}".format(backend, kwargs))
             if self.parallel:
                 # HF, the reason for commenting out the line below is that
                 # cython fails to compile the file otherwise. Will all be
@@ -608,9 +600,8 @@ class Simulation(object):
                 self._integrator = self.llg
             else:
                 self._integrator = llg_integrator(
-                    self.llg, self.llg._m_field, backend=backend, **kwargs)
-                self._integrator.integrator.set_scalar_tolerances(
-                    self.reltol, self.abstol)
+                    self.llg, self.llg._m_field, backend=self.integrator_backend,
+                    reltol=self.reltol, abstol=self.abstol, **kwargs)
 
             # HF: the following code works only for sundials, i.e. not for
             # scipy.integrate.vode.
@@ -648,13 +639,12 @@ class Simulation(object):
         self.reltol = reltol
         self.abstol = abstol
 
-        if hasattr(self, "integrator"):
+        if self.has_integrator():
             if self.parallel:
                 #self.integrator.set_options(reltol, abstol)
                 pass
             else:
-                self.integrator.integrator.set_scalar_tolerances(
-                    reltol, abstol)
+                self.integrator.integrator.set_scalar_tolerances(reltol, abstol)
 
     def advance_time(self, t):
         """
@@ -1137,6 +1127,7 @@ class Simulation(object):
         self.logging_handler = None
 
     def plot_dynamics(self, components='xyz', **kwargs):
+        from finmag.util.plot_helpers import plot_dynamics
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
             raise RuntimeError(
@@ -1144,6 +1135,7 @@ class Simulation(object):
         return plot_dynamics(ndt_file, components=components, **kwargs)
 
     def plot_dynamics_3d(self, **kwargs):
+        from finmag.util.plot_helpers import plot_dynamics_3d
         ndt_file = kwargs.pop('ndt_file', self.ndtfilename)
         if not os.path.exists(ndt_file):
             raise RuntimeError(
@@ -1312,6 +1304,8 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
         demag = Demag(solver=demag_solver, macrogeometry=mg,
                       solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)
+    else:
+        log.debug("Not adding demag to simulation '{}'".format(sim.name))
     log.debug("Successfully created simulation '{}'".format(sim.name))
 
     return sim
