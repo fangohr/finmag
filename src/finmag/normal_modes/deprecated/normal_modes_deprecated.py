@@ -7,16 +7,8 @@ import scipy.sparse.linalg
 from time import time
 from finmag.util import helpers
 from finmag.util.meshes import embed3d
-import matplotlib.pyplot as plt
-import matplotlib.tri as tri
 from itertools import izip
-from matplotlib.ticker import FormatStrFormatter
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from math import pi
-from matplotlib import rcParams
-rcParams.update({'figure.autolayout': True})
-import custom_colormaps
-
 logger = logging.getLogger('finmag')
 
 
@@ -616,23 +608,24 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
         "Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
 
 
-colormaps = {'coolwarm': plt.cm.coolwarm,
-             'cool': plt.cm.cool,
-             'hot': plt.cm.hot,
-             'afmhot': plt.cm.afmhot,
-             'rainbow': plt.cm.jet,
-             'hsv': plt.cm.hsv,
-             'circular1': custom_colormaps.circular1,
-             'circular2': custom_colormaps.circular2,
-             'circular3': custom_colormaps.circular3,
-             'circular4': custom_colormaps.circular4,
-             'husl_99_75': custom_colormaps.husl_99_75,
-             'husl_99_70': custom_colormaps.husl_99_70,
-             'husl_99_65': custom_colormaps.husl_99_65,
-             }
-
-
 def get_colormap_from_name(cmap_name):
+    from matplotlib import cm
+    import custom_colormaps
+
+    colormaps = {'coolwarm': cm.coolwarm,
+                 'cool': cm.cool,
+                 'hot': cm.hot,
+                 'afmhot': cm.afmhot,
+                 'rainbow': cm.jet,
+                 'hsv': cm.hsv,
+                 'circular1': custom_colormaps.circular1,
+                 'circular2': custom_colormaps.circular2,
+                 'circular3': custom_colormaps.circular3,
+                 'circular4': custom_colormaps.circular4,
+                 'husl_99_75': custom_colormaps.husl_99_75,
+                 'husl_99_70': custom_colormaps.husl_99_70,
+                 'husl_99_65': custom_colormaps.husl_99_65,
+                 }
     try:
         if cmap_name == 'rainbow':
             logger.warning('The rainbow colormap is strongly discouraged for scientific visualizations, it is '
@@ -815,6 +808,13 @@ def plot_spatially_resolved_normal_mode(
     The `matplotlib.Figure` containing the plot.
 
     """
+    import matplotlib.pyplot as plt
+    import matplotlib.tri as tri
+    from matplotlib.ticker import FormatStrFormatter
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    from matplotlib import rcParams
+    rcParams.update({'figure.autolayout': True})
+
     coords = mesh.coordinates()
 
     if slice_z == 'z_min':

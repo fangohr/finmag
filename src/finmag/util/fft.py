@@ -6,9 +6,7 @@ from glob import glob
 from time import time
 import numpy as np
 import dolfin as df
-import matplotlib.pyplot as plt
 import logging
-import matplotlib.cm as cm
 from numpy import sin, cos, pi
 
 logger = logging.getLogger("finmag")
@@ -368,6 +366,7 @@ def _plot_spectrum(freqs, psd_mx, psd_my, psd_mz, components="xyz", log=False,
     it can be re-used elsewhere, e.g. in the NormalModeSimulation class.
 
     """
+    import matplotlib.pyplot as plt
     freqs_GHz = freqs / 1e9
     if log:
         psd_mx = np.log(psd_mx)
@@ -493,7 +492,7 @@ def fft_at_probing_points(dolfin_funcs, pts):
 
 def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
                                          t_step=None, figsize=None, yshift_title=1.5,
-                                         show_colorbars=True, cmap=cm.jet):
+                                         show_colorbars=True, cmap=None):
     """
     XXX Warning: The interface for this function hasn't matured yet,
                  so be prepared for it to change in the future.
@@ -545,6 +544,11 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
 
     The matplotlib figure containing.
     """
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+
+    if cmap is None:
+        cmap = cm.jet
     n = (m_vals_on_grid.shape[0] // 2) + 1
     fft_vals = np.ma.masked_array(np.fft.rfft(m_vals_on_grid, axis=0),
                                   mask=np.ma.getmask(m_vals_on_grid[:n, ...]))

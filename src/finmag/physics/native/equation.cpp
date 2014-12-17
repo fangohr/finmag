@@ -1,9 +1,10 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
-#include "equation.h"
 #include <dolfin.h>
 #include <dolfin/function/Function.h>
+#include "equation.h"
+#include "derivatives.h"
 
 namespace dolfin { namespace finmag {
 
@@ -116,6 +117,51 @@ namespace dolfin { namespace finmag {
 
         derivative.set_local(dmdt);
         derivative.apply("");
+    }
+
+    void Equation::sundials_jtimes_serial(Array<double> const& mp, Array<double> const& Hp, Array<double>& jtimes) {
+        if (!alpha) throw std::runtime_error("alpha was not set");
+
+        std::vector<double> a, m, H, dmdt, pinned, Ms, J;
+        alpha->get_local(a);
+        magnetisation.get_local(m);
+        effective_field.get_local(H);
+        derivative.get_local(dmdt);
+
+        if (pinned_nodes) pinned_nodes->get_local(pinned);
+        if (saturation_magnetisation) saturation_magnetisation->get_local(Ms);
+        if (current_density) current_density->get_local(J);
+
+        std::vector<double>::size_type x=0, y=0, z=0;
+        std::vector<double>::size_type const offset = a.size();
+        /* this can be reintroduced as soon as our code doesn't rely on
+         * disabled reordering anymore: #pragma omp parallel for schedule(guided) */
+        for (std::vector<double>::size_type node=0; node < a.size(); ++node) {
+            if (!reorder_dofs_serial) {
+                /* temporary measure until our code doesn't rely 
+                 * on the reordering of dofs being disabled */
+                x = node; y = x + offset; z = y + offset;
+            }
+            else {
+                /* Scalar fields have one degree of freedom per node. When we iterate
+                 * over the nodes, we can thus use the iteration counter to access the
+                 * corresponding degree of freedom.
+                 * Vector fields have 3 degrees of freedom per node. To get the index
+                 * of the first degree of freedom for a node, we thus have to multiply
+                 * the iteration counter by 3. That yields 'x'. Adding 1 and 2 gives us
+                 * 'y' and 'z' respectively. */
+                x = 3 * node; y = x + 1; z = x + 2;
+            }
+            jtimes[x] = 0; jtimes[y] = 0; jtimes[z] = 0;
+
+            if (pinned_nodes && pinned[node]) {
+                continue; /* jtimes=0 on pinned nodes, so skip computation of it */
+            }
+            
+            dm_damping(a[node], gamma, m[x], m[y], m[z], mp[x], mp[y], mp[z], H[x], H[y], H[z], Hp[x], Hp[y], Hp[z], jtimes[x], jtimes[y], jtimes[z]);
+            if (do_precession) dm_precession(a[node], gamma, m[x], m[y], m[z], mp[x], mp[y], mp[z], H[x], H[y], H[z], Hp[x], Hp[y], Hp[z], jtimes[x], jtimes[y], jtimes[z]);
+            dm_relaxation(parallel_relaxation_rate, m[x], m[y], m[z], mp[x], mp[y], mp[z], jtimes[x], jtimes[y], jtimes[z]);
+        }
     }
 
     //same as solve but requires given H and return to value to dmdt

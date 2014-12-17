@@ -16,7 +16,6 @@ import finmag.native.neb as native_neb
 
 from finmag.util.fileio import Tablewriter, Tablereader
 
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import colorConverter
 from matplotlib.collections import PolyCollection, LineCollection
@@ -738,6 +737,7 @@ def plot_energy_2d(name, step=-1):
 
     name is the simulation name.
     """
+    import matplotlib.pyplot as plt
 
     data = np.loadtxt('%s_energy.ndt' % name)
     dms = np.loadtxt('%s_dms.ndt' % name)
@@ -771,6 +771,7 @@ def plot_energy_2d(name, step=-1):
 
 
 def plot_energy_3d(name, key_steps=50, filename=None):
+    import matplotlib.pyplot as plt
 
     data = np.loadtxt('%s_energy.ndt' % name)
 

@@ -20,12 +20,10 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
     #
     assert isinstance(m0, Field)
 
-    log.debug("Creating integrator with backend {}.".format(backend))
-    if kwargs != {}:
-        log.debug("llg_integrator: kwds = %s" % kwargs)
+    log.info("Creating integrator with backend {} and arguments {}.".format(backend, kwargs))
     if backend == "scipy":
-        return ScipyIntegrator(llg, m0.get_numpy_array_debug(), **kwargs)
+        return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0.get_numpy_array_debug(), **kwargs)
+        return SundialsIntegrator(llg, m0.as_array(), **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")
