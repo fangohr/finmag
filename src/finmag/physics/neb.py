@@ -158,7 +158,7 @@ def linear_interpolation_two(m0, m1, n):
     magnetic system. To achieve this,
     we use spherical coordinates and the
     angle difference between m0 and m1, is divided
-    'n' times. Thus, we obtain (n - 2) interpolations:
+    'n + 1' times. Thus, we obtain n interpolations:
 
     m0 = [theta0_1, theta0_1, ..., phi0_1, phi0_2, ...]
 
@@ -173,18 +173,18 @@ def linear_interpolation_two(m0, m1, n):
             phin_1 + n*df1, phin_2 + n*df2, ...]
 
 
-    where [dt1, dt2, ..., df1, df2, ...] = (m0 - m1) / n
+    where [dt1, dt2, ..., df1, df2, ...] = (m0 - m1) / (n + 1)
     and m0, m1 are in spherical coordinates, as specified before.
 
     The function return an array of arrays, with the interpolations
     [thetai_1, thetai_2, ..., phii_1, phii_2, ...] as the entries of
     the main array (thetai_1 = thetai + i*dt1, and so on)
     """
-
+    # Convert magnetic moments to spherical coords
     theta_phi0 = cartesian2spherical(m0)
     theta_phi1 = cartesian2spherical(m1)
 
-    # The differences
+    # The differences with the number of interps + 1
     dtheta = (theta_phi1 - theta_phi0) / (n + 1)
 
     coords = []
@@ -315,10 +315,16 @@ class NEB_Sundials(object):
 
         # the total image number including two ends
         self.total_image_num = len(initial_images) + sum(interpolations)
+        # The number of images without the extremes
         self.image_num = self.total_image_num - 2
 
+        # Number of spins per image. The _m.vector has the form
+        # [mx1, mx2, ..., my1, my2, ..., mz1, mz2]
+        # Thus we divide by 3 to get the total of ms
         self.nxyz = len(self._m.vector()) / 3
 
+        # Total number of degrees of freedom
+        # (In spherical coords, we have 2 components per spin)
         self.coords = np.zeros(2 * self.nxyz * self.total_image_num)
         self.last_m = np.zeros(self.coords.shape)
 
@@ -459,7 +465,14 @@ class NEB_Sundials(object):
         self.integrator = integrator
 
     def compute_effective_field(self, y):
+        """
+        Compute the effective field and the tangents using the
+        formalism developed by Henkelman et al and applied
+        to micromagnetics by Dittrich et al
 
+        The tangents use the native NEB code in
+        finmag/native/src/neb/helper.cc
+        """
         y.shape = (self.total_image_num, -1)
 
         for i in range(self.image_num):
@@ -570,6 +583,11 @@ class NEB_Sundials(object):
                   "stopping_dmdt={} (degrees per nanosecond), "
                   "time_step={} s, max_steps={}.".format(stopping_dmdt,
                                                          dt, max_steps))
+
+        # Write the initial step (step=0)
+        self.compute_distance()
+        self.tablewriter.save()
+        self.tablewriter_dm.save()
 
         for i in range(max_steps):
 

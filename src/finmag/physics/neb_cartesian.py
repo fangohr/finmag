@@ -297,7 +297,7 @@ class NEB_Sundials(object):
             # the energy in the NEB method (derivative with respect to
             # the generalised coordinates)
             h = self.effective_field.H_eff
-            # Transform to spherical coordinates
+            #
             self.Heff[i + 1, :] = h[:]
             # Compute the total energy
             self.energy[i + 1] = self.effective_field.total_energy()
@@ -399,6 +399,10 @@ class NEB_Sundials(object):
                   "stopping_dmdt={} (degrees per nanosecond), "
                   "time_step={} s, max_steps={}.".format(stopping_dmdt,
                                                          dt, max_steps))
+        # Save the initial state i=0
+        self.compute_distance()
+        self.tablewriter.save()
+        self.tablewriter_dm.save()
 
         for i in range(max_steps):
 
