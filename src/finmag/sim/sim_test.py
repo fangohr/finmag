@@ -1089,7 +1089,7 @@ def test_set_m_after_relaxation(tmpdir):
     sim.set_m((0.2, 0.2, -1))
     print sim.integrator.m
     sim.relax()
-    assert sim.m_average[2] <= 0.1
+    assert sim.m_average[2] <= -0.9
 
 
 def test_sim_relax_accepts_filename(tmpdir):
