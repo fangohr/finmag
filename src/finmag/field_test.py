@@ -357,6 +357,32 @@ class TestField(object):
                 assert abs(probed_value[1] - expected_value[1]) < self.tol1
                 assert abs(probed_value[2] - expected_value[2]) < self.tol1
 
+
+    def test_setting_field_with_argument_of_incorrect_dimension_raises_ValueError(self):
+        # Check that we get a decent error (rather than the generic
+        # RuntimError thrown by dolfin) if we try to set a field with
+        # a value whose dimension doesn't match the function space.
+
+        # Try to set scalar field with a vector value
+        field = Field(self.fs3d_scalar)
+        with pytest.raises(ValueError):
+            field.set([1, 0, 0])
+
+        # Try to set vector field with a scalar value
+        field = Field(self.fs2d_vector3d)
+        with pytest.raises(ValueError):
+            field.set(42.0)
+
+        # Try to set 2D vector field with a 3D vector
+        field = Field(self.fs3d_vector2d)
+        with pytest.raises(ValueError):
+            field.set([1, 0, 0])
+
+        # Try to set 2D vector field with a 3D vector
+        field = Field(self.fs3d_vector2d)
+        with pytest.raises(ValueError):
+            field.set(["x[0]", "1", "0"])
+
     def test_set_vector_field_with_expression(self):
         """Test setting the 3D vector field with an expression."""
         # Different expressions for 3D vector fields.
