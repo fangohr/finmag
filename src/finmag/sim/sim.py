@@ -204,9 +204,12 @@ class Simulation(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
+        # TODO: Remove debug flag again once we are sure that re-initialising
+        #       the integrator doesn't cause a performance overhead.
+        debug = kwargs.pop('debug', True)
         self.llg.set_m(value, normalise=normalise, **kwargs)
         if self.has_integrator():
-            self.reinit_integrator()
+            self.reinit_integrator(debug=debug)
 
     m = property(__get_m, set_m)
 
@@ -821,13 +824,15 @@ class Simulation(object):
 
     run_normal_modes_computation = sim_helpers.run_normal_modes_computation
 
-    def reinit_integrator(self):
+    # TODO: Remove debug flag again once we are sure that re-initialising the integrator
+    #       doesn't cause a performance overhead.
+    def reinit_integrator(self, debug=True):
         """
         If an integrator is already present in the simulation, call
         its reinit() method. Otherwise do nothing.
         """
         if self.has_integrator():
-            self.integrator.reinit()
+            self.integrator.reinit(debug=debug)
         else:
             log.warning("Integrator reinit was requested, but no integrator "
                         "is present in the simulation!")
