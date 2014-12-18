@@ -18,7 +18,7 @@ mesh = df.UnitCubeMesh(2, 2, 2)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 m = Field(S3)
 m.set(df.Constant((1, 0, 0)))
-Ms = 1
+Ms = Field(S3, value=1)
 TOL = 1e-14
 
 logger = logging.getLogger('finmag')
