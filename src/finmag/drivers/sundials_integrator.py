@@ -139,7 +139,9 @@ class SundialsIntegrator(object):
         self.llg.sundials_m = self.m
         self.max_steps = old_max_steps
 
-    def reinit(self):
+    # TODO: Remove debug flag again once we are sure that re-initialising the integrator
+    #       doesn't cause a performance overhead.
+    def reinit(self, debug=True):
         """
         Reinitialise memory for CVODE.
 
@@ -147,7 +149,8 @@ class SundialsIntegrator(object):
         By calling this function, we inform the integrator that it should not assuming smoothness
         of the RHS. Should be called when we change the applied field, abruptly, for example.
         """
-        log.debug("Re-initialising CVODE integrator.")
+        if debug:
+            log.debug("Re-initialising CVODE integrator.")
         self.integrator.reinit(self.cur_t, self.llg.sundials_m)  # FIXME: rename sundials_m
 
     n_rhs_evals = property(lambda self: self.integrator.get_num_rhs_evals(

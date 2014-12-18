@@ -151,7 +151,8 @@ def relax(sim, save_vtk_snapshot_as=None, save_restart_data_as=None,
                       after=1e-14 if sim.t < 1e-14 else sim.t)
 
     sim.scheduler.run(sim.integrator, sim.callbacks_at_scheduler_events)
-    sim.integrator.reinit()
+    sim.integrator.reinit()  # TODO: Is this still needed now that set_m also calls reinit()?
+                             #       However, there it happens *after* setting m.
     sim.set_m(sim.m)
     log.info("Relaxation finished at time t = {:.2g}.".format(sim.t))
 
