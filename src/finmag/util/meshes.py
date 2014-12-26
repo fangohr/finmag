@@ -907,7 +907,7 @@ def describe_mesh_size(mesh, unit_length):
         return "hundreds of meters large"
 
 
-def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None, **kwargs):
+def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=None, dg_fun=None, **kwargs):
     """
     Plot the given mesh.
 
@@ -949,6 +949,16 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None, **kwa
 
         Size of the figure in which the mesh is to be plotted. If the
         `ax` argument is provided, this is ignored.
+
+    elev : float | None
+
+        Elevation angle (in degrees) of the 'camera view'. Only meaningful
+        for 3D plots and is ignored for 2D meshes.
+
+    azim : float | None
+
+        Azimuthal angle (in degrees) of the 'camera view' in the x,y plane.
+        Only meaningful for 3D plots and is ignored for 2D meshes.
 
     All other keyword arguments are passed on to matplotlib's `plot_trisurf`
     (for 3D meshes) or to `triplot` (for 2D meshes). The following defaults
@@ -1002,6 +1012,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, dg_fun=None, **kwa
         logger.debug("Creating new figure with figsize '{}'".format(figsize))
         fig = plt.figure(figsize=figsize)
         ax = fig.gca(aspect='equal', projection=(None if (dim == 2) else '3d'))
+        ax.view_init(elev=elev, azim=azim)
         # XXX                  ^--- Note that equal aspect ratios don't seem
         #     to work for 3d plots yet. See [1], [2].
         # [1] http://stackoverflow.com/questions/8130823/set-matplotlib-3d-plot-aspect-ratio
