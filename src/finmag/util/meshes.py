@@ -907,7 +907,8 @@ def describe_mesh_size(mesh, unit_length):
         return "hundreds of meters large"
 
 
-def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=None, dg_fun=None, **kwargs):
+def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=None, dg_fun=None,
+              xlim=None, ylim=None, zlim=None, **kwargs):
     """
     Plot the given mesh.
 
@@ -976,7 +977,8 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
     from matplotlib import cm
     from mpl_toolkits.mplot3d import Axes3D
 
-    dim = mesh.topology().dim()
+    top_dim = mesh.topology().dim()
+    geom_dim = mesh.geometry().dim()
 
     # If the user doesn't explicitly specify a linewidth, we
     # heuristically adapt it so that the plot doesn't appear all black
@@ -987,10 +989,10 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
     # structures it may make more sense to check the extent in each
     # dimension individually rather than the mesh volume as a whole.)
     if not kwargs.has_key('linewidth'):
-        lw_threshold = 500.0 if dim == 2 else 5000.0
+        lw_threshold = 500.0 if geom_dim == 2 else 5000.0
         a = mesh.num_cells() / mesh_volume(mesh)
         if a > lw_threshold:
-            kwargs['linewidth'] = pow(lw_threshold / a, 1.0 / dim)
+            kwargs['linewidth'] = pow(lw_threshold / a, 1.0 / geom_dim)
             logger.debug("Automatically adapting linewidth to improve plot quality "
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
@@ -1011,7 +1013,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
     if ax == None:
         logger.debug("Creating new figure with figsize '{}'".format(figsize))
         fig = plt.figure(figsize=figsize)
-        ax = fig.gca(aspect='equal', projection=(None if (dim == 2) else '3d'))
+        ax = fig.gca(aspect='equal', projection=(None if (geom_dim == 2) else '3d'))
         ax.view_init(elev=elev, azim=azim)
     else:
         if figsize != None:
@@ -1022,7 +1024,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
         dg_fun = df.Function(df.FunctionSpace(mesh, 'DG', 0))
         dg_fun.vector()[:] = 1
 
-    if dim == 2:
+    if geom_dim == 2:
         coords = mesh.coordinates()
         x = coords[:, 0]
         y = coords[:, 1]
@@ -1048,7 +1050,10 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
         ax.tripcolor(
             x, y, triangles=triangs, facecolors=zfaces, edgecolors='k', **kwargs)
 
-    elif dim == 3:
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+    elif geom_dim == 3:
         # TODO: Remove this error message once matplotlib 1.3 has been
         # released!
         import matplotlib
@@ -1059,8 +1064,15 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
                 "release is 1.2.0, so you have to install the development "
                 "version manually. Apologies for the inconvenience!")
 
-        bm = df.BoundaryMesh(mesh, 'exterior')
-        coords = bm.coordinates()
+        if top_dim == 3:
+            # Extract the boundary mesh because we need a mesh
+            # of topological dimension 2 for plotting.
+            mesh = df.BoundaryMesh(mesh, 'exterior')
+        elif top_dim != 2:
+            raise NotImplementedError(
+                "Cannot plot 3D mesh of topological dimension {}"
+                "".format(top_dim))
+        coords = mesh.coordinates()
 
         x = coords[:, 0]
         y = coords[:, 1]
@@ -1076,19 +1088,23 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
         if not kwargs.has_key('shade'):
             kwargs['shade'] = False
 
-        triangs = [[v.index() for v in df.vertices(s)] for s in df.faces(bm)]
         try:
             ax.plot_trisurf(
-                x, y, z, triangles=triangs, vertex_vals=scalar_field, **kwargs)
+                x, y, z, triangles=mesh.cells(), vertex_vals=scalar_field, **kwargs)
         except AttributeError:
             if scalar_field != None:
                 logger.warning("Ignoring 'scalar_field' argument because this "
                                "version of matplotlib doesn't support it.")
-            ax.plot_trisurf(x, y, z, triangles=triangs, **kwargs)
+            ax.plot_trisurf(x, y, z, triangles=mesh.cells(), **kwargs)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_zlim(zlim)
     else:
         raise ValueError(
             "Plotting is only supported for 2- and 3-dimensional meshes.")
 
+    ax.set_aspect('equal')
     return ax
 
 
