@@ -15,10 +15,11 @@ from math import sqrt, pi, cos, sin
 from zeeman import DipolarField
 
 mesh = df.UnitCubeMesh(2, 2, 2)
-S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+S1 = df.FunctionSpace(mesh, "Lagrange", 1)
+S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 m = Field(S3)
 m.set(df.Constant((1, 0, 0)))
-Ms = 1
+Ms = Field(S1, value=1)
 TOL = 1e-14
 
 logger = logging.getLogger('finmag')

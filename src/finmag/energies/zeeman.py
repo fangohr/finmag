@@ -305,7 +305,7 @@ class TimeZeemanPython(TimeZeeman):
             self.H0 = helpers.vector_valued_function(
                 self.df_expression, self.m.functionspace)
 
-        self.E = - mu0 * self.Ms * df.dot(self.m.f, self.H0)
+        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H0)
 
         self.H_init = self.H0.vector().array()
         self.H = self.H_init.copy()
@@ -326,6 +326,7 @@ class TimeZeemanPython(TimeZeeman):
                 self.H.shape = (-1,)
             else:
                 self.H[:] = self.H_init[:] * self.time_fun(t)
+        return self  # for use in list comprehensions
 
     def switch_off(self):
         # It might be nice to provide the option to remove the Zeeman

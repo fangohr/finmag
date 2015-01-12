@@ -111,10 +111,21 @@ class Field(object):
         self.f.vector().set_local(vector.get_local())
 
     def from_sequence(self, seq):
-        assert isinstance(self.functionspace, df.VectorFunctionSpace)
         assert isinstance(seq, (tuple, list))
-        assert len(seq) == self.functionspace.num_sub_spaces()
+        self._check_can_set_vector_value(seq)
         self.from_constant(df.Constant(seq))
+
+    def _check_can_set_scalar_value(self):
+        if not isinstance(self.functionspace, df.FunctionSpace):
+            raise ValueError("Cannot set vector field with scalar value.")
+
+    def _check_can_set_vector_value(self, seq):
+        if not isinstance(self.functionspace, df.VectorFunctionSpace):
+            raise ValueError("Cannot set scalar field with vector value.")
+        if len(seq) != self.functionspace.num_sub_spaces():
+            raise ValueError(
+                "Cannot set vector field with value of non-matching dimension "
+                "({} != {})", len(seq), self.functionspace.num_sub_spaces())
 
     def set(self, value, normalised=False, **kwargs):
         """
@@ -136,10 +147,14 @@ class Field(object):
         elif isinstance(value, df.GenericVector):
             self.from_generic_vector(value)
         elif isinstance(value, (int, float)):
+            self._check_can_set_scalar_value()
             self.from_constant(df.Constant(value))
-        elif (isinstance(value, basestring) or
-              isinstance(value, (tuple, list)) and
-                all(isinstance(item, basestring) for item in value)):
+        elif isinstance(value, basestring):
+            self._check_can_set_scalar_value()
+            self.from_expression(value, **kwargs)
+        elif (isinstance(value, (tuple, list)) and
+              all(isinstance(item, basestring) for item in value)):
+            self._check_can_set_vector_value(value)
             self.from_expression(value, **kwargs)
         elif isinstance(value, (tuple, list)):
             self.from_sequence(value)

@@ -156,7 +156,7 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         if np.iscomplexobj(m):
             raise NotImplementedError(
                 "XXX TODO: Implement the version for complex arrays!")
-        sim.set_m(m, normalise=normalise)
+        sim.set_m(m, normalise=normalise, debug=False)
         return sim.effective_field()
 
     # N is the number of degrees of freedom of the magnetisation vector.
