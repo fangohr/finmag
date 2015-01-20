@@ -339,7 +339,7 @@ class FKDemag(object):
         with fk_timed("using boundary conditions"):
             phi_1 = self._phi_1.vector()[self._b2g_map]
             self._phi_2.vector()[self._b2g_map[:]] = np.dot(
-                self._bem, phi_1.array())
+                self._bem, phi_1)
             #boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
             #A = self._poisson_matrix.copy()
             #b = self._laplace_zeros
