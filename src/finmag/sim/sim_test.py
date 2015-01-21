@@ -974,7 +974,6 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
         """
         for i in xrange(N):
-            logger.warning("Creating simulation object #{}".format(i))
             sim = Simulation(mesh, Ms, unit_length)
             if close_logfiles:
                 sim.close_logfile()
