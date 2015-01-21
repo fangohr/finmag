@@ -188,9 +188,9 @@ class TestSimulation(object):
         # Probe the magnetisation at the given points
         m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
         # Alternative method using 'probe_field_along_line()'
-        m_probed_vals2 = np.concatenate(
-            [sim.probe_field_along_line("m", [xmin, 0, 0], [xmax, 0, 0], N=20),
-             sim.probe_field_along_line("m", [xmin, y0, z0], [xmax, y0, z0], N=20)])
+        _, vals1 = sim.probe_field_along_line("m", [xmin, 0, 0], [xmax, 0, 0], N=20)
+        _, vals2 = sim.probe_field_along_line("m", [xmin, y0, z0], [xmax, y0, z0], N=20)
+        m_probed_vals2 = np.concatenate([vals1, vals2])
 
         # Check that we get m_init everywhere.
         for i in xrange(len(probing_pts)):

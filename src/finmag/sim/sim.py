@@ -560,6 +560,9 @@ class Simulation(object):
         Probe the field of type `field_type` at `N` equidistant points
         along a straight line connecting `pt_start` and `pt_end`.
 
+        Returns a pair `(pts, vals)` where `pts` is the list of probing
+        points and `vals` is the list of probed values.
+
         See the documentation of the method get_field_as_dolfin_function
         to know which ``field_type`` is allowed.
 
@@ -568,7 +571,8 @@ class Simulation(object):
            probe_field_along_line('m', [-200, 0, 0], [200, 0, 0], N=200)
 
         """
-        return helpers.probe_along_line(self.get_field_as_dolfin_function(field_type, region=region), pt_start, pt_end, N)
+        field = self.get_field_as_dolfin_function(field_type, region=region)
+        return helpers.probe_along_line(field, pt_start, pt_end, N)
 
     def has_integrator(self):
         return (self._integrator != None)
