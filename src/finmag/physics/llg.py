@@ -165,9 +165,6 @@ class LLG(object):
         Return the magnetisation as a numpy.array. This is not recommended and
         should only be used for debugging!
         """
-        # For now, print a big, fat warning message (we might remove this again
-        # if this method turns out to be useful for tests).
-        logger.warning("XXX  If possible avoid using m as a numpy.array! XXX")
         return self._m_field.get_numpy_array_debug()
 
     # @m.setter
