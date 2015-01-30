@@ -401,6 +401,7 @@ def compute_field_diffs(sim):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     """
     Check that the stray field of a sphere in an 'airbox'

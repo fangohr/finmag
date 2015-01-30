@@ -124,6 +124,7 @@ def test_passing_scipy_eigsh_parameters(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
@@ -209,6 +210,7 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     os.chdir(str(tmpdir))
     disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
