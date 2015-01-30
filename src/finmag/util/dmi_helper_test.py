@@ -15,7 +15,6 @@ def init_skx_down(pos):
     else:
         return (0, 0, 1)
 
-@pytest.mark.xfail(reason='dolfin 1.5')
 def compute_skyrmion_number_2d_example():
 
     mesh = df.CircleMesh(df.Point(0, 0), 20, 4)
@@ -40,6 +39,7 @@ def compute_skyrmion_number_2d_example():
     print compute_skyrmion_number_2d(sim.m_field.f)
 
 
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compute_skyrmion_number_2d_pbc():
 
     mesh = df.RectangleMesh(0, 0, 100, 100, 40, 40)
