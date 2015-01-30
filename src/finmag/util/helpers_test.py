@@ -188,7 +188,7 @@ def test_vector_valued_function():
         lambda t: (a * t[0], b * t[1], c * t[2]), S3, normalise=True)
 
     # Check that the function vectors are as expected
-    import ipdb; ipdb.set_trace()
+    #import ipdb; ipdb.set_trace()
     assert(all(f_tuple.vector() == v_ref))
     assert(all(f_list.vector() == v_ref))
     assert(all(f_array3.vector() == v_ref))
