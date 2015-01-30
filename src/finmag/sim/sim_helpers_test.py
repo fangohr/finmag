@@ -157,6 +157,7 @@ def test_save_restart_data_creates_non_existing_directories(tmpdir):
     assert(os.path.exists('foo'))
 
 
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_get_submesh(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini(mark_regions=True)

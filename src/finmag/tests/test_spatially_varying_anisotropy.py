@@ -1,3 +1,4 @@
+import pytest
 import os
 import numpy as np
 import dolfin as df
@@ -9,7 +10,7 @@ from finmag.util.consts import bloch_parameter
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
+@pytest.mark.xfail(reason='1.5')
 def test_spatially_varying_anisotropy_axis(tmpdir, debug=False):
     Ms = 1e6
     A = 1.3e-11
