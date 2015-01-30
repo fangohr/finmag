@@ -152,7 +152,7 @@ class TreecodeBEM(FKDemag):
 
         phi_1 = self._phi_1.vector()[self._b2g_map]
 
-        self.fast_sum.fastsum(self.phi2_b, phi_1.array())
+        self.fast_sum.fastsum(self.phi2_b, phi_1)
 
         self._phi_2.vector()[self._b2g_map[:]] = self.phi2_b
 
