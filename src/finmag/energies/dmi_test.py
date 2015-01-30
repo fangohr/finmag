@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import dolfin as df
 from math import pi
@@ -83,7 +84,7 @@ def test_dmi_pbc2d():
 
     assert np.max(field) < 1e-15
 
-
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
