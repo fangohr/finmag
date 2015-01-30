@@ -1188,6 +1188,7 @@ def test_NormalModeSimulation(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
@@ -1211,6 +1212,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     os.chdir(str(tmpdir))
     csg_string = textwrap.dedent("""
