@@ -249,7 +249,7 @@ def skyrmion_number(self):
     """
 
     if self.mesh.topology().dim() == 3:
-        m = get_function_on_top_surface(
+        m = get_function_on_bottom_surface(
             mesh=self.mesh, dfFunction=self.m_field.f)
     else:
         m = self.m_field.f
@@ -333,3 +333,47 @@ def get_function_on_top_surface(mesh, dfFunction):
     dfFunction_top = df.interpolate(dfFunction, V_toplayer)
 
     return dfFunction_top
+
+
+def get_function_on_bottom_surface(mesh, dfFunction):
+    """
+    This function takes a 3D "mesh" and a dolfin function, "dfFunction" defined
+    on that mesh.
+
+    It returns the dolfin function defined on the bottom surface of the mesh.
+
+    It can be used for extracting the magnetisation/a field from the top
+    suface of a simulation object.
+
+    """
+
+    # extract the boundary mesh
+    boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
+
+    # extract the top surface as a sub-mesh of the boundary mesh.
+    # This is done by creating a MeshFunction which marks all triangles
+    # in the boundary mesh that belong to top surface, and then extract the
+    # SubMesh though that MeshFunction (Thanks Max for funding this out).
+    mesh_coords = mesh.coordinates()
+    z_min = min(mesh_coords[:, 2])
+
+    class Bottom(df.SubDomain):
+
+        def inside(self, pt, on_boundary):
+            x, y, z = pt
+            return (z >= z_min - df.DOLFIN_EPS) and (z <= z_min + df.DOLFIN_EPS)
+
+    sub_domains = df.MeshFunction('size_t', boundary_mesh, 2)
+    sub_domains.set_all(0)
+
+    bottom = Bottom()
+    bottom.mark(sub_domains, 1)
+
+    bottom_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
+
+    # create a new function space defined on the top surface and and interpolate
+    # the original field onto this new function space.
+    V_bottomlayer = df.VectorFunctionSpace(bottom_layer, 'CG', 1, dim=3)
+    dfFunction_bottom = df.interpolate(dfFunction, V_bottomlayer)
+
+    return dfFunction_bottom
