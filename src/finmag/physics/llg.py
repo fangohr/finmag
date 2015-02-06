@@ -9,6 +9,7 @@ from finmag.native import llg as native_llg
 from finmag.util import helpers
 from finmag.util.meshes import nodal_volume
 
+
 def get_maps(fspace):
     v2d_xyz = df.vertex_to_dof_map(fspace)
     n1 = len(v2d_xyz)
@@ -238,8 +239,10 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(
-            value, self.S3, normalise=normalise, **kwargs).vector().array())
+        m0 = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector().array()[self.v2d_xxx]
+        if normalise:
+            m0 = helpers.fnormalise(m0)
+        self._m_field.set_with_ordered_numpy_array_xxx(m0)
 
     def solve_for(self, m, t):
         self._m_field.set_with_ordered_numpy_array_xxx(m)
