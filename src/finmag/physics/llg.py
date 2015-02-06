@@ -73,6 +73,8 @@ class LLG(object):
         self.Volume = None
 
         self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = get_maps(S3)
+        self.v2d_scale = df.vertex_to_dof_map(S1)
+        self.d2v_scale = df.dof_to_vertex_map(S1)
 
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
@@ -236,7 +238,7 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m_field.set_with_ordered_numpy_array_xxx(helpers.vector_valued_function(
+        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(
             value, self.S3, normalise=normalise, **kwargs).vector().array())
 
     def solve_for(self, m, t):
@@ -258,7 +260,7 @@ class LLG(object):
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
-
+        alpha__ = self.alpha.vector().array()[self.v2d_scale]
         # Calculate dm/dt
         if self.do_slonczewski:
             if self.fun_slonczewski_time_update != None:
@@ -266,7 +268,7 @@ class LLG(object):
                 self.J[:] = J_new
             native_llg.calc_llg_slonczewski_dmdt(
                 m, H_eff, t, dmdt, self.pins,
-                self.gamma, self.alpha.vector().array(),
+                self.gamma, alpha__,
                 char_time,
                 self.Lambda, self.epsilonprime,
                 self.J, self.P, self.d, self._Ms, self.p)
@@ -275,20 +277,20 @@ class LLG(object):
             H_gradm.shape = (3, -1)
             native_llg.calc_llg_zhang_li_dmdt(
                 m, H_eff, H_gradm, t, dmdt, self.pins,
-                self.gamma, self.alpha.vector().array(),
+                self.gamma, alpha__,
                 char_time,
                 self.u0, self.beta, self._Ms)
             H_gradm.shape = (-1,)
         else:
             native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
-                                     self.gamma, self.alpha.vector().array(),
+                                     self.gamma, alpha__,
                                      char_time, self.do_precession)
         dmdt.shape = (-1,)
         H_eff.shape = (-1,)
 
         default_timer.stop("solve", self.__class__.__name__)
 
-        self._dmdt.vector().set_local(dmdt)
+        self._dmdt.vector().set_local(dmdt[self.d2v_xxx])
 
         return dmdt
 
@@ -414,7 +416,7 @@ class LLG(object):
         # First, compute the derivative H' = dH_eff/dt
         self._m_field.set_with_ordered_numpy_array_xxx(mp)
         Hp = tmp.view()
-        Hp[:] = self.effective_field.compute_jacobian_only(t)
+        Hp[:] = self.effective_field.compute_jacobian_only(t)[self.v2d_xxx]
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
             # If the field m has changed, recompute H_eff as well
@@ -434,7 +436,7 @@ class LLG(object):
         char_time = 0.1 / self.c
         Heff2 = self.effective_field.H_eff[self.v2d_xxx]
         native_llg.calc_llg_jtimes(m, Heff2.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
-                                   self.alpha.vector().array(), char_time, self.do_precession, self.pins)
+                                   self.alpha.vector().array()[self.v2d_scale], char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
         mp.shape = (-1,)
