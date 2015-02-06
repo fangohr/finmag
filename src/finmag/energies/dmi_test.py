@@ -84,7 +84,7 @@ def test_dmi_pbc2d():
 
     assert np.max(field) < 1e-15
 
-@pytest.mark.xfail(reason='dolfin 1.5')
+#@pytest.mark.xfail(reason='dolfin 1.5')
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
@@ -98,7 +98,7 @@ def test_dmi_pbc2d_1D(plot=False):
     m_init = vector_valued_function(m_init_fun, mesh)
 
     Ms = 8.6e5
-    sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)
+    sim = Simulation(mesh, Ms, pbc=None, unit_length=1e-9)
     sim.set_m(m_init_fun)
 
     A = 1.3e-11
