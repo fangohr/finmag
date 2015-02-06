@@ -72,6 +72,8 @@ class LLG(object):
         # will be computed on demand, and carries volume of the mesh
         self.Volume = None
 
+        self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = get_maps(S3)
+
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
         self.alpha.assign(df.Constant(0.5))
@@ -245,7 +247,7 @@ class LLG(object):
     def solve(self, t):
         # we don't use self.effective_field.compute(t) for performance reasons
         self.effective_field.update(t)
-        H_eff = self.effective_field.H_eff  # alias (for readability)
+        H_eff = self.effective_field.H_eff[self.v2d_xxx]  # alias (for readability)
         H_eff.shape = (3, -1)
 
         default_timer.start("solve", self.__class__.__name__)
@@ -430,7 +432,8 @@ class LLG(object):
         J_mp.shape = (3, -1)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
-        native_llg.calc_llg_jtimes(m, self.effective_field.H_eff.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
+        Heff2 = self.effective_field.H_eff[self.v2d_xxx]
+        native_llg.calc_llg_jtimes(m, Heff2.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
                                    self.alpha.vector().array(), char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
