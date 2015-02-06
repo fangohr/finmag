@@ -48,10 +48,13 @@ class Field(object):
         self.unit = unit
 
         functionspace_family = self.f.ufl_element().family()
-        if functionspace_family == 'Lagrange':
+        if functionspace_family == 'Lagrange' and self.value_dim() == 3:
             self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
             n1 = len(self.v2d_xyz)
-            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(n1)
+            print n1
+
+            print self.v2d_xyz
+            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(-1,)
 
 
             self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
