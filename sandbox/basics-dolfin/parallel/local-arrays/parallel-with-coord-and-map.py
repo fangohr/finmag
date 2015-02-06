@@ -10,8 +10,8 @@ print "Hello World"
 import dolfin as df
 import numpy as np
 
-# Explicit - do not reorder
-df.parameters.reorder_dofs_serial = False
+#df.parameters.reorder_dofs_serial = False
+df.parameters.reorder_dofs_serial = True
 
 # Generate mesh and boundary conditions
 nx = ny = 10
@@ -35,6 +35,13 @@ zero_v = df.interpolate(expression, V)
 print("My vector is of shape %s." % zero_v.vector().array().shape)
 print zero_v.vector().array()
 
+# what does the vertex to dof map look like?
+d2v = df.dof_to_vertex_map(V)
+print("dof_to_vertex_map: {}".format(d2v))
+v2d = df.vertex_to_dof_map(V)
+print("vertex_to_dof_map: {}".format(v2d))
+
+
 # Store vector and assert that the full vector is present
 my_vec = zero_v.vector().array()
 my_vec_floor = np.floor(my_vec)
@@ -43,35 +50,43 @@ for num in np.unique(my_vec_floor):
     assert((N - np.count_nonzero(my_vec_floor - num)) == 3)
 
 
-"""
-Observations: 6 Feb 2015 HF:
 
-fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ dir
-parallel.py	    parallel.py-n2.out	parallel-with-coord.py	run_parallel.sh
-parallel.py-n1.out  parallel.py-n3.out	parallel-with-rank.py
-fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ cat parallel.py-n1.out 
+
+
+
+""" 
+
+2015/02/06 HF, MAB:
+
+fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ mpirun -n 1 python parallel-with-coord-and-map.py 
+Hello World
 My vector is of shape 30.
-[ 0.1  1.1  2.1  3.1  4.1  5.1  6.1  7.1  8.1  9.1  0.2  1.2  2.2  3.2  4.2
-  5.2  6.2  7.2  8.2  9.2  0.3  1.3  2.3  3.3  4.3  5.3  6.3  7.3  8.3  9.3]
-fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ cat parallel.py-n2.out 
+[ 0.1  0.2  0.3  1.1  1.2  1.3  2.1  2.2  2.3  3.1  3.2  3.3  4.1  4.2  4.3
+  5.1  5.2  5.3  6.1  6.2  6.3  7.1  7.2  7.3  8.1  8.2  8.3  9.1  9.2  9.3]
+dof_to_vertex_map: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+ 25 26 27 28 29]
+vertex_to_dof_map: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+ 25 26 27 28 29]
+fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ mpirun -n 2 python parallel-with-coord-and-map.py 
+Hello World
+Hello World
+Building mesh (dist 0a)
+Number of global vertices: 10
+Number of global cells: 9
+Building mesh (dist 1a)
 My vector is of shape 15.
 My vector is of shape 15.
-[ 0.1  0.2  0.3  1.1  1.2  1.3  2.1  2.2  2.3  3.1  3.2  3.3  4.1  4.2  4.3]
 [ 5.1  5.2  5.3  6.1  6.2  6.3  7.1  7.2  7.3  8.1  8.2  8.3  9.1  9.2  9.3]
-fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ cat parallel.py-n3.out 
-My vector is of shape 9.
-My vector is of shape 12.
-My vector is of shape 9.
-[ 3.1  3.2  3.3  4.1  4.2  4.3  5.1  5.2  5.3  6.1  6.2  6.3]
-[ 0.1  0.2  0.3  1.1  1.2  1.3  2.1  2.2  2.3]
-[ 7.1  7.2  7.3  8.1  8.2  8.3  9.1  9.2  9.3]
-fangohr@osiris:~/hg/finmag/sandbox/basics-dolfin/parallel/local-arrays$ 
+[ 0.1  0.2  0.3  1.1  1.2  1.3  2.1  2.2  2.3  3.1  3.2  3.3  4.1  4.2  4.3]
+dof_to_vertex_map: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14]
+dof_to_vertex_map: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14]
+vertex_to_dof_map: [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14]
+vertex_to_dof_map: [  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14 -15 -14 -13]
 
-Interestingly, this uses the 'old' order xxxxx, yyyyy, zzzzz for the serial run, but
-switches to xyz, xyz, xyz, xyz, xyz  when run with mpi -n N where N >= 2 .
 
-In other words: the df.parameters.reorder_dofs_serial = False 
-is ignored for parallel runs.
+Observation: dof_to_vertex_map seems to provide local indices (that's good).
 
+We don't know what the additional negative numbers are (last line above): could be a periodic point, or
+a hint that this node is on a different process. Will need to look further into this.
 
 """
