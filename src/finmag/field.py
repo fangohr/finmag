@@ -407,4 +407,6 @@ class Field(object):
         vectors = reordered.reshape((3, -1))  # [[x1, y1, z1], ..., [xn, yn, zn]]
         lengths = np.sqrt(np.add.reduce(vectors * vectors, axis=1))
         normalised = np.dot(vectors.T, np.diag(1 / lengths)).T.ravel()
-        self.from_array(normalised)
+        vertexmap = df.dof_to_vertex_map(self.functionspace)
+        normalised_original_order = normalised[vertexmap]
+        self.from_array(normalised_original_order)
