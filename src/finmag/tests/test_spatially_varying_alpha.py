@@ -31,7 +31,7 @@ def test_spatially_varying_alpha_using_LLG_class():
     mesh = df.IntervalMesh(simplices, 0, length)
 
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, 3)
     llg = LLG(S1, S3)
     llg.set_alpha(1)
     expected_alpha = np.ones(simplices + 1)
