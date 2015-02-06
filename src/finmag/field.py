@@ -64,7 +64,9 @@ class Field(object):
                 j = self.d2v_xyz[i]
                 self.d2v_xxx[i] = (j%3)*n1/3 + (j/3)
             self.d2v_xxx.shape=(-1,)
-
+        if functionspace_family == 'Lagrange' and self.value_dim() == 1:
+            self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
+            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
 
     def __call__(self, x):
         """
