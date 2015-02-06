@@ -178,20 +178,41 @@ class Field(object):
             self.normalise()
 
 
-    def get_ordered_numpy_array(self):
+    def get_ordered_numpy_array_xyz(self):
         """Returns the dolfin function as an ordered numpy array, so that
         in the case of vector fields all components at the same node
         are grouped together."""
         vtd = df.vertex_to_dof_map(self.functionspace)
-
         return self.get_numpy_array_debug()[vtd]
 
-    def set_with_ordered_numpy_array(self, ordered_array):
+    def get_ordered_numpy_array_xxx(self):
+        """Returns the dolfin function as an ordered numpy array, so that
+        in the case of vector fields all components at the same node
+        are grouped together."""
+        return self.order1_to_order2(self.get_ordered_numpy_array_xyz())
+
+    def order2_to_order1(self, order2):
+        """Returns the dolfin function as an ordered numpy array, so that
+        in the case of vector fields all components of different nodes
+        are grouped together."""
+        n = len(order2)
+        return ((order2.reshape(3, n/3)).transpose()).reshape(n)
+
+    def order1_to_order2(self, order1):
+        """Returns the dolfin function as an ordered numpy array, so that
+        in the case of vector fields all components of different nodes
+        are grouped together."""
+        n = len(order1)
+        return ((order1.reshape(n/3, 3)).transpose()).reshape(n)
+
+    def set_with_ordered_numpy_array_xyz(self, ordered_array):
         """Set the field using an ordered numpy array."""
         dtv = df.dof_to_vertex_map(self.functionspace)
-        
         self.set(ordered_array[dtv])
 
+    def set_with_ordered_numpy_array_xxx(self, ordered_array):
+        """Set the field using an ordered numpy array."""        
+        self.set_with_ordered_numpy_array_xyz(self.order2_to_order1(ordered_array))
 
     def as_array(self):
         return self.f.vector().array()
