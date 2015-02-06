@@ -47,6 +47,27 @@ class Field(object):
 
         self.unit = unit
 
+        functionspace_family = self.f.ufl_element().family()
+        if functionspace_family == 'Lagrange' and self.value_dim() == 3:
+            self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
+            n1 = len(self.v2d_xyz)
+            print n1
+
+            print self.v2d_xyz
+            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(-1,)
+
+
+            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
+            n2 = len(self.d2v_xyz)
+            self.d2v_xxx = self.d2v_xyz.copy()
+            for i in xrange(n2):
+                j = self.d2v_xyz[i]
+                self.d2v_xxx[i] = (j%3)*n1/3 + (j/3)
+            self.d2v_xxx.shape=(-1,)
+        if functionspace_family == 'Lagrange' and self.value_dim() == 1:
+            self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
+            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
+
     def __call__(self, x):
         """
         Shorthand so user can do field(x) instead of field.f(x) to interpolate.
@@ -177,19 +198,17 @@ class Field(object):
         if normalised:
             self.normalise()
 
-
     def get_ordered_numpy_array_xyz(self):
         """Returns the dolfin function as an ordered numpy array, so that
         in the case of vector fields all components at the same node
         are grouped together."""
-        vtd = df.vertex_to_dof_map(self.functionspace)
-        return self.get_numpy_array_debug()[vtd]
+        return self.get_numpy_array_debug()[self.v2d_xyz]
 
     def get_ordered_numpy_array_xxx(self):
         """Returns the dolfin function as an ordered numpy array, so that
         in the case of vector fields all components at the same node
         are grouped together."""
-        return self.order1_to_order2(self.get_ordered_numpy_array_xyz())
+        return self.get_numpy_array_debug()[self.v2d_xxx]
 
     def order2_to_order1(self, order2):
         """Returns the dolfin function as an ordered numpy array, so that
@@ -207,12 +226,11 @@ class Field(object):
 
     def set_with_ordered_numpy_array_xyz(self, ordered_array):
         """Set the field using an ordered numpy array."""
-        dtv = df.dof_to_vertex_map(self.functionspace)
-        self.set(ordered_array[dtv])
+        self.set(ordered_array[self.d2v_xyz])
 
     def set_with_ordered_numpy_array_xxx(self, ordered_array):
         """Set the field using an ordered numpy array."""        
-        self.set_with_ordered_numpy_array_xyz(self.order2_to_order1(ordered_array))
+        self.set(ordered_array[self.d2v_xxx])
 
     def as_array(self):
         return self.f.vector().array()
