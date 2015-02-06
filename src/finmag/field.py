@@ -177,6 +177,22 @@ class Field(object):
         if normalised:
             self.normalise()
 
+
+    def get_ordered_numpy_array(self):
+        """Returns the dolfin function as an ordered numpy array, so that
+        in the case of vector fields all components at the same node
+        are grouped together."""
+        vtd = df.vertex_to_dof_map(self.functionspace)
+
+        return self.get_numpy_array_debug()[vtd]
+
+    def set_with_ordered_numpy_array(self, ordered_array):
+        """Set the field using an ordered numpy array."""
+        dtv = df.dof_to_vertex_map(self.functionspace)
+        
+        self.set(ordered_array[dtv])
+
+
     def as_array(self):
         return self.f.vector().array()
 
