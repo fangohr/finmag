@@ -62,7 +62,6 @@ class Field(object):
                 self.d2v_xxx[i] = (j%3)*n1/3 + (j/3)
             self.d2v_xxx.shape=(-1,)
 
-            
 
     def __call__(self, x):
         """
