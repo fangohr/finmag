@@ -87,7 +87,7 @@ class LLG(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) / 3
+            nb_nodes_mesh = len(self._m_field.get_with_ordered_numpy_array_xxx()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
@@ -165,7 +165,7 @@ class LLG(object):
         Return the magnetisation as a numpy.array. This is not recommended and
         should only be used for debugging!
         """
-        return self._m_field.get_numpy_array_debug()
+        return self._m_field.get_with_ordered_numpy_array_xxx()
 
     # @m.setter
     # def m(self, value):
@@ -181,12 +181,12 @@ class LLG(object):
     @property
     def sundials_m(self):
         """The unit magnetisation."""
-        return self._m_field.get_numpy_array_debug()
+        return self._m_field.get_with_ordered_numpy_array_xxx()
 
     @sundials_m.setter
     def sundials_m(self, value):
         # used to copy back from sundials cvode
-        self._m_field.set_with_numpy_array_debug(value)
+        self._m_field.set_with_ordered_numpy_array_xxx(value)
 
     def m_average_fun(self, dx=df.dx):
         """
@@ -219,11 +219,11 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        self._m_field.set_with_numpy_array_debug(helpers.vector_valued_function(
+        self._m_field.set_with_ordered_numpy_array_xxx(helpers.vector_valued_function(
             value, self.S3, normalise=normalise, **kwargs).vector().array())
 
     def solve_for(self, m, t):
-        self._m_field.set_with_numpy_array_debug(m)
+        self._m_field.set_with_ordered_numpy_array_xxx(m)
         value = self.solve(t)
         return value
 
@@ -237,7 +237,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
-        m = self._m_field.get_numpy_array_debug()
+        m = self._m_field.get_with_ordered_numpy_array_xxx()
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
@@ -285,7 +285,7 @@ class LLG(object):
         # need to be present because the function must have the correct signature
         # when it is passed to set_spils_preconditioner() in the cvode class.
         if not jok:
-            self._m_field.set_with_numpy_array_debug(m)
+            self._m_field.set_with_ordered_numpy_array_xxx(m)
             self._reuse_jacobean = True
 
         return 0, not jok
@@ -390,19 +390,19 @@ class LLG(object):
         The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
-        assert m.shape == self._m_field.get_numpy_array_debug().shape
+        assert m.shape == self._m_field.get_with_ordered_numpy_array_xxx().shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
         # First, compute the derivative H' = dH_eff/dt
-        self._m_field.set_with_numpy_array_debug(mp)
+        self._m_field.set_with_ordered_numpy_array_xxx(mp)
         Hp = tmp.view()
         Hp[:] = self.effective_field.compute_jacobian_only(t)
 
         if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
             # If the field m has changed, recompute H_eff as well
             if not np.array_equal(self.m_numpy, m):
-                self.m_field.set_with_numpy_array_debug(m)
+                self.m_field.set_with_ordered_numpy_array_xxx(m)
                 self.effective_field.update(t)
             else:
                 pass
