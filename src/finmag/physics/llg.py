@@ -87,7 +87,7 @@ class LLG(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m_field.get_with_ordered_numpy_array_xxx()) / 3
+            nb_nodes_mesh = len(self._m_field.get_ordered_numpy_array_xxx()) / 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:
@@ -165,7 +165,7 @@ class LLG(object):
         Return the magnetisation as a numpy.array. This is not recommended and
         should only be used for debugging!
         """
-        return self._m_field.get_with_ordered_numpy_array_xxx()
+        return self._m_field.get_ordered_numpy_array_xxx()
 
     # @m.setter
     # def m(self, value):
@@ -181,7 +181,7 @@ class LLG(object):
     @property
     def sundials_m(self):
         """The unit magnetisation."""
-        return self._m_field.get_with_ordered_numpy_array_xxx()
+        return self._m_field.get_ordered_numpy_array_xxx()
 
     @sundials_m.setter
     def sundials_m(self, value):
@@ -237,7 +237,7 @@ class LLG(object):
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
-        m = self._m_field.get_with_ordered_numpy_array_xxx()
+        m = self._m_field.get_ordered_numpy_array_xxx()
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
@@ -390,7 +390,7 @@ class LLG(object):
         The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
         function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
         """
-        assert m.shape == self._m_field.get_with_ordered_numpy_array_xxx().shape
+        assert m.shape == self._m_field.get_ordered_numpy_array_xxx().shape
         assert mp.shape == m.shape
         assert tmp.shape == m.shape
 
