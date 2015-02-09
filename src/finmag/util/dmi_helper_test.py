@@ -39,7 +39,7 @@ def compute_skyrmion_number_2d_example():
     print compute_skyrmion_number_2d(sim.m_field.f)
 
 
-@pytest.mark.xfail(reason='dolfin 1.5')
+#@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compute_skyrmion_number_2d_pbc():
 
     mesh = df.RectangleMesh(0, 0, 100, 100, 40, 40)
@@ -56,8 +56,9 @@ def test_compute_skyrmion_number_2d_pbc():
 
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
 
-    # df.plot(sim._m)
-    # df.interactive()
+    df.plot(sim.m_field.f)
+    df.interactive()
+    print np.max(sim.m_field.as_array())
 
     sky_num = compute_skyrmion_number_2d(sim.m_field.f)
 
@@ -66,5 +67,5 @@ def test_compute_skyrmion_number_2d_pbc():
     assert sky_num < -0.95 and sky_num > -1.0
 
 if __name__ == "__main__":
-    compute_skyrmion_number_2d_example()
+    #compute_skyrmion_number_2d_example()
     test_compute_skyrmion_number_2d_pbc()
