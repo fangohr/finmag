@@ -686,85 +686,16 @@ class TestField(object):
                 assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
     def test_normalise(self):
-        """Test normalisation of vector fields."""
-        # 2D vector field
-        value = (1.3, 3.6)
-        for functionspace in self.vector2d_fspaces:
-            field = Field(functionspace, value, normalised=True)
+        mesh = df.UnitIntervalMesh(2)
+        V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"))
+        field = Field(V, value=expr)
+        field.normalise()
 
-            values = field.coords_and_values()[1]  # Ignore coordinates.
+        dofmap = df.vertex_to_dof_map(V)
+        reordered = field.f.vector().array()[dofmap].reshape((3, -1))
+        assert np.allclose(np.linalg.norm(reordered, axis=1), 1)
 
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (values[:, 0] ** 2 + values[:, 1] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # 3D vector field
-        value = (-1.3, 3.16, 0)
-        for functionspace in self.vector3d_fspaces:
-            field = Field(functionspace, value, normalised=True)
-
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            normalised_c3 = value[2] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-            assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (
-                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # 4D vector field
-        value = (-1.23, -3.96, 0, 6.98)
-        for functionspace in self.vector4d_fspaces:
-            field = Field(functionspace, value, normalised=True)
-
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2 +
-                          value[3] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            normalised_c3 = value[2] / norm_exact
-            normalised_c4 = value[3] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-            assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
-            assert np.all(abs(values[:, 3] - normalised_c4) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2 +
-                    values[:, 3] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # Test normalisation if field is set using
-        # dolfin expression or python function.
-        expressions = [lambda x:(11.2 * x[0], -1.6 * x[1], 0.3 * x[2]),
-                       df.Expression(['11.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
-
-        functionspace = self.fs3d_vector3d
-
-        for expression in expressions:
-            field = Field(functionspace, expression, normalised=True)
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the norm of normalised vector field.
-            norm = (
-                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_whether_field_is_scalar_field(self):
         for functionspace in self.scalar_fspaces:
