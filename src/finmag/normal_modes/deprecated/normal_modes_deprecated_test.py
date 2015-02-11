@@ -124,7 +124,6 @@ def test_passing_scipy_eigsh_parameters(tmpdir):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
