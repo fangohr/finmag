@@ -39,7 +39,6 @@ def compute_skyrmion_number_2d_example():
     print compute_skyrmion_number_2d(sim.m_field.f)
 
 
-#@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compute_skyrmion_number_2d_pbc():
 
     mesh = df.RectangleMesh(0, 0, 100, 100, 40, 40)
