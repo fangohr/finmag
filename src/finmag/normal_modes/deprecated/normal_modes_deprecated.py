@@ -882,9 +882,9 @@ def plot_spatially_resolved_normal_mode(
         if show_colorbars:
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", "5%", pad="3%")
-            if vmin == None:
+            if vmin is None:
                 vmin = min(vals)
-            if vmax == None:
+            if vmax is None:
                 vmax = max(vals)
             trimesh.set_clim(vmin=vmin, vmax=vmax)
             cbar = plt.colorbar(trimesh, cax=cax, format=FormatStrFormatter(colorbar_fmt),
