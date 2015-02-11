@@ -639,8 +639,6 @@ def get_colormap_from_name(cmap_name):
 
 
 def extract_mesh_slice(mesh, slice_z):
-    from fenicstools.Interpolation import interpolate_nonmatching_mesh
-
     coords = mesh.coordinates()
     xmin = min(coords[:, 0])
     xmax = max(coords[:, 0])
@@ -654,11 +652,12 @@ def extract_mesh_slice(mesh, slice_z):
     V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)
     V_slice = df.FunctionSpace(slice_mesh, 'CG', 1)
-    #f_slice = df.Function(V_slice)
+    f_slice = df.Function(V_slice)
 
+    lg = df.LagrangeInterpolator()
     def restrict_to_slice_mesh(a):
         f.vector().set_local(a)
-        f_slice = interpolate_nonmatching_mesh(f, V_slice)
+        lg.interpolate(f_slice, f)
         return f_slice.vector().array()
 
     return slice_mesh, restrict_to_slice_mesh
