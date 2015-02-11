@@ -187,7 +187,6 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk(relaxed=True)
