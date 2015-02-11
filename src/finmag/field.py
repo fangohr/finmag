@@ -51,9 +51,6 @@ class Field(object):
         if functionspace_family == 'Lagrange' and self.value_dim() == 3:
             self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
             n1 = len(self.v2d_xyz)
-            print n1
-
-            print self.v2d_xyz
             self.v2d_xxx = ((self.v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(-1,)
 
 

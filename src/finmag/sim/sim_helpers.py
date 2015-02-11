@@ -213,7 +213,7 @@ def eta(sim, when_started):
     """
     elapsed_real_time = time.time() - when_started
     simulation_speed = sim.t / elapsed_real_time
-    if simulation_speed > 0:
+    if simulation_speed > 0 and sim.t < sim.t_max:
         remaining_simulation_time = sim.t_max - sim.t
         remaining_real_time = remaining_simulation_time / simulation_speed
         log.info("Integrated up to t = {:.4} ns. Predicted end in {}.".format(
