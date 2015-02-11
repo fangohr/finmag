@@ -1653,6 +1653,8 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                     sim.compute_energy(name), a ** exponent * energies[name], atol=0, rtol=1e-12))
 
 
+@pytest.mark.xfail(LooseVersion(df.__version__) == LooseVersion('1.5.0'),
+                   reason='API change in dolfin 1.5')
 @pytest.mark.requires_X_display
 def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     """
