@@ -126,6 +126,6 @@ def receive_quit_signal(signum, frame):
     # inspect.getmodule(cur_frame.f_locals['self']).__name__.startswith('finmag')
 
 
-logger.debug("Registering debug signal handler. Press Ctrl-Z at any time "
+logger.debug("Registering debug signal handler. Press Ctrl-Z any time "
              "to stop execution and jump into the debugger.")
 signal.signal(signal.SIGTSTP, receive_quit_signal)
