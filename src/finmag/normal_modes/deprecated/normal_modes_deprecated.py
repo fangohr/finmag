@@ -638,64 +638,8 @@ def get_colormap_from_name(cmap_name):
             cmap_name, colormaps.keys()))
 
 
-def extract_mesh_slice_via_boundary_mesh__deprecated(mesh, slice_z):
-    """
-    XXX NOTE: This function is deprecated. It is recommended to use
-              `Fenicstools.interpolate_nonmatching_mesh()` if possible!
-
-    Extract a slice from the given mesh corresponding to the layer
-    with z-coordinate `slice_z`. Note that this only works if this
-    layer lies on the boundary of the given mesh.
-
-    """
-    # Extract the boundary mesh from the full mesh (which is a 2D mesh
-    # consisting only of the triangles on the boundary).
-    boundary_mesh = df.BoundaryMesh(mesh, 'exterior')
-    entity_map = boundary_mesh.entity_map(0).array().copy()
-
-    # Extract the submesh of the boundary mesh corresponding to the
-    # bottom or top layer (whichever slice_z corresponds to).
-    class Surface(df.SubDomain):
-
-        def inside(self, pt, on_boundary):
-            x, y, z = pt
-            return (z >= slice_z - df.DOLFIN_EPS) and (z <= slice_z + df.DOLFIN_EPS)
-    sub_domains = df.MeshFunction("size_t", boundary_mesh, 2)
-    sub_domains.set_all(0)
-    surface = Surface()
-    surface.mark(sub_domains, 1)
-    surface_layer = df.SubMesh(boundary_mesh, sub_domains, 1)
-    # XXX TODO: Issue a warning of the mesh defined by 'surface_layer' does not have
-    #           enough vertices (or is not contiguous, etc.)
-
-    # Mapping from the vertex indices in 'surface_layer' to the vertex indices
-    # in the full mesh.
-    parent_vertex_indices = surface_layer.data().array(
-        'parent_vertex_indices', 0)
-
-    V = df.FunctionSpace(mesh, 'CG', 1)
-    f = df.Function(V)
-
-    def restrict_to_submesh(a):
-        # Remark: We can't use df.interpolate here to interpolate the
-        # function values from the full mesh on the submesh because it
-        # sometimes crashes (probably due to rounding errors), even if we
-        # set df.parameters["allow_extrapolation"]=True as they recommend
-        # in the error message.
-        #
-        # Therefore we manually interpolate the function values here using
-        # the vertex mappings determined above. This works fine if the
-        # dofs are not re-ordered, but will probably cause problems in
-        # parallel (or with dof reordering enabled).
-        f.vector().set_local(a)
-        f_array = f.vector().array()
-        return f_array[[entity_map[i] for i in parent_vertex_indices]]
-
-    return surface_layer, restrict_to_submesh
-
-
 def extract_mesh_slice(mesh, slice_z):
-    import fenicstools
+    from fenicstools.Interpolation import interpolate_nonmatching_mesh
 
     coords = mesh.coordinates()
     xmin = min(coords[:, 0])
@@ -714,7 +658,7 @@ def extract_mesh_slice(mesh, slice_z):
 
     def restrict_to_slice_mesh(a):
         f.vector().set_local(a)
-        f_slice = fenicstools.interpolate_nonmatching_mesh(f, V_slice)
+        f_slice = interpolate_nonmatching_mesh(f, V_slice)
         return f_slice.vector().array()
 
     return slice_mesh, restrict_to_slice_mesh
@@ -744,8 +688,7 @@ def plot_spatially_resolved_normal_mode(
         num_power_colorbar_ticks=5, num_phase_colorbar_ticks=5,
         colorbar_fmt='%.2e', cmap_powers='coolwarm', cmap_phases='circular4',
         vmin_powers=0.0, show_axis_labels=True, show_axis_frames=True,
-        show_colorbars=True, figsize=None, outfilename=None, dpi=None,
-        use_fenicstools=False):
+        show_colorbars=True, figsize=None, outfilename=None, dpi=None):
     """
     Plot the normal mode profile across a slice of the sample.
 
@@ -822,24 +765,7 @@ def plot_spatially_resolved_normal_mode(
     elif slice_z == 'z_max':
         slice_z = max(coords[:, 2])
 
-    if use_fenicstools:
-        try:
-            import fenicstools
-            slice_mesh, restrict_to_submesh = extract_mesh_slice(mesh, slice_z)
-        except ImportError:
-            logger.warning(
-                "Could not import Fenicstools. Falling back to standard method for extracting submeshes.")
-            use_fenicstools = False
-
-    if not use_fenicstools:
-        # Deprecated fallback solution in case we can't use Fenicstools
-        # for any reason.
-        #
-        # TODO: This should eventually be removed once we know it works
-        #       and have checked that installing Fenicstools is easy and
-        #       painless for users.
-        slice_mesh, restrict_to_submesh = extract_mesh_slice_via_boundary_mesh__deprecated(
-            mesh, slice_z)
+    slice_mesh, restrict_to_submesh = extract_mesh_slice(mesh, slice_z)
 
     m0_array = m0.copy()
     Q, R, S, Mcross = compute_tangential_space_basis(
