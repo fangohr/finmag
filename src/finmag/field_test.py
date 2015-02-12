@@ -6,17 +6,35 @@ from field import Field
 
 
 class TestField(object):
-
     def setup(self):
-        # Create meshes of several dimensions.
+        self.create_meshes()
+        self.define_tolerances()
+
+        # All created function spaces are CG (Lagrange)
+        # with degree=1 unless named explicitly.
+        self.create_scalar_function_spaces()
+        self.create_vector2d_function_spaces()
+        self.create_vector3d_function_spaces()
+        self.create_vector4d_function_spaces()
+        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
+            self.vector3d_fspaces + self.vector4d_fspaces
+
+        # x, y, or z coordinate value for probing the field.
+        self.probing_coord = 0.4351  # Not at any mesh node.
+
+    def create_meshes(self):
+        """
+        Create meshes of several dimensions.
+        """
         self.mesh1d = df.UnitIntervalMesh(10)
         self.mesh2d = df.UnitSquareMesh(11, 10)
         self.mesh3d = df.UnitCubeMesh(9, 11, 10)
+        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
 
-        # All function spaces are CG (Lagrange)
-        # with degree=1 unless named explicitly.
-
-        # Create scalar function spaces.
+    def create_scalar_function_spaces(self):
+        """
+        Create scalar function spaces.
+        """
         self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
                                             family="CG", degree=1)
         self.fs2d_scalar = df.FunctionSpace(self.mesh2d,
@@ -24,7 +42,13 @@ class TestField(object):
         self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
                                             family="CG", degree=1)
 
-        # Create 2D vector function spaces.
+        self.scalar_fspaces = [self.fs1d_scalar, self.fs2d_scalar,
+                               self.fs3d_scalar]
+
+    def create_vector2d_function_spaces(self):
+        """
+        Create 2D vector function spaces.
+        """
         self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=2)
@@ -35,7 +59,13 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=2)
 
-        # Create 3D vector function spaces.
+        self.vector2d_fspaces = [self.fs1d_vector2d, self.fs2d_vector2d,
+                                 self.fs3d_vector2d]
+
+    def create_vector3d_function_spaces(self):
+        """
+        Create 3D vector function spaces.
+        """
         self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=3)
@@ -46,7 +76,13 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=3)
 
-        # Create 4D vector function spaces.
+        self.vector3d_fspaces = [self.fs1d_vector3d, self.fs2d_vector3d,
+                                 self.fs3d_vector3d]
+
+    def create_vector4d_function_spaces(self):
+        """
+        Create 3D vector function spaces.
+        """
         self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=4)
@@ -57,27 +93,14 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=4)
 
-        # Create lists of meshes and functionspaces
-        # to avoid the repetition of code in tests.
-        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
-
-        self.scalar_fspaces = [self.fs1d_scalar, self.fs2d_scalar,
-                               self.fs3d_scalar]
-        self.vector2d_fspaces = [self.fs1d_vector2d, self.fs2d_vector2d,
-                                 self.fs3d_vector2d]
-        self.vector3d_fspaces = [self.fs1d_vector3d, self.fs2d_vector3d,
-                                 self.fs3d_vector3d]
         self.vector4d_fspaces = [self.fs1d_vector4d, self.fs2d_vector4d,
                                  self.fs3d_vector4d]
-        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
-            self.vector3d_fspaces + self.vector4d_fspaces
 
-        # x, y, or z coordinate value for probing the field.
-        self.probing_coord = 0.4351  # Not at the mesh node.
-
-        # Set the tolerances used throughout all tests
-        # mainly due to interpolation errors.
-
+    def define_tolerances(self):
+        """
+        Set the tolerances used throughout all tests
+        to account for interpolation errors.
+        """
         # Tolerance value at the mesh node and
         # outside the mesh node for linear functions.
         self.tol1 = 5e-13
