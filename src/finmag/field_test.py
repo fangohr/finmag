@@ -12,6 +12,7 @@ class TestField(object):
 
         # All created function spaces are CG (Lagrange)
         # with degree=1 unless named explicitly.
+        self.create_PBCs()
         self.create_scalar_function_spaces()
         self.create_vector2d_function_spaces()
         self.create_vector3d_function_spaces()
@@ -31,9 +32,33 @@ class TestField(object):
         self.mesh3d = df.UnitCubeMesh(9, 11, 10)
         self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
 
+    def create_PBCs(self):
+        """
+        Create periodic boundary conditions which identify the nodes
+        at the left/right edges of the mesh with each other (i.e. the
+        nodes with minimum/maximum x-coordinates).
+        """
+
+        class PeriodicBoundary(df.SubDomain):
+            def inside(self, x, on_boundary):
+                # Pick the nodes which have x-coordinate 0 and lie on
+                # the boundary of the mesh.
+                return (x[0] < df.DOLFIN_EPS and x[0] > df.DOLFIN_EPS
+                        and on_boundary)
+
+            def map(self, pt1, pt2):
+                # Define a mapping from the nodes on the right edge of the mesh
+                # to the ones on the left edge (by subtracting 1.0 from the
+                # x-coordinate).
+                pt2[0] = pt1[0] - 1.0
+                pt2[1:] = pt1[1:]
+
+        # Create periodic boundary condition
+        self.pbc = PeriodicBoundary()
+
     def create_scalar_function_spaces(self):
         """
-        Create scalar function spaces.
+        Create scalar function spaces (both with and without PBCs).
         """
         self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
                                             family="CG", degree=1)
@@ -42,12 +67,24 @@ class TestField(object):
         self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
                                             family="CG", degree=1)
 
-        self.scalar_fspaces = [self.fs1d_scalar, self.fs2d_scalar,
-                               self.fs3d_scalar]
+        self.fs1d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh1d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+        self.fs2d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh2d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+        self.fs3d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh3d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+
+        self.scalar_fspaces = [
+            self.fs1d_scalar, self.fs2d_scalar,
+            self.fs3d_scalar, self.fs1d_scalar_pbc,
+            self.fs2d_scalar_pbc, self.fs3d_scalar_pbc]
 
     def create_vector2d_function_spaces(self):
         """
-        Create 2D vector function spaces.
+        Create 2D vector function spaces (both with and without PBCs).
         """
         self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
@@ -59,12 +96,24 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=2)
 
-        self.vector2d_fspaces = [self.fs1d_vector2d, self.fs2d_vector2d,
-                                 self.fs3d_vector2d]
+        self.fs1d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh1d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+        self.fs2d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh2d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+        self.fs3d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh3d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+
+        self.vector2d_fspaces = [
+            self.fs1d_vector2d, self.fs2d_vector2d,
+            self.fs3d_vector2d, self.fs1d_vector2d_pbc,
+            self.fs2d_vector2d_pbc, self.fs3d_vector2d_pbc]
 
     def create_vector3d_function_spaces(self):
         """
-        Create 3D vector function spaces.
+        Create 3D vector function spaces (both with and without PBCs).
         """
         self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
@@ -76,12 +125,24 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=3)
 
-        self.vector3d_fspaces = [self.fs1d_vector3d, self.fs2d_vector3d,
-                                 self.fs3d_vector3d]
+        self.fs1d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh1d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+        self.fs2d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+        self.fs3d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh3d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+
+        self.vector3d_fspaces = [
+            self.fs1d_vector3d, self.fs2d_vector3d,
+            self.fs3d_vector3d, self.fs1d_vector3d_pbc,
+            self.fs2d_vector3d_pbc, self.fs3d_vector3d_pbc]
 
     def create_vector4d_function_spaces(self):
         """
-        Create 3D vector function spaces.
+        Create 4D vector function spaces (both with and without PBCs).
         """
         self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
@@ -93,8 +154,20 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=4)
 
-        self.vector4d_fspaces = [self.fs1d_vector4d, self.fs2d_vector4d,
-                                 self.fs3d_vector4d]
+        self.fs1d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh1d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
+        self.fs2d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
+        self.fs3d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh3d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
+
+        self.vector4d_fspaces = [
+            self.fs1d_vector4d, self.fs2d_vector4d,
+            self.fs3d_vector4d, self.fs1d_vector4d_pbc,
+            self.fs2d_vector4d_pbc, self.fs3d_vector4d_pbc]
 
     def define_tolerances(self):
         """
