@@ -11,7 +11,8 @@
 #
 # Adjustable options are below.
 #
-CFLAGS=-O3 -fPIC -mfpmath=sse -march=native -ffast-math -lblas -llapack -lm -g -rdynamic
+HASHDIST_PROFILE_DIR ?= $(shell readlink -f ~/.hashdist/bld/profile/default)
+CFLAGS=-O3 -fPIC -mfpmath=sse -march=native -ffast-math -lblas -llapack -lm -g -rdynamic -I$(HASHDIST_PROFILE_DIR)/include -L$(HASHDIST_PROFILE_DIR)/lib
 DEPS = Makefile nvector_custom_malloc_impl.h ../nvector_custom_malloc.h
 SOURCES = nvector_serial_custom_malloc.c sundials_math.c
 

@@ -29,7 +29,8 @@ UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
 # Explicit dependencies to tell how the module files are linked
-SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) -lnvector_serial_custom_malloc
+HASHDIST_PROFILE_DIR ?= $(shell readlink -f ~/.hashdist/bld/profile/default)
+SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN,-rpath,$(HASHDIST_PROFILE_DIR)/lib -L$(abspath ../src/finmag/native/) -lnvector_serial_custom_malloc
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
@@ -93,9 +94,10 @@ CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_pyth
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
-CFLAGS_WARN=-Wall -Werror
+#CFLAGS_WARN=-Wall -Werror
+CFLAGS_WARN=-Wall
 # Add the source code directory to the include path
-CFLAGS_INCLUDE=-I$(abspath src)
+CFLAGS_INCLUDE=-I$(abspath src) -I$(HASHDIST_PROFILE_DIR)/include -I$(HASHDIST_PROFILE_DIR)/include/python2.7/ -I$(HASHDIST_PROFILE_DIR)/include/eigen3 -I$(HASHDIST_PROFILE_DIR)/lib/python2.7/site-packages/numpy/core/include -L$(HASHDIST_PROFILE_DIR)/lib -L/lib64
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
 CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 
