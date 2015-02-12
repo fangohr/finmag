@@ -1,5 +1,6 @@
 import dolfin as df
 import numpy as np
+import functools
 import pytest
 import os
 from field import Field
@@ -1309,3 +1310,56 @@ class TestField(object):
                 assert abs(field3.probe(coord)[0] - 6) < self.tol1
                 assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
                 assert abs(field3.probe(coord)[2] - 9) < self.tol1
+
+    def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
+        """
+        For each mesh define a scalar field as well as vector fields of
+        dimension 2, 3, 4. The field values are defined by adding
+        0.01, 0.02, 0.03 and 0.04, respectively, to the x-coordinates
+        of the mesh nodes.
+
+        Then the field values are retrieved using both
+
+           get_ordered_numpy_array_xxx
+
+        and
+
+           get_ordered_numpy_array_xyz
+
+        and compared with the expected values.
+
+        """
+        def fsetval(value_dim, pos):
+            # Helper function to set field values
+            x = pos[0]
+            return [x + 0.01 * (i+1) for i in range(value_dim)]
+
+        for functionspace in self.all_fspaces:
+            # Define the field
+            f = Field(functionspace)
+            vdim = f.value_dim()
+            f.set(functools.partial(fsetval, vdim))
+
+            # Retrieve the field values in the different orderings
+            vals_xxx = f.get_ordered_numpy_array_xxx()
+            vals_xyz = f.get_ordered_numpy_array_xyz()
+
+            # Define the expected field values (derived from the
+            # x-coordinates of the mesh nodes by adding 0.01 to all
+            # x-components of the field, 0.02 to all y-components,
+            # 0.03 to all z-components, etc.)
+            xcoords = functionspace.mesh().coordinates()[:, 0]
+            vals_xxx_expected = np.concatenate(
+                [xcoords + 0.01 * (i+1) for i in range(vdim)])
+            vals_xyz_expected = np.array(
+                [xcoords + 0.01 * (i+1) for i in range(vdim)]).transpose().ravel()
+
+            # Check that we get the expected orderings
+            np.testing.assert_almost_equal(vals_xxx, vals_xxx_expected)
+            np.testing.assert_almost_equal(vals_xyz, vals_xyz_expected)
+
+            # Check that we get an error if we try to call
+            # get_ordered_numpy_array() on a non-scalar field.
+            if vdim > 1:
+                with pytest.raises(ValueError):
+                    f.get_ordered_numpy_array()
