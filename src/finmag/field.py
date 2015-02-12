@@ -48,22 +48,19 @@ class Field(object):
         self.unit = unit
 
         functionspace_family = self.f.ufl_element().family()
-        if functionspace_family == 'Lagrange' and self.value_dim() == 3:
+        if functionspace_family == 'Lagrange':
+            dim = self.value_dim()
             self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
             n1 = len(self.v2d_xyz)
-            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(-1,)
-
+            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
 
             self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
             n2 = len(self.d2v_xyz)
             self.d2v_xxx = self.d2v_xyz.copy()
             for i in xrange(n2):
                 j = self.d2v_xyz[i]
-                self.d2v_xxx[i] = (j%3)*n1/3 + (j/3)
+                self.d2v_xxx[i] = (j%dim)*n1/dim + (j/dim)
             self.d2v_xxx.shape=(-1,)
-        if functionspace_family == 'Lagrange' and self.value_dim() == 1:
-            self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
-            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
 
     def __call__(self, x):
         """
@@ -71,6 +68,11 @@ class Field(object):
 
         """
         return self.f(x)
+
+    def assert_is_scalar_field(self):
+        if self.value_dim() != 1:
+            raise ValueError(
+                "This function is only defined for scalar fields.")
 
     def from_array(self, arr):
         assert isinstance(arr, np.ndarray)
@@ -195,38 +197,109 @@ class Field(object):
         if normalised:
             self.normalise()
 
+    def get_ordered_numpy_array(self):
+        """
+        For a scalar field, return the dolfin function as an ordered
+        numpy array, such that the field values are in the same order
+        as the vertices of the underlying mesh (as returned by
+        `mesh.coordinates`).
+
+        Note:
+
+        This function is only defined for scalar fields and raises an
+        error if it is applied to a vector field. For the latter, use
+        either
+
+            get_ordered_numpy_array_xxx
+
+        or
+
+            get_ordered_numpy_array_xyz
+
+        depending on the order in which you want the values to be returned.
+
+        """
+        self.assert_is_scalar_field()
+        return self.get_ordered_numpy_array_xxx()
+
     def get_ordered_numpy_array_xyz(self):
-        """Returns the dolfin function as an ordered numpy array, so that
-        in the case of vector fields all components at the same node
-        are grouped together."""
+        """
+        Returns the dolfin function as an ordered numpy array, so that
+        all components at the same node are grouped together. For example,
+        for a 3d vector field the values are returned in the following order:
+
+          [f_1x, f_1y, f_1z,  f_2x, f_2y, f_2z,  f_3x, f_3y, f_3z,  ...]
+
+        Note: In the case of a scalar field this function is equivalent to
+        `get_ordered_numpy_array_xxx` (but for vector fields they yield
+        different results).
+        """
         return self.get_numpy_array_debug()[self.v2d_xyz]
 
     def get_ordered_numpy_array_xxx(self):
-        """Returns the dolfin function as an ordered numpy array, so that
-        in the case of vector fields all components at the same node
-        are grouped together."""
+        """
+        Returns the dolfin function as an ordered numpy array, so that
+        all x-components at different nodes are grouped together, and
+        similarly for the other components. For example, for a 3d
+        vector field the values are returned in the following order:
+
+          [f_1x, f_2x, f_3x, ...,  f_1y, f_2y, f_3y, ...,  f_1z, f_2z, f_3z, ...]
+
+        Note: In the case of a scalar field this function is equivalent to
+        `get_ordered_numpy_array_xyz` (but for vector fields they yield
+        different results).
+        """
         return self.get_numpy_array_debug()[self.v2d_xxx]
 
-    def order2_to_order1(self, order2):
-        """Returns the dolfin function as an ordered numpy array, so that
-        in the case of vector fields all components of different nodes
-        are grouped together."""
-        n = len(order2)
-        return ((order2.reshape(3, n/3)).transpose()).reshape(n)
+    # def order2_to_order1(self, order2):
+    #     """Returns the dolfin function as an ordered numpy array, so that
+    #     in the case of vector fields all components of different nodes
+    #     are grouped together."""
+    #     n = len(order2)
+    #     return ((order2.reshape(3, n/3)).transpose()).reshape(n)
+    #
+    # def order1_to_order2(self, order1):
+    #     """Returns the dolfin function as an ordered numpy array, so that
+    #     in the case of vector fields all components of different nodes
+    #     are grouped together."""
+    #     n = len(order1)
+    #     return ((order1.reshape(n/3, 3)).transpose()).reshape(n)
 
-    def order1_to_order2(self, order1):
-        """Returns the dolfin function as an ordered numpy array, so that
-        in the case of vector fields all components of different nodes
-        are grouped together."""
-        n = len(order1)
-        return ((order1.reshape(n/3, 3)).transpose()).reshape(n)
+    def set_with_ordered_numpy_array(self, ordered_array):
+        """
+        Set the scalar field using an ordered numpy array (where the field
+        values have the same ordering as the vertices in the underlying
+        mesh).
+
+        This function raises an error if the field is not a scalar field.
+        """
+        self.assert_is_scalar_field()
+        self.set_with_ordered_numpy_array_xxx(ordered_array)
 
     def set_with_ordered_numpy_array_xyz(self, ordered_array):
-        """Set the field using an ordered numpy array."""
+        """
+        Set the field using an ordered numpy array in "xyz" order.
+        For example, for a 3d vector field the values should be
+        arranged as follows:
+
+          [f_1x, f_1y, f_1z, f_2x, f_2y, f_2z, f_3x, f_3y, f_3z, ...]
+
+        For a scalar field this function is equivalent to
+        `set_with_ordered_numpy_array_xxx`.
+        """
         self.set(ordered_array[self.d2v_xyz])
 
     def set_with_ordered_numpy_array_xxx(self, ordered_array):
-        """Set the field using an ordered numpy array."""        
+        """
+        Set the field using an ordered numpy array in "xxx" order.
+        For example, for a 3d vector field the values should be
+        arranged as follows:
+
+          [f_1x, f_2x, f_3x, ..., f_1y, f_2y, f_3y, ..., f_1z, f_2z, f_3z, ...]
+
+        For a scalar field this function is equivalent to
+        `set_with_ordered_numpy_array_xyz`.
+        """
         self.set(ordered_array[self.d2v_xxx])
 
     def as_array(self):
