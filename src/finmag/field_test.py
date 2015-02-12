@@ -359,7 +359,7 @@ class TestField(object):
                 field = Field(functionspace, constant)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -439,7 +439,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -497,7 +497,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -555,7 +555,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -609,7 +609,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -648,7 +648,7 @@ class TestField(object):
                 field = Field(functionspace, expression)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -684,7 +684,7 @@ class TestField(object):
                 field = Field(functionspace, expression)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -1073,7 +1073,7 @@ class TestField(object):
                                      -2.4 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -1122,7 +1122,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -1181,7 +1181,7 @@ class TestField(object):
                                      self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
