@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 import dolfin as df
+import distutils
 from aeon import default_timer
 from finmag.field import Field
 from finmag.util.consts import mu0
@@ -152,7 +153,14 @@ class TreecodeBEM(FKDemag):
 
         phi_1 = self._phi_1.vector()[self._b2g_map]
 
-        self.fast_sum.fastsum(self.phi2_b, phi_1.array())
+        # In dolfin 1.4 and lower to access the array of a dolfin function, '.array()'
+        # is required. This is not needed in dolfin 1.5 and will cause error if is 
+        # present. Need to check with dolfin version are using and act according for the
+        # following line of code.
+        if distutils.version.LooseVersion(df.__version__) >= '1.5.0':
+            self.fast_sum.fastsum(self.phi2_b, phi_1)
+        else:
+            self.fast_sum.fastsum(self.phi2_b, phi_1.array())
 
         self._phi_2.vector()[self._b2g_map[:]] = self.phi2_b
 

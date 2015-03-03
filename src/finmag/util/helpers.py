@@ -1092,53 +1092,6 @@ def pointing_downwards((x, y, z)):
     return abs(theta - np.pi) < (np.pi / 4)
 
 
-def mesh_functions_allclose(f1, f2, fun_mask=None, rtol=1e-05, atol=1e-08):
-    """
-    Return True if the values and `f1` and `f2` are nearly identical at all
-    mesh nodes outside a given region.
-
-    The region to be ignored is defined by `fun_mask`. This should be a
-    function which accept a mesh node (= a tuple or list of coordinates) as its
-    single argument and returns True or False, depending on whether the node
-    lies within the region to be masked out. The values of `f1` and `f2` are
-    then ignored at nodes where `fun_mask` evaluates to True (if `fun_mask` is
-    None, all node values are taken into account).
-
-    Note that the current implementation assumes that the degrees of freedom
-    of both functions are at the mesh nodes (in particular, f1 and f2 should
-    not be elements of a Discontinuous Galerkin function space, for example).
-
-    *Arguments*
-
-    f1, f2 : dolfin Functions
-        The functions to be compared.
-
-    fun_mask : None or dolfin Function
-        Indicator function of the region which should be ignored.
-
-    rtol, atol : float
-        The relative/absolute tolerances used for comparison. These have the same
-        meaning as for numpy.allclose().
-    """
-    # XXX FIXME: This is a very crude implementation for now. It should be refined
-    #            once I understand how to properly deal with dolfin Functions, in
-    #            particular how to use the product of funtions.
-    if f1.function_space() != f2.function_space():
-        raise ValueError(
-            "Both functions must be defined on the same FunctionSpace")
-    V = f1.function_space()
-    pts = V.mesh().coordinates()
-
-    if fun_mask is None:
-        mask = np.ones(len(pts))
-    else:
-        mask = np.array(map(lambda pt: 0.0 if fun_mask(pt) else 1.0, pts))
-
-    v1 = f1.vector()
-    v2 = f2.vector()
-    return np.allclose(np.fabs(v1 * mask - v2 * mask), 0.0, rtol=rtol, atol=atol)
-
-
 def piecewise_on_subdomains(mesh, mesh_function, fun_vals):
     """
     Constructs and returns a dolfin Function which is piecewise constant on
@@ -1344,17 +1297,20 @@ def probe_along_line(dolfin_function, pt_start, pt_end, N, apply_func=None):
 
     *Returns*
 
-    A numpy.ma.masked_array of shape `(N, 3)` containing the field values
-    at the probed points (or `apply_func` applied to the field values
-    in case it is provided.). Elements in the output array corresponding
-    to probing point outside the mesh are masked out.
+    A tuple `(pts, vals)` where `pts` is the list of probing points
+    (i.e., the `N` equidistant points between `pt_start` and `pt_end`)
+    and `vals` is a numpy.ma.masked_array of shape `(N, 3)` containing
+    the field values at the probed points (or `apply_func` applied to
+    the field values in case it is provided.). Elements in the output
+    array corresponding to probing point outside the mesh are masked out.
 
     """
     pt_start = np.asarray(pt_start)
     pt_end = np.asarray(pt_end)
     pts = np.array(
         [(1 - t) * pt_start + t * pt_end for t in np.linspace(0, 1, N)])
-    return probe(dolfin_function, pts, apply_func=apply_func)
+    vals = probe(dolfin_function, pts, apply_func=apply_func)
+    return pts, vals
 
 
 def compute_dmdt(t0, m0, t1, m1):

@@ -6,15 +6,15 @@ from finmag.physics.equation import Equation
 
 @pytest.fixture
 def setup():
-    mesh = df.UnitIntervalMesh(2)
+    mesh = df.UnitIntervalMesh(3)
     V = df.FunctionSpace(mesh, "CG", 1)
     alpha = df.Function(V)
     alpha.assign(df.Constant(1))
     W = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     m = df.Function(W)
-    m.assign(df.Constant((1, 0, 0)))
+    m.assign(df.Constant((0.6, 0.8, 0)))
     H = df.Function(W)
-    H.assign(df.Constant((0, 1, 0)))
+    H.assign(df.Constant((1, 2, 3)))
     dmdt = df.Function(W)
     return mesh, V, alpha, W, m, H, dmdt
 
@@ -35,7 +35,7 @@ def setup_for_debugging():
             'equation': equation}
 
 
-def same(v, w):
+def same(v, w, TOL=1e-14):
     """
     Returns True if the vectors `v` and `w` have the same entries.
 
@@ -43,7 +43,7 @@ def same(v, w):
     diff = v - w
     diff.abs()
     print "v = {}\nw = {}\ndiff = {}".format(v.array(), w.array(), diff.array())
-    return diff.sum() == 0
+    return diff.sum() < TOL
 
 
 def test_new_equation(setup):
@@ -98,7 +98,8 @@ def test_solve(setup):
     equation.solve()
 
     dmdt_expected = df.Function(W)
-    dmdt_expected.assign(df.Constant((0.0, 0.5, -0.5)))
+    #dmdt_expected.assign(df.Constant((0.0, 0.5, -0.5)))
+    dmdt_expected.assign(df.Constant((-1.36, 1.02, 1.3)))
     assert same(dmdt.vector(), dmdt_expected.vector())
 
 
@@ -111,12 +112,12 @@ def test_pinning(setup):
     pins.vector()[0] = 1  # pin first node, but this could be done using an expression
     equation.set_pinned_nodes(pins.vector())
     equation.solve()
-    dmdt_node0 = dmdt.vector()[0:3]
-    dmdt_node_others = dmdt.vector()[3:]
+    dmdt_node0 = dmdt.vector().array().reshape(3, -1)[:, 0]
+    dmdt_node_others = dmdt.vector().array().reshape(3, -1)[:, 1:]
     # check that first node is pinned, i.e. dmdt = 0 there
-    assert np.all(dmdt_node0.array() == np.array((0, 0, 0)))
+    assert np.all(dmdt_node0 == np.array((0, 0, 0)))
     # check that we don't accidentally set the whole dmdt array to zero
-    assert not np.all(dmdt_node_others.array() == np.array((0, 0, 0, 0, 0, 0)))
+    assert not np.all(dmdt_node_others == 0)
 
 
 def test_slonczewski(setup):

@@ -188,9 +188,9 @@ class TestSimulation(object):
         # Probe the magnetisation at the given points
         m_probed_vals = [sim.probe_field("m", pt) for pt in probing_pts]
         # Alternative method using 'probe_field_along_line()'
-        m_probed_vals2 = np.concatenate(
-            [sim.probe_field_along_line("m", [xmin, 0, 0], [xmax, 0, 0], N=20),
-             sim.probe_field_along_line("m", [xmin, y0, z0], [xmax, y0, z0], N=20)])
+        _, vals1 = sim.probe_field_along_line("m", [xmin, 0, 0], [xmax, 0, 0], N=20)
+        _, vals2 = sim.probe_field_along_line("m", [xmin, y0, z0], [xmax, y0, z0], N=20)
+        m_probed_vals2 = np.concatenate([vals1, vals2])
 
         # Check that we get m_init everywhere.
         for i in xrange(len(probing_pts)):
@@ -783,6 +783,7 @@ class TestSimulation(object):
 
         assert np.max(np.abs(ts - real_ts)) < 1e-24
 
+    @pytest.mark.xfail(reason='dolfin 1.5')
     def test_mark_regions(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini(mark_regions=True)
@@ -974,7 +975,6 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
 
         """
         for i in xrange(N):
-            logger.warning("Creating simulation object #{}".format(i))
             sim = Simulation(mesh, Ms, unit_length)
             if close_logfiles:
                 sim.close_logfile()
@@ -1653,6 +1653,8 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                     sim.compute_energy(name), a ** exponent * energies[name], atol=0, rtol=1e-12))
 
 
+@pytest.mark.xfail(LooseVersion(df.__version__) == LooseVersion('1.5.0'),
+                   reason='API change in dolfin 1.5')
 @pytest.mark.requires_X_display
 def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     """

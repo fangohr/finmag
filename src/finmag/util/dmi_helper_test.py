@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import dolfin as df
 from finmag import Simulation
@@ -13,7 +14,6 @@ def init_skx_down(pos):
         return (0, 0, -1)
     else:
         return (0, 0, 1)
-
 
 def compute_skyrmion_number_2d_example():
 
@@ -55,8 +55,9 @@ def test_compute_skyrmion_number_2d_pbc():
 
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
 
-    # df.plot(sim._m)
-    # df.interactive()
+    df.plot(sim.m_field.f)
+    df.interactive()
+    print np.max(sim.m_field.as_array())
 
     sky_num = compute_skyrmion_number_2d(sim.m_field.f)
 
@@ -65,5 +66,5 @@ def test_compute_skyrmion_number_2d_pbc():
     assert sky_num < -0.95 and sky_num > -1.0
 
 if __name__ == "__main__":
-    compute_skyrmion_number_2d_example()
+    #compute_skyrmion_number_2d_example()
     test_compute_skyrmion_number_2d_pbc()

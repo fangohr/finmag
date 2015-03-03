@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from distutils.version import LooseVersion
 from finmag import Simulation
 from finmag.example import barmini
+from finmag.util.meshes import nanodisk
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.util.helpers import assert_number_of_files
 from finmag.util.fileio import Tablereader
@@ -157,6 +158,7 @@ def test_save_restart_data_creates_non_existing_directories(tmpdir):
     assert(os.path.exists('foo'))
 
 
+@pytest.mark.xfail(reason='dolfin 1.5')
 def test_get_submesh(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini(mark_regions=True)
@@ -207,3 +209,14 @@ def test_skyrmion_number():
 
     skX_3D = sim3D.skyrmion_number()
     assert(abs(skX_3D - 4) < 4e-1)  # There are four skyrmions here...
+
+    # Test using another geometry (a nanodisk)
+    meshNanodisk = nanodisk(d=100, h=10, maxh=3.0, save_result=False)
+    simNanodisk = Simulation(meshNanodisk, Ms=1e5, unit_length=1e-9)
+
+    # Initialise with a theoretical skyrmion, which should have skyrmion number as 1.
+    simNanodisk.initialise_skyrmions(skyrmionRadius=50)
+
+    skX_nanodisk = simNanodisk.skyrmion_number()
+
+    assert(abs(skX_nanodisk - 1) < 5e-2)

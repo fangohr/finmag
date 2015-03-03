@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import dolfin as df
 from math import pi
@@ -83,11 +84,9 @@ def test_dmi_pbc2d():
 
     assert np.max(field) < 1e-15
 
-
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):
-        print p[0]
         if p[0] < 10:
             return [0.5, 0, 1]
         else:
@@ -98,14 +97,16 @@ def test_dmi_pbc2d_1D(plot=False):
 
     Ms = 8.6e5
     sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)
+    
     sim.set_m(m_init_fun)
+
 
     A = 1.3e-11
     D = 5e-3
     sim.add(Exchange(A))
     sim.add(DMI(D))
 
-    sim.relax(stopping_dmdt=0.001)
+    sim.relax(stopping_dmdt=0.0001)
 
     if plot:
         sim.m_field.plot_with_dolfin()

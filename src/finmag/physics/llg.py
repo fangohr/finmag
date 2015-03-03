@@ -9,6 +9,22 @@ from finmag.native import llg as native_llg
 from finmag.util import helpers
 from finmag.util.meshes import nodal_volume
 
+
+def get_maps(fspace):
+    v2d_xyz = df.vertex_to_dof_map(fspace)
+    n1 = len(v2d_xyz)
+    v2d_xxx = ((v2d_xyz.reshape(n1/3, 3)).transpose()).reshape(n1)
+    
+    d2v_xyz = df.dof_to_vertex_map(fspace)
+    n2 = len(d2v_xyz)
+    d2v_xxx = d2v_xyz.copy()
+    for i in xrange(n2):
+        j = d2v_xyz[i]
+        d2v_xxx[i] = (j%3)*n1/3 + (j/3)
+    d2v_xxx.shape=(-1,)
+
+    return v2d_xyz, v2d_xxx, d2v_xyz, d2v_xxx
+
 # default settings for logger 'finmag' set in __init__.py
 # getting access to logger here
 logger = logging.getLogger(name='finmag')
@@ -56,6 +72,10 @@ class LLG(object):
                                               self.Ms, self.unit_length)
         # will be computed on demand, and carries volume of the mesh
         self.Volume = None
+
+        self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = get_maps(S3)
+        self.v2d_scale = df.vertex_to_dof_map(S1)
+        self.d2v_scale = df.dof_to_vertex_map(S1)
 
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
