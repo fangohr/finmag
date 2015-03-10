@@ -47,12 +47,32 @@ class Field(object):
 
         self.unit = unit
 
+        functionspace_family = self.f.ufl_element().family()
+        if functionspace_family == 'Lagrange':
+            dim = self.value_dim()
+            self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
+            n1 = len(self.v2d_xyz)
+            self.v2d_xxx = ((self.v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
+
+            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
+            n2 = len(self.d2v_xyz)
+            self.d2v_xxx = self.d2v_xyz.copy()
+            for i in xrange(n2):
+                j = self.d2v_xyz[i]
+                self.d2v_xxx[i] = (j%dim)*n1/dim + (j/dim)
+            self.d2v_xxx.shape=(-1,)
+
     def __call__(self, x):
         """
         Shorthand so user can do field(x) instead of field.f(x) to interpolate.
 
         """
         return self.f(x)
+
+    def assert_is_scalar_field(self):
+        if self.value_dim() != 1:
+            raise ValueError(
+                "This function is only defined for scalar fields.")
 
     def from_array(self, arr):
         assert isinstance(arr, np.ndarray)
@@ -177,6 +197,111 @@ class Field(object):
         if normalised:
             self.normalise()
 
+    def get_ordered_numpy_array(self):
+        """
+        For a scalar field, return the dolfin function as an ordered
+        numpy array, such that the field values are in the same order
+        as the vertices of the underlying mesh (as returned by
+        `mesh.coordinates`).
+
+        Note:
+
+        This function is only defined for scalar fields and raises an
+        error if it is applied to a vector field. For the latter, use
+        either
+
+            get_ordered_numpy_array_xxx
+
+        or
+
+            get_ordered_numpy_array_xyz
+
+        depending on the order in which you want the values to be returned.
+
+        """
+        self.assert_is_scalar_field()
+        return self.get_ordered_numpy_array_xxx()
+
+    def get_ordered_numpy_array_xyz(self):
+        """
+        Returns the dolfin function as an ordered numpy array, so that
+        all components at the same node are grouped together. For example,
+        for a 3d vector field the values are returned in the following order:
+
+          [f_1x, f_1y, f_1z,  f_2x, f_2y, f_2z,  f_3x, f_3y, f_3z,  ...]
+
+        Note: In the case of a scalar field this function is equivalent to
+        `get_ordered_numpy_array_xxx` (but for vector fields they yield
+        different results).
+        """
+        return self.get_numpy_array_debug()[self.v2d_xyz]
+
+    def get_ordered_numpy_array_xxx(self):
+        """
+        Returns the dolfin function as an ordered numpy array, so that
+        all x-components at different nodes are grouped together, and
+        similarly for the other components. For example, for a 3d
+        vector field the values are returned in the following order:
+
+          [f_1x, f_2x, f_3x, ...,  f_1y, f_2y, f_3y, ...,  f_1z, f_2z, f_3z, ...]
+
+        Note: In the case of a scalar field this function is equivalent to
+        `get_ordered_numpy_array_xyz` (but for vector fields they yield
+        different results).
+        """
+        return self.get_numpy_array_debug()[self.v2d_xxx]
+
+    # def order2_to_order1(self, order2):
+    #     """Returns the dolfin function as an ordered numpy array, so that
+    #     in the case of vector fields all components of different nodes
+    #     are grouped together."""
+    #     n = len(order2)
+    #     return ((order2.reshape(3, n/3)).transpose()).reshape(n)
+    #
+    # def order1_to_order2(self, order1):
+    #     """Returns the dolfin function as an ordered numpy array, so that
+    #     in the case of vector fields all components of different nodes
+    #     are grouped together."""
+    #     n = len(order1)
+    #     return ((order1.reshape(n/3, 3)).transpose()).reshape(n)
+
+    def set_with_ordered_numpy_array(self, ordered_array):
+        """
+        Set the scalar field using an ordered numpy array (where the field
+        values have the same ordering as the vertices in the underlying
+        mesh).
+
+        This function raises an error if the field is not a scalar field.
+        """
+        self.assert_is_scalar_field()
+        self.set_with_ordered_numpy_array_xxx(ordered_array)
+
+    def set_with_ordered_numpy_array_xyz(self, ordered_array):
+        """
+        Set the field using an ordered numpy array in "xyz" order.
+        For example, for a 3d vector field the values should be
+        arranged as follows:
+
+          [f_1x, f_1y, f_1z, f_2x, f_2y, f_2z, f_3x, f_3y, f_3z, ...]
+
+        For a scalar field this function is equivalent to
+        `set_with_ordered_numpy_array_xxx`.
+        """
+        self.set(ordered_array[self.d2v_xyz])
+
+    def set_with_ordered_numpy_array_xxx(self, ordered_array):
+        """
+        Set the field using an ordered numpy array in "xxx" order.
+        For example, for a 3d vector field the values should be
+        arranged as follows:
+
+          [f_1x, f_2x, f_3x, ..., f_1y, f_2y, f_3y, ..., f_1z, f_2z, f_3z, ...]
+
+        For a scalar field this function is equivalent to
+        `set_with_ordered_numpy_array_xyz`.
+        """
+        self.set(ordered_array[self.d2v_xxx])
+
     def as_array(self):
         return self.f.vector().array()
 
@@ -186,32 +311,6 @@ class Field(object):
     def get_numpy_array_debug(self):
         """ONLY for debugging"""
         return self.f.vector().array()
-
-    def normalise(self):
-        """
-        Normalise the vector field so that the norm=1.
-
-        Note:
-          This method is not implemented for scalar fields.
-
-        """
-        # Normalisation is implemented only for vector fields.
-        if isinstance(self.functionspace, df.VectorFunctionSpace):
-            # Vector field is normalised so that norm=1 at all mesh nodes.
-            norm_squared = 0
-            for i in range(self.value_dim()):
-                norm_squared += self.f[i] ** 2
-            norm = norm_squared ** 0.5
-
-            self.f = df.project(self.f / norm, self.functionspace)
-
-        else:
-            # Scalar field normalisation is not required. Normalisation
-            # can be implemented so that the whole field is divided by
-            # its maximum value. This might cause some problems if the
-            # code is run in parallel.
-            raise NotImplementedError('The normalisation of scalar field '
-                                      'values is not implemented.')
 
     def is_scalar_field(self):
         """
@@ -368,56 +467,16 @@ class Field(object):
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
 
-    def compute_pointwise_norm(self, target=None, method=1):
+    def normalise(self):
         """
-        Compute the norm of the function pointwise, i.e. for every vertex.
-
-        Arguments:
-
-        ``target`` is a scalar dolfin function to accommodate the norm
-
-        ``method`` is an integer to choose the method. We are not sure
-        what method is best at the moment.
-
-        This method is not implemented only for vector fields
-        with 3 compoents at every vertex.
+        Overwrite own field values with normalised ones.
 
         """
-
-        if not target:
-            raise NotImplementedError("This is missing - could cerate a "
-                                      "df.Function(V) here")
-
-        assert self.value_dim() in [3], "Only implemented for 3d vector field"
-
-        if method == 1:
-            wx, wy, wz = self.f.split(deepcopy=True)
-            wnorm = np.sqrt(wx.vector() * wx.vector() +
-                            wy.vector() * wy.vector() +
-                            wz.vector() * wz.vector())
-            target.vector().set_local(wnorm)
-
-        elif method == 2:
-            raise NotImplementedError("this code doesn't compile in Cython "
-                                      "- deactivate for now")
-            # V_vec = self.f.function_space()
-            # dofs0 = V_vec.sub(0).dofmap().dofs()    # indices of x-components
-            # dofs1 = V_vec.sub(1).dofmap().dofs()    # indices of y-components
-            # dofs2 = V_vec.sub(2).dofmap().dofs()    # indices of z-components
-
-            # target.vector()[:] = np.sqrt(w.vector()[dofs0]*w.vector()[dofs0]+
-            #                            w.vector()[dofs1]*w.vector()[dofs1]+
-            #                             w.vector()[dofs2]*w.vector()[dofs2])
-
-        elif method == 3:
-            try:
-                import finmag.native.clib as clib
-            except ImportError:
-                print "please go to the finmag/native/src/clib and " + \
-                    "run 'make' to install clib"
-            f = df.as_backend_type(target.vector()).vec()
-            w = df.as_backend_type(self.f.vector()).vec()
-            clib.norm(w, f)
-
-        else:
-            raise NotImplementedError("method {} unknown".format(method))
+        dofmap = df.vertex_to_dof_map(self.functionspace)
+        reordered = self.f.vector().array()[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
+        vectors = reordered.reshape((3, -1))  # [[x1, y1, z1], ..., [xn, yn, zn]]
+        lengths = np.sqrt(np.add.reduce(vectors * vectors, axis=1))
+        normalised = np.dot(vectors.T, np.diag(1 / lengths)).T.ravel()
+        vertexmap = df.dof_to_vertex_map(self.functionspace)
+        normalised_original_order = normalised[vertexmap]
+        self.from_array(normalised_original_order)

@@ -1,22 +1,66 @@
 import dolfin as df
 import numpy as np
+import functools
 import pytest
 import os
 from field import Field
 
 
 class TestField(object):
-
     def setup(self):
-        # Create meshes of several dimensions.
+        self.create_meshes()
+        self.define_tolerances()
+
+        # All created function spaces are CG (Lagrange)
+        # with degree=1 unless named explicitly.
+        self.create_PBCs()
+        self.create_scalar_function_spaces()
+        self.create_vector2d_function_spaces()
+        self.create_vector3d_function_spaces()
+        self.create_vector4d_function_spaces()
+        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
+            self.vector3d_fspaces + self.vector4d_fspaces
+
+        # x, y, or z coordinate value for probing the field.
+        self.probing_coord = 0.4351  # Not at any mesh node.
+
+    def create_meshes(self):
+        """
+        Create meshes of several dimensions.
+        """
         self.mesh1d = df.UnitIntervalMesh(10)
         self.mesh2d = df.UnitSquareMesh(11, 10)
         self.mesh3d = df.UnitCubeMesh(9, 11, 10)
+        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
 
-        # All function spaces are CG (Lagrange)
-        # with degree=1 unless named explicitly.
+    def create_PBCs(self):
+        """
+        Create periodic boundary conditions which identify the nodes
+        at the left/right edges of the mesh with each other (i.e. the
+        nodes with minimum/maximum x-coordinates).
+        """
 
-        # Create scalar function spaces.
+        class PeriodicBoundary(df.SubDomain):
+            def inside(self, x, on_boundary):
+                # Pick the nodes which have x-coordinate 0 and lie on
+                # the boundary of the mesh.
+                return (x[0] < df.DOLFIN_EPS and x[0] > df.DOLFIN_EPS
+                        and on_boundary)
+
+            def map(self, pt1, pt2):
+                # Define a mapping from the nodes on the right edge of the mesh
+                # to the ones on the left edge (by subtracting 1.0 from the
+                # x-coordinate).
+                pt2[0] = pt1[0] - 1.0
+                pt2[1:] = pt1[1:]
+
+        # Create periodic boundary condition
+        self.pbc = PeriodicBoundary()
+
+    def create_scalar_function_spaces(self):
+        """
+        Create scalar function spaces (both with and without PBCs).
+        """
         self.fs1d_scalar = df.FunctionSpace(self.mesh1d,
                                             family="CG", degree=1)
         self.fs2d_scalar = df.FunctionSpace(self.mesh2d,
@@ -24,7 +68,25 @@ class TestField(object):
         self.fs3d_scalar = df.FunctionSpace(self.mesh3d,
                                             family="CG", degree=1)
 
-        # Create 2D vector function spaces.
+        self.fs1d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh1d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+        self.fs2d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh2d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+        self.fs3d_scalar_pbc = df.FunctionSpace(
+                                   self.mesh3d, family="CG", degree=1,
+                                   constrained_domain=self.pbc)
+
+        self.scalar_fspaces = [
+            self.fs1d_scalar, self.fs2d_scalar,
+            self.fs3d_scalar, self.fs1d_scalar_pbc,
+            self.fs2d_scalar_pbc, self.fs3d_scalar_pbc]
+
+    def create_vector2d_function_spaces(self):
+        """
+        Create 2D vector function spaces (both with and without PBCs).
+        """
         self.fs1d_vector2d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=2)
@@ -35,7 +97,25 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=2)
 
-        # Create 3D vector function spaces.
+        self.fs1d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh1d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+        self.fs2d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh2d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+        self.fs3d_vector2d_pbc = df.VectorFunctionSpace(
+                                     self.mesh3d, family="CG", degree=1,
+                                     dim=2, constrained_domain=self.pbc)
+
+        self.vector2d_fspaces = [
+            self.fs1d_vector2d, self.fs2d_vector2d,
+            self.fs3d_vector2d, self.fs1d_vector2d_pbc,
+            self.fs2d_vector2d_pbc, self.fs3d_vector2d_pbc]
+
+    def create_vector3d_function_spaces(self):
+        """
+        Create 3D vector function spaces (both with and without PBCs).
+        """
         self.fs1d_vector3d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=3)
@@ -46,7 +126,25 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=3)
 
-        # Create 4D vector function spaces.
+        self.fs1d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh1d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+        self.fs2d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+        self.fs3d_vector3d_pbc = \
+            df.VectorFunctionSpace(self.mesh3d, family="CG", degree=1, dim=3,
+                                   constrained_domain=self.pbc)
+
+        self.vector3d_fspaces = [
+            self.fs1d_vector3d, self.fs2d_vector3d,
+            self.fs3d_vector3d, self.fs1d_vector3d_pbc,
+            self.fs2d_vector3d_pbc, self.fs3d_vector3d_pbc]
+
+    def create_vector4d_function_spaces(self):
+        """
+        Create 4D vector function spaces (both with and without PBCs).
+        """
         self.fs1d_vector4d = df.VectorFunctionSpace(self.mesh1d,
                                                     family="CG",
                                                     degree=1, dim=4)
@@ -57,27 +155,26 @@ class TestField(object):
                                                     family="CG",
                                                     degree=1, dim=4)
 
-        # Create lists of meshes and functionspaces
-        # to avoid the repetition of code in tests.
-        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
+        self.fs1d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh1d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
+        self.fs2d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh2d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
+        self.fs3d_vector4d_pbc = \
+            df.VectorFunctionSpace(self.mesh3d, family="CG", degree=1, dim=4,
+                                   constrained_domain=self.pbc)
 
-        self.scalar_fspaces = [self.fs1d_scalar, self.fs2d_scalar,
-                               self.fs3d_scalar]
-        self.vector2d_fspaces = [self.fs1d_vector2d, self.fs2d_vector2d,
-                                 self.fs3d_vector2d]
-        self.vector3d_fspaces = [self.fs1d_vector3d, self.fs2d_vector3d,
-                                 self.fs3d_vector3d]
-        self.vector4d_fspaces = [self.fs1d_vector4d, self.fs2d_vector4d,
-                                 self.fs3d_vector4d]
-        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
-            self.vector3d_fspaces + self.vector4d_fspaces
+        self.vector4d_fspaces = [
+            self.fs1d_vector4d, self.fs2d_vector4d,
+            self.fs3d_vector4d, self.fs1d_vector4d_pbc,
+            self.fs2d_vector4d_pbc, self.fs3d_vector4d_pbc]
 
-        # x, y, or z coordinate value for probing the field.
-        self.probing_coord = 0.4351  # Not at the mesh node.
-
-        # Set the tolerances used throughout all tests
-        # mainly due to interpolation errors.
-
+    def define_tolerances(self):
+        """
+        Set the tolerances used throughout all tests
+        to account for interpolation errors.
+        """
         # Tolerance value at the mesh node and
         # outside the mesh node for linear functions.
         self.tol1 = 5e-13
@@ -336,7 +433,7 @@ class TestField(object):
                 field = Field(functionspace, constant)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -416,7 +513,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -474,7 +571,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -532,7 +629,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -586,7 +683,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -625,7 +722,7 @@ class TestField(object):
                 field = Field(functionspace, expression)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -661,7 +758,7 @@ class TestField(object):
                 field = Field(functionspace, expression)
 
                 # Check vector (numpy array) values (should be exact).
-                f_array = field.f.vector().array()
+                f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
                 assert np.all(f_array_split[0] == expected_value[0])
                 assert np.all(f_array_split[1] == expected_value[1])
@@ -686,85 +783,16 @@ class TestField(object):
                 assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
     def test_normalise(self):
-        """Test normalisation of vector fields."""
-        # 2D vector field
-        value = (1.3, 3.6)
-        for functionspace in self.vector2d_fspaces:
-            field = Field(functionspace, value, normalised=True)
+        mesh = df.UnitIntervalMesh(2)
+        V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
+        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"))
+        field = Field(V, value=expr)
+        field.normalise()
 
-            values = field.coords_and_values()[1]  # Ignore coordinates.
+        dofmap = df.vertex_to_dof_map(V)
+        reordered = field.f.vector().array()[dofmap].reshape((3, -1))
+        assert np.allclose(np.linalg.norm(reordered, axis=1), 1)
 
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (values[:, 0] ** 2 + values[:, 1] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # 3D vector field
-        value = (-1.3, 3.16, 0)
-        for functionspace in self.vector3d_fspaces:
-            field = Field(functionspace, value, normalised=True)
-
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            normalised_c3 = value[2] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-            assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (
-                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # 4D vector field
-        value = (-1.23, -3.96, 0, 6.98)
-        for functionspace in self.vector4d_fspaces:
-            field = Field(functionspace, value, normalised=True)
-
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the components of vector field.
-            norm_exact = (value[0] ** 2 + value[1] ** 2 + value[2] ** 2 +
-                          value[3] ** 2) ** 0.5
-            normalised_c1 = value[0] / norm_exact
-            normalised_c2 = value[1] / norm_exact
-            normalised_c3 = value[2] / norm_exact
-            normalised_c4 = value[3] / norm_exact
-            assert np.all(abs(values[:, 0] - normalised_c1) < self.tol3)
-            assert np.all(abs(values[:, 1] - normalised_c2) < self.tol3)
-            assert np.all(abs(values[:, 2] - normalised_c3) < self.tol3)
-            assert np.all(abs(values[:, 3] - normalised_c4) < self.tol3)
-
-            # Check the norm of normalised vector field.
-            norm = (values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2 +
-                    values[:, 3] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < self.tol3)
-
-        # Test normalisation if field is set using
-        # dolfin expression or python function.
-        expressions = [lambda x:(11.2 * x[0], -1.6 * x[1], 0.3 * x[2]),
-                       df.Expression(['11.2*x[0]', '-1.6*x[1]', '0.3*x[2]'])]
-
-        functionspace = self.fs3d_vector3d
-
-        for expression in expressions:
-            field = Field(functionspace, expression, normalised=True)
-            values = field.coords_and_values()[1]  # Ignore coordinates.
-
-            # Check the norm of normalised vector field.
-            norm = (
-                values[:, 0] ** 2 + values[:, 1] ** 2 + values[:, 2] ** 2) ** 0.5
-            assert np.all(abs(norm - 1) < 0.1)  # Too big error!!!!
 
     def test_whether_field_is_scalar_field(self):
         for functionspace in self.scalar_fspaces:
@@ -1119,7 +1147,7 @@ class TestField(object):
                                      -2.4 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -1168,7 +1196,7 @@ class TestField(object):
                                      3 * self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -1227,7 +1255,7 @@ class TestField(object):
                                      self.probing_coord)
 
             # Check vector (numpy array) values (should be exact).
-            f_array = field.f.vector().array()
+            f_array = field.get_ordered_numpy_array_xxx()
             f_array_split = np.split(f_array, field.value_dim())
             assert np.all(f_array_split[0] == expected_values[0])
             assert np.all(f_array_split[1] == expected_values[1])
@@ -1282,3 +1310,56 @@ class TestField(object):
                 assert abs(field3.probe(coord)[0] - 6) < self.tol1
                 assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
                 assert abs(field3.probe(coord)[2] - 9) < self.tol1
+
+    def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
+        """
+        For each mesh define a scalar field as well as vector fields of
+        dimension 2, 3, 4. The field values are defined by adding
+        0.01, 0.02, 0.03 and 0.04, respectively, to the x-coordinates
+        of the mesh nodes.
+
+        Then the field values are retrieved using both
+
+           get_ordered_numpy_array_xxx
+
+        and
+
+           get_ordered_numpy_array_xyz
+
+        and compared with the expected values.
+
+        """
+        def fsetval(value_dim, pos):
+            # Helper function to set field values
+            x = pos[0]
+            return [x + 0.01 * (i+1) for i in range(value_dim)]
+
+        for functionspace in self.all_fspaces:
+            # Define the field
+            f = Field(functionspace)
+            vdim = f.value_dim()
+            f.set(functools.partial(fsetval, vdim))
+
+            # Retrieve the field values in the different orderings
+            vals_xxx = f.get_ordered_numpy_array_xxx()
+            vals_xyz = f.get_ordered_numpy_array_xyz()
+
+            # Define the expected field values (derived from the
+            # x-coordinates of the mesh nodes by adding 0.01 to all
+            # x-components of the field, 0.02 to all y-components,
+            # 0.03 to all z-components, etc.)
+            xcoords = functionspace.mesh().coordinates()[:, 0]
+            vals_xxx_expected = np.concatenate(
+                [xcoords + 0.01 * (i+1) for i in range(vdim)])
+            vals_xyz_expected = np.array(
+                [xcoords + 0.01 * (i+1) for i in range(vdim)]).transpose().ravel()
+
+            # Check that we get the expected orderings
+            np.testing.assert_almost_equal(vals_xxx, vals_xxx_expected)
+            np.testing.assert_almost_equal(vals_xyz, vals_xyz_expected)
+
+            # Check that we get an error if we try to call
+            # get_ordered_numpy_array() on a non-scalar field.
+            if vdim > 1:
+                with pytest.raises(ValueError):
+                    f.get_ordered_numpy_array()

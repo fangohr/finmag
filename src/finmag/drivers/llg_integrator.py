@@ -24,6 +24,6 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
     if backend == "scipy":
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
-        return SundialsIntegrator(llg, m0.as_array(), **kwargs)
+        return SundialsIntegrator(llg, m0.get_ordered_numpy_array_xxx(), **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")
