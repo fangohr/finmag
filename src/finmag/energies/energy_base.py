@@ -62,10 +62,10 @@ class EnergyBase(object):
                              "one of {}.".format(method,
                                                  self._supported_methods))
         else:
-            logger.debug("Creating {} object with method {}, {} in "
+            logger.debug("Creating {} object with method {},{} in "
                          "Jacobian.".format(self.__class__.__name__,
                                             method,
-                                            "not " if not in_jacobian else ""))
+                                            " not " if not in_jacobian else ""))
 
         self.in_jacobian = in_jacobian
         self.method = method

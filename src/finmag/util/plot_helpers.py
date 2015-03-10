@@ -15,12 +15,12 @@ import types
 from .helpers import *
 
 def surface_2d(x, y, u, labels=("", "", ""), title="",
-               ylim=None, xlim=None, clim=None, path="", **kwargs):
+               ylim=None, xlim=None, clim=None, cmap=cm.coolwarm, path="", **kwargs):
     fig = plt.figure(**kwargs)
     ax = fig.add_subplot(111)
 
     X, Y = np.meshgrid(x, y)
-    surf = ax.pcolormesh(X, Y, u)
+    surf = ax.pcolormesh(X, Y, u, cmap=cmap)
 
     if xlim is not None:
         ax.set_xlim(xlim)
