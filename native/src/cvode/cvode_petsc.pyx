@@ -85,7 +85,7 @@ cdef class CvodeSolver(object):
         self.cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
         #self.cvode_mem = CVodeCreate(CV_ADAMS, CV_FUNCTIONAL);
 	
-	self.jac_fun = jac_fun
+        self.jac_fun = jac_fun
         self.init_ode(callback_fun, t0, y0)
         self.set_options(rtol, atol, max_num_steps)
 

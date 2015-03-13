@@ -3,8 +3,8 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 import dolfin as df
 import numpy as np
-import cvode2
-import llg_petsc
+import finmag.native.cvode_petsc as cvode2
+import finmag.native.llg_petsc as llg_petsc
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange, Zeeman, Demag
 
@@ -59,7 +59,7 @@ class Test(object):
         #self.llg.effective_field.add(demag)
         self.llg.effective_field.add(self.zeeman)
         
-        self.m_petsc = df.as_backend_type(self.llg._m.vector()).vec()
+        self.m_petsc = df.as_backend_type(self.llg.m_field.f.vector()).vec()
         self.h_petsc = df.as_backend_type(self.field.vector()).vec()
         self.alpha_petsc = df.as_backend_type(self._alpha.vector()).vec()
         
