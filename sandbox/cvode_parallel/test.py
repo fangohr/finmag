@@ -3,14 +3,17 @@ mpl.use("Agg")
 import matplotlib.pyplot as plt
 import dolfin as df
 import numpy as np
-import cvode2
+import finmag.native.cvode_petsc as cvode
 
-from mpi4py import MPI
+#from mpi4py import MPI
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+#comm = MPI.COMM_WORLD
+#rank1 = comm.Get_rank()
+#size1 = comm.Get_size()
 
+mpi_world = df.mpi_comm_world()
+rank = df.MPI.rank(mpi_world)
+size = df.MPI.size(mpi_world)
 
 #mpirun -n 2 python test.py
 
@@ -21,9 +24,13 @@ class Test(object):
     def __init__(self, mesh):
         self.mesh = mesh
         self.V = df.FunctionSpace(mesh, 'CG', 1)
-        zero = df.Expression('0.3')
+        zero = df.Expression('0')
         self.u = df.interpolate(zero, self.V)
-        self.spin = self.u.vector().array()
+        self.spin = self.u.vector().get_local()
+        self.spin[:] = 0.1*rank
+        self.u.vector().set_local(self.spin)
+        #print rank, len(self.spin),self.spin
+        #print rank, len(self.u.vector().array()), self.u.vector().array()
         self.t = 0
         
         self.m_petsc = df.as_backend_type(self.u.vector()).vec()
@@ -31,15 +38,15 @@ class Test(object):
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
-        self.ode = cvode2.CvodeSolver(self.sundials_rhs, 0, self.m_petsc, rtol, atol)
+        self.ode = cvode.CvodeSolver(self.sundials_rhs, 0, self.m_petsc, rtol, atol)
 
         #self.ode.test_petsc(self.m_petsc)
         
     def sundials_rhs(self, t, y, ydot):
         
         print 'rank=%d t=%g local=%d size=%d'%(rank, t, y.getLocalSize(), ydot.getSize())
-
-        ydot.setArray(np.sin(t))
+        
+        ydot.setArray(np.cos((rank+1)/2.0*t))
  
         return 0
 
@@ -56,16 +63,20 @@ class Test(object):
             raise Exception("Run cython run_until failed!!!")
         
         self.u.vector().set_local(ode.y_np)
-        self.spin = self.u.vector().array()
+        self.spin = self.u.vector().get_local()
         #print self.spin[0]
         #self.spin[:] = ode.y[:]
     
 
 def plot_m(ts, m):
-    plt.plot(ts, m, ".", label="m", color='DarkGreen')
+    fig = plt.figure()
+    plt.plot(ts, m, ".", label="sim", color='DarkGreen')
+    m2 = 2.0/(rank+1.0)*np.sin((rank+1)/2.0*ts)+0.1*rank
+    plt.plot(ts, m2, label="exact", color='red')
     plt.xlabel('Time')
-    plt.ylabel('m')
-    plt.savefig('m_rank_%d.pdf'%rank)
+    plt.ylabel('y')
+    plt.legend()
+    fig.savefig('m_rank_%d.pdf'%rank)
 
 
 if __name__ == '__main__':
@@ -76,10 +87,10 @@ if __name__ == '__main__':
     
     ts = np.linspace(0, 5, 101)
     
-    
     us = []
     
     file = df.File('u_time.pvd')
+    file << sim.u
     
     for t in ts:
         sim.run_until(t)
