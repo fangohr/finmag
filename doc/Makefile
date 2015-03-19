@@ -182,12 +182,13 @@ timing:
 	make -C ../examples/exchange_demag/timings/
 
 # Collect all .ipynb files in IPYTHON_NOTEBOOK_SRC_DIR and convert
-# them to .rst files in IPYTHON_NOTEBOOK_DEST_DIR, which are then
-# included in the documentation
+# them to HTML files in IPYTHON_NOTEBOOK_DEST_DIR. Each of these is
+# then wrapped in a minimal .rst file, which is included
+# in the documentation.
 collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 	@echo "IPYTHON_NOTEBOOK_SRC_DIR: ${IPYTHON_NOTEBOOK_DEST_DIR}"
 	-rm -rf ${IPYTHON_NOTEBOOK_DEST_DIR}/*
-	@echo "Converting IPython notebooks in directory '${IPYTHON_NOTEBOOK_SRC_DIR}' to .rst format..."
+	@echo "Converting IPython notebooks in directory '${IPYTHON_NOTEBOOK_SRC_DIR}' to .html format..."
 	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "    Converting file: $$FILE"; \
 	    ipython nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb --output ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE && \
