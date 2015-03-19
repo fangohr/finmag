@@ -210,12 +210,12 @@ ${IPYTHON_NOTEBOOK_DEST_DIR}:
 # to .rst first and then run sphinx on them there is an error). The only small drawback
 # with this is that we have a duplicate title, but that's only a very minor aesthetical
 # issue. Nevertheless, we keep the code here in case it can be useful.  -- Max, 3.9.2013
-prettify-ipython-notebooks:
-	@echo "Replacing notebook html files with nicer ones"
-	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
-	    echo "Replacing file: $$FILE"; \
-	    ipython nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb _build/html/${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE; \
-	done
+#prettify-ipython-notebooks:
+#	@echo "Replacing notebook html files with nicer ones"
+#	@for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
+#	    echo "Replacing file: $$FILE"; \
+#	    ipython nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb _build/html/${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE; \
+#	done
 
 #this target can be run to execute py.test ../examples to get figure
 #files ready. This will happen automatically when Jenkins runs, as
