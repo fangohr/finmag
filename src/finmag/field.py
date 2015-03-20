@@ -13,6 +13,7 @@ import logging
 import dolfin as df
 import numpy as np
 from finmag.util.helpers import expression_from_python_function
+from finmag.util.visualization import plot_dolfin_function
 
 log = logging.getLogger(name="finmag")
 
@@ -466,6 +467,17 @@ class Field(object):
 
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
+
+    def plot_with_paraview(self, **kwargs):
+        """
+        Render the field using Paraview and return an `IPython.display.Image`
+        object with the resulting plot (which is displayed as a regular image
+        in an IPython notebook). All keyword arguments are passed on to the
+        function `finmag.util.visualization.render_paraview_scene`, which is
+        used internally. This currently only works for 3D vector fields.
+
+        """
+        return plot_dolfin_function(self.f, **kwargs)
 
     def normalise(self):
         """
