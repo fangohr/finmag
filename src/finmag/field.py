@@ -12,6 +12,7 @@ duplicate code all over the FinMag code base.
 import logging
 import dolfin as df
 import numpy as np
+import numbers
 from finmag.util.helpers import expression_from_python_function
 from finmag.util.visualization import plot_dolfin_function
 
@@ -419,6 +420,20 @@ class Field(object):
         result = Field(self.functionspace)
         result.set(self.f.vector() + other.f.vector())
         return result
+
+    def __mul__(self, other):
+        if not isinstance(other, numbers.Number):
+            raise TypeError("Can only multiple with scalars for now.")
+        result = Field(self.functionspace)
+        # XXX TODO: This is a hack because it uses a detour via numpy arrays!
+        #           In principle, it should be possible to simply say
+        #           result.set(self.f.vector() * other), but this
+        #           currently throws a PETSc error.  -- Max, 20.3.2015
+        result.set(self.f.vector().array() * other)
+        return result
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def probe(self, coord):
         return self.f(coord)

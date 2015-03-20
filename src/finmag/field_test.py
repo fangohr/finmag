@@ -1311,6 +1311,33 @@ class TestField(object):
                 assert abs(field3.probe(coord)[1] - 4.1) < self.tol1
                 assert abs(field3.probe(coord)[2] - 9) < self.tol1
 
+    def test_mul_scalar_fields(self):
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = field1 * 42
+            field3 = -12 * field1
+
+            assert np.allclose(field2.f.vector().array(), 130.2)
+            assert np.allclose(field3.f.vector().array(), -37.2)
+
+    def test_mul_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2.4, 3.7))
+            field2 = field1 * 42
+            field3 = -3.6 * field1
+
+            coords = field2.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field2.probe(coord)[0] - 42) < self.tol1
+                assert abs(field2.probe(coord)[1] - 100.8) < self.tol1
+                assert abs(field2.probe(coord)[2] - 155.4) < self.tol1
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - (-3.6)) < self.tol1
+                assert abs(field3.probe(coord)[1] - (-8.64)) < self.tol1
+                assert abs(field3.probe(coord)[2] - (-13.32)) < self.tol1
+
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
         For each mesh define a scalar field as well as vector fields of
