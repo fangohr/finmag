@@ -468,6 +468,16 @@ class Field(object):
         v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
         return Field(self.functionspace, value=v_res)
 
+    @property
+    def np(self):
+        if self.value_dim() == 1:
+            # TODO: We should also rearrange these vector entries according to the dofmap.
+            return self.get_ordered_numpy_array_xxx()
+        elif self.value_dim() == 3:
+            return self.get_ordered_numpy_array_xxx().reshape(3, -1)
+        else:
+            raise NotImplementedError("Numpy representation is only implemented for scalar and 3d vector fields.")
+
     def probe(self, coord):
         return self.f(coord)
 
