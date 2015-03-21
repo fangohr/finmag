@@ -65,7 +65,7 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 # Other variables
 #
 # The list of output binary files to link
-BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY) add_version
+BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY)
 # The list of source files to be compiled
 SOURCES = $(shell find src tests -name \*.cc)
 # The list of object files to be compiled
@@ -110,9 +110,11 @@ REVISION_ID = $(shell hg --debug id -i -r ${FINMAGDIST_REVISION})
 # TODO: This is probably not the best place for this target, but at
 #       least it ensures that the version is re-generated whenever the
 #       native code is compiled, so we are always up to date.
-add_version:
+add_version: .add_version
+.add_version: $(BUILD_TARGETS)
 	@echo "FINMAG_VERSION: ${REVISION_NR}:${REVISION_ID}"
 	@echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
+	touch .add_version
 
 # Builds the whole project
 parallel:
@@ -126,7 +128,7 @@ parallel:
 	$(MAKE) -j $(N_SIMULTANEOUS_JOBS) build-targets
 
 # Links the object files and creates the binaries
-build-targets : $(BUILD_TARGETS)
+build-targets : $(BUILD_TARGETS) add_version
 
 # Compiles the source files into object files
 object-files : $(OBJECT_FILES)
