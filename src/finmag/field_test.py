@@ -1351,6 +1351,18 @@ class TestField(object):
                 assert abs(field4.probe(coord)[1] - 2.4 * coord[0]**2) < self.tol1
                 assert abs(field4.probe(coord)[2] - 3.7 * coord[0]**2) < self.tol1
 
+    def test_cross(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2, 3))
+            field2 = Field(functionspace, value=(4, 5, -2))
+            field3 = field1.cross(field2)
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - (-19)) < self.tol1
+                assert abs(field3.probe(coord)[1] - 14) < self.tol1
+                assert abs(field3.probe(coord)[2] - (-3)) < self.tol1
+
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
         For each mesh define a scalar field as well as vector fields of
