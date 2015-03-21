@@ -446,7 +446,6 @@ class Field(object):
         else:
             other.assert_is_scalar_field()
             a = other
-        result = Field(self.functionspace)
         # We use Claas Abert's 'point measure hack' to multiply the dolfin
         # function self.f with the scalar function a.f at each vertex.
         # Note that if 'other' is just a number, it should be possible to
@@ -454,11 +453,20 @@ class Field(object):
         # a PETSc error.  -- Max, 20.3.2015
         w = df.TestFunction(self.functionspace)
         v_res = df.assemble(df.dot(self.f * a.f, w) * df.dP)
-        result.set(v_res)
-        return result
+        return Field(self.functionspace, value=v_res)
 
     def __rmul__(self, other):
         return self.__mul__(other)
+
+    def cross(self, other):
+        assert isinstance(other, Field)
+        if not (self.value_dim() == 3 and other.value_dim() == 3):
+            raise ValueError("The cross product is only defined for 3d vector fields.")
+        # We use Claas Abert's 'point measure hack' for the vertex-wise
+        # cross product.
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
+        return Field(self.functionspace, value=v_res)
 
     def probe(self, coord):
         return self.f(coord)
