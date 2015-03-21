@@ -462,6 +462,13 @@ class Field(object):
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def __div__(self, other):
+        # We use Claas Abert's 'point measure hack' for the vertex-wise operation.
+        a = self.coerce_scalar_field(other)
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(self.f / a.f, w) * df.dP)
+        return Field(self.functionspace, value=v_res)
+
     def cross(self, other):
         if not isinstance(other, Field):
             raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))

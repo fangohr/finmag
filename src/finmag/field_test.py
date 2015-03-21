@@ -1351,6 +1351,36 @@ class TestField(object):
                 assert abs(field4.probe(coord)[1] - 2.4 * coord[0]**2) < self.tol1
                 assert abs(field4.probe(coord)[2] - 3.7 * coord[0]**2) < self.tol1
 
+    def test_div_scalar_fields(self):
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = field1 / 20
+            assert np.allclose(field2.f.vector().array(), 0.155)
+
+    def test_div_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2.4, 3.7))
+
+            # Multiply with scalars
+            field2 = field1 / 20
+
+            # Divide by a scalar field
+            S1 = associated_scalar_space(functionspace)
+            a = Field(S1, lambda pt: (pt[0] + 1.0)**2)
+            field3 = field1 / a
+
+            coords = field2.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field2.probe(coord)[0] - 0.05) < self.tol1
+                assert abs(field2.probe(coord)[1] - 0.12) < self.tol1
+                assert abs(field2.probe(coord)[2] - 0.185) < self.tol1
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - 1.0 / (coord[0] + 1)**2) < self.tol1
+                assert abs(field3.probe(coord)[1] - 2.4 / (coord[0] + 1)**2) < self.tol1
+                assert abs(field3.probe(coord)[2] - 3.7 / (coord[0] + 1)**2) < self.tol1
+
     def test_cross(self):
         for functionspace in self.vector3d_fspaces:
             field1 = Field(functionspace, value=(1, 2, 3))
