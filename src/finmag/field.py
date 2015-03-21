@@ -86,7 +86,7 @@ class Field(object):
     def assert_is_scalar_field(self):
         if self.value_dim() != 1:
             raise ValueError(
-                "This function is only defined for scalar fields.")
+                "This operation is only defined for scalar fields.")
 
     def from_array(self, arr):
         assert isinstance(arr, np.ndarray)
@@ -434,14 +434,27 @@ class Field(object):
         return result
 
     def __mul__(self, other):
-        if not isinstance(other, numbers.Number):
-            raise TypeError("Can only multiple with scalars for now.")
+        if not isinstance(other, Field):
+            S1 = associated_scalar_space(self.functionspace)
+            try:
+                # Try to coerce 'other' into a scalar function space
+                # on the same mesh.
+                a = Field(S1, other)
+            except:
+                print("Error: can only multiply with a scalar or scalar field.")
+                raise
+        else:
+            other.assert_is_scalar_field()
+            a = other
         result = Field(self.functionspace)
-        # XXX TODO: This is a hack because it uses a detour via numpy arrays!
-        #           In principle, it should be possible to simply say
-        #           result.set(self.f.vector() * other), but this
-        #           currently throws a PETSc error.  -- Max, 20.3.2015
-        result.set(self.f.vector().array() * other)
+        # We use Claas Abert's 'point measure hack' to multiply the dolfin
+        # function self.f with the scalar function a.f at each vertex.
+        # Note that if 'other' is just a number, it should be possible to
+        # say: result.set(self.f.vector() * other), but this currently throws
+        # a PETSc error.  -- Max, 20.3.2015
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(self.f * a.f, w) * df.dP)
+        result.set(v_res)
         return result
 
     def __rmul__(self, other):

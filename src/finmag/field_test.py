@@ -3,7 +3,7 @@ import numpy as np
 import functools
 import pytest
 import os
-from field import Field
+from field import Field, associated_scalar_space
 
 
 class TestField(object):
@@ -1323,8 +1323,15 @@ class TestField(object):
     def test_mul_vector_fields(self):
         for functionspace in self.vector3d_fspaces:
             field1 = Field(functionspace, value=(1, 2.4, 3.7))
+
+            # Multiply with scalars
             field2 = field1 * 42
             field3 = -3.6 * field1
+
+            # Multiply with a scalar field
+            S1 = associated_scalar_space(functionspace)
+            a = Field(S1, lambda pt: pt[0]**2)
+            field4 = field1 * a
 
             coords = field2.coords_and_values()[0]
             for coord in coords:
@@ -1337,6 +1344,12 @@ class TestField(object):
                 assert abs(field3.probe(coord)[0] - (-3.6)) < self.tol1
                 assert abs(field3.probe(coord)[1] - (-8.64)) < self.tol1
                 assert abs(field3.probe(coord)[2] - (-13.32)) < self.tol1
+
+            coords = field4.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field4.probe(coord)[0] - 1.0 * coord[0]**2) < self.tol1
+                assert abs(field4.probe(coord)[1] - 2.4 * coord[0]**2) < self.tol1
+                assert abs(field4.probe(coord)[2] - 3.7 * coord[0]**2) < self.tol1
 
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
