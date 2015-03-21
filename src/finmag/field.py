@@ -433,24 +433,28 @@ class Field(object):
         result.set(self.f.vector() + other.f.vector())
         return result
 
-    def __mul__(self, other):
-        if not isinstance(other, Field):
+    def coerce_scalar_field(self, value):
+        if not isinstance(value, Field):
             S1 = associated_scalar_space(self.functionspace)
             try:
-                # Try to coerce 'other' into a scalar function space
+                # Try to coerce 'value' into a scalar function space
                 # on the same mesh.
-                a = Field(S1, other)
+                res = Field(S1, value)
             except:
-                print("Error: can only multiply with a scalar or scalar field.")
+                print("Error: cannot coerce into scalar field: {}".format(value))
                 raise
         else:
-            other.assert_is_scalar_field()
-            a = other
+            value.assert_is_scalar_field()
+            res = value
+        return res
+
+    def __mul__(self, other):
         # We use Claas Abert's 'point measure hack' to multiply the dolfin
         # function self.f with the scalar function a.f at each vertex.
         # Note that if 'other' is just a number, it should be possible to
         # say: result.set(self.f.vector() * other), but this currently throws
         # a PETSc error.  -- Max, 20.3.2015
+        a = self.coerce_scalar_field(other)
         w = df.TestFunction(self.functionspace)
         v_res = df.assemble(df.dot(self.f * a.f, w) * df.dP)
         return Field(self.functionspace, value=v_res)
@@ -459,11 +463,11 @@ class Field(object):
         return self.__mul__(other)
 
     def cross(self, other):
-        assert isinstance(other, Field)
+        if not isinstance(other, Field):
+            raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
         if not (self.value_dim() == 3 and other.value_dim() == 3):
             raise ValueError("The cross product is only defined for 3d vector fields.")
-        # We use Claas Abert's 'point measure hack' for the vertex-wise
-        # cross product.
+        # We use Claas Abert's 'point measure hack' for the vertex-wise cross product.
         w = df.TestFunction(self.functionspace)
         v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
         return Field(self.functionspace, value=v_res)
