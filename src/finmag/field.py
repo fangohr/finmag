@@ -19,6 +19,18 @@ from finmag.util.visualization import plot_dolfin_function
 log = logging.getLogger(name="finmag")
 
 
+def associated_scalar_space(functionspace):
+    """
+    Given any dolfin function space (which may be a scalar or vector space),
+    return a scalar function space on the same mesh defined by the same finite
+    element family and degree.
+
+    """
+    fs_family = functionspace.ufl_element().family()
+    fs_degree = functionspace.ufl_element().degree()
+    return df.FunctionSpace(functionspace.mesh(), fs_family, fs_degree)
+
+
 class Field(object):
     """
     Representation of scalar and vector fields using a dolfin function.
