@@ -1,0 +1,14 @@
+Update (mostly for Hans, since David and I just did this):
+
+- Clone Finmag and compile it:
+
+     hg clone https://cilix@bitbucket.org/fangohr/finmag
+
+After cloning Finmag, you first need to check out the branch "iridis_compilation", otherwise the compilation will fail
+
+   hg update iridis_compilation
+
+Then proceed as in my previous email and it should work.
+
+Cheers,
+Max
