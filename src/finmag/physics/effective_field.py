@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from finmag.field import Field
 from finmag.util.helpers import vector_valued_function
 from finmag.energies import TimeZeeman
 from finmag.physics.errors import UnknownInteraction
@@ -19,6 +20,8 @@ class EffectiveField(object):
 
         unit_length:  float
         """
+        assert isinstance(m, Field)
+        assert isinstance(Ms, Field)
         self.m_field = m
         self.Ms = Ms
         self.unit_length = unit_length
