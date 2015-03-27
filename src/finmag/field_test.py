@@ -787,7 +787,9 @@ class TestField(object):
         V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"))
         field = Field(V, value=expr)
+        field2 = Field(V, value=expr)
         field.normalise()
+        field2.normalise()
 
         coords = mesh.coordinates()
         xcoords = coords[:, 0]
@@ -798,6 +800,7 @@ class TestField(object):
         m_normalised = (1. / m_norm) * m
 
         assert np.allclose(m_normalised, field.get_ordered_numpy_array_xxx().reshape(3, -1))
+        assert np.allclose(field.f.vector().array(), field2.vector().array())
 
     def test_whether_field_is_scalar_field(self):
         for functionspace in self.scalar_fspaces:
