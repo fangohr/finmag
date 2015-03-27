@@ -24,6 +24,9 @@ from finmag.util.fileio import Tablewriter, Tablereader
 import logging
 log = logging.getLogger(name="finmag")
 
+from neb import cartesian2spherical
+from neb import spherical2cartesian
+
 
 def linear_interpolation_two(m0, m1, n):
     """
@@ -33,36 +36,18 @@ def linear_interpolation_two(m0, m1, n):
     done in the magnetic moments that constitute the
     magnetic system.
     """
+    theta_phi0 = cartesian2spherical(m0)
+    theta_phi1 = cartesian2spherical(m1)
+    
+    # The differences with the number of interps + 1
+    dtheta = (theta_phi1 - theta_phi0) / (n + 1)
 
-    dm = (m1 - m0) / (n + 1)
     coords = []
     for i in range(n):
-        m = m0 + dm * (i + 1)
-        coords.append(m)
+        theta = theta_phi0 + (i + 1) * dtheta
+        coords.append(spherical2cartesian(theta))
+
     return coords
-
-
-def normalise_m(a):
-    """
-    Normalise the magnetisation array.
-    We asume:
-    a = [mx1, mx2, ..., my1, my2, ..., mz1, mz2, ...]
-    to transform this into
-
-    [ [mx1, mx2, ...],
-      [my1, my2, ...],
-      [mz1, mz2, ...]
-    ]
-    normalise the matrix, and return again a  1 x -- array
-    """
-    # Transform to matrix
-    a.shape = (3, -1)
-    # Compute the array 'a' length
-    lengths = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
-    # Normalise all the entries
-    a[:] /= lengths
-    # Return to original shape
-    a.shape = (-1, )
 
 
 def compute_dm(m0, m1):
@@ -167,7 +152,6 @@ class NEB_Sundials(object):
         self.total_image_num = len(initial_images) + sum(interpolations)
         self.image_num = self.total_image_num - 2
 
-        self.nxyz = len(self._m.vector()) / 3
         
         S3 = sim.S3
         Vs = []
@@ -175,9 +159,9 @@ class NEB_Sundials(object):
             Vs.append(S3)
         ME = df.MixedFunctionSpace(VS)
 
-        self.u = df.Function(ME)
+        self.images_fun = df.Function(ME)
         #all the degree of freedom, which is a petsc vector
-        self.coords = df.as_backend_type(self.u.vector()).vec()
+        self.coords = df.as_backend_type(self.images_fun.vector()).vec()
         
 
         self.t = 0
@@ -267,29 +251,32 @@ class NEB_Sundials(object):
 
         # Initiate the counter
         image_id = 0
-        self.coords.shape = (self.total_image_num, -1)
+        
 
         # For every interpolation between images (zero if no interpolations
         # were specified)
         for i in range(len(self.interpolations)):
             # Store the number
             n = self.interpolations[i]
-
+            
             # Save on the first image of a pair (step 1, 6, ...)
             self.sim.set_m(self.initial_images[i])
-            m0 = self.sim.m
-
-            self.coords[image_id][:] = m0[:]
+            m0 = self.sim._m_field.get_ordered_numpy_array_xxx()
+            df.assign(self.images_fun.sub(image_id),self.sim._m_field.f)
+            
             image_id = image_id + 1
 
             # Set the second image in the pair as m1 and interpolate
             # (step 4 and 7), saving in corresponding self.coords entries
+            
             self.sim.set_m(self.initial_images[i + 1])
-            m1 = self.sim.m
+            m1 = self.sim._m_field.get_ordered_numpy_array_xxx()
             # Interpolations (arrays with magnetisation values)
             coords = linear_interpolation_two(m0, m1, n)
 
             for coord in coords:
+                self.sim.set_m(coord)
+                df.assign(self.images_fun.sub(image_id),self.sim._m_field.f)
                 self.coords[image_id][:] = coord[:]
                 image_id = image_id + 1
 
@@ -297,17 +284,16 @@ class NEB_Sundials(object):
 
         # Append the magnetisation of the last image
         self.sim.set_m(self.initial_images[-1])
-        m2 = self.sim.m
-        self.coords[image_id][:] = m2[:]
-
+        df.assign(self.images_fun.sub(image_id),self.sim._m_field.f)
+        
+        """
         # Save the energies
         for i in range(self.total_image_num):
             self._m.vector().set_local(self.coords[i])
             self.effective_field.update()
             self.energy[i] = self.effective_field.total_energy()
-
-        # Flatten the array
-        self.coords.shape = (-1,)
+        """
+        
 
     def save_vtks(self):
         """
