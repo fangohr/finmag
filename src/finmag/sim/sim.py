@@ -4,6 +4,7 @@ import time
 import inspect
 import logging
 import itertools
+import sys
 import dolfin as df
 import numpy as np
 import cProfile
@@ -69,7 +70,9 @@ class Simulation(object):
         # Store the simulation name and a 'sanitized' version of it which
         # contains only alphanumeric characters and underscores. The latter
         # will be used as a prefix for .log/.ndt files etc.
+
         self.name = name
+        #log.debug("__init__:sim-object '{}' refcount 1={}".format(self.name, sys.getrefcount(self)))
         self.sanitized_name = helpers.clean_filename(name)
 
         self.logfilename = self.sanitized_name + '.log'
@@ -78,10 +81,19 @@ class Simulation(object):
         self.logging_handler = helpers.start_logging_to_file(
             self.logfilename, mode='w', level=logging.DEBUG)
 
+        #log.debug("__init__:sim-object '{}' refcount 30={}".format(self.name, sys.getrefcount(self)))
+
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
         # timesteps.
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
+
+        # Note that we pass the simulation object ("self") to the Tablewrite in the line above, and
+        # that the table writer stores a reference. This is just a cyclic reference. If we want 
+        # the garbage collection to be able to collect this simulation object, we need to remove
+        # that cyclic reference. This is what the 'delete()' method attempts to do.
+
+        #log.debug("__init__:sim-object '{}' refcount 31={}".format(self.name, sys.getrefcount(self)))
 
         self.tablewriter.add_entity('E_total', {
             'unit': '<J>',
@@ -91,6 +103,8 @@ class Simulation(object):
             'unit': '<A/m>',
             'get': lambda sim: helpers.average_field(sim.effective_field()),
             'header': ('H_total_x', 'H_total_y', 'H_total_z')})
+
+        #log.debug("__init__:sim-object '{}' refcount 32={}".format(self.name, sys.getrefcount(self)))
 
         log.info("Creating Sim object '{}' (rank={}/{}).".format(
             self.name, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
@@ -108,11 +122,16 @@ class Simulation(object):
         elif pbc != None:
             raise ValueError("Argument 'pbc' must be one of None, '1d', '2d'.")
 
+        #log.debug("__init__:sim-object '{}' refcount 35={}".format(self.name, sys.getrefcount(self)))
+
         if not mesh_size_plausible(mesh, unit_length):
             log.warning(
                 "The mesh is {}.".format(describe_mesh_size(mesh, unit_length)))
             log.warning(
                 "unit_length is set to {}. Are you sure this is correct?".format(unit_length))
+
+
+        #log.debug("__init__:sim-object '{}' refcount 50={}".format(self.name, sys.getrefcount(self)))
 
         self.mesh = mesh
         self.Ms = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
@@ -124,6 +143,8 @@ class Simulation(object):
         self.S3 = df.VectorFunctionSpace(
             mesh, "Lagrange", 1, dim=3, constrained_domain=self.pbc)
 
+        #log.debug("__init__:sim-object '{}' refcount 40={}".format(self.name, sys.getrefcount(self)))
+
         if kernel == 'llg':
             self.llg = LLG(
                 self.S1, self.S3, average=average, unit_length=unit_length)
@@ -133,6 +154,8 @@ class Simulation(object):
             self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
         else:
             raise ValueError("kernel must be one of llg, sllg or llg_stt.")
+
+        #log.debug("__init__:sim-object '{}' refcount 41={}".format(self.name, sys.getrefcount(self)))
 
         self.kernel = kernel
 
@@ -146,6 +169,8 @@ class Simulation(object):
         self.domains.set_all(0)
         self.region_id = 0
 
+        #log.debug("__init__:sim-object '{}' refcount 80={}".format(self.name, sys.getrefcount(self)))
+
         # XXX TODO: this separation between vtk_savers and
         # field_savers is artificial and should/will be removed once
         # we have a robust, unified field saving mechanism.
@@ -153,6 +178,8 @@ class Simulation(object):
         self.field_savers = {}
         self._render_scene_indices = {}
 
+        #log.debug("__init__:sim-object '{}' refcount 85={}".format(self.name, sys.getrefcount(self)))
+        
         self.scheduler_shortcuts = {
             'eta': sim_helpers.eta,
             'ETA': sim_helpers.eta,
@@ -163,9 +190,12 @@ class Simulation(object):
             'save_m': sim_savers._save_m_incremental,
             'save_ndt': sim_helpers.save_ndt,
             'save_restart_data': sim_helpers.save_restart_data,
-            'save_vtk': self.save_vtk,
+            'save_vtk': self.save_vtk,                                # <- this line creates a reference to the simulation object. Why?
             'switch_off_H_ext': Simulation.switch_off_H_ext,
-        }
+            }
+
+
+        #log.debug("__init__:sim-object '{}' refcount 86={}".format(self.name, sys.getrefcount(self)))
 
         # At the moment, we can only have cvode as the driver, and thus do
         # time development of a system. We may have energy minimisation at some
@@ -176,10 +206,39 @@ class Simulation(object):
         self.reltol = 1e-6
         self.abstol = 1e-6
 
+        #log.debug("__init__:sim-object '{}' refcount 88={}".format(self.name, sys.getrefcount(self)))
+
         self.parallel = parallel
         if self.parallel:
             self.m_petsc = self.llg._m_field.petsc_vector()
             #df.parameters.reorder_dofs_serial = True
+
+        #log.debug("__init__:sim-object '{}' refcount 100={}".format(self.name, sys.getrefcount(self)))
+
+
+    def delete(self):
+        """Attempt to clear all cyclic dependencies and close all files"""
+        log.debug("delete(): 1-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        self.tablewriter.delete_entity_get_methods()
+        #'del self.tablewriter' would be sufficient?
+        log.debug("delete(): 2-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        del self.tablewriter.sim
+        log.debug("delete(): 3-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        self.clear_schedule()
+        log.debug("delete(): 4-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        del self.scheduler
+        log.debug("delete(): 5-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        del self.scheduler_shortcuts
+        log.debug("delete(): 6-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        self.close_logfile()
+        log.debug("delete(): 7-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        return sys.getrefcount(self)
+
+    def __del__(self):
+        # self.close_logfile()        
+        print("Simulation object {} is going out of scope (__del__())".format(self.name))
+        #log("Simulation object {} is going out of scope (__del__())".format(self.name))
+
 
     def __str__(self):
         """String briefly describing simulation object"""
@@ -1137,6 +1196,7 @@ class Simulation(object):
         files (in particular the global logfile) is not affected.
 
         """
+        log.info("Closing logging_handler {} for sim object {}".format(self.logging_handler, self.name))
         self.logging_handler.stream.close()
         log.removeHandler(self.logging_handler)
         self.logging_handler = None
