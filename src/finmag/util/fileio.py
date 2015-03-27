@@ -166,6 +166,15 @@ class Tablewriter(object):
 
         self._entities[name]['get'] = lambda sim: np.NAN
 
+    def delete_entity_get_methods(self):
+        """Method to delete all get_methods. 
+        Might need this (trying to find references to the simulation objects are hiding).
+        """
+        logger.debug("'Deletinging all get methods in TableWriter(name={})".format(self.filename))
+        keys = self._entities.keys()
+        for key in keys:
+            self.delete_entity_get_method(key)
+
     def default_entity_order(self):
         keys = self._entities.keys()
         # time needs to go first
@@ -177,6 +186,7 @@ class Tablewriter(object):
             return ['step'] + sorted(keys)
         else:
             return keys
+
 
     def update_entity_order(self):
         self.entity_order = self.default_entity_order()
