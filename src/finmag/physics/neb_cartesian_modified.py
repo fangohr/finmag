@@ -5,14 +5,14 @@ import numpy as np
 from aeon import default_timer
 # import finmag.util.consts as consts
 
+
 # from finmag.util import helpers
 # from finmag.physics.effective_field import EffectiveField
 from finmag.util.vtk_saver import VTKSaver
 from finmag import Simulation
 # from finmag.field import Field  # Change sim._m to new field class
 # in line 184
-from finmag.native import sundials
-import finmag.native.neb as native_neb
+import finmag.native.cvode_petsc as cvode
 
 from finmag.util.fileio import Tablewriter, Tablereader
 
@@ -168,19 +168,17 @@ class NEB_Sundials(object):
         self.image_num = self.total_image_num - 2
 
         self.nxyz = len(self._m.vector()) / 3
+        
+        S3 = sim.S3
+        Vs = []
+        for i in range(self.image_num):
+            Vs.append(S3)
+        ME = df.MixedFunctionSpace(VS)
 
-        self.coords = np.zeros(3 * self.nxyz * self.total_image_num)
-        self.last_m = np.zeros(self.coords.shape)
-
-        self.Heff = np.zeros(self.coords.shape)
-        self.Heff.shape = (self.total_image_num, -1)
-
-        self.tangents = np.zeros(3 * self.nxyz * self.image_num)
-        self.tangents.shape = (self.image_num, -1)
-
-        self.energy = np.zeros(self.total_image_num)
-
-        self.springs = np.zeros(self.image_num)
+        self.u = df.Function(ME)
+        #all the degree of freedom, which is a petsc vector
+        self.coords = df.as_backend_type(self.u.vector()).vec()
+        
 
         self.t = 0
         self.step = 0
@@ -339,41 +337,17 @@ class NEB_Sundials(object):
 
         self.coords.shape = (-1, )
 
-    def save_npys(self):
-        """
-        Save npy files in different folders according to
-        the simulation name and step
-        Files are saved as: simname_simstep/image_x.npy
-        """
-        # Create directory as simname_simstep
-        directory = 'npys/%s_%d' % (self.name, self.step)
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+    def create_integrator(self, rtol=1e-6, atol=1e-6):
 
-        # Save the images with the format: 'image_{}.npy'
-        # where {} is the image number, starting from 0
-        self.coords.shape = (self.total_image_num, -1)
-        for i in range(self.total_image_num):
-            name = os.path.join(directory, 'image_%d.npy' % i)
-            np.save(name, self.coords[i, :])
-
-        self.coords.shape = (-1, )
-
-    def create_integrator(self, reltol=1e-6, abstol=1e-6, nsteps=10000):
-
-        integrator = sundials.cvode(sundials.CV_BDF, sundials.CV_NEWTON)
-        integrator.init(self.sundials_rhs, 0, self.coords)
-        integrator.set_linear_solver_sp_gmr(sundials.PREC_NONE)
-        integrator.set_scalar_tolerances(reltol, abstol)
-        integrator.set_max_num_steps(nsteps)
-
+        integrator = cvode.CvodeSolver(self.sundials_rhs, 0, self.coords, rtol, atol)
+        
         self.integrator = integrator
 
     def compute_effective_field(self, y):
 
         y.shape = (self.total_image_num, -1)
-
+        """
         for i in range(self.image_num):
 
             self._m.vector().set_local(y[i + 1])
@@ -400,8 +374,9 @@ class NEB_Sundials(object):
         # at: Henkelman et al., Journal of Chemical Physics 113, 22 (2000)
         native_neb.compute_tangents(y, self.energy, self.tangents)
         # native_neb.compute_springs(y,self.springs,self.spring)
-
+        """
         y.shape = (-1, )
+        
 
     def sundials_rhs(self, time, y, ydot):
         """
