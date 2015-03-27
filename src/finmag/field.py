@@ -548,7 +548,7 @@ class Field(object):
         """
         return plot_dolfin_function(self.f, **kwargs)
 
-    def normalise_old(self):
+    def normalise_dofmap(self):
         """
         Overwrite own field values with normalised ones.
 
