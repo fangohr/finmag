@@ -15,7 +15,7 @@ Heff.assign(df.Constant((0, 0, 1)))
 alpha.assign(df.Constant(1))
 Ms.assign(df.Constant(1))
 
-dmdt_expression = -gamma*df.cross(m, Heff) - alpha*gamma/Ms*df.cross(m, df.cross(m, Heff))
+dmdt_expression = -gamma/(1+alpha*alpha)*df.cross(m, Heff) - alpha*gamma/(1+alpha*alpha)*df.cross(m, df.cross(m, Heff))
 dmdt = df.assemble(df.dot(dmdt_expression, df.TestFunction(S3)) * df.dP)
 
 # An expected result is unit z vector and the type is dolfin vector.
