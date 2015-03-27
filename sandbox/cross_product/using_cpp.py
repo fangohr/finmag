@@ -2,7 +2,7 @@ import time
 import dolfin as df
 from finmag.physics.equation import Equation
 
-mesh = df.UnitSquareMesh(100, 100)
+mesh = df.UnitSquareMesh(200, 200)
 S1 = df.FunctionSpace(mesh, "CG", 1)
 S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
 
@@ -23,8 +23,6 @@ eq.set_gamma(1.0)
 start = time.time()
 for i in xrange(10000):
     eq.solve()
-    if i % 100 == 0:
-        print i
 stop = time.time()
 print "delta = ", stop - start
 
