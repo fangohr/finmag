@@ -548,7 +548,7 @@ class Field(object):
         """
         return plot_dolfin_function(self.f, **kwargs)
 
-    def normalise(self):
+    def normalise_old(self):
         """
         Overwrite own field values with normalised ones.
 
@@ -561,3 +561,20 @@ class Field(object):
         vertexmap = df.dof_to_vertex_map(self.functionspace)
         normalised_original_order = normalised[vertexmap]
         self.from_array(normalised_original_order)
+
+    def normalise(self):
+        """
+        Normalises the Field, so that the norm at every mesh node is 1.
+        """
+        S1 = df.FunctionSpace(self.functionspace.mesh(), 'CG', 1)
+
+        norm_squared = 0
+        for i in range(self.value_dim()):
+            norm_squared += self.f[i]*self.f[i]
+
+        norm = df.Function(S1)
+        norm_vector = df.assemble(df.dot(df.sqrt(norm_squared), df.TestFunction(S1))*df.dP)
+        norm.vector().set_local(norm_vector.get_local())
+
+        #self.f = df.project(self.f/norm, self.functionspace)
+        self.f = (self / norm).f

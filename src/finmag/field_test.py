@@ -783,16 +783,21 @@ class TestField(object):
                 assert abs(probed_value[3] - expected_value[3]) < self.tol1
 
     def test_normalise(self):
-        mesh = df.UnitIntervalMesh(2)
+        mesh = df.UnitIntervalMesh(50)
         V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"))
         field = Field(V, value=expr)
         field.normalise()
 
-        dofmap = df.vertex_to_dof_map(V)
-        reordered = field.f.vector().array()[dofmap].reshape((3, -1))
-        assert np.allclose(np.linalg.norm(reordered, axis=1), 1)
+        coords = mesh.coordinates()
+        xcoords = coords[:, 0]
+        m = np.array([10 * xcoords + 0.1,
+                      10 * xcoords + 0.2,
+                      10 * xcoords + 0.3])
+        m_norm = np.linalg.norm(m, axis=0)
+        m_normalised = (1. / m_norm) * m
 
+        assert np.allclose(m_normalised, field.get_ordered_numpy_array_xxx().reshape(3, -1))
 
     def test_whether_field_is_scalar_field(self):
         for functionspace in self.scalar_fspaces:
