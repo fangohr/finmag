@@ -1,0 +1,68 @@
+Hi David & Hans,
+
+Here are finally some instructions how to compile FEniCS and Finmag on Iridis. It took quite a lot of tweaking, but I hope it works now. If there are any problems, let me know before you spend too much time resolving them. I'm pretty sure I have seen most of them by now... ;)
+
+Note: step (1) below takes a long time. If you want to skip this step, you can use my own hashdist build of FEniCS for now, which resides in /home/mha2e09/.hashdist. You can skip to (2) below and adapt the paths if you wish.
+
+(1) Installing FEniCS using hashdist
+
+- Clone my fork of the fenics-developer-tools (it doesn't really matter where you clone it) and change into the newly created directory:
+
+     git clone https://cilix@bitbucket.org/cilix/fenics-developer-tools.git
+     cd fenics-developer-tools/
+
+- Check out the branch "iridis_compilation":
+
+     git checkout -b iridis_compilation remotes/origin/iridis_compilation
+
+- Run the script which installs FEniCS using hashdist:
+
+     cd install/
+     bash fenics-install.sh
+
+The second of these commands will display a prompt asking you to select the FEniCS version. Choose "latest stable version of FEniCS (1.5)", then wait. This will take a long time (2-3 hours). It will compile a lot of packages and place them in the directory ~/.hashdist.
+
+[Note: Sometimes, if the compilaton takes too much time or CPU resources then the job may be automatically killed. Then you simply have to re-execute the command "bash fenics-install.sh". Hashdist is clever enough not to recompile the packages which have already been compiled successfully.]
+
+If successful, this will create a new file "fenics.stable" in the current directory. This file which defines all environment variables and sets up the profile.
+
+- As a side note, the installation script "fenics-install.sh" from my fork of fenics-developer-tools also clones my fork of the hashstack repository, because we need some special adaptations for Iridis in that one as well. But this is done automatically, I just wanted to mention it in case it needs tweaking, too.
+
+(2) Compile Finmag using our custom-compiled FEniCS version:
+
+- Load the correct environment:
+
+     module load gcc/4.8.1
+     module load openmpi/1.6.4/gcc
+     module load cmake
+     module load hg
+     source /path/to/fenics-developer-tools/install/fenics.stable
+
+(The path in the last command needs adapting to wherever you cloned fenics-developer-tools.)
+
+- Clone Finmag and compile it:
+
+     hg clone https://cilix@bitbucket.org/fangohr/finmag
+     cd finmag/native
+     make
+
+  To use Finmag, set PYTHONPATH and LD_LIBRARY_PATH:
+
+     export PYTHONPATH=/path/to/finmag/src:$PYTHONPATH
+     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/.hashdist/bld/profile/default/lib/
+
+  (Again, the path in the first command above needs adapting to wherever you cloned Finmag.)
+
+  Then Finmag should (hopefully!!) work:
+
+     >>> from finmag.example import barmini
+     >>> sim = barmini()
+     >>> sim.relax()
+
+It raises some MPI warning, but the relaxation seems to work. So hopefully this is usable.
+
+Again, any questions or problems, just shout.
+
+Cheers,
+Max
+

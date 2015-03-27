@@ -15,8 +15,10 @@ CFLAGS=-O3 -fPIC -mfpmath=sse -march=native -ffast-math -lblas -llapack -lm -g -
 DEPS = Makefile nvector_custom_malloc_impl.h ../nvector_custom_malloc.h
 SOURCES = nvector_serial_custom_malloc.c sundials_math.c
 
-nvector_serial_custom_malloc.so : $(SOURCES) $(DEPS)
-	gcc $(SOURCES) $(CFLAGS) -shared -o ../../../../src/finmag/native/lib$@
+nvector_serial_custom_malloc.so: .nvector_serial_custom_malloc_compiled
+.nvector_serial_custom_malloc_compiled: $(SOURCES) $(DEPS)
+	gcc $(SOURCES) $(CFLAGS) -shared -o ../../../../src/finmag/native/libnvector_serial_custom_malloc.so
+	touch .nvector_serial_custom_malloc_compiled
 
 # This target can be used to print Makefile variables (such as PROJECT_DIR)
 # from the command line, for example by saying 'make print-PROJECT_DIR'.

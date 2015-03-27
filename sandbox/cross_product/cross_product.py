@@ -3,7 +3,10 @@ An example code that computes the cross product of two dolfin functions.
 This should be replaced in the parts of the code where dmdt is computed.
 """
 import dolfin as df
+from distutils.version import LooseVersion
 
+if LooseVersion(df.__version__) < LooseVersion('1.5.0'):
+    raise RuntimeError("This script requires at least dolfin version 1.5. It will run without error in 1.4, but the computed cross product will be zero!")
 
 def cross_product(a, b, S3):
     """

@@ -12,9 +12,23 @@ duplicate code all over the FinMag code base.
 import logging
 import dolfin as df
 import numpy as np
+import numbers
 from finmag.util.helpers import expression_from_python_function
+from finmag.util.visualization import plot_dolfin_function
 
 log = logging.getLogger(name="finmag")
+
+
+def associated_scalar_space(functionspace):
+    """
+    Given any dolfin function space (which may be a scalar or vector space),
+    return a scalar function space on the same mesh defined by the same finite
+    element family and degree.
+
+    """
+    fs_family = functionspace.ufl_element().family()
+    fs_degree = functionspace.ufl_element().degree()
+    return df.FunctionSpace(functionspace.mesh(), fs_family, fs_degree)
 
 
 class Field(object):
@@ -72,7 +86,7 @@ class Field(object):
     def assert_is_scalar_field(self):
         if self.value_dim() != 1:
             raise ValueError(
-                "This function is only defined for scalar fields.")
+                "This operation is only defined for scalar fields.")
 
     def from_array(self, arr):
         assert isinstance(arr, np.ndarray)
@@ -419,6 +433,62 @@ class Field(object):
         result.set(self.f.vector() + other.f.vector())
         return result
 
+    def coerce_scalar_field(self, value):
+        if not isinstance(value, Field):
+            S1 = associated_scalar_space(self.functionspace)
+            try:
+                # Try to coerce 'value' into a scalar function space
+                # on the same mesh.
+                res = Field(S1, value)
+            except:
+                print("Error: cannot coerce into scalar field: {}".format(value))
+                raise
+        else:
+            value.assert_is_scalar_field()
+            res = value
+        return res
+
+    def __mul__(self, other):
+        # We use Claas Abert's 'point measure hack' to multiply the dolfin
+        # function self.f with the scalar function a.f at each vertex.
+        # Note that if 'other' is just a number, it should be possible to
+        # say: result.set(self.f.vector() * other), but this currently throws
+        # a PETSc error.  -- Max, 20.3.2015
+        a = self.coerce_scalar_field(other)
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(self.f * a.f, w) * df.dP)
+        return Field(self.functionspace, value=v_res)
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __div__(self, other):
+        # We use Claas Abert's 'point measure hack' for the vertex-wise operation.
+        a = self.coerce_scalar_field(other)
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(self.f / a.f, w) * df.dP)
+        return Field(self.functionspace, value=v_res)
+
+    def cross(self, other):
+        if not isinstance(other, Field):
+            raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
+        if not (self.value_dim() == 3 and other.value_dim() == 3):
+            raise ValueError("The cross product is only defined for 3d vector fields.")
+        # We use Claas Abert's 'point measure hack' for the vertex-wise cross product.
+        w = df.TestFunction(self.functionspace)
+        v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
+        return Field(self.functionspace, value=v_res)
+
+    @property
+    def np(self):
+        if self.value_dim() == 1:
+            # TODO: We should also rearrange these vector entries according to the dofmap.
+            return self.get_ordered_numpy_array_xxx()
+        elif self.value_dim() == 3:
+            return self.get_ordered_numpy_array_xxx().reshape(3, -1)
+        else:
+            raise NotImplementedError("Numpy representation is only implemented for scalar and 3d vector fields.")
+
     def probe(self, coord):
         return self.f(coord)
 
@@ -466,6 +536,17 @@ class Field(object):
 
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
+
+    def plot_with_paraview(self, **kwargs):
+        """
+        Render the field using Paraview and return an `IPython.display.Image`
+        object with the resulting plot (which is displayed as a regular image
+        in an IPython notebook). All keyword arguments are passed on to the
+        function `finmag.util.visualization.render_paraview_scene`, which is
+        used internally. This currently only works for 3D vector fields.
+
+        """
+        return plot_dolfin_function(self.f, **kwargs)
 
     def normalise(self):
         """
