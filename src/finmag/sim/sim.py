@@ -45,6 +45,13 @@ class Simulation(object):
         t           the current simulation time
 
     """
+
+
+    # see comment at end of file on 'INSTANCE'
+    instance_counter_max = 0   
+    instances = {}
+
+
     @mtimed
     def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend="sundials", pbc=None, average=False, parallel=False):
         """Simulation object.
@@ -82,6 +89,14 @@ class Simulation(object):
             self.logfilename, mode='w', level=logging.DEBUG)
 
         #log.debug("__init__:sim-object '{}' refcount 30={}".format(self.name, sys.getrefcount(self)))
+
+
+        # instance booking
+        self.instance_id = Simulation.instance_counter_max
+        Simulation.instance_counter_max += 1
+        assert self.instance_id not in Simulation.instances.keys() 
+        Simulation.instances[self.instance_id] = self
+
 
         # Create a Tablewriter object for ourselves which will be used
         # by various methods to save the average magnetisation at given
@@ -216,8 +231,27 @@ class Simulation(object):
         #log.debug("__init__:sim-object '{}' refcount 100={}".format(self.name, sys.getrefcount(self)))
 
 
-    def delete(self):
-        """Attempt to clear all cyclic dependencies and close all files"""
+    def shutdown(self):
+        """Attempt to clear all cyclic dependencies and close all files.
+        The simulation object is unusable after this has been called, but 
+        should be garbage collected if going out of scope subsequently.
+
+        Returns the number of references to self -- in my tests in March 2015,
+        this number was 4 when all cyclic references were removed, and thus
+        the next GC did work."""
+
+        log.info("Shutting down Simulation object {}".format(self.__str__()))
+
+        # instance book keeping
+        assert self.instance_id in Simulation.instances.keys()
+        # remove reference to this simulation object from dictionary
+        del Simulation.instances[self.instance_id]
+
+        log.debug("{} other Simulation instances alive.".format(
+                self.instances_alive_count()))
+
+        # now start to remove (potential) references to 'self':
+
         log.debug("delete(): 1-refcount {} for {}".format(sys.getrefcount(self), self.name))
         self.tablewriter.delete_entity_get_methods()
         #'del self.tablewriter' would be sufficient?
@@ -234,15 +268,34 @@ class Simulation(object):
         log.debug("delete(): 7-refcount {} for {}".format(sys.getrefcount(self), self.name))
         return sys.getrefcount(self)
 
+
+    def instances_list_all(self):
+        log.info("Showing all Simulation object instances:")
+        for id_ in sorted(Simulation.instances.keys()):
+            if id_ != None:   # can happen if instances have been deleted
+                log.info("    sim instance_id={}: name='{}'".format(id_, Simulation.instances[id_].name))
+
+    def instances_delete_all_others(self):
+        for id_ in sorted(Simulation.instances.keys()):
+            if id_ != None:   # can happen if instances have been deleted
+                if id_ != self.instance_id:  # do not delete ourselves, here
+                    sim = Simulation.instances[id_]
+                    sim.shutdown()
+                    del sim
+
+    def instances_alive_count(self):
+        return sum([1 for id_ in Simulation.instances.keys() if id_ != None])
+
+
+
     def __del__(self):
         # self.close_logfile()        
-        print("Simulation object {} is going out of scope (__del__())".format(self.name))
-        #log("Simulation object {} is going out of scope (__del__())".format(self.name))
+        print("__del__(): Simulation object name='{}' (instance_id={}) is going out of scope".format(self.name, self.instance_id))
 
 
     def __str__(self):
         """String briefly describing simulation object"""
-        return "finmag.Simulation(name='%s') with %s" % (self.name, self.mesh)
+        return "finmag.Simulation(name='%s', instance_id=%s) with %s" % (self.name, self.instance_id, self.mesh)
 
     def __get_m(self):
         """The unit magnetisation"""
@@ -1388,3 +1441,56 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     log.debug("Successfully created simulation '{}'".format(sim.name))
 
     return sim
+
+
+
+
+
+# Instance accounting
+
+"""28 March 2015: running jenkins tests has started to fail some weeks
+ago wiht an error message about too many open files. We find that the
+simulation specific log-handler files are not closed. If we run many
+simulations in the same python session, the number of open files
+increases. It is not clear whether this is the problem, but that is the current working assumption.
+
+Part of the problem is that self.close_logfile() is never called, and
+thus the file is not closed.
+
+As part of the investigation, we found that the simulation objects
+also are not garbage collected. [Marijan reported memory problems when
+he has many simulation objects created in a for-loop.] This is due to
+other references to the simulation object existing when it goes out of
+scope. For example, the Table writer functions have a reference to the
+simulation object. We thus have cyclic references, and therefore the
+garbage collection never removes the simulation objects, and thus
+__del__(self) is never called.
+
+As long as we stick to passing a reference to the simulation object
+around in our code, we can not close the logfile automatically in the
+__del__ method, because the delete method never executes due to the
+cyclic references. We want to stick to using references to the
+simulation object as this is very convenient and allows writing the
+most generic code (i.e. use user-defined functions that get the
+simulation object passed as an argument).
+
+Sticking to this approach, we need an additional function to 'delete'
+the simulation object. What this actually needs to do is to remove the
+cyclic references so that the object can be garbage collected when it
+goes out of scope. (The same function might as well close the logfile
+handler, thus addressing the original problem.)
+
+This commit introduced a method Simulation.shutdown() which provides
+this functionality and (at least for simple examples) removes cyclic
+references from the simulation object.
+
+It also provides other goodies that will hopefully allow us to monitor
+the existence of 'un-garbage-collected' simulation objects, and
+convenience functions to shut them down, for example as part of our
+test suite. This is hopeful thinking at the moment and needs more
+testing to see that it delivers.
+
+"""
+
+
+
