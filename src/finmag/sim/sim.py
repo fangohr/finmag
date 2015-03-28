@@ -121,8 +121,10 @@ class Simulation(object):
 
         #log.debug("__init__:sim-object '{}' refcount 32={}".format(self.name, sys.getrefcount(self)))
 
-        log.info("Creating Sim object '{}' (rank={}/{}).".format(
-            self.name, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
+        log.info("Creating Sim object name='{}', instance_id={} (rank={}/{}).".format(
+            self.name, self.instance_id, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
+        log.debug("   Total number of Sim objects in this session: {}".format(self.instances_alive_count()))
+
         log.info(mesh)
 
         self.pbc = pbc
