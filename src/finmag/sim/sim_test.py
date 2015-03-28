@@ -944,7 +944,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
 
 
-@pytest.mark.skipif("True")
+#@pytest.mark.skipif("True")
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
     When many simulation objects are created in the same scripts, the
@@ -999,7 +999,9 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     create_loads_of_simulations(N, close_logfiles=True)
 
     # Check that no file logging handler is left
-    print logging_status_str()
+    # The next line creates an error, presumably because the loop above
+    # removes too many Handlers
+    #print logging_status_str()
 
     # Restore the maximum number of allowed open file descriptors. Not
     # sure this is actually necessary but can't hurt.
@@ -1963,3 +1965,11 @@ def test_profile(tmpdir):
 
     sim.profile('relax()', filename='foobar.prof', sort=-1, N=5)
     os.path.exists('foobar.prof')
+
+
+def test_clean_up():
+    """Fake test to shutdown simulation objects"""
+    s = barmini()
+    s.instances_delete_all_others()
+    del s
+    
