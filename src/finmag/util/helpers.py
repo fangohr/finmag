@@ -84,11 +84,18 @@ def logging_status_str():
     # This keeps the loggers (with the exception of root)
     loggers = logging.Logger.manager.loggerDict
     for loggername, logger in [('root', rootlog)] + loggers.items():
-        for i, handler in enumerate(logger.handlers):
-            handlerstr = logging_handler_str(handler)
-            msg += (" %15s (lev=%2d, eff.lev=%2d) -> handler %d: lev=%2d %s\n"
-                    % (loggername, logger.level, logger.getEffectiveLevel(),
-                       i, handler.level, handlerstr))
+        # check that we have any handlers at all before we attempt
+        # to iterate
+        if hasattr(logger, 'handlers'):
+            for i, handler in enumerate(logger.handlers):
+                handlerstr = logging_handler_str(handler)
+                msg += (" %15s (lev=%2d, eff.lev=%2d) -> handler %d: lev=%2d %s\n"
+                        % (loggername, logger.level, logger.getEffectiveLevel(),
+                           i, handler.level, handlerstr))
+        else:
+                msg += (" %15s -> %s\n"
+                        % (loggername, "no handlers found"))
+
     return msg
 
 
