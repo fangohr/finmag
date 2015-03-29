@@ -270,13 +270,6 @@ class Simulation(object):
         log.debug("   shutdown(): 7-refcount {} for {}".format(sys.getrefcount(self), self.name))
         return sys.getrefcount(self)
 
-
-    def instances_list_all(self):
-        log.info("Showing all Simulation object instances:")
-        for id_ in sorted(Simulation.instances.keys()):
-            if id_ != None:   # can happen if instances have been deleted
-                log.info("    sim instance_id={}: name='{}'".format(id_, Simulation.instances[id_].name))
-
     def instances_delete_all_others(self):
         for id_ in sorted(Simulation.instances.keys()):
             if id_ != None:   # can happen if instances have been deleted
@@ -284,6 +277,28 @@ class Simulation(object):
                     sim = Simulation.instances[id_]
                     sim.shutdown()
                     del sim
+
+
+    @staticmethod
+    def instances_list_all():
+        log.info("Showing all Simulation object instances:")
+        for id_ in sorted(Simulation.instances.keys()):
+            if id_ != None:   # can happen if instances have been deleted
+                log.info("    sim instance_id={}: name='{}'".format(id_, Simulation.instances[id_].name))
+
+
+    @staticmethod
+    def instances_delete_all():
+        log.info("instances_delete_all() starting:")
+        if len(Simulation.instances) == 0:
+            log.debug("  no instances found")
+            return   # no objects exist
+        else:
+            for id_ in sorted(Simulation.instances.keys()):
+                sim = Simulation.instances[id_]
+                sim.shutdown()
+                del sim
+            log.debug("instances_delete_all() ending")
 
     def instances_alive_count(self):
         return sum([1 for id_ in Simulation.instances.keys() if id_ != None])
