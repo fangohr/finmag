@@ -1001,7 +1001,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     # Check that no file logging handler is left
     # The next line creates an error, presumably because the loop above
     # removes too many Handlers
-    #print logging_status_str()
+    print logging_status_str()
 
     # Restore the maximum number of allowed open file descriptors. Not
     # sure this is actually necessary but can't hurt.
