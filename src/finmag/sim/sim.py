@@ -254,20 +254,20 @@ class Simulation(object):
 
         # now start to remove (potential) references to 'self':
 
-        log.debug("delete(): 1-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 1-refcount {} for {}".format(sys.getrefcount(self), self.name))
         self.tablewriter.delete_entity_get_methods()
         #'del self.tablewriter' would be sufficient?
-        log.debug("delete(): 2-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 2-refcount {} for {}".format(sys.getrefcount(self), self.name))
         del self.tablewriter.sim
-        log.debug("delete(): 3-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 3-refcount {} for {}".format(sys.getrefcount(self), self.name))
         self.clear_schedule()
-        log.debug("delete(): 4-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 4-refcount {} for {}".format(sys.getrefcount(self), self.name))
         del self.scheduler
-        log.debug("delete(): 5-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 5-refcount {} for {}".format(sys.getrefcount(self), self.name))
         del self.scheduler_shortcuts
-        log.debug("delete(): 6-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 6-refcount {} for {}".format(sys.getrefcount(self), self.name))
         self.close_logfile()
-        log.debug("delete(): 7-refcount {} for {}".format(sys.getrefcount(self), self.name))
+        log.debug("   shutdown(): 7-refcount {} for {}".format(sys.getrefcount(self), self.name))
         return sys.getrefcount(self)
 
 
@@ -1251,10 +1251,13 @@ class Simulation(object):
         files (in particular the global logfile) is not affected.
 
         """
-        log.info("Closing logging_handler {} for sim object {}".format(self.logging_handler, self.name))
-        self.logging_handler.stream.close()
-        log.removeHandler(self.logging_handler)
-        self.logging_handler = None
+        if hasattr(self.logging_handler, 'stream'):
+            log.info("Closing logging_handler {} for sim object {}".format(self.logging_handler, self.name))
+            self.logging_handler.stream.close()
+            log.removeHandler(self.logging_handler)
+            self.logging_handler = None
+        else:
+            log.info("No stream found for logging_handler {} for sim object {}".format(self.logging_handler, self.name))
 
     def plot_dynamics(self, components='xyz', **kwargs):
         from finmag.util.plot_helpers import plot_dynamics
