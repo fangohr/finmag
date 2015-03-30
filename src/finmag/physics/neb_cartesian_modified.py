@@ -157,7 +157,7 @@ class NEB_Sundials(object):
         Vs = []
         for i in range(self.image_num):
             Vs.append(S3)
-        ME = df.MixedFunctionSpace(VS)
+        ME = df.MixedFunctionSpace(Vs)
 
         self.images_fun = df.Function(ME)
         #all the degree of freedom, which is a petsc vector
@@ -418,7 +418,7 @@ class NEB_Sundials(object):
         # Update the step with the optimisation algorithm, in this
         # case we use: dY /dt = Y x Y x D
         # (check the C++ code in finmag/native/src/)
-        native_neb.compute_dm_dt(y, self.Heff, ydot)
+        #native_neb.compute_dm_dt(y, self.Heff, ydot)
 
         ydot[0, :] = 0
         ydot[-1, :] = 0
