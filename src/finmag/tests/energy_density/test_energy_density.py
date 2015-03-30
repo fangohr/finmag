@@ -12,6 +12,7 @@ from finmag.util.meshes import sphere
 
 TOL = 1e-14
 
+# TODO: We're missing the Zeeman energy density here!
 
 @pytest.mark.skipif('subprocess.call(["which", "nsim"]) != 0')
 def test_exchange_energy_density():
@@ -203,6 +204,7 @@ def test_demag_energy_density():
     print "Max deviation:", np.max(deviation)
     assert np.max(deviation) < TOL, \
         "Max deviation is %g, should be zero." % np.max(deviation)
+
 
 if __name__ == '__main__':
     test_exchange_energy_density()

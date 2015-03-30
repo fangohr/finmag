@@ -83,12 +83,22 @@ class Zeeman(object):
         return E
 
     def energy_density(self):
-        return df.project(df.dot(self.m.f, self.H.f) * self.Ms.f * -mu0, self.S1).vector().array()
+        """
+        Return energy density (as a finmag.Field object).
+        """
+        # Previous version
+        #return df.project(df.dot(self.m.f, self.H.f) * self.Ms.f * -mu0, self.S1).vector().array()
+        #
+        # New version using the Field class. Note that this is
+        # currently ca. 6-7 times *slower* than the version above.
+        # However, it is slightly more accurate (no rounding errors
+        # due to projection), and we should be able to tune
+        # performance in the Field class.
+        return self.m.dot(self.H) * self.Ms * -mu0
 
     def energy_density_function(self):
         if not hasattr(self, "E_density_function"):
-            self.E_density_function = df.Function(self.S1)
-        self.E_density_function.vector()[:] = self.energy_density()
+            self.E_density_function = self.energy_density().f
         return self.E_density_function
 
 
