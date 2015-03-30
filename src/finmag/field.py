@@ -442,6 +442,11 @@ class Field(object):
         return result
 
     def coerce_scalar_field(self, value):
+        """
+        Coerce `value` into a scalar field defined over the same mesh
+        (and using the same finite element family) as the current field.
+
+        """
         if not isinstance(value, Field):
             S1 = associated_scalar_space(self.functionspace)
             try:
@@ -478,6 +483,9 @@ class Field(object):
         return Field(self.functionspace, value=v_res)
 
     def cross(self, other):
+        """
+        Return vector field representing the cross product of this field with `other`.
+        """
         if not isinstance(other, Field):
             raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
         if not (self.value_dim() == 3 and other.value_dim() == 3):
@@ -486,6 +494,20 @@ class Field(object):
         w = df.TestFunction(self.functionspace)
         v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
         return Field(self.functionspace, value=v_res)
+
+    def dot(self, other):
+        """
+        Return scalar field representing the dot product of this field with `other`.
+
+        """
+        if not isinstance(other, Field):
+            raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
+        if not (self.value_dim() == other.value_dim()):
+            raise ValueError("The cross product is only defined for vector fields of the same dimension.")
+        # We use Claas Abert's 'point measure hack' for the vertex-wise cross product.
+        w = df.TestFunction(associated_scalar_space(self.functionspace))
+        v_res = df.assemble(df.dot(df.dot(self.f, other.f), w) * df.dP)
+        return self.coerce_scalar_field(v_res)
 
     @property
     def np(self):
