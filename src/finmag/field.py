@@ -523,8 +523,8 @@ class Field(object):
 
     def allclose(self, other, rtol=1e-7, atol=0):
         """
-        Returns `True` if the two fields are element-wise equal up to
-        the given tolerance.
+        Returns `True` if the two fields are element-wise equal up to the
+        given tolerance.
 
         It compares the difference between 'self' and 'other' to
         `atol + rtol * abs(self)`
@@ -534,7 +534,17 @@ class Field(object):
         comparison also returns sensible results if the field values
         are very small numbers.
 
+        The argument `other` must be either a scalar value or of type
+        `Field`. Passing a numpy array raises an error because it is
+        unclear in which order the values should be compares if the
+        degrees of freedom of the underlying dolfin vector are
+        re-ordered.
+
         """
+        if not isinstance(other, Field):
+            raise TypeError("Argument `other` must be of type'Field'. "
+                            "Got: {} (type {}).".format(other, type(other)))
+
         a = other.f.vector().array()
         b = self.f.vector().array()
 

@@ -1427,7 +1427,6 @@ class TestField(object):
             # Define field on the function space and fill with random values.
             field1 = Field(functionspace)
             field1.set_random_values(vrange=[0.1, 1.0])  # the rtol check below can fail if the changed field value below is accidentallye very small, so valid those values here
-            a = field1.get_ordered_numpy_array_xxx()
 
             # Define second field as copy of the first.
             # Check that they are allclose.
@@ -1437,6 +1436,7 @@ class TestField(object):
             # Change one of the coordinates and check that the fields are now
             # not allclose any more with the default tolerances, but that they
             # are allclose with less strict tolerances.
+            a = field1.get_ordered_numpy_array_xxx()
             eps = np.zeros_like(a)
             eps[7] = 2.1e-6
 
@@ -1448,6 +1448,17 @@ class TestField(object):
             except:
                 import ipdb; ipdb.set_trace()
                 pass
+
+            # TODO: It would be nice to allow to pass scalar values for scalar
+            #       fields and 3-vectors for 3-vector fields, etc. (which would
+            #       check that the value at every vertex coincides with the
+            #       given value). However, for now we disallow any other type
+            #       than `Field`.
+            with pytest.raises(TypeError):
+                assert field2.allclose(42.0)
+
+            with pytest.raises(TypeError):
+                assert field2.allclose(a)
 
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
