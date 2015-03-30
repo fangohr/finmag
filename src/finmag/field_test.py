@@ -1422,6 +1422,33 @@ class TestField(object):
             _, vals = field3.coords_and_values()
             np.testing.assert_allclose(vals, v_dot_w)
 
+    def test_allclose(self):
+        for functionspace in self.all_fspaces:
+            # Define field on the function space and fill with random values.
+            field1 = Field(functionspace)
+            field1.set_random_values(vrange=[0.1, 1.0])  # the rtol check below can fail if the changed field value below is accidentallye very small, so valid those values here
+            a = field1.get_ordered_numpy_array_xxx()
+
+            # Define second field as copy of the first.
+            # Check that they are allclose.
+            field2 = Field(functionspace, field1)
+            assert field2.allclose(field1)
+
+            # Change one of the coordinates and check that the fields are now
+            # not allclose any more with the default tolerances, but that they
+            # are allclose with less strict tolerances.
+            eps = np.zeros_like(a)
+            eps[7] = 2.1e-6
+
+            try:
+                field2.set_with_ordered_numpy_array_xxx(a + eps)
+                assert not field2.allclose(field1)
+                assert field2.allclose(field1, atol=1e-5)
+                assert field2.allclose(field1, rtol=1e-4)
+            except:
+                import ipdb; ipdb.set_trace()
+                pass
+
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
         For each mesh define a scalar field as well as vector fields of
