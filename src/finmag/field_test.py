@@ -1321,16 +1321,24 @@ class TestField(object):
 
     def test_mul_scalar_fields(self):
         for functionspace in self.scalar_fspaces:
-            field1 = Field(functionspace, value=3.1)
+            # Define linearly varying field
+            field1 = Field(functionspace, value="x[0] + 3.1")
+
+            # Multiply with scalars
             field2 = field1 * 42
             field3 = -12 * field1
 
-            assert np.allclose(field2.f.vector().array(), 130.2)
-            assert np.allclose(field3.f.vector().array(), -37.2)
+            coords2, vals2 = field2.coords_and_values()
+            coords3, vals3 = field3.coords_and_values()
+            np.testing.assert_allclose(vals2, 42 * (coords2[:, 0] + 3.1))
+            np.testing.assert_allclose(vals3, -12 * (coords3[:, 0] + 3.1))
+            # assert np.allclose(field2.f.vector().array(), 130.2)
+            # assert np.allclose(field3.f.vector().array(), -37.2)
 
     def test_mul_vector_fields(self):
         for functionspace in self.vector3d_fspaces:
-            field1 = Field(functionspace, value=(1, 2.4, 3.7))
+            # Define linearly varying field
+            field1 = Field(functionspace, value=["x[0] + 1", "x[0] + 2.4", "x[0] + 3.7"])
 
             # Multiply with scalars
             field2 = field1 * 42
@@ -1341,23 +1349,22 @@ class TestField(object):
             a = Field(S1, lambda pt: pt[0]**2)
             field4 = field1 * a
 
-            coords = field2.coords_and_values()[0]
-            for coord in coords:
-                assert abs(field2.probe(coord)[0] - 42) < self.tol1
-                assert abs(field2.probe(coord)[1] - 100.8) < self.tol1
-                assert abs(field2.probe(coord)[2] - 155.4) < self.tol1
+            coords2, vals2 = field2.coords_and_values()
+            coords3, vals3 = field3.coords_and_values()
+            coords4, vals4 = field4.coords_and_values()
 
-            coords = field3.coords_and_values()[0]
-            for coord in coords:
-                assert abs(field3.probe(coord)[0] - (-3.6)) < self.tol1
-                assert abs(field3.probe(coord)[1] - (-8.64)) < self.tol1
-                assert abs(field3.probe(coord)[2] - (-13.32)) < self.tol1
+            # We extract the x-coordinates and add a new axis to the
+            # numpy array to allow broadcasting.
+            xcoords2  = coords2[:, 0][:, np.newaxis]
+            xcoords3  = coords3[:, 0][:, np.newaxis]
+            xcoords4  = coords4[:, 0][:, np.newaxis]
+            vals2_expected = 42 * (xcoords2 + [1, 2.4, 3.7])
+            vals3_expected = -3.6 * (xcoords3 + [1, 2.4, 3.7])
+            vals4_expected = xcoords4**2 * (xcoords2 + [1, 2.4, 3.7])
 
-            coords = field4.coords_and_values()[0]
-            for coord in coords:
-                assert abs(field4.probe(coord)[0] - 1.0 * coord[0]**2) < self.tol1
-                assert abs(field4.probe(coord)[1] - 2.4 * coord[0]**2) < self.tol1
-                assert abs(field4.probe(coord)[2] - 3.7 * coord[0]**2) < self.tol1
+            np.testing.assert_allclose(vals2, vals2_expected)
+            np.testing.assert_allclose(vals3, vals3_expected)
+            np.testing.assert_allclose(vals4, vals4_expected)
 
     def test_div_scalar_fields(self):
         for functionspace in self.scalar_fspaces:

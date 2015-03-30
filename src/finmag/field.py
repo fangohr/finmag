@@ -388,6 +388,12 @@ class Field(object):
             return np.array(f_average) / volume
 
     def coords_and_values(self, t=None):
+        """
+        If the field is defined on a function space with degrees of freedom
+        at mesh vertices only, return a list of mesh coordinates and associated
+        field values (in the same order).
+
+        """
         # The function values are defined at mesh nodes only for
         # specific function space families. In finmag, the only families
         # of interest are Lagrange (CG) and Discontinuous Lagrange (DG).
@@ -421,6 +427,8 @@ class Field(object):
                     # investigate.  (Max, 15/05/2014)
                     raise NotImplementedError("TODO")
 
+            if value_dim == 1:
+                values.shape = (num_nodes,)  # convert to scalar field
             return coords, values
 
         else:
