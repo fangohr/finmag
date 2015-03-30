@@ -151,7 +151,6 @@ class Simulation(object):
         #log.debug("__init__:sim-object '{}' refcount 50={}".format(self.name, sys.getrefcount(self)))
 
         self.mesh = mesh
-        self.Ms = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
         self._integrator = None
@@ -174,9 +173,10 @@ class Simulation(object):
 
         #log.debug("__init__:sim-object '{}' refcount 41={}".format(self.name, sys.getrefcount(self)))
 
+        self.Ms = Ms
+
         self.kernel = kernel
 
-        self.llg.Ms = self.Ms
         self.Volume = mesh_volume(mesh)
 
         self.scheduler = scheduler.Scheduler()
@@ -341,6 +341,17 @@ class Simulation(object):
             self.reinit_integrator(debug=debug)
 
     m = property(__get_m, set_m)
+
+    @property
+    def Ms(self):
+        return self._Ms
+
+    @Ms.setter
+    def Ms(self, value):
+        self._Ms = Field(df.FunctionSpace(self.mesh, 'DG', 0), value)
+        self.llg.Ms = self._Ms
+        # XXX TODO: Do we also need to reset Ms in the interactions or is this
+        #           automatically done by the llg or effective field?!?
 
     @property
     def m_field(self):
