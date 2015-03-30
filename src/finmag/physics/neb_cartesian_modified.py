@@ -1,6 +1,6 @@
 import os
-# import dolfin as df
 import numpy as np
+import dolfin as df
 # import inspect
 from aeon import default_timer
 # import finmag.util.consts as consts
