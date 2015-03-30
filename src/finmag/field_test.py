@@ -1397,16 +1397,30 @@ class TestField(object):
                 assert abs(field3.probe(coord)[2] - 3.7 / (coord[0] + 1)**2) < self.tol1
 
     def test_cross(self):
+        v = np.array([1, 2, 3])
+        w = np.array([4, 5, -2])
+        v_cross_w = np.cross(v, w)
+
         for functionspace in self.vector3d_fspaces:
-            field1 = Field(functionspace, value=(1, 2, 3))
-            field2 = Field(functionspace, value=(4, 5, -2))
+            field1 = Field(functionspace, value=v)
+            field2 = Field(functionspace, value=w)
             field3 = field1.cross(field2)
 
-            coords = field3.coords_and_values()[0]
-            for coord in coords:
-                assert abs(field3.probe(coord)[0] - (-19)) < self.tol1
-                assert abs(field3.probe(coord)[1] - 14) < self.tol1
-                assert abs(field3.probe(coord)[2] - (-3)) < self.tol1
+            coords, vals = field3.coords_and_values()
+            np.testing.assert_allclose(vals - v_cross_w, 0)
+
+    def test_dot(self):
+        v = np.array([1, 2, 3])
+        w = np.array([4, 5, -2])
+        v_dot_w = np.dot(v, w)
+
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=v)
+            field2 = Field(functionspace, value=w)
+            field3 = field1.dot(field2)
+
+            _, vals = field3.coords_and_values()
+            np.testing.assert_allclose(vals, v_dot_w)
 
     def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
         """
