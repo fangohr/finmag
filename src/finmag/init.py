@@ -15,6 +15,7 @@ from finmag.energies.demag import MacroGeometry
 from finmag.sim.normal_mode_sim import NormalModeSimulation, normal_mode_simulation
 from finmag.util.helpers import set_logging_level
 from finmag.util import configuration
+from finmag.field import Field
 import util.versions
 from __version__ import __version__
 import example
