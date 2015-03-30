@@ -216,7 +216,7 @@ class Field(object):
         For a scalar field, return the dolfin function as an ordered
         numpy array, such that the field values are in the same order
         as the vertices of the underlying mesh (as returned by
-        `mesh.coordinates`).
+        `mesh.coordinates()`).
 
         Note:
 
@@ -315,6 +315,18 @@ class Field(object):
         `set_with_ordered_numpy_array_xyz`.
         """
         self.set(ordered_array[self.d2v_xxx])
+
+    def set_random_values(self, vrange=[-1, 1]):
+        """
+        This is a helper function useful for debugging. It fills the array
+        with random values where each coordinate is uniformly distributed
+        from the half-open interval `vrange` (default: vrange=[-1, 1)).
+
+        """
+        shape = self.f.vector().array().shape
+        a, b = vrange
+        vals = np.random.random_sample(shape) * float(b - a) + a
+        self.set(vals)
 
     def as_array(self):
         return self.f.vector().array()
@@ -508,6 +520,25 @@ class Field(object):
         w = df.TestFunction(associated_scalar_space(self.functionspace))
         v_res = df.assemble(df.dot(df.dot(self.f, other.f), w) * df.dP)
         return self.coerce_scalar_field(v_res)
+
+    def allclose(self, other, rtol=1e-7, atol=0):
+        """
+        Returns `True` if the two fields are element-wise equal up to
+        the given tolerance.
+
+        It compares the difference between 'self' and 'other' to
+        `atol + rtol * abs(self)`
+
+        This calls `np.allclose()` underneath, but with different
+        default tolerances (in particular, we use atol=0 so that
+        comparison also returns sensible results if the field values
+        are very small numbers.
+
+        """
+        a = other.f.vector().array()
+        b = self.f.vector().array()
+
+        return np.allclose(a, b, rtol=rtol, atol=atol)
 
     @property
     def np(self):
