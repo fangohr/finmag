@@ -272,7 +272,7 @@ class TestField(object):
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the interpolated value outside the mesh node.
             # The expected field is linear and, because of that,
@@ -318,7 +318,7 @@ class TestField(object):
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the interpolated value outside the mesh node.
             # The expected field is linear and, because of that,
@@ -364,7 +364,7 @@ class TestField(object):
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the interpolated value outside the mesh node.
             # The expected field is linear and, because of that,
@@ -405,7 +405,7 @@ class TestField(object):
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the interpolated value outside the mesh node.
             # The expected field is linear and, because of that,
@@ -948,12 +948,12 @@ class TestField(object):
             assert isinstance(values, np.ndarray)
 
             # Check the shape of results.
-            assert values.shape == (num_nodes, field.value_dim())
+            assert values.shape == (num_nodes,)
             assert coords.shape == (num_nodes, field.mesh_dim())
 
             # Check values of results.
             assert np.all(coords == expected_coords)
-            assert np.all(values[:, 0] == expected_values)
+            assert np.all(values == expected_values)
 
     def test_coords_and_values_vector_field(self):
         """Test coordinates and values for vector field."""
@@ -1114,7 +1114,7 @@ class TestField(object):
 
             # Check the result of coords_and_values (should be exact).
             field_values = field.coords_and_values()[1]  # ignore coordinates
-            assert np.all(field_values[:, 0] == expected_values)
+            assert np.all(field_values == expected_values)
 
             # Check the interpolated value outside the mesh node.
             # The expected field is nonlinear and, because of that,
