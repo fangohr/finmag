@@ -138,7 +138,7 @@ class EnergyBase(object):
     @mtimed
     def compute_energy(self):
         """
-        Return the total energy, i.e. energy density intergrated
+        Return the total energy, i.e. energy density integrated
         over the whole mesh [in units of Joule].
 
         *Returns*
