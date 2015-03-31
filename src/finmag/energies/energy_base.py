@@ -196,9 +196,9 @@ class EnergyBase(object):
 
         """
 
-        Hex = self.__compute_field()
+        H = self.__compute_field()
 
-        return Hex
+        return H
 
     def average_field(self):
         """
