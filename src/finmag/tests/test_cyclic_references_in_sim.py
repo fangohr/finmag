@@ -22,4 +22,4 @@ def test_cyclic_refs_in_simulation_object_barmini():
     refcount = s.shutdown()
     # The number 4 is emperical. If it increases, we
     # have introduced an extra cyclic reference.
-    assert refcount == 4
+    assert refcount <= 4
