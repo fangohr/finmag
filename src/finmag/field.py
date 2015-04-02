@@ -649,3 +649,58 @@ class Field(object):
 
         #self.f = df.project(self.f/norm, self.functionspace)
         self.f = (self / norm).f
+
+    def get_spherical(self):
+        """
+        Transform magnetisation coordinates to spherical coordinates
+        
+        theta = arctan(m_r / m_z) ; m_r = sqrt(m_x ^ 2 + m_y ^ 2)
+        phi = arctan(m_y / m_x)        
+
+        The theta and phi generalised coordinates are stored in
+        self.theta and self.phi respectively.
+        
+        When this function is called, the two dolfin functions
+        are returned
+
+        """
+
+        # Create an scalar Function Space to compute the cylindrical radius (x^2 + y^2)
+        # and the angles phi and theta
+        S1 = df.FunctionSpace(self.functionspace.mesh(), 'CG', 1)
+
+        # Create a dolfin function from the FS
+        m_r = df.Function(S1)
+        # Compute the radius using the assemble method with dolfin dP
+        # (like a dirac delta to get values on every node of the mesh)
+        # This returns a dolfin vector
+        cyl_vector = df.assemble(df.dot(df.sqrt(self.f[0] * self.f[0] + self.f[1] * self.f[1]),
+                                        df.TestFunction(S1)) * df.dP,
+                         
+                                 )
+        # Set the vector values to the dolfin function
+        m_r.vector().set_local(cyl_vector.get_local())
+
+        # Now we compute the theta and phi angles to describe the magnetisation
+        # and save them to the coresponding variables
+        self.theta = df.Function(S1)
+        self.phi = df.Function(S1)
+
+        # We will use the same vector variable than the one used to
+        # compute m_r,  in order to save memory
+
+        # Theta = arctan(m_r / m_z)
+        cyl_vector = df.assemble(df.dot(df.atan_2(m_r, self.f[2]),
+                                        df.TestFunction(S1)) * df.dP,
+                                 tensor=cyl_vector
+                                 )
+        self.theta.vector().set_local(cyl_vector.get_local())
+
+        # Phi = arctan(m_y / m_x)
+        cyl_vector = df.assemble(df.dot(df.atan_2(self.f[1], self.f[0]),
+                                                df.TestFunction(S1)) * df.dP,
+                                         tensor=cyl_vector
+                                         )
+        self.phi.vector().set_local(cyl_vector.get_local())
+
+        return self.theta, self.phi
