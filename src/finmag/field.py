@@ -65,10 +65,21 @@ class Field(object):
         if functionspace_family == 'Lagrange':
             dim = self.value_dim()
             self.v2d_xyz = df.vertex_to_dof_map(self.functionspace)
+            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
+            
+            a = []
+            b = set()
+            for x in self.v2d_xyz:
+                if x not in b:
+                    b.add(x)
+                    a.append(x)
+            assert(len(a)==len(self.d2v_xyz))
+            self.v2d_xyz = np.array(a)
+
             n1 = len(self.v2d_xyz)
             self.v2d_xxx = ((self.v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
 
-            self.d2v_xyz = df.dof_to_vertex_map(self.functionspace)
+            
             n2 = len(self.d2v_xyz)
             self.d2v_xxx = self.d2v_xyz.copy()
             for i in xrange(n2):
