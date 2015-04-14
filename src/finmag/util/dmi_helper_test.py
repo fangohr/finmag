@@ -34,7 +34,7 @@ def compute_skyrmion_number_2d_example():
 
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
 
-    sim.m_field.plot_with_dolfin(interactive=True)
+    #sim.m_field.plot_with_dolfin(interactive=True)
 
     print compute_skyrmion_number_2d(sim.m_field.f)
 

@@ -1786,3 +1786,49 @@ def print_boundary_element_matrix_size(mesh, generalised=False):
     logger.debug("Boundary element matrix for mesh with {} vertices and {} "
                  "surface nodes will occupy {} in memory.".format(
                      mesh.num_vertices(), N, make_human_readable(memory_usage)))
+
+
+def build_maps(functionspace, dim=3, scalar=False):
+    v2d_xyz = df.vertex_to_dof_map(functionspace)
+    d2v_xyz = df.dof_to_vertex_map(functionspace)
+    n1, n2 = len(v2d_xyz), len(d2v_xyz)
+
+    n = n1 - n2
+    
+    #in the presence of pbc, n1 > n2, here we try to reduce the length of v2d_xyz.
+    if n>0:
+
+        #next, we reduce the length of v2d_xyz to n2
+        a = []
+        b = set()
+        for x in v2d_xyz:
+            if x not in b:
+                b.add(x)
+                a.append(x)
+        assert(len(a) == n2)
+        v2d_xyz2 = np.array(a)
+
+        #we need both d2v_xyz and v2d_xyz2 to make sure the values in d2v_xyz is less than n2.
+        for i in range(n2):
+            if d2v_xyz[i]>n2:
+                j = v2d_xyz[d2v_xyz[i]]
+                for k in range(n2):
+                    if v2d_xyz2[k] == j:
+                        d2v_xyz[i] = k
+                        break
+        v2d_xyz = v2d_xyz2
+
+    
+    if scalar:
+        return v2d_xyz, d2v_xyz
+
+            
+    #we then build new mappings for order xxx rather xyz
+    v2d_xxx = ((v2d_xyz.reshape(n2/dim, dim)).transpose()).reshape(-1,)
+
+    d2v_xxx = d2v_xyz.copy()
+    for i in xrange(n2):
+        j = d2v_xyz[i]
+        d2v_xxx[i] = (j%dim)*n2/dim + (j/dim)
+
+    return v2d_xyz, v2d_xxx, d2v_xyz, d2v_xxx
