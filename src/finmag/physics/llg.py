@@ -59,7 +59,7 @@ class LLG(object):
         self.Volume = None
 
         self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = helpers.build_maps(S3)
-        self.v2d_scale, self.d2v_scale = helpers.build_maps(S1, scalar=True)
+        self.v2d_scale, self.d2v_scale = helpers.build_maps(S1, dim=1, scalar=True)
 
     def set_default_values(self):
         self.alpha = df.Function(self.S1)
