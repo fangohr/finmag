@@ -55,8 +55,8 @@ def test_compute_skyrmion_number_2d_pbc():
 
     sim.relax(stopping_dmdt=1, dt_limit=1e-9)
 
-    df.plot(sim.m_field.f)
-    df.interactive()
+    #df.plot(sim.m_field.f)
+    #df.interactive()
     print np.max(sim.m_field.as_array())
 
     sky_num = compute_skyrmion_number_2d(sim.m_field.f)

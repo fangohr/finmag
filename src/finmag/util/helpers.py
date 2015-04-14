@@ -1793,8 +1793,16 @@ def build_maps(functionspace, dim=3, scalar=False):
     d2v_xyz = df.dof_to_vertex_map(functionspace)
     n1, n2 = len(v2d_xyz), len(d2v_xyz)
 
+    v2d_xxx = ((v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
+
+    d2v_xxx = d2v_xyz.copy()
+    for i in xrange(n2):
+        j = d2v_xyz[i]
+        d2v_xxx[i] = (j%dim)*n1/dim + (j/dim)
+
     n = n1 - n2
     
+    """
     #in the presence of pbc, n1 > n2, here we try to reduce the length of v2d_xyz.
     if n>0:
 
@@ -1809,26 +1817,29 @@ def build_maps(functionspace, dim=3, scalar=False):
         v2d_xyz2 = np.array(a)
 
         #we need both d2v_xyz and v2d_xyz2 to make sure the values in d2v_xyz is less than n2.
+        d2v_xyz2 = d2v_xyz.copy()
         for i in range(n2):
             if d2v_xyz[i]>n2:
                 j = v2d_xyz[d2v_xyz[i]]
                 for k in range(n2):
                     if v2d_xyz2[k] == j:
-                        d2v_xyz[i] = k
+                        d2v_xyz2[i] = k
                         break
-        v2d_xyz = v2d_xyz2
+        
+        v2d_xxx2 = ((v2d_xyz2.reshape(n2/dim, dim)).transpose()).reshape(-1,)
 
+        d2v_xxx2 = d2v_xyz2.copy()
+        for i in xrange(n2):
+            j = d2v_xyz2[i]
+            d2v_xxx2[i] = (j%dim)*n2/dim + (j/dim)
+    """
     
     if scalar:
         return v2d_xyz, d2v_xyz
 
             
     #we then build new mappings for order xxx rather xyz
-    v2d_xxx = ((v2d_xyz.reshape(n2/dim, dim)).transpose()).reshape(-1,)
 
-    d2v_xxx = d2v_xyz.copy()
-    for i in xrange(n2):
-        j = d2v_xyz[i]
-        d2v_xxx[i] = (j%dim)*n2/dim + (j/dim)
 
+    #return v2d_xyz2, v2d_xxx2, d2v_xyz2, d2v_xxx2
     return v2d_xyz, v2d_xxx, d2v_xyz, d2v_xxx
