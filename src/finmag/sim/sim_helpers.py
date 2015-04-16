@@ -216,8 +216,13 @@ def eta(sim, when_started):
     if simulation_speed > 0 and sim.t < sim.t_max:
         remaining_simulation_time = sim.t_max - sim.t
         remaining_real_time = remaining_simulation_time / simulation_speed
-        log.info("Integrated up to t = {:.4} ns. Predicted end in {}.".format(
-            sim.t * 1e9, str(timedelta(seconds=remaining_real_time))))
+        # split up remaining_real_time in hours, minutes
+        # and seconds for nicer formatting
+        hours, remainder = divmod(remaining_real_time, 60)
+        minutes, seconds = divmod(remainder, 60)
+        log.info("Integrated up to t = {:.4} ns. "
+                 "Predicted end in {:0>2}:{:0>2}:{:0>2}.".format(
+                     sim.t * 1e9, int(hours), int(minutes), int(seconds)))
 
 
 def plot_relaxation(sim, filename="relaxation.png"):
