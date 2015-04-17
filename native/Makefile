@@ -93,7 +93,7 @@ CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_pyth
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
-CFLAGS_WARN=-Wall -Werror
+CFLAGS_WARN=-Wall -Werror -Wno-error=unused-function
 # Add the source code directory to the include path
 CFLAGS_INCLUDE=-I$(abspath src)
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
