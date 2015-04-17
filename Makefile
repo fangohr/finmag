@@ -3,11 +3,11 @@
 # Do not distribute.
 #
 # This Makefile is used by our continuous-integration server
-# to run the tests and to build the documentation 
+# to run the tests and to build the documentation
 #
 
 default:
-	@echo 'This makefile is used for CI only; do not use directly.' 
+	@echo 'This makefile is used for CI only; do not use directly.'
 
 PYTHON ?= python
 PURGE_REPO_CMD ?= hg purge --all
@@ -65,7 +65,7 @@ doc-html-nobuildexamples:
 	SPHINXWARNINGOPTS= make -C doc htmlraw
 
 # generate documentation in any of the supported formats in doc/Makefile
-# examples: `make doc-html`, `make doc-singlehtml`, `make doc-pdf` 
+# examples: `make doc-html`, `make doc-singlehtml`, `make doc-pdf`
 doc-%:
 	make -C doc generate-doc $*
 
@@ -75,7 +75,7 @@ doc-%:
 
 # py.test options
 # example: `-sx` to disable capturing of STDOUT and exit on first error
-TEST_OPTIONS ?= 
+TEST_OPTIONS ?=
 
 create-dirs:
 	mkdir -p test-reports/junit
@@ -110,6 +110,6 @@ test-native: make-modules
 
 # try to reproduce the ipython notebooks
 test-notebooks: create-dirs make-modules print-debugging-info
-	PYTHONPATH=$(PYTHON_ROOTS) echo "[DDD] PYTHONPATH now: ${PYTHONPATH}" && py.test $(TEST_OPTIONS) bin/reproduce_ipython_notebooks.py --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+	cd doc/ipython_notebooks_src/ && py.test . -v --ipynb --sanitize-with sanitize_file --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 .PHONY: default make-modules create-dirs doc test test-python test-fast test-slow test-native test-notebooks
