@@ -9,12 +9,13 @@ replace: DATESTAMP
 regex: \d\d-\d\d-\d\d\d\d
 replace: DATESTAMP
 
-regex: \d\d:\d\d
-replace: TIMESTAMP
-
 regex: \d\d:\d\d:\d\d
 replace: TIMESTAMP
 
 [Memory addresses]
 regex: 0x[0-9a-fA-F]+
 replace: MEMORY_ADDRESS
+
+[Version]
+regex: [0-9]{4,5}:[a-z0-9]{40}
+replace: FINMAG_VERSION
