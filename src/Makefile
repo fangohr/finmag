@@ -59,8 +59,10 @@ endif
 		--exclude=unnamed.ndt \
 		--exclude=_mat.xml \
 		--exclude=_bi.xml \
-		--exclude=unnamed.log\
-		--exclude=__pycache__ . 
+		--exclude=unnamed.log \
+		--exclude=__pycache__ \
+		--exclude=*tar \
+		*
 
 cleanbin:
 	cd ${FINMAGDIST_BUILD_DIR}/finmag && find . -name "*.so" | xargs rm -f
