@@ -36,6 +36,9 @@ def linear_interpolation_two(m0, m1, n):
     done in the magnetic moments that constitute the
     magnetic system.
     """
+    
+    
+    
     theta_phi0 = cartesian2spherical(m0)
     theta_phi1 = cartesian2spherical(m1)
     
@@ -172,6 +175,97 @@ class NEB_Sundials(object):
         self.initial_image_coordinates()
         self.create_tablewriter()
 
+    def linear_interpolation_two(self, image0, image1, n):
+        """
+        Define a linear interpolation between
+        two states of the energy band (m0, m1) to get
+        an initial state. The interpolation is
+        done in the magnetic moments that constitute the
+        magnetic system.
+        """
+        
+        # Get the spherical coordinates dolfin functions
+        # for the m0 and m1 magnetisation vector fields
+        self.sim.set_m(self.initial_images[image0])
+        theta0, phi0 = self.sim._m_field.get_spherical()
+        
+        self.sim.set_m(self.initial_images[image1])
+        theta1, phi1 = self.sim._m_field.get_spherical()
+        
+        # To not depend on numpy arrays, we will assemble every
+        # interpolation into dolfin functions and assign their
+        # values to the subdomains of the MixedFunctionSpace of images
+        
+        # Create a scalar Function Space
+        S1 = df.FunctionSpace(self.sim.m_field.functionspace.mesh(), 'CG', 1)
+        
+        # Define the interpolations step for theta
+        assemble_vector = df.assemble(df.dot((theta1 - theta0) / (n + 1))
+                                      * df.dP)
+        dtheta = df.Function(S1)
+        dtheta.vector().set_local(dtheta_v.get_local())
+        
+        # The same for Phi
+        assemble_vector = df.assemble(df.dot((theta1 - theta0) / (n + 1))
+                                      * df.dP,
+                                      tensor=assemble_vector)
+        dphi = df.Function(S1)
+        dphi.vector().set_local(dtheta_v.get_local())
+
+        # Now loop for every interpolation and assign it to
+        # the MixedFunctionSpace
+        for i in xrange(n):
+            
+            # Create a dolfin function from the FS, for the interpolation
+            interpolation_theta = df.Function(S1)
+            interpolation_phi = df.Function(S1)
+            # Compute the radius using the assemble method with dolfin dP
+            # (like a dirac delta to get values on every node of the mesh)
+            # This returns a dolfin vector
+            
+            # Theta
+            assemble_vector = df.assemble(df.dot(theta0 + (i + 1) * dtheta,
+                                          #
+                                          df.TestFunction(S1)) * df.dP,
+                                          tensor=assemble_vector  
+                                          )
+            # Set the vector values to the dolfin function
+            interpolation_theta.vector().set_local(assemble_vector.get_local())    
+ 
+            # Phi
+            assemble_vector = df.assemble(df.dot(phi0 + (i + 1) * dphi,
+                                          #
+                                          df.TestFunction(S1)) * df.dP,
+                                          tensor=assemble_vector  
+                                          )
+            # Set the vector values to the dolfin function
+            interpolation_phi.vector().set_local(assemble_vector.get_local())    
+
+            # Now set this interpolation to the corresponding image           
+
+            # Set a vector function space for the simulation
+            # magnetisation vector field
+            interpolation = df.VectorFunction(self.sim.S3)
+            df.assemble(df.dot(df.as_vector((df.sin(interpolation_theta) * df.cos(interpolation_phi),
+                                             df.sin(interpolation_theta) * df.sin(interpolation_phi),
+                                             df.cos(interpolation_theta)  
+                                             )),
+                               df.TestFunction(self.sim.S3)) * df.dP
+                        )
+            interpolation.vector().axpy(1, interpolation)            
+
+            # Now assign the interpolation vector function values to the corresponding
+            # image in the MixedFunctionSpace        
+            df.assign(self.images_fun.sub(i), interpolation)
+
+        # coords = []
+        # for i in range(n):
+        #     theta_phi_interp = theta_phi0 + (i + 1) * d_theta_phi
+        #     coords.append(spherical2cartesian(theta_phi_interp))
+
+        # return coords
+
+
     def create_tablewriter(self):
         entities_energy = {
             'step': {'unit': '<1>',
@@ -251,7 +345,6 @@ class NEB_Sundials(object):
 
         # Initiate the counter
         image_id = 0
-        
 
         # For every interpolation between images (zero if no interpolations
         # were specified)
@@ -276,7 +369,7 @@ class NEB_Sundials(object):
 
             for coord in coords:
                 self.sim.set_m(coord)
-                df.assign(self.images_fun.sub(image_id),self.sim._m_field.f)
+                df.assign(self.images_fun.sub(image_id), self.sim._m_field.f)
                 self.coords[image_id][:] = coord[:]
                 image_id = image_id + 1
 
@@ -284,7 +377,7 @@ class NEB_Sundials(object):
 
         # Append the magnetisation of the last image
         self.sim.set_m(self.initial_images[-1])
-        df.assign(self.images_fun.sub(image_id),self.sim._m_field.f)
+        df.assign(self.images_fun.sub(image_id), self.sim._m_field.f)
         
         """
         # Save the energies
