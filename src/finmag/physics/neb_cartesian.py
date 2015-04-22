@@ -291,13 +291,9 @@ class NEB_Sundials(object):
             # Save on the first image of a pair (step 1, 6, ...)
             self.sim.set_m(self.initial_images[i])
             
-            df.plot(self.sim.m_field.f, interactive=True)
-            
             # m0 = self.sim.m
             # Use the full array for PBCs
             m0 = self.sim.m_field.get_ordered_numpy_array_xxx()            
-
-            df.plot(self.sim.m_field.f, interactive=True)
 
             self.coords[image_id][:] = m0[:]
             image_id = image_id + 1
