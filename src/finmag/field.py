@@ -685,13 +685,24 @@ class Field(object):
                                         df.TestFunction(S1)) * df.dP,
                                  tensor=cyl_vector
                                  )
-        self.theta.vector().set_local(cyl_vector.get_local())
 
+        # Instead of:
+        # self.theta.vector().set_local(cyl_vector.get_local())
+        # We will use:
+        self.theta.vector().axpy(1, cyl_vector)
+        # which adds:  1 * cyl_vector
+        # to self.theta.vector() and is much faster
+        # (we assume self.theta.vector() is empty, i.e. only made of zeros)
+        # See: Fenics Book, page 44
+ 
         # Phi = arctan(m_y / m_x)
         cyl_vector = df.assemble(df.dot(df.atan_2(self.f[1], self.f[0]),
                                                 df.TestFunction(S1)) * df.dP,
                                          tensor=cyl_vector
                                          )
-        self.phi.vector().set_local(cyl_vector.get_local())
+
+        # We will save this line just in case:
+        # self.phi.vector().set_local(cyl_vector.get_local())
+        self.phi.vector().axpy(1, cyl_vector)
 
         return self.theta, self.phi
