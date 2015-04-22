@@ -542,7 +542,13 @@ class NEB_Sundials(object):
         self.coords.shape = (self.total_image_num, -1)
         for i in range(self.total_image_num):
             name = os.path.join(directory, 'image_%d.npy' % i)
-            # Save the reduced length array (?)
+            # Save the reduced length array
+            # Since the dolfin vector (for the magnetisation) can have any
+            # ordering, we rely on the fact that
+            # this mapping does not change when we use the same mesh
+            # when loading the system from a different simulation
+            # In the future it can be useful to save the mesh together with
+            # the magnetisation in a single hdf5 file
             np.save(name, spherical2cartesian(self.coords[i, :])[self.sim.m_field.d2v_xxx])
 
         self.coords.shape = (-1, )
@@ -573,15 +579,22 @@ class NEB_Sundials(object):
             # (see the corresponding function)
             check_boundary(y[i + 1])
             # Transform the input 'y'  to cartesian to compute the fields
+            #
+            # spherical2cartesian updates the full system vector (y), but to update
+            # the magnetisation we only need the reduced vector, thus
+            # we use the d2v map
             self._m.vector().set_local(spherical2cartesian(y[i + 1])[self.sim.m_field.d2v_xxx])
             #
             self.effective_field.update()
             # Compute effective field, which is the gradient of
             # the energy in the NEB method (derivative with respect to
             # the generalised coordinates)
+            #
+            # To get the effective field for the whole system we use the v2d map
             h = self.effective_field.H_eff[self.sim.m_field.v2d_xxx]
             # Transform to spherical coordinates
             
+            # DEBUG 
             # print len(h)
             # print len(y[i + 1])
             
