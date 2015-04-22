@@ -294,7 +294,8 @@ class NEB_Sundials(object):
         self.spring = spring
 
         # Dolfin function of the new _m_field (instead of _m)
-        self._m = sim.llg._m_field.f
+        # self._m = sim.llg._m_field.f
+        self._m = sim.m_field.f
         self.effective_field = sim.llg.effective_field
 
         if interpolations is None:
@@ -320,7 +321,12 @@ class NEB_Sundials(object):
         # Number of spins per image. The _m.vector has the form
         # [mx1, mx2, ..., my1, my2, ..., mz1, mz2]
         # Thus we divide by 3 to get the total of ms
-        self.nxyz = len(self._m.vector()) / 3
+        # self.nxyz = len(self._m.vector()) / 3
+        
+        # Use the full vector from the field class to get the total number
+        # of degrees of freedom when using PBC 
+        # (the self._m gave us the reduced number of spins when using PBC)
+        self.nxyz = len(self.sim.m_field.get_ordered_numpy_array_xxx()) / 3
 
         # Total number of degrees of freedom
         # (In spherical coords, we have 2 components per spin)
@@ -369,39 +375,125 @@ class NEB_Sundials(object):
 
     def initial_image_coordinates(self):
         """
-        generate the coordinates linearly.
+
+        Generate the coordinates linearly according to the number of
+        interpolations provided.
+
+        Example: Imagine we have 4 images and we want 3 interpolations
+        between every neighbouring pair, i.e  interpolations = [3, 3, 3]
+
+        1. Imagine the initial states with the interpolation numbers
+           and choose the first and second state
+
+            0          1           2          3
+            X -------- X --------- X -------- X
+                  3          3           3
+
+            2. Counter image_id is set to 0
+
+            3. Set the image 0 magnetisation vector as m0 and append the
+               values to self.coords[0]. Update the counter: image_id = 1 now
+
+            4. Set the image 1 magnetisation values as m1 and interpolate
+               the values between m0 and m1, generating 3 arrays
+               with the magnetisation values of every interpolation image.
+               For every array, append the values to self.coords[i]
+               with i = 1, 2 and 3 ; updating the counter every time, so
+               image_id = 4 now
+
+            5. Append the value of m1 (image 1) in self.coords[4]
+               Update counter (image_id = 5 now)
+
+            6. Move to the next pair of images, now set the 1-th image
+               magnetisation values as m0 and append to self.coords[5]
+
+            7. Interpolate to get self.coords[i], for i = 6, 7, 8
+               ...
+            8. Repeat as before until move to the pair of images: 2 - 3
+
+            9. Finally append the magnetisation of the last image
+               (self.initial_images[-1]). In this case, the 3rd image
+
+        Then, for every magnetisation vector values array (self.coords[i])
+        append the value to the simulation and store the energies
+        corresponding to every i-th image to the self.energy[i] arrays
+
+        Finally, flatten the self.coords matrix (containing the magnetisation
+        values of every image in different rows)
+
+
+        ** Our generalised coordinates in the NEBM are the magnetisation values
+
         """
 
         image_id = 0
         self.coords.shape = (self.total_image_num, -1)
+        
+        # For every interpolation between images (zero if no interpolations
+        # were specified)
         for i in range(len(self.interpolations)):
 
             n = self.interpolations[i]
-
+            
+            # Save on the first image of a pair (step 1, 6, ...)
             self.sim.set_m(self.initial_images[i])
-            m0 = self.sim.m
-
+            # m0 = self.sim.m
+            # Use the full array for PBCs
+            m0 = self.sim.m_field.get_ordered_numpy_array_xxx()
+            
+            # DEBUGGING
+            # This shows that, when using PBC,
+            # the vector() is reduced (boundary vlaues that are repeated)
+            # while the ordered array consider all the spins
+            #
+            # print len(self.sim.m_field.f.vector())
+            # print len(self.sim.m_field.get_ordered_numpy_array_xxx())
+            # df.plot(self.sim.m_field.f, interactive=True)
+            
             self.coords[image_id][:] = cartesian2spherical(m0)
             image_id = image_id + 1
 
-            self.sim.set_m(self.initial_images[i + 1])
-            m1 = self.sim.m
+            # Set the second image in the pair as m1 and interpolate
+            # (step 4 and 7), saving in corresponding self.coords entries
 
+            self.sim.set_m(self.initial_images[i + 1])
+            # m1 = self.sim.m
+            # Use the full array for PBCs
+            m1 = self.sim.m_field.get_ordered_numpy_array_xxx()
+
+            # Interpolations (arrays with magnetisation values)
             coords = linear_interpolation_two(m0, m1, n)
 
             for coord in coords:
                 self.coords[image_id][:] = coord[:]
                 image_id = image_id + 1
-
+            
+            # Continue to the next pair of images
+        
+        # Append the magnetisation of the last image
         self.sim.set_m(self.initial_images[-1])
-        m2 = self.sim.m
+        # m2 = self.sim.m
+        # Use the full array for PBCs
+        m2 = self.sim.m_field.get_ordered_numpy_array_xxx()
         self.coords[image_id][:] = cartesian2spherical(m2)
 
+        # Save the energies
         for i in range(self.total_image_num):
-            self._m.vector().set_local(spherical2cartesian(self.coords[i]))
+            # To assign the values from the full array using set_local
+            # (with boundaries when using PBCs) to a reduced 
+            # sim.m_field.vector() ,
+            # we use the ordered dof to vertex map (d2v_xxx),
+            # which has a reduced number of indexes
+            # (we take the value from the field class)
+            self._m.vector().set_local(spherical2cartesian(self.coords[i])[self.sim.m_field.d2v_xxx])
+            
+            # This is for checking that the interpolations worked
+            # df.plot(self._m, interactive=True)
+
             self.effective_field.update()
             self.energy[i] = self.effective_field.total_energy()
 
+        # Flatten the array
         self.coords.shape = (-1,)
 
     def save_vtks(self):
@@ -425,7 +517,8 @@ class NEB_Sundials(object):
         self.coords.shape = (self.total_image_num, -1)
 
         for i in range(self.total_image_num):
-            self._m.vector().set_local(spherical2cartesian(self.coords[i, :]))
+            # We will save the vectors with the REDUCED length array
+            self._m.vector().set_local(spherical2cartesian(self.coords[i, :])[self.sim.m_field.d2v_xxx])
             # set t =0, it seems that the parameter time is only
             # for the interface?
             vtk_saver.save_field(self._m, 0)
@@ -449,7 +542,8 @@ class NEB_Sundials(object):
         self.coords.shape = (self.total_image_num, -1)
         for i in range(self.total_image_num):
             name = os.path.join(directory, 'image_%d.npy' % i)
-            np.save(name, spherical2cartesian(self.coords[i, :]))
+            # Save the reduced length array (?)
+            np.save(name, spherical2cartesian(self.coords[i, :])[self.sim.m_field.d2v_xxx])
 
         self.coords.shape = (-1, )
 
@@ -473,20 +567,24 @@ class NEB_Sundials(object):
         finmag/native/src/neb/helper.cc
         """
         y.shape = (self.total_image_num, -1)
-
+ 
         for i in range(self.image_num):
             # Redefine the angles if phi is larger than pi
             # (see the corresponding function)
             check_boundary(y[i + 1])
             # Transform the input 'y'  to cartesian to compute the fields
-            self._m.vector().set_local(spherical2cartesian(y[i + 1]))
+            self._m.vector().set_local(spherical2cartesian(y[i + 1])[self.sim.m_field.d2v_xxx])
             #
             self.effective_field.update()
             # Compute effective field, which is the gradient of
             # the energy in the NEB method (derivative with respect to
             # the generalised coordinates)
-            h = self.effective_field.H_eff
+            h = self.effective_field.H_eff[self.sim.m_field.v2d_xxx]
             # Transform to spherical coordinates
+            
+            # print len(h)
+            # print len(y[i + 1])
+            
             self.Heff[i, :] = cartesian2spherical_field(h, y[i + 1])
             # Compute the total energy
             self.energy[i + 1] = self.effective_field.total_energy()
