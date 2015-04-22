@@ -34,7 +34,6 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install $packages
 sudo pip install -U sphinx pytest aeon sh diff-match-patch
-
 # [Observation: We need IPython installed to be able to import finmag. So
 # we need to make sure to also install ipython.]
 
@@ -42,6 +41,11 @@ sudo pip install -U sphinx pytest aeon sh diff-match-patch
 # via pip:
 sudo pip install -U ipython
 sudo pip install -U pyzmq
+
+# nbconvert for IPython 3.x seems to need mistune (caused fail on
+# jenkins for target 'doc-html' when this was missing).
+sudo pip install mistune
+
 
 # Eigenmodes need petsc4py. SLEPc and PETSc should also be installed for this.
 sudo apt-get install python-petsc4py libpetsc3.4.2 libpetsc3.4.2-dev\
