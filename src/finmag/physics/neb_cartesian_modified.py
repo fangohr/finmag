@@ -183,46 +183,50 @@ class NEB_Sundials(object):
         done in the magnetic moments that constitute the
         magnetic system.
         """
-        
+
         # Get the spherical coordinates dolfin functions
         # for the m0 and m1 magnetisation vector fields
         self.sim.set_m(self.initial_images[image0])
         theta0, phi0 = self.sim._m_field.get_spherical()
-        
+
         self.sim.set_m(self.initial_images[image1])
         theta1, phi1 = self.sim._m_field.get_spherical()
-        
+
         # To not depend on numpy arrays, we will assemble every
         # interpolation into dolfin functions and assign their
         # values to the subdomains of the MixedFunctionSpace of images
-        
+
         # Create a scalar Function Space
         S1 = df.FunctionSpace(self.sim.m_field.functionspace.mesh(), 'CG', 1)
-        
+
+        # Define a variable to use as vector in all the assemble instances
+        assemble_vector = None
+ 
         # Define the interpolations step for theta
         assemble_vector = df.assemble(df.dot((theta1 - theta0) / (n + 1))
-                                      * df.dP)
+                                      * df.dP,
+                                      tensor=assemble_vector)
         dtheta = df.Function(S1)
-        dtheta.vector().set_local(dtheta_v.get_local())
-        
+        dtheta.vector().axpy(1, assemble_vector)
+ 
         # The same for Phi
         assemble_vector = df.assemble(df.dot((theta1 - theta0) / (n + 1))
                                       * df.dP,
                                       tensor=assemble_vector)
         dphi = df.Function(S1)
-        dphi.vector().set_local(dtheta_v.get_local())
+        dphi.vector().axpy(1, assemble_vector)
 
         # Now loop for every interpolation and assign it to
         # the MixedFunctionSpace
         for i in xrange(n):
-            
+ 
             # Create a dolfin function from the FS, for the interpolation
             interpolation_theta = df.Function(S1)
             interpolation_phi = df.Function(S1)
             # Compute the radius using the assemble method with dolfin dP
             # (like a dirac delta to get values on every node of the mesh)
             # This returns a dolfin vector
-            
+ 
             # Theta
             assemble_vector = df.assemble(df.dot(theta0 + (i + 1) * dtheta,
                                           #
@@ -230,7 +234,7 @@ class NEB_Sundials(object):
                                           tensor=assemble_vector  
                                           )
             # Set the vector values to the dolfin function
-            interpolation_theta.vector().set_local(assemble_vector.get_local())    
+            interpolation_theta.vector().axpy(1, assemble_vector)    
  
             # Phi
             assemble_vector = df.assemble(df.dot(phi0 + (i + 1) * dphi,
@@ -239,23 +243,23 @@ class NEB_Sundials(object):
                                           tensor=assemble_vector  
                                           )
             # Set the vector values to the dolfin function
-            interpolation_phi.vector().set_local(assemble_vector.get_local())    
+            interpolation_phi.vector().axpy(1, assemble_vector)
 
-            # Now set this interpolation to the corresponding image           
+            # Now set this interpolation to the corresponding image
 
             # Set a vector function space for the simulation
             # magnetisation vector field
             interpolation = df.VectorFunction(self.sim.S3)
-            df.assemble(df.dot(df.as_vector((df.sin(interpolation_theta) * df.cos(interpolation_phi),
-                                             df.sin(interpolation_theta) * df.sin(interpolation_phi),
-                                             df.cos(interpolation_theta)  
-                                             )),
-                               df.TestFunction(self.sim.S3)) * df.dP
-                        )
-            interpolation.vector().axpy(1, interpolation)            
+            interpolation = df.assemble(df.dot(df.as_vector((df.sin(interpolation_theta) * df.cos(interpolation_phi),
+                                                             df.sin(interpolation_theta) * df.sin(interpolation_phi),
+                                                             df.cos(interpolation_theta)  
+                                                             )),
+                                                            df.TestFunction(self.sim.S3)) * df.dP
+                                                            )
+            interpolation.vector().axpy(1, interpolation)
 
             # Now assign the interpolation vector function values to the corresponding
-            # image in the MixedFunctionSpace        
+            # image in the MixedFunctionSpace
             df.assign(self.images_fun.sub(i), interpolation)
 
         # coords = []
