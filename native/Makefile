@@ -162,6 +162,8 @@ run-ci-tests:
 clean:
 	rm -f $(BUILD_TARGETS) $(PRECOMPILED_HEADER_FILE)
 	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h -o -name \*.so \) -exec rm {} +
+	rm -f ./src/sundials/nvec_serial/.nvector_serial_custom_malloc_compiled
+	rm -f .add_version
 
 # Runs the native unit tests
 test:
