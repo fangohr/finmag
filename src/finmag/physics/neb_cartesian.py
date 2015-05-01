@@ -1,5 +1,5 @@
 import os
-# import dolfin as df
+import dolfin as df
 import numpy as np
 # import inspect
 from aeon import default_timer
@@ -145,7 +145,9 @@ class NEB_Sundials(object):
             self.climbing_image = climbing_image
 
         # Dolfin function of the new _m_field (instead of _m)
-        self._m = sim.llg._m_field.f
+        # self._m = sim.llg._m_field.f
+        self._m = sim.m_field.f
+        
         self.effective_field = sim.llg.effective_field
 
         if interpolations is None:
@@ -167,8 +169,17 @@ class NEB_Sundials(object):
         self.total_image_num = len(initial_images) + sum(interpolations)
         self.image_num = self.total_image_num - 2
 
-        self.nxyz = len(self._m.vector()) / 3
-
+        # Number of spins per image. The _m.vector has the form
+        # [mx1, mx2, ..., my1, my2, ..., mz1, mz2]
+        # Thus we divide by 3 to get the total of ms
+        # self.nxyz = len(self._m.vector()) / 3
+        
+        # Use the full vector from the field class to get the total number
+        # of degrees of freedom when using PBC 
+        # (the self._m gave us the reduced number of spins when using PBC)
+        self.nxyz = len(self.sim.m_field.get_ordered_numpy_array_xxx()) / 3
+        
+        # Total number of degrees of freedom (3 components per spin)
         self.coords = np.zeros(3 * self.nxyz * self.total_image_num)
         self.last_m = np.zeros(self.coords.shape)
 
@@ -279,7 +290,10 @@ class NEB_Sundials(object):
 
             # Save on the first image of a pair (step 1, 6, ...)
             self.sim.set_m(self.initial_images[i])
-            m0 = self.sim.m
+            
+            # m0 = self.sim.m
+            # Use the full array for PBCs
+            m0 = self.sim.m_field.get_ordered_numpy_array_xxx()            
 
             self.coords[image_id][:] = m0[:]
             image_id = image_id + 1
@@ -287,7 +301,10 @@ class NEB_Sundials(object):
             # Set the second image in the pair as m1 and interpolate
             # (step 4 and 7), saving in corresponding self.coords entries
             self.sim.set_m(self.initial_images[i + 1])
-            m1 = self.sim.m
+            # m1 = self.sim.m
+            # Use the full array for PBCs
+            m1 = self.sim.m_field.get_ordered_numpy_array_xxx()
+
             # Interpolations (arrays with magnetisation values)
             coords = linear_interpolation_two(m0, m1, n)
 
@@ -299,12 +316,21 @@ class NEB_Sundials(object):
 
         # Append the magnetisation of the last image
         self.sim.set_m(self.initial_images[-1])
-        m2 = self.sim.m
+        # m2 = self.sim.m
+        # Use the full array for PBCs
+        m2 = self.sim.m_field.get_ordered_numpy_array_xxx()
         self.coords[image_id][:] = m2[:]
 
         # Save the energies
         for i in range(self.total_image_num):
-            self._m.vector().set_local(self.coords[i])
+            # To assign the values from the full array using set_local
+            # (with boundaries when using PBCs) to a reduced 
+            # sim.m_field.vector() ,
+            # we use the ordered dof to vertex map (d2v_xxx),
+            # which has a reduced number of indexes
+            # We take the map from the field class
+            self._m.vector().set_local(self.coords[i][self.sim.m_field.d2v_xxx])
+
             self.effective_field.update()
             self.energy[i] = self.effective_field.total_energy()
 
@@ -332,7 +358,8 @@ class NEB_Sundials(object):
         self.coords.shape = (self.total_image_num, -1)
 
         for i in range(self.total_image_num):
-            self._m.vector().set_local(self.coords[i, :])
+            # Save the REDUCED length arrray
+            self._m.vector().set_local(self.coords[i, :][self.sim.m_field.d2v_xxx])
             # set t =0, it seems that the parameter time is only
             # for the interface?
             vtk_saver.save_field(self._m, 0)
@@ -356,7 +383,12 @@ class NEB_Sundials(object):
         self.coords.shape = (self.total_image_num, -1)
         for i in range(self.total_image_num):
             name = os.path.join(directory, 'image_%d.npy' % i)
-            np.save(name, self.coords[i, :])
+            # Save the reduced length array
+            # Since the dolfin vector (for the magnetisation) can have any
+            # ordering, we rely on the fact that
+            # this mapping does not change when we use the same mesh
+            # when loading the system from a different simulation
+            np.save(name, self.coords[i, :][self.sim.m_field.d2v_xxx])
 
         self.coords.shape = (-1, )
 
@@ -375,15 +407,19 @@ class NEB_Sundials(object):
         y.shape = (self.total_image_num, -1)
 
         for i in range(self.image_num):
+            # To update
+            # the magnetisation we only need the reduced vector, thus
+            # we use the d2v map
+            self._m.vector().set_local(y[i + 1][self.sim.m_field.d2v_xxx])
 
-            self._m.vector().set_local(y[i + 1])
-            #
             self.effective_field.update()
             # Compute effective field, which is the gradient of
             # the energy in the NEB method (derivative with respect to
             # the generalised coordinates)
-            h = self.effective_field.H_eff
-            #
+            # We need the whole system effective field 
+            # (thus we use the v2d map)
+            h = self.effective_field.H_eff[self.sim.m_field.v2d_xxx]
+
             self.Heff[i + 1, :] = h[:]
             # Compute the total energy
             self.energy[i + 1] = self.effective_field.total_energy()
