@@ -10,11 +10,7 @@ jsonfilename = 'file.json'
 mesh = df.UnitSquareMesh(10, 10)
 functionspace = df.VectorFunctionSpace(mesh, 'CG', 1, 3)
 f = df.Function(functionspace)
-<<<<<<< local
-t_array = np.arange(0, 1e-9, 0.1e-9)
-=======
 t_array = np.linspace(0, 1e-9, 5)
->>>>>>> other
 
 
 def test_save_data():
