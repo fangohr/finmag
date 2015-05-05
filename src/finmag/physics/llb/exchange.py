@@ -1,6 +1,6 @@
 import logging
 import dolfin as df
-from aeon import mtimed
+from aeon import timer
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
 from finmag.physics.llb.material import Material
@@ -70,7 +70,7 @@ class ExchangeStd(EnergyBase):
         super(ExchangeStd, self).__init__(method, in_jacobian=True)
         self.C = C
 
-    @mtimed
+    @timer.method
     def setup(self, S3, m, Ms, Me, unit_length=1):
         self.Me = Me
 
@@ -118,7 +118,7 @@ class Exchange(object):
         self.me = mat._m_e
         self.in_jacobian = in_jacobian
 
-    @mtimed
+    @timer.method
     def setup(self, S3, m, Ms0, unit_length=1.0):
         self.S3 = S3
         self.m = m

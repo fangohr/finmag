@@ -1,6 +1,6 @@
 import dolfin as df
 import logging
-from aeon import mtimed
+from aeon import timer
 from finmag.energies.energy_base import EnergyBase
 from material import Material
 logger = logging.getLogger('finmag')
@@ -25,7 +25,7 @@ class LLBAnisotropy(EnergyBase):
         self.inv_chi_perp = mat.inv_chi_perp
         super(LLBAnisotropy, self).__init__(method, in_jacobian=True)
 
-    @mtimed
+    @timer.method
     def setup(self, S3, m, Ms0, unit_length=1):
         #self._m_normed = df.Function(S3)
         self.m = m

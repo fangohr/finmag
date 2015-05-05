@@ -9,7 +9,7 @@ import dolfin as df
 import numpy as np
 import cProfile
 import pstats
-from aeon import mtimed
+from aeon import timer
 from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
@@ -52,7 +52,7 @@ class Simulation(object):
     instances = {}
 
 
-    @mtimed
+    @timer.method
     def __init__(self, mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend="sundials", pbc=None, average=False, parallel=False):
         """Simulation object.
 

@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
 import numpy as np
-from aeon import mtimed
+from aeon import timer
 from energy_base import EnergyBase
 from finmag.field import Field
 from finmag.util import helpers
@@ -82,7 +82,7 @@ class UniaxialAnisotropy(EnergyBase):
         if K2 != 0:
             self.assemble = False
 
-    @mtimed
+    @timer.method
     def setup(self, m, Ms, unit_length=1):
         """
         Function to be called after the energy object has been constructed.

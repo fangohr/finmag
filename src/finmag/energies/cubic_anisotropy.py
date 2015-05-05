@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import dolfin as df
-from aeon import mtimed
+from aeon import timer
 from finmag.field import Field
 from energy_base import EnergyBase
 from finmag.util import helpers
@@ -54,7 +54,7 @@ class CubicAnisotropy(EnergyBase):
 
         self.assemble = assemble
 
-    @mtimed
+    @timer.method
     def setup(self, m, Ms, unit_length=1):
         dofmap = m.functionspace.dofmap()
         cg_scalar_functionspace = df.FunctionSpace(

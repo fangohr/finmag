@@ -1,6 +1,6 @@
 import numpy as np
 import dolfin as df
-from aeon import timed, mtimed, Timer, default_timer
+from aeon import timer
 from finmag.field import Field
 from finmag.native.llg import compute_bem_fk
 from finmag.util.consts import mu0
@@ -158,7 +158,7 @@ class Demag2D(FKDemag):
         self._H_func.vector()[:] = self.__compute_field()
         return df.assemble(self._E) * self.unit_length ** self.m.mesh_dim()
 
-    @mtimed(default_timer)
+    @timer.method
     def energy_density(self):
         """
         Compute the energy density in the field.

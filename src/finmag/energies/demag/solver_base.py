@@ -16,7 +16,7 @@ laplace.add("preconditioner", "default")
 default_parameters.add(poisson)
 default_parameters.add(laplace)
 
-demag_timings = Timer()
+demag_timer = Timer()
 
 
 class FemBemDeMagSolver(object):
@@ -247,10 +247,10 @@ class FemBemDeMagSolver(object):
         if self.bench:
             bench.solve(A, function.vector(), b, benchmark=True)
         else:
-            demag_timings.start("2nd linear solve", self.__class__.__name__)
+            demag_timer.start("2nd linear solve", self.__class__.__name__)
             self.laplace_iter = self.laplace_solver.solve(
                 A, function.vector(), b)
-            demag_timings.stop("2nd linear solve", self.__class__.__name__)
+            demag_timer.stop("2nd linear solve", self.__class__.__name__)
         return function
 
     def __compute_field_project(self):

@@ -2,7 +2,7 @@ import os
 import dolfin as df
 import numpy as np
 import inspect
-from aeon import default_timer
+from aeon import timer
 import finmag.util.consts as consts
 
 from finmag.util import helpers
@@ -620,7 +620,7 @@ class NEB_Sundials(object):
     def sundials_rhs(self, time, y, ydot):
 
         self.ode_count += 1
-        default_timer.start("sundials_rhs", self.__class__.__name__)
+        timer.start("sundials_rhs", self.__class__.__name__)
 
         self.compute_effective_field(y)
 
@@ -640,7 +640,7 @@ class NEB_Sundials(object):
 
         ydot.shape = (-1,)
 
-        default_timer.stop("sundials_rhs", self.__class__.__name__)
+        timer.stop("sundials_rhs", self.__class__.__name__)
 
         return 0
 

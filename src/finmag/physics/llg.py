@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import dolfin as df
 import finmag.util.consts as consts
-from aeon import default_timer, mtimed
+from aeon import timer
 from finmag.field import Field
 from finmag.physics.effective_field import EffectiveField
 from finmag.native import llg as native_llg
@@ -34,7 +34,7 @@ class LLG(object):
     :math:`-\\alpha\\gamma_{LL}` as *damping coefficient*.
 
     """
-    @mtimed
+    @timer.method
     def __init__(self, S1, S3, do_precession=True, average=False, unit_length=1):
         """
         S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
@@ -239,7 +239,7 @@ class LLG(object):
         H_eff = self.effective_field.H_eff[self.v2d_xxx]  # alias (for readability)
         H_eff.shape = (3, -1)
 
-        default_timer.start("solve", self.__class__.__name__)
+        timer.start("solve", self.__class__.__name__)
         # Use the same characteristic time as defined by c
         char_time = 0.1 / self.c
         # Prepare the arrays in the correct shape
@@ -275,7 +275,7 @@ class LLG(object):
         dmdt.shape = (-1,)
         H_eff.shape = (-1,)
 
-        default_timer.stop("solve", self.__class__.__name__)
+        timer.stop("solve", self.__class__.__name__)
 
         self._dmdt.vector().set_local(dmdt[self.d2v_xxx])
 
@@ -325,7 +325,7 @@ class LLG(object):
     """
 
     # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
-    @mtimed
+    @timer.method
     def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
         """
         The time integration problem we need to solve is of type

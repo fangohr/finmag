@@ -1,4 +1,4 @@
-from aeon import default_timer
+from aeon import timer
 from finmag import Simulation
 from finmag.energies import Exchange, Demag
 from finmag.util.meshes import from_geofile
@@ -19,11 +19,11 @@ def run_simulation(verbose=False):
     sim.schedule("eta", every=10e-12)
     sim.run_until(3e-10)
 
-    print default_timer
+    print timer
     if verbose:
         print "The RHS was evaluated {} times, while the Jacobian was computed {} times.".format(
                 sim.integrator.stats()['nfevals'],
-                default_timer.get("sundials_jtimes", "LLG").calls)
+                timer.get("sundials_jtimes", "LLG").calls)
 
 if __name__ == "__main__":
     run_simulation(verbose=False)

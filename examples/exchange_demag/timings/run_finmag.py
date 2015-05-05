@@ -3,7 +3,7 @@ import os
 import time
 import pprint
 import dolfin as df
-from aeon import default_timer
+from aeon import timer
 from finmag.util.meshes import from_geofile
 
 from finmag import Simulation
@@ -57,7 +57,7 @@ output.write("-------------------------\n")
 pp = pprint.PrettyPrinter()
 output.write("\nfirst linear solve\n{}\n".format(pp.pformat(demag._poisson_solver.parameters.to_dict())))
 output.write("\nsecond linear solve\n{}\n\n".format(pp.pformat(demag._laplace_solver.parameters.to_dict())))
-output.write(str(default_timer))
+output.write(str(timer))
 output.close()
 
 # Cleanup
