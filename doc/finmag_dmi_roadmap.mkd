@@ -1,0 +1,206 @@
+% Extending Finmag's notion of DMI
+% Hagen Fuchs <mail@hfuchs.net>
+% 2015-04-16
+
+
+'Tis a bit of a roadmap; on the titular goals and, incidentally, my
+diploma thesis, too.  Lucky bastard that I am, Ulrich Rößler agreed to
+be my supervisor.  This better be good, then, eh?
+
+I'll start with an off-hand introduction to my current, painfully narrow
+understanding of DMI.  Then, I'll take a quick look at Finmag's
+implementation (dmi.py) and, finally, offer a crude list of steps (the
+roadmap proper) to refine Finmag's DMI model.
+
+DMI physics
+------------------------
+
+(The following is the layman's version: in response, Ulrich composed
+a »Very short but complete exposition of Landau theory and introduction
+of Dzyaloshinskii models« that I should probably simply paste here.
+However, I'd like to rein it in first; digest it.  In other words: the
+following is an easy piece and perhaps not completely wrong.)
+
+I have come to distinguish between micro- and macro-DMI (nomenclature stolen
+from Pyatakov 2014):
+
+The µDMI term appears as the antisymmetric part of the exchange coupling when
+looking sharply at the general Heisenberg- or Spin-Hamiltonian.  It can be
+written such that it's proportional to the vector-product of localized spins.
+That's vintage Dzyaloshinskii '58 (more explicit in Moryia 1960, though).
+
+Macro-DMI on the other hand may be thought of a bit differently: arguing from
+symmetry, Dzyaloshinskii proposed, back in '64, that it should be entirely
+possibly to squeeze a few energy contributions into the thermodynamic
+potential -- provided they be linear with respect to the first spatial
+derivatives of the magnetic order parameter (Dzyaloshinskii 1964).  25 years
+later, Bogdanov and Yablonskii got around to writing some of these down in an
+explicit form for certain crystal classes (Bogdanov 1989).  No hurry for these
+easy-going lads.
+
+Turns out, these terms possess an uncanny resemblance to *Lifshitz
+invariants* that first arose in Lifshitz' treatment of general Landau
+theory of continuous phase transitions (Lifshitz 1941).  As such, or
+rather as LIs, I'll try to denominate these peculiar forms wherever
+possible (for sanity's as much as variety's sake).
+
+Exempli gratia, the LIs for $C_{nv}$ crystals are of the form $w' = \alpha' w_1$
+where $\alpha'$ is *a* Dzyaloshinskii constant and
+$$
+w_1 =
++ m_z \frac{\partial m_x}{\partial x}
+- m_x \frac{\partial m_z}{\partial x}
++ m_z \frac{\partial m_y}{\partial y}
+- m_y \frac{\partial m_z}{\partial y} \, .
+$$
+
+The key point to take away here: different crystal symmetries allow
+different combinations of LIs.  As Ulrich Rößler likes to point out: there are
+9 possible terms of the form
+$$
+w_D  =  d_{ij}^k (  m_i  \partial_j  m_k - m_k \partial_j m_i)
+$$
+(the term in parentheses constitutes *one* Lifshitz invariant proper).
+By virtue of it's symmetry a crystal may select some and discard others.
+
+There are indeed materials that show plenty of µDMI action while prohibiting
+LIs from sheer symmetry, thus exhibiting none of the chiral structures that
+make DMI so damn interesting (Pyatakov 2014).
+
+
+
+Current implementation -- dmi.py
+-----------------------------------
+
+Now, where do the DMI-terms implemented in dmi.py come from?   There are two
+terms, the "interface term" (Rohart 2013),
+$$
+w_interface = D \cdot \left(
++ m_x \frac{\partial m_z}{\partial x}
+- m_z \frac{\partial m_x}{\partial x}
++ m_y \frac{\partial m_z}{\partial y}
+- m_z \frac{\partial m_y}{\partial y}
+\right) \, ,
+$$
+and a "bulk term", or m-rotor:
+$$
+w_dmi = D \vec m \cdot (\nabla \times \vec m)
+$$
+
+Turns out, $w_{interface}/D = -w_1$ ($w_1$: the $C_{nv}$ LI above), so Rohart and
+Thiaville use a term suitable for high-symmetry cubic systems to model
+DMI-effects in (and I'm paraphrasing here): "ultrathin layers interfacing with
+high spin-orbit heavy metals, disregarding any variations along the surface".
+And there's the rub: interfaces tend to exhibit reduced symmetry, so that
+(many) more LI terms have to be taken into account.  Point in case, if we drop
+the mirror plane in $C_{nv}$, turning it into $C_n$, two more LIs come into play
+(Bogdanov 1989).
+
+There are more problems with the approach "constant magnetic order parameter
+at the surface", but I'm not going into that now (chiefly because I don't want
+to make a fool of myself).
+
+Now, the bulk term.  I have no clear idea where the m-rotor form comes from,
+to be honest.  It resembles a form of "total DMI" that I played around with as
+I was trying to find a form more amenable to coordinate transformation:
+\begin{align}
+&  D \cdot \vec m (\nabla \times\vec m)\\
+&=
+D \cdot \vec m \left(
+\begin{array}{ccc}
+  0& -\partial_z& \partial_y\\
+  \partial_z& 0& -\partial_x\\
+  -\partial_y& \partial_x& 0
+\end{array}
+\right) \vec m \\
+&=
+D \cdot w_{bulk} \\
+&=
+D \cdot \left(
+m_x \frac{\partial m_z}{\partial y}
+- m_x \frac{\partial m_y}{\partial z}
++ m_y \frac{\partial m_x}{\partial z}
+- m_y \frac{\partial m_z}{\partial x}
++ m_z \frac{\partial m_y}{\partial x}
+- m_z \frac{\partial m_x}{\partial y}
+\right) \; .
+\end{align}
+A sizeable collection of LIs, to be sure, but no panacea: this expression
+makes sense only in low-symmetry crystals (eg. B20 FeGe [TODO]).
+
+In addition, both terms, interface and bulk, have in common that they
+use one and only one Dzyaloshinskii-constant: Ulrich, however, points
+out that, in general, there are actually 9 constants $d_{ij}$
+(drastically reduced under symmetry, of course).
+
+One last point: In what I have started to call *Ulrich's Admonition*, he
+insists that proper treatment of the transformations between crystal and
+laboratory coordinate systems are essential.  Simply transforming the
+magnetisation vectors won't cut it.
+
+That's as far as it goes for now and should provide sufficient scope for the
+work proposed here.
+
+
+Roadmap
+----------
+
+**Step 1.**
+Implement one more LI for a different crystal class as a third option in
+dmi.py without regard for crystal orientation.
+(This should've happened by now, but I'm running into problems that
+I hope I can fix now that I can see/debug/trace the actual code.)
+
+This should ignite some discussion about the DMI class' interface: how do we
+want to specify crystal symmetry, crystal orientation, etc.
+
+With this, we can start to consider the behavior of different LIs/homogeneous
+crystalline systems.
+
+**Step 2.**
+Coordinate transforms.  It seems to me that Finmag doesn't offer much
+infrastructure to deal with coordinate transforms in the sense that we
+need for 'proper' DMI: transformations between crystal and laboratory
+systems.
+
+One obvious place to look for prior applications of this would be
+finmag/energies/anisotropy.py, where unaxial anistropies may be
+specified as 'constant K + axis' or 'spatially varying anisotropy by
+using df.Functions'.  No mention of different coordinate systems,
+though.
+
+The 'Jacobians' mentioned throughout the code all seem to refer to the
+integration process: Sundials needs to know, of course, what the mesh's
+tetrahedron looks like at any given spot.
+
+I'd probably start looking into Finmag's field representation class
+(finmag/field.py) for what's cooking with coordinate transforms.
+
+**Step 3.**
+Find suitable test cases and candidates.  This should answer one and only one
+question: Does any of this actually make any sense at all?  What would be
+a nice'n'easy comparison data set/model?  Perhaps Denys' group has something
+here.
+
+Ulrich: "The simplest case are the one-dimensional Dzyaloshinskii spiral
+which can look like helices, cycloids or oblique depending on
+propagation direction and DMI-term and the transition of these
+modulations into a soliton lattice finally into a colinear state, if and
+when we switch on an additional strong uniaxial anisotropy[...]."
+
+At this point, the interface question should've found an answer ("Specify
+crystal symmetry globally, or just with energies.DMI()?").  A thought that
+occured to me with nmag already: it would be *nice* to have a materials
+catalogue available (but perhaps that already exists?)
+
+**Step 4.**
+Implement all of Bogdanov's LIs.  Test.
+
+Ideally, all of this would happen before a bunch of important people take me
+to task about the time spent with this (defense of my diploma thesis).
+
+**Step 5.**
+Rejoice, then sober up and think about all that's left to do.   Or,
+rather, don't think: Ulrich has all this thought through already
+(seriously, I have tons of emails).
+
