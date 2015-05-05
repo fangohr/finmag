@@ -4,7 +4,7 @@ import glob
 import time
 import logging
 import dolfin as df
-from aeon import mtimed
+from aeon import timer
 
 log = logging.getLogger(name="finmag")
 
@@ -96,7 +96,7 @@ class VTK(object):
         # overwrite previously written data.
         self.f = df.File(self.output_file, "compressed")
 
-    @mtimed
+    @timer.method
     def save(self, dolfin_function, t):
         """
         Save the ``dolfin_function`` to a .pvd file (in VTK format) which can

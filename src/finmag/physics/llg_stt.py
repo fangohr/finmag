@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 import inspect
-from aeon import default_timer
+from aeon import timer
 import finmag.util.consts as consts
 
 from finmag.field import Field
@@ -268,7 +268,7 @@ class LLG_STT(object):
         H_eff = self.effective_field.H_eff  # alias (for readability)
         H_eff.shape = (3, -1)
 
-        default_timer.start("sundials_rhs", self.__class__.__name__)
+        timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
 
         H_gradm = self.compute_gradient_field()
@@ -295,7 +295,7 @@ class LLG_STT(object):
             char_time, self.P,
             self.tau_sd, self.tau_sf, self._Ms)
 
-        default_timer.stop("sundials_rhs", self.__class__.__name__)
+        timer.stop("sundials_rhs", self.__class__.__name__)
 
         self.dm_dt.shape = (-1,)
         ydot[:] = self.dm_dt[:]

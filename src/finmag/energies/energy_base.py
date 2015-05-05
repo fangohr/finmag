@@ -1,7 +1,7 @@
 import logging
 import dolfin as df
 import numpy as np
-from aeon import mtimed
+from aeon import timer
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
 from finmag.util.consts import mu0
@@ -135,7 +135,7 @@ class EnergyBase(object):
                              "{}.".format(self.method,
                                           self._supported_methods))
 
-    @mtimed
+    @timer.method
     def compute_energy(self):
         """
         Return the total energy, i.e. energy density integrated
@@ -149,7 +149,7 @@ class EnergyBase(object):
         E = df.assemble(self.E) * self.unit_length ** self.dim
         return E
 
-    @mtimed
+    @timer.method
     def energy_density(self):
         """
         Compute the energy density,
@@ -185,7 +185,7 @@ class EnergyBase(object):
         self.E_density_function.vector()[:] = self.energy_density()
         return self.E_density_function
 
-    @mtimed
+    @timer.method
     def compute_field(self):
         """
         Compute the field associated with the energy.

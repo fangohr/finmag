@@ -2,7 +2,7 @@ import dolfin as df
 import numpy as np
 import logging
 from finmag.util.consts import mu0
-from finmag.util.timings import mtimed
+from aeon import timer
 from finmag.native import llg as native_llg
 
 logger=logging.getLogger('finmag')
@@ -14,7 +14,7 @@ class Exchange(object):
         self.chi = chi
         self.in_jacobian=in_jacobian
    
-    @mtimed
+    @timer.method
     def setup(self, S3, M, M0, unit_length=1.0): 
         self.S3 = S3
         self.M = M

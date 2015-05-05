@@ -1,6 +1,6 @@
 import logging
 import dolfin as df
-from aeon import mtimed
+from aeon import timer
 from finmag.field import Field
 from energy_base import EnergyBase
 from finmag.util.helpers import times_curl
@@ -75,7 +75,7 @@ class DMI(EnergyBase):
 
         super(DMI, self).__init__(method, in_jacobian=True)
 
-    @mtimed
+    @timer.method
     def setup(self, m, Ms, unit_length=1):
         # Create an exchange constant Field object A in DG0 function space.
         dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)

@@ -4,7 +4,7 @@ import types
 import numpy as np
 from glob import glob
 from types import TupleType, StringType
-from aeon import mtimed
+from aeon import timer
 logger = logging.getLogger(name='finmag')
 
 
@@ -207,7 +207,7 @@ class Tablewriter(object):
                              self._entities[entityname]['unit'])
         return "".join(line1) + "\n" + "".join(line2) + "\n"
 
-    @mtimed
+    @timer.method
     def save(self):
         """Append data (spatial averages of fields) for current
         configuration"""

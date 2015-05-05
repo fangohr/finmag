@@ -2,7 +2,6 @@ import logging
 import numpy as np
 import dolfin as df
 import distutils
-from aeon import default_timer
 from finmag.field import Field
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
@@ -233,10 +232,3 @@ if __name__ == "__main__":
     print np.average(np.abs(f3[:200] / f1[:200]))
 
     print 'max errror:', compare_field(f1, f2)
-
-    """
-    print stop-start,stop2-start2
-
-    from aeon import default_timer
-    print default_timer.report(20)
-    """

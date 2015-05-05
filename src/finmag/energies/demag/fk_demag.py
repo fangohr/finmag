@@ -11,7 +11,7 @@ a template for other techniques like the GCR.
 import numpy as np
 import dolfin as df
 import logging
-from aeon import timed, mtimed, Timer, default_timer
+from aeon import timer, Timer
 from finmag.util.consts import mu0
 from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
@@ -21,15 +21,7 @@ from fk_demag_pbc import BMatrixPBC
 
 
 logger = logging.getLogger('finmag')
-
-
-def prepared_timed(measurement_group, timer_to_use):
-    def new_timed(measurement_name):
-        return timed(measurement_name, measurement_group, timer_to_use)
-    return new_timed
-
 fk_timer = Timer()
-fk_timed = prepared_timed("FKDemag", fk_timer)
 
 
 class FKDemag(object):
@@ -115,7 +107,7 @@ class FKDemag(object):
 
         self.macrogeometry = macrogeometry
 
-    @mtimed(default_timer)
+    @timer.method
     def setup(self, m, Ms, unit_length=1):
         """
         Setup the FKDemag instance. Usually called automatically by the
@@ -198,7 +190,7 @@ class FKDemag(object):
             raise ValueError("Argument 'solver_type' must be either 'Krylov' or 'LU'. "
                              "Got: '{}'".format(solver_type))
 
-        with fk_timed('compute BEM'):
+        with fk_timer('compute BEM'):
             if not hasattr(self, "_bem"):
                 if self.macrogeometry is not None:
                     Ts = self.macrogeometry.compute_Ts(self.m.mesh())
@@ -230,7 +222,7 @@ class FKDemag(object):
 
         self._setup_gradient_computation()
 
-    @mtimed(default_timer)
+    @timer.method
     def precomputed_bem(self, bem, b2g_map):
         """
         If the BEM and a boundary to global vertices map are known, they can be
@@ -240,7 +232,7 @@ class FKDemag(object):
         """
         self._bem, self._b2g_map = bem, b2g_map
 
-    @mtimed(default_timer)
+    @timer.method
     def compute_potential(self):
         """
         Compute the magnetic potential.
@@ -253,7 +245,7 @@ class FKDemag(object):
         self._compute_magnetic_potential()
         return self._phi
 
-    @mtimed(default_timer)
+    @timer.method
     def compute_field(self):
         """
         Compute the demagnetising field.
@@ -272,7 +264,7 @@ class FKDemag(object):
         """
         return helpers.average_field(self.compute_field())
 
-    @mtimed(default_timer)
+    @timer.method
     def compute_energy(self):
         """
         Compute the total energy of the field.
@@ -290,7 +282,7 @@ class FKDemag(object):
         self._H_func.vector()[:] = self.compute_field()
         return df.assemble(self._E) * self.unit_length ** self.m.mesh_dim()
 
-    @mtimed(default_timer)
+    @timer.method
     def energy_density(self):
         """
         Compute the energy density in the field.
@@ -310,7 +302,7 @@ class FKDemag(object):
             self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
-    @mtimed(default_timer)
+    @timer.method
     def energy_density_function(self):
         """
         Returns the energy density in the field as a dolfin function to allow probing.
@@ -323,7 +315,7 @@ class FKDemag(object):
         self._nodal_E_func.vector()[:] = self.energy_density()
         return self._nodal_E_func
 
-    @mtimed(fk_timer)
+    @fk_timer.method
     def _poisson_matrix(self):
         A = df.dot(df.grad(self._trial1), df.grad(self._test1)) * df.dx
         return df.assemble(A)  # stiffness matrix for Poisson equation
@@ -331,12 +323,12 @@ class FKDemag(object):
     def _compute_magnetic_potential(self):
         # compute _phi_1 on the whole domain
         g_1 = self._Ms_times_divergence * self.m.f.vector()
-        with fk_timed("first linear solve"):
+        with fk_timer("first linear solve"):
             self._poisson_solver.solve(self._phi_1.vector(), g_1)
 
         # compute _phi_2 on the boundary using the Dirichlet boundary
         # conditions we get from BEM * _phi_1 on the boundary.
-        with fk_timed("using boundary conditions"):
+        with fk_timer("using boundary conditions"):
             phi_1 = self._phi_1.vector()[self._b2g_map]
             self._phi_2.vector()[self._b2g_map[:]] = np.dot(
                 self._bem, phi_1)
@@ -350,13 +342,13 @@ class FKDemag(object):
             self.boundary_condition.apply(A, b)
 
         # compute _phi_2 on the whole domain
-        with fk_timed("second linear solve"):
+        with fk_timer("second linear solve"):
             self._laplace_solver.solve(A, self._phi_2.vector(), b)
 
         # add _phi_1 and _phi_2 to obtain magnetic potential
         self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
 
-    @mtimed(fk_timer)
+    @fk_timer.method
     def _setup_gradient_computation(self):
         """
         Prepare the discretised gradient to use in :py:meth:`FKDemag._compute_gradient`.
@@ -380,7 +372,7 @@ class FKDemag(object):
         b = df.dot(self._test3, df.Constant((1, 1, 1))) * df.dx
         self._nodal_volumes_S3_no_units = df.assemble(b).array()
 
-    @mtimed(fk_timer)
+    @fk_timer.method
     def _compute_gradient(self):
         """
         Get the demagnetising field from the magnetic scalar potential.

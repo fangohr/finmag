@@ -1,7 +1,7 @@
 import dolfin as df
 import numpy as np
 import inspect
-from aeon import default_timer
+from aeon import timer
 from finmag.native import sundials
 import finmag.native.llb as native_llb
 from finmag.energies import Zeeman
@@ -227,7 +227,7 @@ class LLB(object):
 
         self.compute_effective_field()
 
-        default_timer.start("sundials_rhs", self.__class__.__name__)
+        timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
 
         native_llb.calc_llb_dmdt(self._m.vector().array(),
@@ -240,7 +240,7 @@ class LLB(object):
                                  self.material.Tc,
                                  self.do_precession)
 
-        default_timer.stop("sundials_rhs", self.__class__.__name__)
+        timer.stop("sundials_rhs", self.__class__.__name__)
 
         for func in self._post_rhs_callables:
             func(self)

@@ -2,7 +2,7 @@ import os
 import numpy as np
 import dolfin as df
 # import inspect
-from aeon import default_timer
+from aeon import timer
 # import finmag.util.consts as consts
 
 
@@ -482,7 +482,7 @@ class NEB_Sundials(object):
         """
         # Update the ODE solver
         self.ode_count += 1
-        default_timer.start("sundials_rhs", self.__class__.__name__)
+        timer.start("sundials_rhs", self.__class__.__name__)
 
         # Compute the eff field H for every image, H = -nabla E
         # (derived with respect to M)
@@ -523,7 +523,7 @@ class NEB_Sundials(object):
         y.shape = (-1,)
         ydot.shape = (-1,)
 
-        default_timer.stop("sundials_rhs", self.__class__.__name__)
+        timer.stop("sundials_rhs", self.__class__.__name__)
 
         return 0
 
