@@ -9,7 +9,7 @@ logger = logging.getLogger(name='finmag')
 import finmag.util.solver_benchmark as bench
 from solver_gcr_qvector_pe import PEQBuilder
 
-gcr_timings = sb.demag_timings
+gcr_timer = sb.demag_timer
 
 
 class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
@@ -219,10 +219,10 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
             self.poisson_matrix_dirichlet, method, pc)
 
         # Buffer the BEM
-        gcr_timings.start("build BEM", self.__class__.__name__)
+        gcr_timer.start("build BEM", self.__class__.__name__)
         self.boundary_mesh = df.BoundaryMesh(self.m.mesh(), 'exterior', False)
         self.bem, self.b2g = compute_bem_gcr(self.boundary_mesh)
-        gcr_timings.stop("build BEM", self.__class__.__name__)
+        gcr_timer.stop("build BEM", self.__class__.__name__)
 
         if self.qvector_method == "box":
             # Buffer Surface Node Areas for the box method
@@ -247,7 +247,7 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
 
         # Assemble the vector q.
         logger.debug("GCR: Solving for phi_b on the boundary")
-        gcr_timings.start("Build q vector", self.__class__.__name__)
+        gcr_timer.start("Build q vector", self.__class__.__name__)
         if self.qvector_method == "pe":
             q = self.build_vector_q_pe(self.m, self.Ms, self.phia)
         elif self.qvector_method == "box":
@@ -257,24 +257,24 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
                 "Only 'box' and 'pe' are possible qvector_method values")
 
         # Compute phi2 on boundary using the BEM matrix
-        gcr_timings.start_next(
+        gcr_timer.start_next(
             "Compute phiab on the boundary", self.__class__.__name__)
         phib_boundary = np.dot(self.bem, q[self.b2g])
 
         # Insert the boundary data into the function phib.
-        gcr_timings.start_next(
+        gcr_timer.start_next(
             "Inserting bem data into a dolfin function", self.__class__.__name__)
         self.phib.vector()[self.b2g] = phib_boundary
-        gcr_timings.stop_last()
+        gcr_timer.stop_last()
 
         # Solve for phib on the inside of the mesh with Fem, eq. (3)
         logger.debug("GCR: Solve for phi_b (laplace on the inside)")
         self.phib = self.solve_laplace_inside(self.phib)
 
         # Add together the two potentials
-        gcr_timings.start("Add phi1 and phi2", self.__class__.__name__)
+        gcr_timer.start("Add phi1 and phi2", self.__class__.__name__)
         self.phi.vector()[:] = self.phia.vector() + self.phib.vector()
-        gcr_timings.stop_last()
+        gcr_timer.stop_last()
 
         return self.phi
 
@@ -295,9 +295,9 @@ class FemBemGCRSolver(sb.FemBemDeMagSolver, PEQBuilder):
             bench.solve(
                 self.poisson_matrix_dirichlet, phia.vector(), F, benchmark=True)
         else:
-            gcr_timings.start("1st linear solve", self.__class__.__name__)
+            gcr_timer.start("1st linear solve", self.__class__.__name__)
             self.poisson_iter = self.poisson_solver.solve(phia.vector(), F)
-            gcr_timings.stop("1st linear solve", self.__class__.__name__)
+            gcr_timer.stop("1st linear solve", self.__class__.__name__)
         return phia
 
     def build_vector_q(self, m, Ms, phi1):

@@ -143,7 +143,7 @@ for i,maxh in enumerate(meshsizes):
         endtime = time.time()
 
         #Store the times
-        runtimes["bem"][demagtype].append(sb.demag_timings.time("build BEM", finmagsolvers[demagtype].__name__))
+        runtimes["bem"][demagtype].append(sb.demag_timer.time("build BEM", finmagsolvers[demagtype].__name__))
         runtimes["solve"][demagtype].append(endtime - starttime)
 
 
