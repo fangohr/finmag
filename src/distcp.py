@@ -97,10 +97,10 @@ def storeversions(targetfile):
     """Target file should be something like 'finmag/util/binary.py'
     The data in the file is used to store which version of software we 
     had when the binary distribution was created."""
-    if os.path.exists(targetfile):
-        print("This is odd: the file '%s' exists already, but is only" % targetfile)
-        print("meant to be created now (in function storeversions() in distcp.py)")
-        raise RuntimeError("odd error when running %s" % __file__)
+    #if os.path.exists(targetfile):
+    #    print("This is odd: the file '%s' exists already, but is only" % targetfile)
+    #    print("meant to be created now (in function storeversions() in distcp.py)")
+    #    raise RuntimeError("odd error when running %s" % __file__)
 
     f = open(targetfile,'w')
     f.write("buildlinux = '%s'\n" % get_linux_issue())
