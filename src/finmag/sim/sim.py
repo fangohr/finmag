@@ -306,8 +306,7 @@ class Simulation(object):
 
 
     def __del__(self):
-        # self.close_logfile()        
-        print("__del__(): Simulation object name='{}' (instance_id={}) is going out of scope".format(self.name, self.instance_id))
+        print "Simulation object about to be destroyed."
 
 
     def __str__(self):
