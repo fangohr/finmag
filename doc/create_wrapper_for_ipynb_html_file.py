@@ -32,7 +32,7 @@ def get_level(cell):
 
 
 def extract_title(cell):
-    if cell['cell_type'] == 'heading':
+    if cell['cell_type'] == 'markdown' and cell['source'][0].startswith('#'):
         title = cell['source'][0]
         print "[DDD] HEADING: Using cell title: '{}'".format(title)
     elif cell['cell_type'] == 'markdown':
@@ -53,9 +53,10 @@ json_data = open(infilename).read()
 data = json.loads(json_data)
 
 # Extract all cells from all worksheets
-cells = list(itertools.chain(*[ws['cells'] for ws in data['worksheets']]))
+# cells = list(itertools.chain(*ws['cells'] for ws in data['worksheets']]))
+cells = list(itertools.chain(*[data['cells']]))
 
-header_cells = sorted([c for c in cells if (c['cell_type'] == 'heading') or (c['cell_type'] == 'markdown' and c['source'][0].startswith('#'))], key=get_level)
+header_cells = sorted([c for c in cells if (c['cell_type'] == 'markdown' and c['source'][0].startswith('#'))], key=get_level)
 
 if header_cells == []:
     title = os.path.basename(infilename)
