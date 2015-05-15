@@ -33,11 +33,12 @@ def get_level(cell):
 
 def extract_title(cell):
     if cell['cell_type'] == 'markdown' and cell['source'][0].startswith('#'):
-        title = cell['source'][0]
-        print "[DDD] HEADING: Using cell title: '{}'".format(title)
+        # Remove leading '#' signs
+        title = re.sub('^#+\s*', '', cell['source'][0])
+        print "[DDD] MARKDOWN: Using cell title: '{}'".format(title)
     elif cell['cell_type'] == 'markdown':
         if not isinstance(cell['source'], list):
-            raise ValueError("Cell source is not a list: '{}'. Please consider convertingi the notebook to an up-to-date format.".format(cell['source']))
+            raise ValueError("Cell source is not a list: '{}'. Please consider converting the notebook to an up-to-date format.".format(cell['source']))
         # Remove leading '#' signs
         title = re.sub('^#+\s*', '', cell['source'][0])
         print "[DDD] MARKDOWN: Using cell title: '{}'".format(title)
