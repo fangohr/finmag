@@ -393,7 +393,7 @@ def test_probe():
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
 
-
+@pytest.mark.skipif(True,reason="test for hg")
 def test_get_hg_revision_info(tmpdir):
     finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
@@ -414,8 +414,8 @@ def test_get_hg_revision_info(tmpdir):
 
 def test_binary_tarball_name(tmpdir):
     finmag_repo = MODULE_DIR
-    expected_tarball_name = 'FinMag-dist__2012-02-02__rev4_d330c151a7ce_foobar.tar.bz2'
-    assert(binary_tarball_name(finmag_repo, revision='d330c151a7ce',
+    expected_tarball_name = 'FinMag-dist__2014-09-18__95b07562f00195f012720054aa165c167990dd5e_foobar.tar.bz2'
+    assert(binary_tarball_name(finmag_repo, revision='95b07562f00195f012720054aa165c167990dd5e',
                                suffix='_foobar') == expected_tarball_name)
 
 

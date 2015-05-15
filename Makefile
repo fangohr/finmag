@@ -10,7 +10,7 @@ default:
 	@echo 'This makefile is used for CI only; do not use directly.'
 
 PYTHON ?= python
-PURGE_REPO_CMD ?= hg purge --all
+PURGE_REPO_CMD ?= git clean -f -x
 NETGENDIR ?= /usr/share/netgen/
 PROJECT_DIR = $(abspath .)
 NATIVE_DIR = native
