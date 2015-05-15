@@ -39,6 +39,10 @@ f1l = ldata.load_field(field_name='m', t=0)
 f2l = ldata.load_field(field_name='m', t=1e-12)
 f3l = ldata.load_field(field_name='m', t=2e-12)
 
+f1lj = ldata.load_field_with_json_data(field_name='m', t=0)
+f2lj = ldata.load_field_with_json_data(field_name='m', t=1e-12)
+f3lj = ldata.load_field_with_json_data(field_name='m', t=2e-12)
+
 ldata.close()
 
 # ASSERTIONS. Is the saved data the same as loaded.
@@ -47,6 +51,10 @@ assert np.all(mesh.coordinates() == meshl.coordinates())
 assert np.all(f1l.vector().array() == f1.vector().array())
 assert np.all(f2l.vector().array() == f2.vector().array())
 assert np.all(f3l.vector().array() == f3.vector().array())
+
+assert np.all(f1lj.vector().array() == f1.vector().array())
+assert np.all(f2lj.vector().array() == f2.vector().array())
+assert np.all(f3lj.vector().array() == f3.vector().array())
 
 
 

@@ -3,6 +3,15 @@ import numpy as np
 import json
 from collections import OrderedDict
 
+
+"""
+Problems:
+1. We have to know the mesh in advance.
+2. Merge loading and saving into single class (r, w flags).
+3. Appending data.
+4. Looking into the file (we have to use python module).
+"""
+
 class SavingData(object):
     def __init__(self, h5filename, npzfilename, jsonfilename, functionspace):
         self.functionspace = functionspace
