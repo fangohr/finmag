@@ -249,8 +249,32 @@ def get_hg_revision_info(repo_dir, revision='tip'):
     os.chdir(cwd_bak)
     return rev_nr, rev_id, rev_date
 
+def get_git_revision_info(repo_dir, revision='HEAD'):
+    """
+    Return the revision id and the date of a revision in the given github repository. 
+    For examaple, the information returned should looks like,
+    
+    """
+    cwd_bak = os.getcwd()
+    try:
+        os.chdir(os.path.expanduser(repo_dir))
+    except OSError:
+        raise ValueError(
+            "Expected a valid repository, but directory does not exist: '{}'".format(repo_dir))
 
-def binary_tarball_name(repo_dir, revision='tip', suffix=''):
+    try:
+        rev_id = sp.check_output(['git', 'rev-parse',  revision]).strip()
+        rev_date = sp.check_output(
+            ['git', 'show', '-s', '--format=%ci',revision]).split()[0]
+
+    except sp.CalledProcessError:
+        raise ValueError(
+            "Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
+
+    os.chdir(cwd_bak)
+    return rev_id, rev_date
+
+def binary_tarball_name(repo_dir, revision='HEAD', suffix=''):
     """
     Returns the name of the Finmag binary tarball if built from the
     given repository and revision.
@@ -273,9 +297,9 @@ def binary_tarball_name(repo_dir, revision='tip', suffix=''):
     """
     # XXX TODO: Should we also check whether the repo is actually a Finmag
     # repository?!?
-    rev_nr, rev_id, rev_date = get_hg_revision_info(repo_dir, revision)
-    tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(
-        rev_date, rev_nr, rev_id, suffix)
+    rev_id, rev_date = get_git_revision_info(repo_dir, revision)
+    tarball_name = "FinMag-dist__{}__{}{}.tar.bz2".format(
+        rev_date,  rev_id, suffix)
     return tarball_name
 
 

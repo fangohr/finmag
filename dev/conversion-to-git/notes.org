@@ -11,7 +11,30 @@ cd /tmp/conv/hg-repo
 
 hg log | grep user: | sort | uniq | sed 's/user: *//' > ../authors
 
+Edit authors file (see content below).
 
+Actual conversion command:
+
+# create git repository
+mkdir /tmp/conv/git
+cd /tmp/conv/git
+git init 
+
+# do the conversion:
+
+/tmp/fast-export/hg-fast-export.sh -r /tmp/conv/hg-repo/ -A /tmp/conv/authors --force
+
+where /tmp/conv/hg-repo/ is the finmag mercurial repository.
+
+Done, then upload to github
+
+git remote add origin git@github.com:fangohr/finmag.git
+git push -u origin master
+
+#upload branches
+git push origin master
+git push origin next
+git push origin iridis_compilation
 
 * Authors conversion file:
 
@@ -45,7 +68,7 @@ Marijan Beg <mb4e10@ecs.soton.ac.uk>=Marijan Beg <mb4e10@soton.ac.uk>
 Marijan Beg <mb4e10@soton.ac.uk>
 Mark Vousden <mark.vousden@soton.ac.uk>
 Marvin <fangohr@soton.ac.uk>
-Marvin <marvin@bisotti.de>
+Marvin <marvin@bisotti.de>=Marvin <fangohr@soton.ac.uk>
 Maximilian Albert <maximilian.albert@gmail.com>=Maximilian Albert <maximilian.albert@soton.ac.uk>
 Maximilian Albert <maximilian.albert@soton.ac.uk>
 mb4e10 <mb4e10@soton.ac.uk>=Marijan Beg <mb4e10@soton.ac.uk>
@@ -53,7 +76,7 @@ mv3g08@soton.ac.uk=Mark Vousden <mark.vousden@soton.ac.uk>
 mvousden=Mark Vousden <mark.vousden@soton.ac.uk>
 Neil O'Brien <nsob104@gmail.com>=Neil O'Brien <nsob104@soton.ac.uk>
 Neil O'Brien <nsob104@soton.ac.uk>
-olaslett
+olaslett==Oliver Laslett <O.Laslett@soton.ac.uk>
 owl@osiris.soton.ac.uk=Oliver Laslett <O.Laslett@soton.ac.uk>
 Rebecca Carey <r.carey@soton.ac.uk>
 Weiwei Wang=Weiwei Wang <w.wang@soton.ac.uk>
