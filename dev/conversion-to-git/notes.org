@@ -1,0 +1,66 @@
+* <2015-05-15 Fri 13:50>
+
+Follow guidance at https://git-scm.com/book/en/v2/Git-and-Other-Systems-Migrating-to-Git#Mercurial
+
+git clone http://repo.or.cz/r/fast-export.git /tmp/fast-export
+
+mkdir /tmp/conv
+hg clone ssh://hg@bitbucket.org/fangohr/finmag /tmp/conv/hg-repo
+
+cd /tmp/conv/hg-repo
+
+hg log | grep user: | sort | uniq | sed 's/user: *//' > ../authors
+
+
+
+* Authors conversion file:
+
+Anders Johansen <anders.e.johansen@gmail.com>
+davidcorteso <david.cortes.o@gmail.com>=<d.i.cortes@soton.ac.uk>
+davidcorteso <dic1e13@soton.ac.uk>=<d.i.cortes@soton.ac.uk>
+davidcorteso <d.i.cortes@soton.ac.uk>
+Dmitri Chernyshenko <d.chernyshenko@soton.ac.uk>
+Gabriel Balaban <gabrib@math.uio.no>=Gabriel Balaban <G.Balaban@soton.ac.uk>
+Gabriel Balaban <G.Balaban@soton.ac.uk>
+Gabriel Balaban <gblf11@soton.ac.uk>=Gabriel Balaban <G.Balaban@soton.ac.uk>
+GabrielB <gabrib@math.uio.no>=Gabriel Balaban <G.Balaban@soton.ac.uk>
+Hagen Fuchs <code@hfuchs.net>
+Hans Fangohr [eta] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [iota] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [Lubuntu-VM on MBA] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [MBA] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [MBP13,2011] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [Mint VBox MBA] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [osiris] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [summer.kk] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr <VBox Ubunt 12.10 MBA>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [vBox-Ubuntu12-04b] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [vBox-Ubuntu12-04c, MBA] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [virtualbox-1310-xubuntu-feb2014] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [Virtual Machine on MBP13,2011] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Hans Fangohr [VM Ubuntu 11.10] <fangohr@soton.ac.uk>=Hans Fangohr <fangohr@soton.ac.uk>
+Marc-Antonio Bisotti <mb8g11@soton.ac.uk>
+Marijan Beg <mb4e10@ecs.soton.ac.uk>=Marijan Beg <mb4e10@soton.ac.uk>
+Marijan Beg <mb4e10@soton.ac.uk>
+Mark Vousden <mark.vousden@soton.ac.uk>
+Marvin <fangohr@soton.ac.uk>
+Marvin <marvin@bisotti.de>
+Maximilian Albert <maximilian.albert@gmail.com>=Maximilian Albert <maximilian.albert@soton.ac.uk>
+Maximilian Albert <maximilian.albert@soton.ac.uk>
+mb4e10 <mb4e10@soton.ac.uk>=Marijan Beg <mb4e10@soton.ac.uk>
+mv3g08@soton.ac.uk=Mark Vousden <mark.vousden@soton.ac.uk>
+mvousden=Mark Vousden <mark.vousden@soton.ac.uk>
+Neil O'Brien <nsob104@gmail.com>=Neil O'Brien <nsob104@soton.ac.uk>
+Neil O'Brien <nsob104@soton.ac.uk>
+olaslett
+owl@osiris.soton.ac.uk=Oliver Laslett <O.Laslett@soton.ac.uk>
+Rebecca Carey <r.carey@soton.ac.uk>
+Weiwei Wang=Weiwei Wang <w.wang@soton.ac.uk>
+Weiwei Wang<ww1g11@soton.ac.uk>=Weiwei Wang <w.wang@soton.ac.uk>
+Weiwei Wang <ww1g11@soton.ac.uk>=Weiwei Wang <w.wang@soton.ac.uk>
+Weiwei Wang <w.wang@soton.ac.uk>
+
+
+
+
