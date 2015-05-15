@@ -102,18 +102,18 @@ CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 # The number of make jobs to run in parallel
 N_SIMULTANEOUS_JOBS:=$(shell grep -ci processor /proc/cpuinfo)
 
-FINMAGDIST_REVISION ?= tip
+FINMAGDIST_REVISION ?= HEAD
 
-REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
-REVISION_ID = $(shell hg --debug id -i -r ${FINMAGDIST_REVISION})
+#REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
+REVISION_ID = $(shell git rev-parse ${FINMAGDIST_REVISION})
 
 # TODO: This is probably not the best place for this target, but at
 #       least it ensures that the version is re-generated whenever the
 #       native code is compiled, so we are always up to date.
 add_version: .add_version
 .add_version: $(BUILD_TARGETS)
-	@echo "FINMAG_VERSION: ${REVISION_NR}:${REVISION_ID}"
-	@echo '__version__ = "${REVISION_NR}:${REVISION_ID}"' > ../src/finmag/__version__.py
+	@echo "FINMAG_VERSION: ${REVISION_ID}"
+	@echo '__version__ = "${REVISION_ID}"' > ../src/finmag/__version__.py
 	touch .add_version
 
 # Builds the whole project
