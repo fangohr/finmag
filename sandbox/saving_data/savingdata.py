@@ -68,7 +68,6 @@ class LoadingData(object):
 
     def load_field(self, field_name, t):
         index = np.where(self.t_array==t)[0][0]
-        print index
 
         name = field_name + str(index)
 
