@@ -17,7 +17,7 @@ class SavingData(object):
         self.functionspace = functionspace
         self.h5filename = h5filename
         self.npzfilename = npzfilename
-        self.h5file = df.HDF5File(self.functionspace.mesh().mpi_comm(), self.h5filename, 'w')
+        self.h5file = df.HDF5File(df.mpi_comm_world(), self.h5filename, 'w')
         self.jsonfilename = jsonfilename
         
         self.field_index = 0
@@ -54,7 +54,7 @@ class SavingData(object):
         self.h5file.write(self.functionspace.mesh(), name)
 
     def close(self):
-        self.h5file.close()
+        self.h5file.close(df.mpi_comm_world())
 
 
 class LoadingData(object):
@@ -62,7 +62,7 @@ class LoadingData(object):
         self.functionspace = functionspace
         self.h5filename = h5filename
         self.npzfilename = npzfilename
-        self.h5file = df.HDF5File(self.functionspace.mesh().mpi_comm(), self.h5filename, 'r')
+        self.h5file = df.HDF5File(df.mpi_comm_world(), self.h5filename, 'r')
         self.jsonfilename = jsonfilename
 
         npzfile = np.load(self.npzfilename)

@@ -27,7 +27,8 @@ sdata.save_field(f1, 'm', t=0)
 sdata.save_field(f2, 'm', t=1e-12)
 sdata.save_field(f3, 'm', t=2e-12)
 
-sdata.close()
+# Temporarily disable close. Problems on virtual machine.
+#sdata.close()
 
 
 # LOADING DATA.
@@ -43,7 +44,8 @@ f1lj = ldata.load_field_with_json_data(field_name='m', t=0)
 f2lj = ldata.load_field_with_json_data(field_name='m', t=1e-12)
 f3lj = ldata.load_field_with_json_data(field_name='m', t=2e-12)
 
-ldata.close()
+# Temporarily disable closing. Problems on virtual machine.
+# ldata.close()
 
 # ASSERTIONS. Is the saved data the same as loaded.
 assert np.all(mesh.coordinates() == meshl.coordinates())
