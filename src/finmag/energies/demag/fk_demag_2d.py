@@ -87,7 +87,7 @@ class Demag2D(FKDemag):
 
     def create_dg3_from_dg2(self, mesh, dg2):
 
-        dg3 = df.FunctionSpace(mesh, 'DG', 0)
+        self.dg3 = df.FunctionSpace(mesh, 'DG', 0)
 
         class HelperExpression(df.Expression):
 
@@ -99,7 +99,7 @@ class Demag2D(FKDemag):
                 value[0] = self.fun((x[0], x[1]))
 
         hexp = HelperExpression(dg2)
-        fun = df.interpolate(hexp, dg3)
+        fun = df.interpolate(hexp, self.dg3)
 
         return fun
 
@@ -137,7 +137,8 @@ class Demag2D(FKDemag):
 
         self.build_mapping(S3, V3)
 
-        Ms_dg3 = self.create_dg3_from_dg2(mesh3, Ms)
+        Ms_dg3_value = self.create_dg3_from_dg2(mesh3, Ms)
+        Ms_dg3 = Field(self.dg3, Ms_dg3_value)
 
         super(Demag2D, self).setup(mm, Ms_dg3, unit_length)
 
