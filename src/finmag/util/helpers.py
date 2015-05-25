@@ -251,9 +251,9 @@ def get_hg_revision_info(repo_dir, revision='tip'):
 
 def get_git_revision_info(repo_dir, revision='HEAD'):
     """
-    Return the revision id and the date of a revision in the given github repository. 
+    Return the revision id and the date of a revision in the given github repository.
     For examaple, the information returned should looks like,
-    
+
     """
     cwd_bak = os.getcwd()
     try:
@@ -269,7 +269,7 @@ def get_git_revision_info(repo_dir, revision='HEAD'):
 
     except sp.CalledProcessError:
         raise ValueError(
-            "Invalid revision '{}', or invalid Mercurial repository: '{}'".format(revision, repo_dir))
+            "Invalid revision '{}', or invalid Git repository: '{}'".format(revision, repo_dir))
 
     os.chdir(cwd_bak)
     return rev_id, rev_date
@@ -1825,7 +1825,7 @@ def build_maps(functionspace, dim=3, scalar=False):
         d2v_xxx[i] = (j%dim)*n1/dim + (j/dim)
 
     n = n1 - n2
-    
+
     """
     #in the presence of pbc, n1 > n2, here we try to reduce the length of v2d_xyz.
     if n>0:
@@ -1849,7 +1849,7 @@ def build_maps(functionspace, dim=3, scalar=False):
                     if v2d_xyz2[k] == j:
                         d2v_xyz2[i] = k
                         break
-        
+
         v2d_xxx2 = ((v2d_xyz2.reshape(n2/dim, dim)).transpose()).reshape(-1,)
 
         d2v_xxx2 = d2v_xyz2.copy()
@@ -1857,11 +1857,11 @@ def build_maps(functionspace, dim=3, scalar=False):
             j = d2v_xyz2[i]
             d2v_xxx2[i] = (j%dim)*n2/dim + (j/dim)
     """
-    
+
     if scalar:
         return v2d_xyz, d2v_xyz
 
-            
+
     #we then build new mappings for order xxx rather xyz
 
 
