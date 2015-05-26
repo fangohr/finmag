@@ -266,13 +266,14 @@ def get_git_revision_info(repo_dir, revision='HEAD'):
         rev_id = sp.check_output(['git', 'rev-parse',  revision]).strip()
         rev_date = sp.check_output(
             ['git', 'show', '-s', '--format=%ci',revision]).split()[0]
+        rev_nr = sp.check_output(['git', 'rev-list', '--count', revision])
 
     except sp.CalledProcessError:
         raise ValueError(
             "Invalid revision '{}', or invalid Git repository: '{}'".format(revision, repo_dir))
 
     os.chdir(cwd_bak)
-    return rev_id, rev_date
+    return rev_nr, rev_id, rev_date
 
 def binary_tarball_name(repo_dir, revision='HEAD', suffix=''):
     """
