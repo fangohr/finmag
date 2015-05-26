@@ -299,8 +299,8 @@ def binary_tarball_name(repo_dir, revision='HEAD', suffix=''):
     # XXX TODO: Should we also check whether the repo is actually a Finmag
     # repository?!?
     rev_nr, rev_id, rev_date = get_git_revision_info(repo_dir, revision)
-    tarball_name = "FinMag-dist__{}__rev{}_{}{}.tar.bz2".format(
-        rev_date,  rev_nr, rev_id, suffix)
+    tarball_name = "FinMag-dist__{}__{}{}.tar.bz2".format(
+        rev_date,  rev_id, suffix)
     return tarball_name
 
 
