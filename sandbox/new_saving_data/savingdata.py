@@ -36,7 +36,7 @@ class SavingData(object):
 
         self.fieldsDict[field_name][name] = t
         self.fieldsDict['fs_family'] = self.functionspace.ufl_element().family()
-        self.fieldsDict['dim'] = self.functionspace.ufl_element().degree()
+        self.fieldsDict['dim'] = self.functionspace.ufl_element().value_shape()[0]
 
         with open(self.jsonfilename, 'w') as jsonfile:
             json.dump(self.fieldsDict, jsonfile, sort_keys=False)
