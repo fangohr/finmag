@@ -1472,3 +1472,43 @@ def mesh_is_periodic(mesh, axes):
 
     # No a-periodicity found, hence the mesh is periodic
     return True
+
+
+def regular_polygon(n,r,f):
+	"""
+	Returns a dolfin mesh representing a 2D polygon with the following parameters
+	n = number of sides
+	r = distance from centre to a vertex
+	f = fineness of mesh
+	"""
+	theta=2*math.pi/n
+	csg = ""
+	for i in range(0,n):
+		csg = csg + "Point({})  = {{{}, {}, 0, {}}}; \n".format(i+1,r*math.cos(theta*i),r*math.sin(theta*i),f)
+	csg = csg + "\n"   
+	for i in range(1,n+1):
+		if (i==n):
+			csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,1)
+		else:
+			csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,i+1)
+	csg = csg + "\nLine Loop(1) = {"
+	for i in range(1,n+1):
+		csg=csg+"{}".format(i)
+		if (i!=n):
+			csg+=","
+	csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+	filename = filename="polygon_{}_{}_{}".format(n,r,f)
+	csg_saved=open(filename+".geo",'w')
+	csg_saved.write(csg)
+	csg_saved.close()
+	cmd="gmsh " + filename + ".geo -2 -o "+filename+".msh"
+	os.system(cmd)
+	cmd="dolfin-convert "+filename+".msh "+filename+".xml"
+	os.system(cmd)
+	mesh = df.Mesh(filename+".xml")
+	cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
+	os.system(cmd)
+	return mesh
+
+
+
