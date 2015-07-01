@@ -214,3 +214,11 @@ def test_mesh_is_periodic(tmpdir):
     assert mesh_is_periodic(mesh_box, 'x')
     #assert mesh_is_periodic(mesh_box, 'y')
     assert mesh_is_periodic(mesh_box, 'xy')
+
+def test_regular_polygon():
+	testmesh = regular_polygon(6,50,5)
+	assert np.max(testmesh.coordinates()) == 50
+	assert np.min(testmesh.coordinates()) == -50
+
+	
+	
