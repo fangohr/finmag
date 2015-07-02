@@ -1474,28 +1474,33 @@ def mesh_is_periodic(mesh, axes):
     return True
 
 
-def regular_polygon(n,r,f):
+def regular_polygon(n, r, f):
     """
-    Returns a dolfin mesh representing a 2D polygon with the following parameters
+    Returns a dolfin mesh representing a 2D polygon with the 
+    following parameters
+    
     n = number of sides
     r = distance from centre to a vertex
     f = fineness of mesh
     """
-    theta=2*math.pi/n
+    theta = 2*math.pi/n
     csg = ""
-    for i in range(0,n):
-        csg = csg + "Point({})  = {{{}, {}, 0, {}}}; \n".format(i+1,r*math.cos(theta*i),r*math.sin(theta*i),f)
+    for i in range(0, n):
+        csg = csg + "Point({}) = {{{}, {}, 0, {}}};\n".format(i+1,
+                                                              r*math.cos(theta*i),
+                                                              r*math.sin(theta*i),
+                                                              f)
     csg = csg + "\n"   
-    for i in range(1,n+1):
+    for i in range(1, n+1):
         if (i==n):
-            csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,1)
+            csg = csg + "Line({}) = {{{},{}}}; \n".format(i,i,1)
         else:
-            csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,i+1)
+            csg = csg + "Line({}) = {{{},{}}}; \n".format(i,i,i+1)
     csg = csg + "\nLine Loop(1) = {"
-    for i in range(1,n+1):
-        csg=csg+"{}".format(i)
+    for i in range(1, n+1):
+        csg = csg + "{}".format(i)
         if (i!=n):
-            csg+=","
+            csg += ","
     csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
     filename = filename="polygon_{}_{}_{}".format(n,r,f)
     csg_saved=open(filename+".geo",'w')
@@ -1512,3 +1517,53 @@ def regular_polygon(n,r,f):
 
 
 
+def regular_polygon_extruded(n,r,t,f):
+    """
+    Returns a dolfin mesh representing a 2D polygon with the 
+    following parameters. For a 2D mesh set t = 0
+ 
+    Number of layers is calculated by taking the ceiling of the value t/f
+    n = number of sides
+    r = distance from centre to a vertex
+    f = fineness of mesh
+    t = extrude thickness
+    
+    """
+    theta = 2*math.pi/n
+    csg = ""
+    n_layers = math.ceil(t/f)
+    for i in range(0,n):
+        csg = csg + "Point({})  = {{{}, {}, 0, {}}}; \n".format(i+1, r*math.cos(theta*i), r*math.sin(theta*i),f)
+    csg = csg + "\n"   
+    for i in range(1,n+1):
+        if (i==n):
+            csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,1)
+        else:
+            csg = csg+"Line({}) = {{{},{}}}; \n".format(i,i,i+1)
+    csg = csg + "\nLine Loop(1) = {"
+    for i in range(1,n+1):
+        csg=csg+"{}".format(i)
+        if (i!=n):
+            csg += ","
+    csg += "};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+    if (t!=0):
+        n_layers = math.ceil(t/f)
+        csg += "\n\nExtrude {{0,0,{}}} {{\nSurface{{1}}; \nLayers{{{}}};\n}}".format(t,n_layers)
+        filename = "polygon_ext_{}_{}_{}_{}".format(n,r,t,f)
+    else:
+        filename = "polygon_{}_{}_{}".format(n,r,f)
+    print csg
+    csg_saved=open(filename+".geo",'w')
+    csg_saved.write(csg)
+    csg_saved.close()
+    if (t==0):
+        cmd = "gmsh " + filename + ".geo -2 -o " + filename + ".msh"
+    else:
+        cmd = "gmsh " + filename + ".geo -3 -o " + filename + ".msh"
+    os.system(cmd)
+    cmd = "dolfin-convert "+filename+".msh "+filename+".xml"
+    os.system(cmd)
+    mesh = df.Mesh(filename+".xml")
+    cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
+    os.system(cmd)
+    return mesh

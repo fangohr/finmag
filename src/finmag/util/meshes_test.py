@@ -220,5 +220,6 @@ def test_regular_polygon():
     assert np.max(testmesh.coordinates()) == 50
     assert np.min(testmesh.coordinates()) == -50
 
-	
-	
+def test_regular_polygon_extruded():
+    testmesh = regular_polygon_extruded(5,50,30,10)
+    assert np.amax(testmesh.coordinates(),axis=0)[0] == 50
