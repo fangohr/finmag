@@ -581,6 +581,19 @@ class TestSimulation(object):
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [1, 2, 3]))
 
+    def test_set_m(self):
+        """
+        Test to ensure m is not set with illegal values (such a NaNs)
+
+        """
+        def m_init_nan(pos):
+            return [np.NaN, 1, 1]
+
+        mesh =  df.BoxMesh(0,0,0,1,1,1,1,1,1)
+        sim = Simulation(mesh, Ms=1e5, unit_length=1e-9)
+        with pytest.raises(ValueError):
+            sim.set_m(m_init_nan)
+
     @pytest.mark.skipif("not LooseVersion(df.__version__) < LooseVersion('1.2.0')")
     def test_pbc2d_m_init(self):
 
