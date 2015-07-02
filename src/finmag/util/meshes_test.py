@@ -217,6 +217,7 @@ def test_mesh_is_periodic(tmpdir):
 
 def test_regular_polygon():
     testmesh = regular_polygon(6,50,5)
+    testmesh = regular_polygon(6,50,5)
     assert np.max(testmesh.coordinates()) == 50
     assert np.min(testmesh.coordinates()) == -50
 
