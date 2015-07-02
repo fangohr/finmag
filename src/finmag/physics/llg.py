@@ -224,6 +224,10 @@ class LLG(object):
 
         """
         m0 = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector().array()[self.v2d_xxx]
+
+        if np.any(np.isnan(m0)):
+            raise ValueError("Attempting to initialise m with NaN(s)")
+
         if normalise:
             m0 = helpers.fnormalise(m0)
         self._m_field.set_with_ordered_numpy_array_xxx(m0)
