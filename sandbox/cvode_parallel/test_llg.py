@@ -29,6 +29,7 @@ class Test(object):
         m_init = df.Constant([1, 1, 1.0])
         self.m = df.interpolate(m_init, self.S3)
         self.field = df.interpolate(m_init, self.S3)
+        self.dmdt = df.interpolate(m_init, self.S3)
         self.spin = self.m.vector().array()
         self.t = 0
         
@@ -62,7 +63,11 @@ class Test(object):
         self.m_petsc = df.as_backend_type(self.llg.m_field.f.vector()).vec()
         self.h_petsc = df.as_backend_type(self.field.vector()).vec()
         self.alpha_petsc = df.as_backend_type(self._alpha.vector()).vec()
-        
+        self.dmdt_petsc = df.as_backend_type(self.dmdt.vector()).vec()
+        alpha = 0.2
+        gamma = 2.21e5
+        LLG1 = -gamma/(1+alpha*alpha)*df.cross(self.m, self.field) - alpha*gamma/(1+alpha*alpha)*df.cross(self.m, df.cross(self.m, self.field))
+        self.L = df.dot(LLG1, df.TestFunction(self.S3)) * df.dP
 
     def set_up_solver(self, rtol=1e-8, atol=1e-8):
         
@@ -73,14 +78,11 @@ class Test(object):
         
         self.llg.effective_field.update(t)
         self.field.vector().set_local(self.llg.effective_field.H_eff)
-
-        llg_petsc.compute_dm_dt(y,
-                                self.h_petsc,
-                                ydot,
-                                self.alpha_petsc,
-                                self.llg.gamma,
-                                self.llg.do_precession,
-                                self.llg.c)
+        
+        #print y, self.h_petsc, self.m_petsc
+        y.copy(self.m_petsc)
+        df.assemble(self.L, tensor=self.dmdt.vector())
+        self.dmdt_petsc.copy(ydot)
 
         return 0
 
@@ -88,6 +90,7 @@ class Test(object):
         
         if t <= self.t:
             ode = self.ode
+            self.spin = self.m.vector().array()
             return
         
         ode = self.ode
@@ -110,7 +113,7 @@ def plot_m(ts, m):
     plt.plot(ts, m, "-", label="m", color='DarkGreen')
     plt.xlabel('Time')
     plt.ylabel('energy')
-    plt.savefig('m_rank_%d.pdf'%rank)
+    plt.savefig('mm_rank_%d.pdf'%rank)
 
 
 
@@ -127,12 +130,14 @@ if __name__ == '__main__':
     
     #file = df.File('u_time.pvd')
     file = df.HDF5File(sim.m.vector().mpi_comm(),'test.h5','w')
-    
+    mm = []
+    tt=[]
     for t in ts:
         sim.run_until(t)
         print t, sim.spin[0]
         #sim.field.vector().set_local(sim.llg.effective_field.H_eff)
         file.write(sim.m,'/m_%g'%t)
         energy.append(sim.llg.effective_field.total_energy())
-        
-    plot_m(ts,energy)
+        mm.append(sim.spin[0])
+        tt.append(t)
+    plot_m(tt,mm)
