@@ -8,7 +8,7 @@ import finmag.native.llg_petsc as llg_petsc
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange, Zeeman, Demag
 
-df.parameters.reorder_dofs_serial = True
+df.parameters.reorder_dofs_serial = False
 from mpi4py import MPI
 
 comm = MPI.COMM_WORLD
@@ -64,7 +64,7 @@ class Test(object):
         self.h_petsc = df.as_backend_type(self.field.vector()).vec()
         self.alpha_petsc = df.as_backend_type(self._alpha.vector()).vec()
         self.dmdt_petsc = df.as_backend_type(self.dmdt.vector()).vec()
-        alpha = 0.2
+        alpha = 0.001
         gamma = 2.21e5
         LLG1 = -gamma/(1+alpha*alpha)*df.cross(self.m, self.field) - alpha*gamma/(1+alpha*alpha)*df.cross(self.m, df.cross(self.m, self.field))
         self.L = df.dot(LLG1, df.TestFunction(self.S3)) * df.dP
@@ -83,6 +83,15 @@ class Test(object):
         y.copy(self.m_petsc)
         df.assemble(self.L, tensor=self.dmdt.vector())
         self.dmdt_petsc.copy(ydot)
+        """
+        #llg_petsc.compute_dm_dt(y,
+                                self.h_petsc,
+                                ydot,
+                                self.alpha_petsc,
+                                self.llg.gamma,
+                                self.llg.do_precession,
+                                self.llg.c)
+        """
 
         return 0
 
