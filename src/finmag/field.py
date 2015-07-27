@@ -13,6 +13,7 @@ import logging
 import dolfin as df
 import numpy as np
 import numbers
+from finmag.util.dolfinh5tools import savingdata
 from finmag.util import helpers
 from finmag.util.helpers import expression_from_python_function
 from finmag.util.visualization import plot_dolfin_function
@@ -584,13 +585,31 @@ class Field(object):
         pvd_file = df.File(filename)
         pvd_file << self.f
 
-    def save(self, filename):
-        """Dispatches to specialists"""
-        raise NotImplementedError
+    def save_hdf5(self, filename, t):
+        """
+        Save field to h5 file and corresponding Meta data (times at which field is saved),
+        which is saved to a json file.
 
-    def save_hdf5(self, filename):
-        """Save to hdf5 file using dolfin code"""
-        raise NotImplementedError
+        Arguments:
+        filename - filename of data to be saved. This will produce
+                   filename.h5
+                   filename.json
+
+        t        - time at which the file is being save
+                   it is recomended that this is taken from sim.t
+
+        When simulation/field saving is finished, it is recomended that closeh5() is
+        called.
+
+        """
+        # ask if file has already been created. If not, create it
+        if not hasattr(self, 'h5fileWrite'):
+            self.h5fileWrite = savingdata.Create(filename, self.functionspace)
+        self.h5fileWrite.save_field(self.f, self.name, t)
+
+    def close_hdf5(self):
+        if hasattr(self, 'h5fileWrite'):
+            self.h5fileWrite.close()
 
     def load_hdf5(self, filename):
         """Load field from hdf5 file using dolfin code"""
