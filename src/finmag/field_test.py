@@ -1512,3 +1512,36 @@ class TestField(object):
             if vdim > 1:
                 with pytest.raises(ValueError):
                     f.get_ordered_numpy_array()
+
+
+    def test_save_hdf5(self):
+        """
+        Test saving of field to hdf5 and corresponding metadata to json file.
+
+        TODO: this test is very basic. It currently only checks if relevant
+        files are creates. Values which are saves are NOT currently checked.
+
+        """
+
+        # Define base filename to save data to.
+        filename = 'test_save_field'
+        # define name of field
+        fieldname = 'f'
+
+        expression = df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])
+
+        # Define and set field
+        field = Field(functionspace=self.fs3d_vector3d, name=fieldname)
+        field.set(expression)
+
+        # save field to h5 file
+        field.save_hdf5(filename, t=1.0)
+        field.close_hdf5()
+
+        # check that files have been created
+        assert(os.path.isfile(filename + '.h5'))
+        assert(os.path.isfile(filename + '.json'))
+
+        # remove created files
+        os.remove(filename + '.h5')
+        os.remove(filename + '.json')
