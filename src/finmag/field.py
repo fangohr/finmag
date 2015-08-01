@@ -13,6 +13,7 @@ import logging
 import dolfin as df
 import numpy as np
 import numbers
+import os
 from finmag.util.dolfinh5tools import savingdata
 from finmag.util import helpers
 from finmag.util.helpers import expression_from_python_function
@@ -589,6 +590,9 @@ class Field(object):
         """
         Save field to h5 file and corresponding Meta data (times at which field is saved),
         which is saved to a json file.
+
+        Note, the mesh is automatically saved into this file as it is required by
+        load_hdf5, which could potentially be called at a later date.
 
         Arguments:
         filename - filename of data to be saved. This will produce
