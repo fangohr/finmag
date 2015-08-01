@@ -613,12 +613,69 @@ class Field(object):
         self.h5fileWrite.save_field(self.f, self.name, t)
 
     def close_hdf5(self):
+        """Close hdf5 file. Delete the saving object variable."""
+
         if hasattr(self, 'h5fileWrite'):
             self.h5fileWrite.close()
+            del self.h5fileWrite
 
-    def load_hdf5(self, filename):
-        """Load field from hdf5 file using dolfin code"""
-        raise NotImplementedError
+    def load_hdf5(self, filename, t):
+        """
+        Load field from hdf5 file using dolfingh5tools and return this field.
+
+        Arguments:
+
+        filename: Filename of h5 file containing field to be loadedField
+                  This can either have the filename extension or not.
+
+        t: In h5 file, the field should have been saved at specific times.
+           Here t references to the time at which the field was originally saved
+           Thus, to the field form time, t, which you want to load
+
+        """
+        # Strip filename of file extension type.
+        baseFilename = os.path.splitext(filename)[0]
+        h5Filename = baseFilename + '.h5'
+        jsonFilename = baseFilename + '.json'
+
+        # check if h5 file exists
+        if not os.path.isfile(h5Filename):
+            raise IOError('The hdf5 file, {}, does not exist.'.format(h5Filename))
+
+        # check if corresponding json file exists
+        if not os.path.isfile(jsonFilename):
+            raise IOError('The corresponding json file, {}, does not exist.'.format(jsonFilename))
+
+        # create dolfinh5tools Read object
+        h5fileRead = savingdata.Read(baseFilename)
+
+        # check that field type to be loaded exists in saves file
+        h5fileFields = h5fileRead.get_fields()
+        if not unicode(self.name) in h5fileFields:
+            raise IOError('The field type, {}, to be loaded does not exist in {}. '
+                          'The availble field types are {}'.format(self.name, h5Filename, h5fileFields))
+
+        # check that field has been saved at that particular time.
+        h5fieldTimes = h5fileRead.get_times(self.name)
+        if not t in h5fieldTimes:
+            raise IOError('The field, {} at requested time, {}, does not exist for this specified time. '
+                          'Check json file for times at which field was saved'.format(self.name, t, h5Filename))
+
+        # check if mesh in file matches field object mesh
+        # this is done by comparing the coordinates of the
+        # saved mesh and the function space mesh.
+        h5fileMesh = h5fileRead.load_mesh()
+        if not (h5fileMesh.coordinates() == self.functionspace.mesh().coordinates()).all():
+            raise IOError('The coordinated of the saved mesh do not match the coordinates'
+                          'of the mesh associated with the simulation object/the field, {}.'.format(self.name))
+
+        # load field
+        loadedField = h5fileRead.load_field(self.name, t)
+
+        # close hdf5 file
+        h5fileRead.close()
+
+        return loadedField
 
     def plot_with_dolfin(self, interactive=True):
         df.plot(self.f, interactive=True)
