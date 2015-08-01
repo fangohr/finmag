@@ -1552,7 +1552,6 @@ def regular_polygon_extruded(n,r,t,f):
         filename = "polygon_ext_{}_{}_{}_{}".format(n,r,t,f)
     else:
         filename = "polygon_{}_{}_{}".format(n,r,f)
-    print csg
     csg_saved=open(filename+".geo",'w')
     csg_saved.write(csg)
     csg_saved.close()
