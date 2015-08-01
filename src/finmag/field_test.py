@@ -1513,15 +1513,15 @@ class TestField(object):
                 with pytest.raises(ValueError):
                     f.get_ordered_numpy_array()
 
-
-    def test_save_hdf5(self):
+    def test_save_and_load_hdf5(self):
         """
-        Test saving of field to hdf5 and corresponding metadata to json file.
-
-        TODO: this test is very basic. It currently only checks if relevant
-        files are creates. Values which are saves are NOT currently checked.
+        Test saving and loading of field to hdf5 and corresponding metadata
+        to json file.
 
         """
+        # -----------------------------------------------------------------
+        # Create test data and files
+        # -----------------------------------------------------------------
 
         # Define base filename to save data to.
         filename = 'test_save_field'
@@ -1536,12 +1536,55 @@ class TestField(object):
 
         # save field to h5 file
         field.save_hdf5(filename, t=1.0)
+        field.save_hdf5(filename, t=2.0)
+
+        # close hdf5 file
         field.close_hdf5()
 
+        # -----------------------------------------------------------------
+        # Test saving of data has created relevant files
+        # -----------------------------------------------------------------
         # check that files have been created
         assert(os.path.isfile(filename + '.h5'))
         assert(os.path.isfile(filename + '.json'))
 
-        # remove created files
+        # -----------------------------------------------------------------
+        # Test loading of data
+        # -----------------------------------------------------------------
+
+        # test error occurs if hdf5/json file doesn't exist
+        with pytest.raises(IOError):
+            field.load_hdf5('false_file_name', t=1.0)
+
+        # test if error is raised if field type doesn't exist in h5 file
+        field.name = 'false_f'
+        with pytest.raises(IOError):
+            field.load_hdf5(filename, t=1.0)
+        field.name = 'f'
+
+        # test if error is raised if non-existant times is given
+        with pytest.raises(IOError):
+            field.load_hdf5(filename, t=1.1111)
+
+        # test if error is raised if h5file mesh doesn't match field
+        # object mesh. Create h5 file with different mesh.
+        # First create h5 (as json) file with a 2D mesh. Then try to load
+        # this file with the field object, which is 3D
+        from finmag.util.dolfinh5tools import savingdata
+        h5FileIncorrectMesh = savingdata.Create('test_hdf5_false_mesh', self.fs2d_vector3d)
+        h5FileIncorrectMesh.save_mesh()
+        with pytest.raises(IOError):
+            field.load_hdf5('test_hdf5_false_mesh', t=1.0)
+
+        # check saved field matches loaded field
+        loadedField = field.load_hdf5(filename, t=1.0)
+        assert np.all(field.vector().array() == loadedField.vector().array())
+
+        # -----------------------------------------------------------------
+        # Delete files
+        # -----------------------------------------------------------------
         os.remove(filename + '.h5')
         os.remove(filename + '.json')
+        os.remove('test_hdf5_false_mesh' + '.h5')
+        os.remove('test_hdf5_false_mesh' + '.json')
+        
