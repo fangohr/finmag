@@ -602,13 +602,14 @@ class Field(object):
         t        - time at which the file is being save
                    it is recomended that this is taken from sim.t
 
-        When simulation/field saving is finished, it is recomended that closeh5() is
+        When simulation/field saving is finished, it is recomended that close_hdf5() is
         called.
 
         """
         # ask if file has already been created. If not, create it
         if not hasattr(self, 'h5fileWrite'):
             self.h5fileWrite = savingdata.Create(filename, self.functionspace)
+            self.h5fileWrite.save_mesh()
         self.h5fileWrite.save_field(self.f, self.name, t)
 
     def close_hdf5(self):
