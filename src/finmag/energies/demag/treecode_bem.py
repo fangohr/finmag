@@ -214,11 +214,7 @@ if __name__ == "__main__":
 
     import time
 
-    fk = FKDemag()
-    fk.setup(m, Ms, unit_length=1e-9)
-    start = time.time()
-    f1 = fk.compute_field()
-    stop = time.time()
+
 
     demag = TreecodeBEM(
         mac=0.4, p=5, num_limit=1, correct_factor=10, type_I=False)
@@ -226,6 +222,12 @@ if __name__ == "__main__":
     start2 = time.time()
     f2 = demag.compute_field()
     stop2 = time.time()
+
+    fk = FKDemag()
+    fk.setup(m, Ms, unit_length=1e-9)
+    start = time.time()
+    f1 = fk.compute_field()
+    stop = time.time()
 
     f3 = f1 - f2
     print f1[0:10], f2[0:10]

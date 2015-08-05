@@ -2,7 +2,6 @@ import dolfin as df
 import numpy as np
 import logging
 from finmag.util.consts import mu0
-from finmag.util.timings import mtimed
 from finmag.util import helpers
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
@@ -392,7 +391,7 @@ class ExchangeDG2(object):
         self.in_jacobian=in_jacobian
         self.name = name
    
-    @mtimed
+    #@mtimed
     def setup(self, DG3, m, Ms, unit_length=1.0): 
         self.DG3 = DG3
         self.m = m
@@ -470,7 +469,7 @@ class ExchangeDG2(object):
         self.m_x = df.PETScVector(self.m.vector().size()/3)
         
     
-    @mtimed
+    #@mtimed
     def compute_field(self):
         
         mm = self.m.vector().array()
@@ -509,7 +508,7 @@ class ExchangeDG_bak(object):
         self.in_jacobian=in_jacobian
         self.name = name
    
-    @mtimed
+    #@mtimed
     def setup(self, DG3, m, Ms, unit_length=1.0): 
         self.DG3 = DG3
         self.m = m
@@ -567,7 +566,7 @@ class ExchangeDG_bak(object):
         # to store the exchange fields
         self.H = df.PETScVector()
     
-    @mtimed
+    #@mtimed
     def compute_field(self):
         
         # b = K2 * m 
