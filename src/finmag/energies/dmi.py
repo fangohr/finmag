@@ -9,6 +9,8 @@ logger = logging.getLogger('finmag')
 
 
 class DMI(EnergyBase):
+    # TODO Update docstring for multiple DMI values and new dmi_types;
+    # see LI_assembler().
     """
     Compute the Dzyaloshinskii-Moriya Interaction (DMI) field.
 
@@ -79,12 +81,20 @@ class DMI(EnergyBase):
     def setup(self, m, Ms, unit_length=1):
         # Create an exchange constant Field object A in DG0 function space.
         dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
-        self.D = Field(dg_functionspace, self.D_value, name='D')
+        # Coercing any scalar values into a list here.  Not too elegant, but
+        # it simplifies the treatment in LI_assembler().  The (possible)
+        # deprecation of DMI_interfacial will simplify it again.
+        if type(self.D_value) == list:
+            self.D = [ Field(dg_functionspace, x, name='D') for x in self.D_value ]
+        else:
+            self.D = [ Field(dg_functionspace, self.D_value, name='D') ]
         del(self.D_value)
 
         # Multiplication factor used for dmi energy computation.
         self.dmi_factor = df.Constant(1.0/unit_length)
 
+        # TODO Why not remove all dimension handling?  The DMI terms
+        #      simply vanish if dimensions are reduced.
         if self.dmi_type is '1d':
             dmi_dim = 1
         elif self.dmi_type is '2d':
@@ -96,82 +106,157 @@ class DMI(EnergyBase):
 
         # Select the right expression for computing the dmi energy.
         if self.dmi_type is 'interfacial':
-            E_integrand = DMI_interfacial(m, self.dmi_factor*self.D.f,
-                                          dim=dmi_dim)
+            E_integrand = DMI_interfacial(m, self.dmi_factor*self.D[0].f, dim=dmi_dim)
         elif self.dmi_type in ['C_nv', 'D_n', 'D_2d', 'C_n', 'S_4']:
-            E_integrand = LI_assembler(m, self.dmi_factor*self.D.f, self.dmi_type)
+            D_fields = [ self.dmi_factor * x.f for x in self.D ]
+            E_integrand = LI_assembler(m, D_fields, self.dmi_type)
         else:
             E_integrand = self.dmi_factor*self.D.f*times_curl(m.f, dmi_dim)
 
         super(DMI, self).setup(E_integrand, m, Ms, unit_length)
 
-def LI_assembler(m, D, crystalsym):
-    """
-    This is the LI assembler for the terms as listed in ANB89.
-
-    Remember: "To stabilize vortex states, an additional
-    uniaxial anisotropy must be present." (Bogdanov 1994)
-
-    Also: Note the comments below on the exclusion of certain lifshitz
-    invariants.
-    """
-    #logger.info("Running LI assembler with type ", crystalsym)
+def LI_factory(m, d = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]):
+    """ Refer to LI_assembler() for a more in-depth explanation. """
+    #
+    # Collect the ingredients: 9 DMI constants (argument), magnetization
+    # components and all (first) spatial derivatives thereof.
+    #
+    mx = m.f[0]
+    my = m.f[1]
+    mz = m.f[2]
     gradm = df.grad(m.f)
-
-    # TODO How costly are these assignments?
     dmxdx = gradm[0, 0]
     dmydx = gradm[1, 0]
     dmzdx = gradm[2, 0]
     dmxdy = gradm[0, 1]
     dmydy = gradm[1, 1]
     dmzdy = gradm[2, 1]
-    # Not in use currently (see below):
-    #dmxdz = gradm[0, 2]
-    #dmydz = gradm[1, 2]
-    #dmzdz = gradm[2, 2]
+    dmxdz = gradm[0, 2]
+    dmydz = gradm[1, 2]
+    dmzdz = gradm[2, 2]
 
-    mx = m.f[0]
-    my = m.f[1]
-    mz = m.f[2]
-
-    # TODO (Bogdanov 1989) or (1994) notation?
-    w_1 = mz*dmxdx - mx*dmzdx + mz*dmydy - my*dmzdy
-    w_2 = mz*dmxdy - mx*dmzdy - mz*dmydx + my*dmzdx
-    # (Note: ANB89 uses w_1' and w_2' instead.)
-    w_3 = mz*dmxdx - mx*dmzdx - mz*dmydy + my*dmzdy
-    w_4 = mz*dmxdy - mx*dmzdy + mz*dmydx - my*dmzdx
-    #w_z = mx*dmydz - my*dmxdz  # w_3 in (Bogdanov 1994).
-
-    # Note: All terms w_z are left out!  ANB89: "We note also that the
-    # classes D_n and C_n admit the invariants [w_z] which can lead to
-    # the formation of a spiral structure with propagation vector along
-    # the z axis." (Bogdanov, Hubert 1994) says the same thing.
-
-    # Nota bene, the DMI_interfacial() below implements -w_1 (C_nv).
-
-    # TODO w_1...4 use actually only 4 distinct LIs:
-    # LIs, spelled out: m_i delta_j m_k - m_k delta_j m_i
     #
-    #w_1 = w_11 + w_12    w_2 = w_21 + w_22
-    #w_3 = w_11 - w_12    w_4 = w_21 - w_22
+    # Now built up the most general DMI term, 'total_dmi', which is composed
+    # of 9 Lifshitz invariants and corresponding DMI constants.  Selection of
+    # a particular crystal symmetry then reduces their number (drastically).
+    #
+    # The constants are named d[i] to slightly avoid headaches with the
+    # 'D' variable passed to the class constructor.
+    #
+    # TODO Insert deep insight about the cross-product nature and the
+    # resulting interpretation as regards crystal symmetry here.
+    # Something along the lines of: a Lifshitz invariant,
+    #   m_i \delta_\kappa m_j - m_j \delta_\kappa m_i
+    # describes a spiral state for |epsilon_{i,j,\kappa}| = 1,
+    # else, a helical state.
+    total_dmi = \
+    d[0]*(my*dmzdx - mz*dmydx) + \
+    d[1]*(my*dmzdy - mz*dmydy) + \
+    d[2]*(my*dmzdz - mz*dmydz) + \
+    d[3]*(mz*dmxdx - mx*dmzdx) + \
+    d[4]*(mz*dmxdy - mx*dmzdy) + \
+    d[5]*(mz*dmxdz - mx*dmzdz) + \
+    d[6]*(mx*dmydx - my*dmxdx) + \
+    d[7]*(mx*dmydy - my*dmxdy) + \
+    d[8]*(mx*dmydz - my*dmxdz)
 
-    # For now, I'll equate all different dmi constants.
-    a = a_1 = a_2 = a_3 = a_4 = a_5 = a_6 = D
-    # Note: At least C_nv and D_n admit w_z terms (see above)!
-    C_nv = a * w_1
-    D_n  = a_1 * w_2
-    D_2d = a_2 * w_4
-    C_n  = a_3 * w_1 + a_4 * w_2
-    S_4  = a_5 * w_3 + a_6 * w_4
+    return total_dmi
 
-    # TODO I'd really like a more elegant dispatch table here.  I want
-    # many other pretty things, too.
-    if crystalsym is 'C_nv':   return C_nv
-    elif crystalsym is 'D_n':  return D_n
-    elif crystalsym is 'D_2d': return D_2d
-    elif crystalsym is 'C_n':  return C_n
-    elif crystalsym is 'S_4':  return S_4
-    else: True # TODO Die?  Do nothing?  What?
+def LI_assembler(m, D, crystalsym):
+    """
+    This is the LI assembler for the terms as listed in ANB89.
+
+    The selection of DMI constants implies a specific crystal symmetry,
+    yet here we /start/ with the crystal symetry (argument) and
+    interpret the D's (argument, a list) accordingly.
+
+    And remember: "To stabilize vortex states, an additional
+    uniaxial anisotropy must be present." (Bogdanov 1994)
+    """
+    #
+    # Here's a short overview of DMI terms mentioned in literature.
+    #
+    ### A.N. Bogdanov and D.A. Yablonsky, Sov. Phys. JETP 95 (1989) 178:
+    #
+    #   C_nv: a' w_1,              D_n: a'_1 w_2,             D_2d: a'_2 w_2',
+    #   C_n: a'_3 w_1 + a'_4 w_2,  S_4: a'_5 w_1' + a'_6 w_2'
+    #
+    # where
+    #
+    #   a'_i are simply different DMI constants; and
+    #   w_i are composed of one or more lifshitz invariants (given here
+    #   directly as elements of total_dmi in LI_factory)
+    #
+    #   w_1  = d[3] - d[1],  w_2  = d[4] + d[0],
+    #   w_1' = d[3] + d[1],  w_2' = d[4] - d[0]
+    #   (w_3 = d[8])
+    #
+    # The d[i] refer to the terms in LI_factory (hence the array notation).
+    #
+    # Note, w_3 is mentioned, not treated:
+    # > We note also that the classes D_n and C_n admit the invariants
+    # > [w_3] which can lead to the formation of a spiral structure with
+    # > propagation vector along the z axis.
+    #
+    ### A.N. Bogdanov and A. Hubert, JMMM 138, 255 (1994):
+    #
+    # General term
+    #
+    #   w_D = a_1 w_1 + a_2 w_2 + a_3 w_3
+    #
+    # which, translated to LI_factory terms, becomes
+    #
+    #       = a_1 ( d[3] - d[1] ) +
+    #         a_2 ( d[4] + d[0] ) +
+    #         a_3 ( d[8] )
+    #
+    # These expressions correspond to C_nv (a_2 = 0) and D_n (a_1 = 0) above.
+    # The spiral structures in z direction (a_3 term), though explicitly
+    # included, are not treated in this paper, either.
+    #
+    ### Rohart, S. and Thiaville A., Phys. Rev. B 88, 184422 (2013):
+    #
+    # The 'interface term' becomes, in this notation,
+    #
+    #   a_0 ( -d[3] + d[1] )
+    #
+    # which, in Bogdanov's parlance is simply -C_nv
+    # (again, without the z-spiral, of course).
+
+    # And now, for the Elegant Dispatch Table(TM).
+    # TODO The dichotomy between d[] in LI_factory and D[] here is
+    # confusing and the table is very far from elegant.  Ideas?
+    #
+    # Check requirements for the different point groups, then let
+    # LI_factory construct the appropriate DMI term.
+    if crystalsym in ['C_nv', 'D_n', 'D_2d']:  # Requirements...
+        if not 1 <= len(D) <= 2:
+            logger.warning("Cannot initialize '", crystalsym, "': strictly one or two DMI constants necessary.")
+            return LI_factory(m) # TODO The empty interaction?  Rather: discard.
+        if len(D) == 1:  # No z-term given.
+            D.append(0)
+
+        # DMI construction
+        if crystalsym is 'C_nv':
+            return LI_factory(m, [0, -D[0], 0, D[0], 0, 0, 0, 0, D[1]])
+        elif crystalsym is 'D_n':
+            return LI_factory(m, [D[0], 0, 0, 0, D[0], 0, 0, 0, D[1]])
+        elif crystalsym is 'D_2d':
+            return LI_factory(m, [-D[0], 0, 0, 0, D[0], 0, 0, 0, D[1]])
+
+    elif crystalsym in ['C_n', 'S_4']:
+        if not len(D) == 2:
+            logger.warning("Cannot initialize '", crystalsym, "': strictly two DMI constants necessary.")
+            return LI_factory(m)
+
+        if crystalsym is 'C_n':
+            return LI_factory(m, [D[1], -D[0], 0, D[0], D[1], 0, 0, 0, 0])
+        elif crystalsym is 'S_4':
+            return LI_factory(m, [-D[1], D[0], 0, D[0], D[1], 0, 0, 0, 0])
+
+    else:
+        logger.warning("Unknown crystal symmetry: ", crystalsym)
+        return LI_factory(m)  # TODO Is this indeed a suitable no-op?
 
 def DMI_interfacial(m, D, dim):
     """
