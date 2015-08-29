@@ -134,7 +134,7 @@ CFLAGS_PYTHON=-I$(PYTHON_INCLUDE_DIR) -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_pytho
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
-CFLAGS_WARN=-Wall -Werror -Wno-error=unused-function
+CFLAGS_WARN=-Wall -Werror -Wno-error=unused-function -Wno-unused-local-typedefs
 # Add the source code directory to the include path
 CFLAGS_INCLUDE=-I$(abspath src) -I/$(NUMPY_INCLUDE_DIR) $(EXTRA_INCLUDE_FLAGS)
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
