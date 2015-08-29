@@ -75,6 +75,18 @@ OBJECT_FILES = $(patsubst %.cc,%.o,$(SOURCES))
 PRECOMPILED_HEADER_FILE=$(PRECOMPILED_HEADER_DIR)/finmag_includes.h.gch
 CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 
+# Determine Python version and Python-related include directories
+# from the Python installation itself instead of using hard-coded
+# values. This is necessary in case Python is installed in a non-
+# standard place (e.g. when using  Anaconda).
+#
+# You can configure which Python installation to use by setting
+# the PYTHON environment variable to your Python executable.
+PYTHON ?= python
+PYTHON_VERSION=$(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_version; print(get_python_version())')
+PYTHON_INCLUDE_DIR = $(shell $(PYTHON) -c 'from distutils.sysconfig import get_python_inc; print(get_python_inc())')
+NUMPY_INCLUDE_DIR = $(shell $(PYTHON) -c 'import numpy; print(numpy.get_include())')
+
 ######################
 # Compilation flags
 #
@@ -88,14 +100,14 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 #       to document these flags.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
-CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython2.7
+CFLAGS_PYTHON=-I$(PYTHON_INCLUDE_DIR) -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython$(PYTHON_VERSION)
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
 CFLAGS_WARN=-Wall -Werror -Wno-error=unused-function
 # Add the source code directory to the include path
-CFLAGS_INCLUDE=-I$(abspath src)
+CFLAGS_INCLUDE=-I$(abspath src) -I/$(NUMPY_INCLUDE_DIR) $(EXTRA_INCLUDE_FLAGS)
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
 CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 
