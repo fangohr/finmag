@@ -17,29 +17,58 @@ all : parallel
 #######################################
 #  Configurable options
 #
+
+# Sometimes you may have header files and libraries installed in non-
+# standard places. If you add the root directories of these installations
+# to the environment variable EXTRA_INCLUDE_AND_LIBRARY_ROOT_DIRS then
+# the variables EXTRA_INCLUDE_FLAGS and EXTRA_LIBRARY_FLAGS will be
+# populated automatically to point the the subdirectories 'include'
+# and 'lib' of these directories.
+#
+# Example:
+#
+#    $ export EXTRA_INCLUDE_AND_LIBRARY_ROOT_DIRS="/usr/local/lib/quux /foo/bar"
+#
+# will result in the following values:
+#
+#    EXTRA_INCLUDE_FLAGS = -I/usr/local/lib/quux/include -I/foo/bar/include
+#    EXTRA_LIBRARY_FLAGS = -L/usr/local/lib/quux/lib -L/foo/bar/lib
+#
+# Alternatively, you can also set the values of of the environment
+# variables EXTRA_INCLUDE_FLAGS and EXTRA_LIBRARY_FLAGS manually.
+#
+EXTRA_INCLUDE_AND_LIBRARY_ROOT_DIRS ?=
+EXTRA_INCLUDE_FLAGS ?= $(foreach dir,$(EXTRA_INCLUDE_AND_LIBRARY_ROOT_DIRS),-I$(dir)/include)
+EXTRA_LIBRARY_FLAGS ?= $(foreach dir,$(EXTRA_INCLUDE_AND_LIBRARY_ROOT_DIRS),-L$(dir)/lib)
+
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
+
 # The list of extension modules to build
 MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so
+
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
+
 # Name of the binary that runs all unit tests
 UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
+
 # Directory for CI unit test results
 UNIT_TEST_RESULTS_DIR=../test-reports/boost
 UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
+
 # Explicit dependencies to tell how the module files are linked
-SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) -lnvector_serial_custom_malloc
+SUNDIALS_NVECTOR_SO=-Wl,-rpath,\$$ORIGIN -L$(abspath ../src/finmag/native/) $(EXTRA_LIBRARY_FLAGS) -lnvector_serial_custom_malloc
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
 sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
 
 #SUNDIALS_CUSTOM=-I$(SUNDIALS_PATH)/include -Wl,-rpath, -Wl,-L$(SUNDIALS_PATH)/lib
 #$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o
-#sundials_p_LDFLAGS = $(SUNDIALS_CUSTOM) -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -llapack -ldolfin -lboost_thread
+#sundials_p_LDFLAGS = $(SUNDIALS_CUSTOM) $(EXTRA_LIBRARY_FLAGS) -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -llapack -ldolfin -lboost_thread
 
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/energy.o
-llg_LDFLAGS = -L$(INSTALL_PATH)/lib -ldolfin
+llg_LDFLAGS = -L$(INSTALL_PATH)/lib $(EXTRA_LIBRARY_FLAGS) -ldolfin
 
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/material.o src/llb/llb.o src/llb/sllg.o src/llb/sllg_stt.o src/llb/mt19937.o 
 
