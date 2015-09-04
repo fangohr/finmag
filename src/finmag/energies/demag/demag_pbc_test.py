@@ -5,9 +5,9 @@ from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag
 from finmag import MacroGeometry
 
-mesh_1 = df.BoxMesh(-10, -10, -10, 10, 10, 10, 10, 10, 10)
-mesh_3 = df.BoxMesh(-30, -10, -10, 30, 10, 10, 30, 10, 10)
-mesh_9 = df.BoxMesh(-30, -30, -10, 30, 30, 10, 30, 30, 10)
+mesh_1 = df.BoxMesh(df.Point(-10, -10, -10), df.Point(10, 10, 10), 10, 10, 10)
+mesh_3 = df.BoxMesh(df.Point(-30, -10, -10), df.Point(30, 10, 10), 30, 10, 10)
+mesh_9 = df.BoxMesh(df.Point(-30, -30, -10), df.Point(30, 30, 10), 30, 30, 10)
 
 
 def compute_field(mesh, nx=1, ny=1, m0=(1, 0, 0), pbc=None):
