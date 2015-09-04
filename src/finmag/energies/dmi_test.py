@@ -34,7 +34,7 @@ def test_dmi_uses_unit_length_2dmesh():
         # so let's use a Rectangular mesh which should work the same:
 
         nx = ny = int(round(radius / maxh))
-        mesh = df.RectangleMesh(0, 0,  radius, radius, nx, ny)
+        mesh = df.RectangleMesh(df.Point(0, 0),  df.Point(radius, radius), nx, ny)
 
         S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
         m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
@@ -71,7 +71,7 @@ def test_interaction_accepts_name():
 
 
 def test_dmi_pbc2d():
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 0.1, 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
 
     pbc = PeriodicBoundary2D(mesh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
@@ -92,7 +92,7 @@ def test_dmi_pbc2d_1D(plot=False):
         else:
             return [-0.5, 0, -1]
 
-    mesh = df.RectangleMesh(0, 0, 20, 2, 10, 1)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(20, 2), 10, 1)
     m_init = vector_valued_function(m_init_fun, mesh)
 
     Ms = 8.6e5

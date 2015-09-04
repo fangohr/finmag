@@ -44,7 +44,7 @@ def test_thin_film_demag():
 
 @pytest.mark.slow
 def test_thin_film_demag_against_real_demag():
-    sim = Sim(df.BoxMesh(0, 0, 0, 500e-9, 500e-9, 1e-9, 50, 50, 1), Ms)
+    sim = Sim(df.BoxMesh(df.Point(0, 0, 0), df.Point(500e-9, 500e-9, 1e-9), 50, 50, 1), Ms)
     sim.set_m((0, 0, 1))
 
     tfdemag = ThinFilmDemag()
