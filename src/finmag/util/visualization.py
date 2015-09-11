@@ -226,12 +226,14 @@ def render_paraview_scene(
         if use_display is None:
             use_display = configuration.get_config_option(
                 "visualization", "use_display", None)
+            if use_display == 'None':
+                use_display = None
         if use_display is None and use_xpra.lower() != "false":
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
                 sh.xpra('--version')
-                xpra_display = find_unused_X_display(xrange(1, 100))
+                xpra_display = find_unused_X_display(xrange(10, 100))
                 sh.xpra('start', ':{}'.format(xpra_display))
                 use_display = xpra_display
                 logger.debug(
