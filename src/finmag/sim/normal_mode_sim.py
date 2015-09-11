@@ -14,6 +14,7 @@ from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, \
     export_normal_mode_animation, plot_spatially_resolved_normal_mode, \
     compute_tangential_space_basis, mf_mult
+from past.builtins import basestring
 
 log = logging.getLogger(name="finmag")
 
@@ -611,7 +612,7 @@ class NormalModeSimulation(Simulation):
               of `w`, but this has changed in the interface!
 
         """
-        if isinstance(solver, str):
+        if isinstance(solver, basestring):
             try:
                 solver = self.predefined_eigensolvers[solver]
             except KeyError:
@@ -848,7 +849,7 @@ class NormalModeSimulation(Simulation):
         for details about the meaning of the arguments.
 
         """
-        if self.eigenvecs == None:
+        if self.eigenvecs is None:
             log.warning("No eigenvectors have been computed. Please call "
                         "`sim.compute_normal_modes()` to do so.")
 
