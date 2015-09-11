@@ -33,7 +33,7 @@ sudo add-apt-repository ppa:fenics-packages/fenics
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install $packages
-sudo pip install -U sphinx pytest aeon sh diff-match-patch
+sudo pip install -U sphinx pytest aeon sh diff-match-patch future
 # [Observation: We need IPython installed to be able to import finmag. So
 # we need to make sure to also install ipython.]
 
