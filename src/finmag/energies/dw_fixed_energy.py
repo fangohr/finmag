@@ -135,7 +135,7 @@ class FixedEnergyDW(object):
 
 
 if __name__ == '__main__':
-    mesh = df.BoxMesh(0, 0, 0, 500, 20, 5, 100, 4, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(500, 20, 5), 100, 4, 1)
 
     dw = FixedEnergyDW(repeat_time=5)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)

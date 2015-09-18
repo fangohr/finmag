@@ -5,7 +5,7 @@ from finmag.util.helpers import fnormalise
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 
 Ms = 8.6e5
-mesh = df.BoxMesh(0, 0, 0, 10e-9, 10e-9, 10e-9, 5, 5, 5)
+mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10e-9, 10e-9, 10e-9), 5, 5, 5)
 
 def pytest_funcarg__fixt(request):
     fixt = request.cached_setup(setup=setup, scope="module")

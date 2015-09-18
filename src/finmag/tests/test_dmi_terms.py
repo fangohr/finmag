@@ -1,6 +1,6 @@
 
 import dolfin as df
-mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 10, 10, 10)
+mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 10, 10, 10)
 
 V1 = df.VectorFunctionSpace(mesh, "CG", 1)
 VT = df.TensorFunctionSpace(mesh, "CG", 1)
@@ -51,8 +51,8 @@ def compare_dmi_term2d_with_dolfin(Mexp):
 
 
 def dis_test_dmi_term2d():
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 10, 10, 10)
-    mesh2d = df.RectangleMesh(0, 0, 1, 1, 10, 10)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 10, 10, 10)
+    mesh2d = df.RectangleMesh(df.Point(0, 0), df.Point(1, 1), 10, 10)
 
     eps = 1e-15
     assert compare_dmi_term2d_with_dolfin(("x[0]", "0.", "0.")) < eps

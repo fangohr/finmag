@@ -20,7 +20,7 @@ def nanowire(lx=100, ly=10, lz=3, nx=30, ny=3, nz=1, name='nanowire'):
     A = 13e-12
     Ms = 8e5
 
-    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(lx, ly, lz), nx, ny, nz)
     S1 = df.FunctionSpace(mesh, 'CG', 1)
     S3 = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
 

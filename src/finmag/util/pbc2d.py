@@ -163,7 +163,7 @@ class PeriodicBoundary2D(df.SubDomain):
 
 
 if __name__ == "__main__":
-    mesh = df.BoxMesh(0, 0, 0, 10, 5, 1, 10, 5, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 5, 1), 10, 5, 1)
     #mesh = df.UnitSquareMesh(2, 2)
     V = df.FunctionSpace(mesh, "Lagrange", 1)
     V3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)

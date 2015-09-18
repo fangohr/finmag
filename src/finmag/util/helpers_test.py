@@ -429,7 +429,7 @@ def test_crossprod():
     xmin = ymin = zmin = -2
     xmax = ymax = zmax = 3
     nx = ny = nz = 10
-    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     u = df.interpolate(df.Expression(['x[0]', 'x[1]', '0']), V)
     v = df.interpolate(df.Expression(['-x[1]', 'x[0]', 'x[2]']), V)
@@ -448,7 +448,7 @@ def test_apply_vertexwise():
     xmin = ymin = zmin = -2
     xmax = ymax = zmax = 3
     nx = ny = nz = 10
-    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     u = df.interpolate(df.Expression(['x[0]', 'x[1]', '0']), V)
     v = df.interpolate(df.Expression(['-x[1]', 'x[0]', 'x[2]']), V)

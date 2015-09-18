@@ -104,7 +104,7 @@ def convergence_rates(hs, ys):
 
 
 m = 1e-5
-mesh = BoxMesh(0, 0, 0, m, m, m, 5, 5, 5)
+mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
 S1 = FunctionSpace(mesh, "Lagrange", 1)
 S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
 llg = MyLLG(S1, S3)

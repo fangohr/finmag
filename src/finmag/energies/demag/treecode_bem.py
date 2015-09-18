@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     n = 4
     #mesh = UnitCubeMesh(n, n, n)
-    #mesh = BoxMesh(-1, 0, 0, 1, 1, 1, 10, 2, 2)
+    #mesh = BoxMesh(df.Point(-1, 0, 0), df.Point(1, 1, 1), 10, 2, 2)
     # mesh=sphere(3.0,0.3)
     # mesh=df.Mesh('tet.xml')
     #
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     from finmag.util.meshes import elliptic_cylinder, sphere
     mesh = elliptic_cylinder(100, 150, 5, 4.5, directory='meshes')
     # mesh=box(0,0,0,5,5,100,5,directory='meshes')
-    #mesh = df.BoxMesh(0, 0, 0, 100, 2, 2, 400, 2, 2)
+    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 2, 2), 400, 2, 2)
     mesh = sphere(15, 1, directory='meshes')
     Vv = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 

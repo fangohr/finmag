@@ -43,7 +43,7 @@ def run_simulation(plot=False):
     Ly = ny * L
     nz = 30
     Lz = nz * L
-    mesh = df.BoxMesh(0, 0, 0, Lx, Ly, Lz, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(Lx, Ly, Lz), nx, ny, nz)
 
     # Anisotropy easy axis is (0, 0, 1) in the lower half of the film and
     # (1, 0, 0) in the upper half. This is a toy model of the exchange spring
