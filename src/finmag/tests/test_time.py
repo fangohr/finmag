@@ -9,7 +9,9 @@ def test_current_time():
     size = 20e-9
     simplices = 4
     mesh = df.BoxMesh(
-        0, 0, 0, size, size, size, simplices, simplices, simplices)
+        df.Point(0, 0, 0),
+        df.Point(size, size, size),
+        simplices, simplices, simplices)
 
     Ms = 860e3
     A = 13.0e-12

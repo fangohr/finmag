@@ -27,7 +27,7 @@ def three_dimensional_problem():
     x_max = 10e-9
     y_max = 1e-9
     z_max = 1e-9
-    mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, 40, 2, 2)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(x_max, y_max, z_max), 40, 2, 2)
 
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
 

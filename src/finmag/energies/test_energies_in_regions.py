@@ -126,7 +126,7 @@ def test_energies_in_touching_subdomains():
 
     m_vals = {1: [1, 0, 0],
               2: [0.5, -0.8, 0]}
-    box_mesh = df.BoxMesh(-50, -20, 0, 50, 20, 5, 30, 10, 2)
+    box_mesh = df.BoxMesh(df.Point(-50, -20, 0), df.Point(50, 20, 5), 30, 10, 2)
 
     Ms = 8.6e5
     unit_length = 1e-9

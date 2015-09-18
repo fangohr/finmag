@@ -33,12 +33,12 @@ def test_pbc2d_2dmesh():
     assert abs(M(0, 0) - M(1, 0)) < 1e-15
     assert abs(M(0, 0) - M(1, 1)) < 5e-15
 
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 2)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 2)
 
 
 def test_pbc2d_3dmesh():
 
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 2, 2, 1)
 
     pbc = PeriodicBoundary2D(mesh)
 
@@ -57,8 +57,8 @@ def test_pbc2d_3dmesh():
 
 def test_pbc2d_3dmesh2():
 
-    mesh = df.BoxMesh(0, 0, 0, 50, 50, 3, 15, 15, 1)
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(50, 50, 3), 15, 15, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 2, 2, 1)
 
     pbc = PeriodicBoundary2D(mesh)
 

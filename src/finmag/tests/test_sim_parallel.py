@@ -14,7 +14,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def t_test_sim_ode_parallel(do_plot=False):
-    mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9, pbc='2d', parallel=True)
     sim.alpha = alpha
     sim.set_m((1, 0, 0))

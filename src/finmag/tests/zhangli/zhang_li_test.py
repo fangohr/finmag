@@ -44,7 +44,7 @@ def init_J(pos):
 
 def test_zhangli():
 
-    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)
 
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
@@ -70,7 +70,7 @@ def test_zhangli():
 
 def test_zhangli_sllg():
 
-    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)
 
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9, kernel='sllg')
@@ -102,7 +102,7 @@ def init_J_x(pos):
 
 def compare_gradient_field1():
 
-    mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9)
     sim.set_m(init_m)
     sim.set_zhangli(init_J_x, 0.5, 0.01)
@@ -166,7 +166,7 @@ def field_at2(pos):
 
 def compare_gradient_field2():
 
-    mesh = df.BoxMesh(0, 0, 0, np.pi / 2, np.pi / 2, 1, 20, 20, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(np.pi / 2, np.pi / 2, 1), 20, 20, 1)
     sim = Sim(mesh, Ms=8.6e5, unit_length=1)
     sim.set_m(init_m2)
     sim.set_zhangli(init_J_xy, 0.5, 0.01)

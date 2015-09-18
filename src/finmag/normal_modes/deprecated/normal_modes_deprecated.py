@@ -647,7 +647,7 @@ def extract_mesh_slice(mesh, slice_z):
     nx = int(1 * (xmax - xmin))
     ny = int(1 * (ymax - ymin))
     slice_mesh = embed3d(
-        df.RectangleMesh(xmin, ymin, xmax, ymax, nx, ny), z_embed=slice_z)
+        df.RectangleMesh(df.Point(xmin, ymin), df.Point(xmax, ymax), nx, ny), z_embed=slice_z)
 
     V = df.FunctionSpace(mesh, 'CG', 1)
     f = df.Function(V)

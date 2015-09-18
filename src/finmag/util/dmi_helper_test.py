@@ -41,7 +41,7 @@ def compute_skyrmion_number_2d_example():
 
 def test_compute_skyrmion_number_2d_pbc():
 
-    mesh = df.RectangleMesh(0, 0, 100, 100, 40, 40)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(100, 100), 40, 40)
 
     Ms = 8.6e5
     sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)

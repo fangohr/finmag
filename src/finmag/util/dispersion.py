@@ -124,8 +124,8 @@ def dispersion_relation(points, mesh, data_fun, component):
 def spinwaves_to_vtk(points, mesh, data_fun, component, directory=""):
     rs, ts, delta_mj_t = spinwaves(points, mesh, data_fun, component)
     mesh = df.RectangleMesh(
-        ts[0] * 1e12, rs[0] * 1e9,
-        ts[-1] * 1e12, rs[-1] * 1e9,
+        df.Point(ts[0] * 1e12, rs[0] * 1e9),
+        df.Point(ts[-1] * 1e12, rs[-1] * 1e9),
         len(ts) - 1, len(rs) - 1)
 
     excitation_data = np.swapaxes(delta_mj_t, 0, 1).reshape(-1)

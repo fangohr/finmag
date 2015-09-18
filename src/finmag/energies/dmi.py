@@ -43,7 +43,7 @@ class DMI(EnergyBase):
             # Define a mesh representing a cube with edge length L.
             L = 1e-8  # m
             n = 5
-            mesh = df.BoxMesh(0, L, 0, L, 0, L, n, n, n)
+            mesh = df.BoxMesh(df.Point(0, L, 0), df.Point(L, 0, L), n, n, n)
 
             D = 5e-3  # J/m**2 DMI constant
             Ms = 0.8e6  # A/m magnetisation saturation

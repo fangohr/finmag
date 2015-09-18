@@ -14,7 +14,7 @@ def test_mesh_size():
 
     """
     RTOL = 1e-3
-    box_mesh = df.BoxMesh(-20, -30, 10, 30, 42, 20, 4, 4, 4)
+    box_mesh = df.BoxMesh(df.Point(-20, -30, 10), df.Point(30, 42, 20), 4, 4, 4)
     assert(np.isclose(mesh_size(box_mesh, unit_length=1.0), 72.0, rtol=RTOL))
     assert(
         np.isclose(mesh_size(box_mesh, unit_length=3e-5), 216e-5, rtol=RTOL))
@@ -39,7 +39,7 @@ def test_line_mesh():
 
 def test_embed3d():
     # Create a 2D mesh which we want to embed in 3D space
-    mesh_2d = df.RectangleMesh(0, 0, 20, 10, 10, 5)
+    mesh_2d = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 10, 5)
     coords_2d = mesh_2d.coordinates()
     z_embed = 4.2
 
@@ -90,14 +90,14 @@ def test_build_mesh():
         assert np.allclose(coords, mesh_new.coordinates())
         assert np.allclose(cells, mesh_new.cells())
 
-    mesh1 = df.RectangleMesh(0, 0, 20, 10, 12, 8)
+    mesh1 = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 12, 8)
     assert_mesh_builds_correctly(mesh1)
 
     mesh2_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
     mesh2 = mshr.generate_mesh(mesh2_temp, 10)
     assert_mesh_builds_correctly(mesh2)
 
-    mesh3 = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
+    mesh3 = df.BoxMesh(df.Point(0, 0, 0), df.Point(20, 10, 5), 12, 8, 3)
     assert_mesh_builds_correctly(mesh3)
 
     mesh4_temp = mshr.Sphere(df.Point(2.0, 3.0, -4.0), 10)
@@ -183,7 +183,7 @@ def test_mesh_is_periodic(tmpdir):
     #assert mesh_is_periodic(mesh4, 'y')
     assert mesh_is_periodic(mesh4, 'xy')
 
-    mesh_rectangle = df.RectangleMesh(0, 0, 20, 10, 12, 8)
+    mesh_rectangle = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 12, 8)
     assert mesh_is_periodic(mesh_rectangle, 'x')
     #assert mesh_is_periodic(mesh_rectangle, 'y')
     assert mesh_is_periodic(mesh_rectangle, 'xy')
@@ -210,7 +210,7 @@ def test_mesh_is_periodic(tmpdir):
     #assert mesh_is_periodic(mesh8, 'y')
     assert mesh_is_periodic(mesh8, 'xy')
 
-    mesh_box = df.BoxMesh(0, 0, 0, 20, 10, 5, 12, 8, 3)
+    mesh_box = df.BoxMesh(df.Point(0, 0, 0), df.Point(20, 10, 5), 12, 8, 3)
     assert mesh_is_periodic(mesh_box, 'x')
     #assert mesh_is_periodic(mesh_box, 'y')
     assert mesh_is_periodic(mesh_box, 'xy')

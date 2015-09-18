@@ -30,7 +30,7 @@ def m_init(pos):
 
 
 def cubic_anisotropy(K1=520e3, K2=0, K3=0):
-    mesh = df.RectangleMesh(0, 0, 50, 2, 20, 1)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(50, 2), 20, 1)
 
     sim = Simulation(mesh, Ms, unit_length=1e-9)
     sim.set_m(m_init)

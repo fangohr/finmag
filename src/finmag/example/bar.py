@@ -29,7 +29,7 @@ def bar(name='bar', demag_solver_type=None):
     xmax, ymax, zmax = 30, 30, 100  # other corner of cuboid
     # number of subdivisions (use ~2nm edgelength)
     nx, ny, nz = 15, 15, 50
-    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1), name=name,
@@ -61,7 +61,7 @@ def barmini(name='barmini', mark_regions=False, demag_solver_type=None):
     xmax, ymax, zmax = 3, 3, 10     # other corner of cuboid
     # number of subdivisions (use ~2nm edgelength)
     nx, ny, nz = 2, 2, 4
-    mesh = df.BoxMesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1), name=name,
