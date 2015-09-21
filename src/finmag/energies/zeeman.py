@@ -112,6 +112,7 @@ class DipolarField(Zeeman):
         If `magnitude` is `None`, the magnetic moment is simply given by `m`.
         Otherwise `m` is interpreted only as the *direction* of the magnetic
         moment and `magnitude` as its magnitude, i.e. the magnetic moment is
+        given by:
 
            magnitude * (m / |m|)
 
