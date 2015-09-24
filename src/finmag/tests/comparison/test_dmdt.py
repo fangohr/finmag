@@ -15,7 +15,7 @@ H = 1e-9
 nL = 20
 nW = 10
 nH = 1
-msh = df.BoxMesh(0, 0, 0, L, W, H, nL, nW, nH)
+msh = df.BoxMesh(df.Point(0, 0, 0), df.Point(L, W, H), nL, nW, nH)
 S1 = df.FunctionSpace(msh, "Lagrange", 1)
 S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 

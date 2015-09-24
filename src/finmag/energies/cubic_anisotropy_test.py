@@ -30,7 +30,7 @@ def compute_cubic_energy():
 
 
 def test_cubic_anisotropy_energy():
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 40), 1, 1, 40)
     volume = mesh_volume(mesh) * unit_length ** 3
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)

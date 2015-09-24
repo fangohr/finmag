@@ -15,7 +15,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.mark.xfail
 def test_llb_sundials(do_plot=False):
-    mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
 
     mat = Material(mesh, name='FePt', unit_length=1e-9)
     mat.set_m((1, 0, 0))
@@ -70,7 +70,7 @@ def test_llb_sundials(do_plot=False):
 
 
 def sim_llb_100(do_plot=False):
-    mesh = df.BoxMesh(0, 0, 0, 10, 10, 10, 1, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 10), 1, 1, 1)
 
     mat = Material(mesh, name='FePt', unit_length=1e-9)
     mat.set_m((1, 0, 0))
@@ -117,7 +117,7 @@ def sim_llb_100(do_plot=False):
 
 @pytest.mark.xfail
 def test_llb_save_data():
-    mesh = df.BoxMesh(0, 0, 0, 10, 10, 5, 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 1)
 
     def region1(coords):
         if coords[2] < 0.5:
@@ -167,7 +167,7 @@ def test_llb_save_data():
 
 
 def llb_relax():
-    mesh = df.BoxMesh(0, 0, 0, 10, 10, 5, 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 1)
 
     mat = Material(mesh, name='FePt', unit_length=1e-9)
     mat.set_m((1, 0, 0))

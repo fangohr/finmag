@@ -135,7 +135,7 @@ if __name__ == '__main__':
     nx = 1
     ny = 1
     nz = 1
-    mesh = df.BoxMesh(x0, y0, z0, x1, y1, z1, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(x0, y0, z0), df.Point(x1, y1, z1), nx, ny, nz)
     
     #mesh =df.Interval(1,0,50e-9)
     print mesh.coordinates()

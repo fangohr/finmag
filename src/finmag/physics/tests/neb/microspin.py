@@ -55,7 +55,7 @@ def plot_data_2d():
 
 
 if __name__ == "__main__":
-    mesh = df.RectangleMesh(0, 0, 10, 10, 1, 1)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(10, 10), 1, 1)
     sim = create_simulation(mesh)
     relax_system(sim)
 

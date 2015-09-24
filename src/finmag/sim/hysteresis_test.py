@@ -17,7 +17,7 @@ N = 5
 def test_hysteresis(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini()
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
     H_ext_list = [(1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)]
     N = len(H_ext_list)
 
@@ -50,7 +50,7 @@ def test_hysteresis_loop_and_plotting(tmpdir):
     """
     os.chdir(str(tmpdir))
 
-    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
     sim = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0,
                    unit_length=1e-9, A=None, demag_solver=None)
     H_vals, m_vals = \

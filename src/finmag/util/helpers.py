@@ -203,7 +203,7 @@ def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBU
         #    import logging
         #
         #    logger = logging.getLogger("finmag")
-        #    mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        #    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 5, 5, 5)
         #
         #    logger.debug("Creating first simulation")
         #    sim = sim_with(mesh, 1e6, m_init=(1,0,0), name="sim1")

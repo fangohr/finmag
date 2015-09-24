@@ -86,7 +86,7 @@ def test_exchange_energy_analytical_2():
     lz = 2
     nx = 300
     ny = nz = 1
-    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(lx, ly, lz), nx, ny, nz)
     unit_length = 1e-9
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
     Ms = Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 8e5)
@@ -140,7 +140,7 @@ def test_exchange_field_supported_methods(fixt):
         assert np.nanmax(rel_diff) < REL_TOLERANCE
 
 if __name__ == "__main__":
-    mesh = df.BoxMesh(0, 0, 0, 2 * np.pi, 1, 1, 10, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2 * np.pi, 1, 1), 10, 1, 1)
 
     S = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)

@@ -15,7 +15,7 @@ def test_easy_relaxation(do_plot=False):
     errors in the relaxation code.
 
     """
-    mesh = df.BoxMesh(0, 0, 0, 50, 10, 10, 10, 2, 2)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(50, 10, 10), 10, 2, 2)
     Ms = 0.86e6
     A = 13.0e-12
 

@@ -186,7 +186,7 @@ def test_skyrmion_number():
     number of skyrmions.
     """
     # Create simulation object with four skyrmions in it.
-    mesh = df.RectangleMesh(-100, -100, 100, 100, 50, 50)
+    mesh = df.RectangleMesh(df.Point(-100, -100), df.Point(100, 100), 50, 50)
     sim = Simulation(mesh, 1e5, unit_length=1e-9)
     skCentres = np.array([[0, 0], [-50, 70], [40, -80], [70, 70]])
     sim.initialise_skyrmions(skyrmionRadius=30, centres=skCentres)
@@ -201,7 +201,7 @@ def test_skyrmion_number():
 
     # Repeat for a 3D mesh
 
-    mesh3D = df.BoxMesh(-100, -100, -5, 100, 100, 5, 50, 50, 5)
+    mesh3D = df.BoxMesh(df.Point(-100, -100, -5), df.Point(100, 100, 5), 50, 50, 5)
     sim3D = Simulation(mesh3D, 1e5, unit_length=1e-9)
     skCentres3D = np.array(
         [[0, 0, 0], [-50, 70, 0], [40, -80, 0], [70, 70, 0]])

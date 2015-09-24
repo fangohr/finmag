@@ -71,7 +71,7 @@ if __name__ == "__main__":
     m = 1e-8
     Ms = 0.8e6
     n = 5
-    mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
+    mesh = BoxMesh(df.Point(0, m, 0), df.Point(m, 0, m), n, n, n)
 
     mat = Material(mesh)
     mat.set_m((1, 2, 3))

@@ -10,7 +10,7 @@ def run_simulation():
     L = 3e-8
     W = 1e-8
     H = 1e-8
-    mesh = df.BoxMesh(0, 0, 0, L, W, H, 10, 4, 4)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(L, W, H), 10, 4, 4)
 
     Ms = 0.86e6  # A/m
     A = 1.3e-11  # J/m

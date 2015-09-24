@@ -23,7 +23,7 @@ def run_simulation():
     z0 = -0.1e-9
     z1 = 0.1e-9
     nz = 1
-    mesh = df.BoxMesh(x0, y0, z0, x1, y1, z1, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(x0, y0, z0), df.Point(x1, y1, z1), nx, ny, nz)
     S1 = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 
