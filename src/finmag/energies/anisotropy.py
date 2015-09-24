@@ -41,7 +41,7 @@ class UniaxialAnisotropy(EnergyBase):
 
             L = 1e-8;
             nL = 5;
-            mesh = df.BoxMesh(0, L, 0, L, 0, L, nL, nL, nL)
+            mesh = df.BoxMesh(df.Point(0, L, 0), df.Point(L, 0, L), nL, nL, nL)
 
             S3 = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
             K = 520e3 # For Co (J/m3)

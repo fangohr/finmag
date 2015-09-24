@@ -8,7 +8,7 @@ from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag, DMI
 
 np.random.seed(0)
 
-mesh = df.BoxMesh(0, 0, 0, 40, 40, 5, 15, 15, 1)
+mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(40, 40, 5), 15, 15, 1)
 N = mesh.num_vertices()
 V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
 

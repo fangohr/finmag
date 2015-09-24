@@ -35,7 +35,7 @@ def small_problem():
     x_max = 1e-9
     y_max = 1e-9
     z_max = 1e-9
-    dolfin_mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, 5, 5, 5)
+    dolfin_mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(x_max, y_max, z_max), 5, 5, 5)
     oommf_mesh = mesh.Mesh((1, 1, 1), size=(x_max, y_max, z_max))
 
     def m_gen(rs):
@@ -66,7 +66,7 @@ def three_dimensional_problem():
     x_n = 20
     y_n = z_n = 1
 
-    dolfin_mesh = df.BoxMesh(0, 0, 0, x_max, y_max, z_max, x_n, y_n, z_n)
+    dolfin_mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(x_max, y_max, z_max), x_n, y_n, z_n)
     print dolfin_mesh.num_vertices()
     oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
 

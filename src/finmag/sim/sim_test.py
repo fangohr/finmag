@@ -46,7 +46,7 @@ class TestSimulation(object):
         # efficiency. Thus they should be regarded as read-only and
         # not be changed in any test method, otherwise there may be
         # unpredicted bugs or errors in unrelated test methods!
-        cls.mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 5, 5, 5)
+        cls.mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 5, 5, 5)
         cls.sim = sim_with(cls.mesh, Ms=8.6e5, m_init=(1, 0, 0), alpha=1.0,
                            unit_length=1e-9, A=13.0e-12, demag_solver='FK')
         cls.sim.relax()
@@ -134,7 +134,7 @@ class TestSimulation(object):
         assert(np.allclose(v_probed_1d, v_ref))
 
     def test_probe_constant_m_at_individual_points(self):
-        mesh = df.BoxMesh(-2, -2, -2, 2, 2, 2, 5, 5, 5)
+        mesh = df.BoxMesh(df.Point(-2, -2, -2), df.Point(2, 2, 2), 5, 5, 5)
         m_init = np.array([0.2, 0.7, -0.4])
         # normalize the vector for later comparison
         m_init /= np.linalg.norm(m_init)
@@ -166,7 +166,7 @@ class TestSimulation(object):
         TOL = 1e-5
 
         unit_length = 1e-9
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1000, 2, 2)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1000, 2, 2)
         m_init = df.Expression(("cos(x[0]*pi)",
                                 "sin(x[0]*pi)",
                                 "0.0"),
@@ -384,7 +384,7 @@ class TestSimulation(object):
 
         # First simulation: run for 50 ps, reset the time to 30 ps and run
         # again for 50 ps.
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim1 = Simulation(mesh, Ms=1, name='test_save_ndt', unit_length=1e-9)
         sim1.alpha = 0.05
         sim1.set_m((1, 0, 0))
@@ -509,7 +509,7 @@ class TestSimulation(object):
 
     def test_remove_interaction1(self):
 
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((0, 0, 1)))
         sim.add(Exchange(13e-12))
@@ -526,7 +526,7 @@ class TestSimulation(object):
             sim.remove_interaction("Zeeman")
 
     def test_remove_interaction2(self):
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
 
         # Two different Zeeman interactions present
@@ -549,7 +549,7 @@ class TestSimulation(object):
         """
         Simply test that we can call sim.switch_off_H_ext()
         """
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
@@ -561,7 +561,7 @@ class TestSimulation(object):
         assert(num_interactions(sim) == 0)
 
     def test_set_H_ext(self):
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
@@ -589,7 +589,7 @@ class TestSimulation(object):
         def m_init_nan(pos):
             return [np.NaN, 1, 1]
 
-        mesh =  df.BoxMesh(0,0,0,1,1,1,1,1,1)
+        mesh =  df.BoxMesh(df.Point(0,0,0), df.Point(1,1,1),1,1,1)
         sim = Simulation(mesh, Ms=1e5, unit_length=1e-9)
         with pytest.raises(ValueError):
             sim.set_m(m_init_nan)
@@ -621,7 +621,7 @@ class TestSimulation(object):
         changes sign halfway through the simulation.
         """
         import matplotlib.pyplot as plt
-        mesh = df.BoxMesh(0, 0, 0, 1, 1, 1, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
         sim = Simulation(
             mesh, Ms=8.6e5, unit_length=1e-9, name='macrospin_with_stt')
         sim.m = (1, 0, 0)
@@ -729,7 +729,7 @@ class TestSimulation(object):
         assert(len(glob('mag_[0-9]*.npy')) == 3)
 
     def test_sim_sllg(self, do_plot=False):
-        mesh = df.BoxMesh(0, 0, 0, 2, 2, 2, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         alpha = 0.1
         sim.alpha = alpha
@@ -774,7 +774,7 @@ class TestSimulation(object):
         assert np.max(np.abs(mz - mz_ref)) < 8e-7
 
     def test_sim_sllg_time(self):
-        mesh = df.BoxMesh(0, 0, 0, 5, 5, 5, 1, 1, 1)
+        mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(5, 5, 5), 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         sim.alpha = 0.1
         sim.set_m((1, 0, 0))
@@ -1091,7 +1091,7 @@ def test_set_m_after_relaxation(tmpdir):
     os.chdir(str(tmpdir))
 
     # Construct a 2D simulation with two obvious optima.
-    mesh = df.RectangleMesh(0, 0, 1, 1, 1, 1)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(1, 1), 1, 1)
     sim = finmag.Simulation(mesh, Ms=1, unit_length=1e-9)
     sim.add(finmag.energies.UniaxialAnisotropy(1, np.array([0, 0, 1])))
 
@@ -1932,7 +1932,7 @@ def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
     os.chdir(str(tmpdir))
 
     # Create a small test simulation and compute its eigenfrequencies
-    mesh = df.BoxMesh(0, 0, 0, 10, 20, 3, 3, 6, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 20, 3), 3, 6, 1)
     sim = normal_mode_simulation(
         mesh, m_init=[1, 0, 0], Ms=8e5, A=13e-12, unit_length=1e-9)
     omega_ref, _, _ = sim.compute_normal_modes()

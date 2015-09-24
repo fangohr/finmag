@@ -4,7 +4,7 @@ from finmag import Simulation
 from finmag.energies import Exchange, CubicAnisotropy
 from finmag.util.consts import mu0
 
-mesh = df.BoxMesh(0, 0, 0, 1, 1, 40, 1, 1, 40)
+mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 40), 1, 1, 40)
 
 Ms = 876626  # A/m
 A = 1.46e-11  # J/m

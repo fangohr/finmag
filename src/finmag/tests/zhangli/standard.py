@@ -99,7 +99,7 @@ def plot_data():
 
 
 if __name__ == "__main__":
-    #mesh = df.BoxMesh(0, 0, 0, 100, 100, 10, 40, 40, 2)
+    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 100, 10), 40, 40, 2)
     mesh = from_geofile('thinfilm100.geo')
     print mesh_info(mesh)
     # relax_system(mesh)

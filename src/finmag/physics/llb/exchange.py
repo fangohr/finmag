@@ -45,7 +45,7 @@ class ExchangeStd(EnergyBase):
             Ms   = 0.8e6
             m    = 1e-8
             n    = 5
-            mesh = BoxMesh(0, m, 0, m, 0, m, n, n, n)
+            mesh = BoxMesh(df.Point(0, m, 0), df.Point(m, 0, m), n, n, n)
 
             S3  = VectorFunctionSpace(mesh, "Lagrange", 1)
             A  = 1.3e-11 # J/m exchange constant
@@ -149,7 +149,7 @@ class Exchange(object):
 
 if __name__ == "__main__":
 
-    mesh = df.BoxMesh(0, 0, 0, 10, 1, 1, 10, 1, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 1, 1), 10, 1, 1)
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant

@@ -6,7 +6,7 @@ from finmag.energies import DMI
 nm = 1e-9
 simplexes = 10
 length = 20 * nm
-mesh = df.BoxMesh(0, 0, 0, length, 3 * nm, 3 * nm, simplexes, 1, 1)
+mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(length, 3 * nm, 3 * nm), simplexes, 1, 1)
 V = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
 

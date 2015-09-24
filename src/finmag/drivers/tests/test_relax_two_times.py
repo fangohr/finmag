@@ -8,7 +8,7 @@ def test_relax_two_times():
     Test whether we can call the relax method on Sim two times in a row.
 
     """
-    mesh = df.BoxMesh(0, 0, 0, 10, 10, 10, 2, 2, 2)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 10), 2, 2, 2)
     Ms = 0.86e6
 
     sim = Simulation(mesh, Ms)

@@ -61,7 +61,7 @@ def test_compute_energy():
     nx = ny = nz = 10  # XXX TODO: why does the approximation get
     # worse if we use a finer mesh?!?
     unit_length = 1e-9
-    mesh = df.BoxMesh(0, 0, 0, lx, ly, lz, nx, ny, nz)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(lx, ly, lz), nx, ny, nz)
     Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 8e5)
     H = 1e6
 
@@ -98,7 +98,7 @@ def test_energy_density_function():
     compare it to the expected result.
     """
 
-    mesh = df.RectangleMesh(-50, -50, 50, 50, 10, 10)
+    mesh = df.RectangleMesh(df.Point(-50, -50), df.Point(50, 50), 10, 10)
     unit_length = 1e-9
     H = 1e6
 
@@ -234,7 +234,7 @@ def test_value_set_update():
     second_value = [100., 200., 400.]
 
     zeeman = Zeeman(init_value)
-    mesh = df.RectangleMesh(0, 0, 1, 1, 10, 10)
+    mesh = df.RectangleMesh(df.Point(0, 0), df.Point(1, 1), 10, 10)
     sim = finmag.Simulation(mesh, 1e5)
     sim.add(zeeman)
     zeeman.set_value(second_value)
@@ -384,7 +384,7 @@ def test_oscillating_zeeman():
 def test_dipolar_field_class(tmpdir):
     os.chdir(str(tmpdir))
     H_dipole = DipolarField(pos=[0, 0, 0], m=[1, 0, 0], magnitude=3e9)
-    mesh = df.BoxMesh(-50, -50, -50, 50, 50, 50, 20, 20, 20)
+    mesh = df.BoxMesh(df.Point(-50, -50, -50), df.Point(50, 50, 50), 20, 20, 20)
     V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
     m_field = Field(V, value=df.Constant((1, 0, 0)))
     H_dipole.setup(m_field, Field(df.FunctionSpace(m.mesh(), 'DG', 0), 8.6e5), unit_length=1e-9)

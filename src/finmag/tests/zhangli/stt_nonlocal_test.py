@@ -32,7 +32,7 @@ def init_J(pos):
 
 def test_zhangli():
 
-    #mesh = df.BoxMesh(0, 0, 0, 100, 1, 1, 50, 1, 1)
+    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)
 
     sim = Sim(mesh, Ms=8.6e5, unit_length=1e-9, kernel='llg_stt')
