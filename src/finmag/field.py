@@ -588,25 +588,25 @@ class Field(object):
 
     def save_hdf5(self, filename, t):
         """
-        Save field to h5 file and corresponding Meta data (times at which field is saved),
+        Save field to h5 file and corresponding metadata (times at which field is saved),
         which is saved to a json file.
 
         Note, the mesh is automatically saved into this file as it is required by
-        load_hdf5, which could potentially be called at a later date.
+        load_hdf5.
 
         Arguments:
-        filename - filename of data to be saved. This will produce
-                   filename.h5
-                   filename.json
+        filename - filename of data to be saved (no extensions)
 
         t        - time at which the file is being save
                    it is recomended that this is taken from sim.t
+
+        This function creates to files with filename.h5 and filename.json names.
 
         When simulation/field saving is finished, it is recomended that close_hdf5() is
         called.
 
         """
-        # ask if file has already been created. If not, create it
+        # ask if file has already been created. If not, create it.
         if not hasattr(self, 'h5fileWrite'):
             self.h5fileWrite = savingdata.Create(filename, self.functionspace)
             self.h5fileWrite.save_mesh()
@@ -630,7 +630,7 @@ class Field(object):
 
         t: In h5 file, the field should have been saved at specific times.
            Here t references to the time at which the field was originally saved
-           Thus, to the field form time, t, which you want to load
+           Thus, to the field form time, t, which is wanted to be loaded.
 
         """
         # Strip filename of file extension type.
@@ -638,7 +638,7 @@ class Field(object):
         h5Filename = baseFilename + '.h5'
         jsonFilename = baseFilename + '.json'
 
-        # check if h5 file exists
+        # check if h5 file exists.
         if not os.path.isfile(h5Filename):
             raise IOError('The hdf5 file, {}, does not exist.'.format(h5Filename))
 
@@ -678,7 +678,7 @@ class Field(object):
         return loadedField
 
     def plot_with_dolfin(self, interactive=True):
-        df.plot(self.f, interactive=True)
+        df.plot(self.f, interactive=interactive)
 
     def plot_with_paraview(self, **kwargs):
         """
