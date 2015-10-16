@@ -9,6 +9,7 @@ from finmag.util import helpers
 from finmag.util.meshes import embed3d
 from itertools import izip
 from math import pi
+from finmag.field import Field
 logger = logging.getLogger('finmag')
 
 
@@ -506,7 +507,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     return omega, w
 
 
-def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False):
+def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, dm_only=False, save_h5=False):
     """
     Save a number of vtk files of different snapshots of a given normal mode.
     These can be imported and animated in Paraview.
@@ -592,6 +593,7 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     m_osc = np.zeros(3 * n)
     t0 = time()
     f = df.File(filename, 'compressed')
+    field = Field(V, name='m')
     for (i, t) in enumerate(timesteps):
         logger.debug("Saving animation snapshot for timestep {} ({}/{})".format(t,
                                                                                 i, num_cycles * num_snapshots_per_cycle))
@@ -603,6 +605,10 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
         #save_vector_field(m_osc, os.path.join(dirname, basename + '_{:04d}.vtk'.format(i)))
         func.vector().set_local(m_osc)
         f << func
+        if save_h5:
+            field.set(func)
+            field.save_hdf5(filename[0:-4], i)
+    field.close_hdf5()
     t1 = time()
     logger.debug(
         "Saving the data to file '{}' took {} seconds".format(filename, t1 - t0))
