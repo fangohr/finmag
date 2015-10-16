@@ -14,7 +14,7 @@ import dolfin as df
 import numpy as np
 import numbers
 import os
-from finmag.util.dolfinh5tools import savingdata
+import dolfinh5tools
 from finmag.util import helpers
 from finmag.util.helpers import expression_from_python_function
 from finmag.util.visualization import plot_dolfin_function
@@ -608,9 +608,9 @@ class Field(object):
         """
         # ask if file has already been created. If not, create it.
         if not hasattr(self, 'h5fileWrite'):
-            self.h5fileWrite = savingdata.Create(filename, self.functionspace)
+            self.h5fileWrite = dolfinh5tools.Create(filename, self.functionspace)
             self.h5fileWrite.save_mesh()
-        self.h5fileWrite.save_field(self.f, self.name, t)
+        self.h5fileWrite.write(self.f, self.name, t)
 
     def close_hdf5(self):
         """Close hdf5 file. Delete the saving object variable."""
