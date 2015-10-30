@@ -207,7 +207,7 @@ class Simulation(object):
             'save_m': sim_savers._save_m_incremental,
             'save_ndt': sim_helpers.save_ndt,
             'save_restart_data': sim_helpers.save_restart_data,
-            'save_vtk': self.save_vtk,                                # <- this line creates a reference to the simulation object. Why?
+            'save_vtk': sim_savers.save_vtk,                                # <- this line creates a reference to the simulation object. Why?
             'switch_off_H_ext': Simulation.switch_off_H_ext,
             }
 
@@ -1103,10 +1103,10 @@ class Simulation(object):
                             filename=filename, overwrite=overwrite)
 
                     def aux_save(sim):
-                        sim._save_m_to_vtk(vtk_saver)
+                        sim_savers._save_m_to_vtk(vtk_saver)
 
                     func = aux_save
-                    func = lambda sim: sim._save_m_to_vtk(vtk_saver)
+                    func = lambda sim: sim_savers._save_m_to_vtk(sim, vtk_saver)
                 elif func == "eta" or func == "ETA":
                     eta = self.scheduler_shortcuts[func]
                     started = time.time()
@@ -1177,32 +1177,11 @@ class Simulation(object):
 
         return s
 
-    def _save_m_to_vtk(self, vtk_saver):
-        vtk_saver.save_field(self.llg._m_field.f, self.t)
-
-    def _save_field_to_vtk(self, field_name, vtk_saver, region=None):
-        field_data = self.get_field_as_dolfin_function(
-            field_name, region=region)
-        field_data.rename(field_name, field_name)
-        vtk_saver.save_field(field_data, self.t)
-
-    def save_vtk(self, filename=None, overwrite=False, region=None):
-        """
-        Save the magnetisation to a VTK file.
-        """
-        self.save_field_to_vtk(
-            'm', filename=filename, overwrite=overwrite, region=region)
-
-    def save_field_to_vtk(self, field_name, filename=None, overwrite=False, region=None):
-        """
-        Save the field with the given name to a VTK file.
-        """
-        vtk_saver = self._get_vtk_saver(filename, overwrite)
-        self._save_field_to_vtk(field_name, vtk_saver, region=region)
-
     save_m = sim_helpers.save_m
 
     save_field = sim_savers.save_field
+    save_vtk = sim_savers.save_vtk
+    save_field_to_vtk = sim_savers.save_field_to_vtk
 
     length_scales = sim_details.length_scales
     mesh_info = sim_details.mesh_info
@@ -1228,7 +1207,7 @@ class Simulation(object):
         with helpers.TemporaryDirectory() as tmpdir:
             filename = os.path.join(
                 tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-            self.save_field_to_vtk(
+            sim_savers.save_field_to_vtk(
                 field_name=field_name, filename=filename, region=region)
             return render_paraview_scene(filename, outfile=outfile, **kwargs)
 
