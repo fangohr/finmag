@@ -1293,8 +1293,8 @@ class Simulation(object):
 
         """
         from distutils.version import LooseVersion
-        if LooseVersion(df.__version__) == LooseVersion('1.5.0'):
-            raise RuntimeError("Marking mesh regions is currently not supported with dolfin 1.5 due to an API change with respect to 1.4.")
+        if LooseVersion(df.__version__) >= LooseVersion('1.5.0'):
+            raise RuntimeError("Marking mesh regions is currently not supported with dolfin >= 1.5 due to an API change with respect to 1.4.")
 
         # Determine all region identifiers and associate each of them with a unique integer.
         # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
