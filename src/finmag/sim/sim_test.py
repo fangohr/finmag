@@ -796,7 +796,7 @@ class TestSimulation(object):
 
         assert np.max(np.abs(ts - real_ts)) < 1e-24
 
-    @pytest.mark.xfail(reason='dolfin 1.5')
+    @pytest.mark.xfail(reason='dolfin >=1.5')
     def test_mark_regions(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini(mark_regions=True)
