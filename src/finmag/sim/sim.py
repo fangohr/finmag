@@ -1207,7 +1207,7 @@ class Simulation(object):
         with helpers.TemporaryDirectory() as tmpdir:
             filename = os.path.join(
                 tmpdir, 'paraview_scene_{}.pvd'.format(self.name))
-            sim_savers.save_field_to_vtk(
+            self.save_field_to_vtk(
                 field_name=field_name, filename=filename, region=region)
             return render_paraview_scene(filename, outfile=outfile, **kwargs)
 
