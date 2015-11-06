@@ -69,3 +69,5 @@ sudo apt-get install python-pyvtk python-h5py
 sudo pip install --upgrade\
  https://github.com/mikaem/fenicstools/archive/v1.4.0.tar.gz
 
+# install dolfinh5tools
+sudo pip install --upgrade git+https://github.com/fangohr/dolfinh5tools.git

@@ -76,3 +76,26 @@ def save_field(sim, field_name, filename=None, incremental=False, overwrite=Fals
 #-------------------------------------------------------------------------
 # VTK savers
 #-------------------------------------------------------------------------
+
+def _save_m_to_vtk(sim, vtk_saver):
+    vtk_saver.save_field(sim.llg._m_field.f, sim.t)
+
+def _save_field_to_vtk(sim, field_name, vtk_saver, region=None):
+    field_data = sim.get_field_as_dolfin_function(
+        field_name, region=region)
+    field_data.rename(field_name, field_name)
+    vtk_saver.save_field(field_data, sim.t)
+
+def save_vtk(sim, filename=None, overwrite=False, region=None):
+    """
+    Save the magnetisation to a VTK file.
+    """
+    sim.save_field_to_vtk(
+        'm', filename=filename, overwrite=overwrite, region=region)
+
+def save_field_to_vtk(sim, field_name, filename=None, overwrite=False, region=None):
+    """
+    Save the field with the given name to a VTK file.
+    """
+    vtk_saver = sim._get_vtk_saver(filename=filename, overwrite=overwrite)
+    _save_field_to_vtk(sim, field_name, vtk_saver, region=region)
