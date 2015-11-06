@@ -683,7 +683,7 @@ class NormalModeSimulation(Simulation):
 
         return omega, eigenvecs, rel_errors
 
-    def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
+    def export_eigenmode_animations(self, modes, dm_only=False, directory='', create_movies=True, directory_movies=None, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, save_h5=False, **kwargs):
         """
         Export animations for multiple eigenmodes.
 
@@ -732,7 +732,8 @@ class NormalModeSimulation(Simulation):
 
             self.export_normal_mode_animation(
                 k, filename=vtk_filename, dm_only=dm_only, num_cycles=num_cycles,
-                num_snapshots_per_cycle=num_snapshots_per_cycle, scaling=scaling, **kwargs)
+                num_snapshots_per_cycle=num_snapshots_per_cycle, scaling=scaling,
+                save_h5=save_h5, **kwargs)
 
             # Some good default values for movie files
             default_kwargs = {
@@ -750,7 +751,7 @@ class NormalModeSimulation(Simulation):
                 helpers.pvd2avi(vtk_filename, os.path.join(
                     directory_movies, mode_descr + '.avi'), **default_kwargs)
 
-    def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, **kwargs):
+    def export_normal_mode_animation(self, k, filename=None, directory='', dm_only=False, num_cycles=1, num_snapshots_per_cycle=20, scaling=0.2, save_h5=False, **kwargs):
         """
         XXX TODO: Complete me!
 
@@ -788,7 +789,7 @@ class NormalModeSimulation(Simulation):
         export_normal_mode_animation(self.mesh, m, self.eigenfreqs[k], self.eigenvecs[k],
                                      pvd_filename, num_cycles=num_cycles,
                                      num_snapshots_per_cycle=num_snapshots_per_cycle,
-                                     scaling=scaling, dm_only=dm_only)
+                                     scaling=scaling, dm_only=dm_only, save_h5=save_h5)
 
         # Export image files
         if suffix == '.jpg':
