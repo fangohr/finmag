@@ -78,12 +78,19 @@ else
     echo "Patch 'magpar.patch' already applied. Skipping..."
 fi
 
-# Likewise for the second patch.
+# Likewise for the second and third patches.
 if ! patch -f -R -s -p1 --dry-run < ${ROOTDIR}/magpar_code.patch; then
     patch -p1 < ${ROOTDIR}/magpar_code.patch
     echo "Patch 'magpar_code.patch' SUCCESSFULLY applied."
 else
     echo "Patch 'magpar_code.patch' already applied. Skipping..."
+fi
+
+if ! patch -f -R -s -p1 --dry-run < ${ROOTDIR}/magpar_Makefile_libs.patch; then
+    patch -p1 < ${ROOTDIR}/magpar_Makefile_libs.patch
+    echo "Patch 'magpar_Makefile_libs.patch' SUCCESSFULLY applied."
+else
+    echo "Patch 'magpar_Makefile_libs.patch' already applied. Skipping..."
 fi
 
 # Finally, we perform the sed substitution. This substitution will always be
