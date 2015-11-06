@@ -1,0 +1,54 @@
+--- Makefile.libs.orig	2015-02-01 23:49:14.167248246 +0000
++++ Makefile.libs	2015-02-01 23:57:50.560901184 +0000
+@@ -188,13 +188,15 @@
+
+ lapacklib = $(PD)/atlas/lib/liblapack.a
+ lapack: $(lapacklib2) $(lapacklib)
+-$(lapacklib): $(atlaslib) FORCE
++$(lapacklib): $(atlaslib) $(PD)/.lapackreplace
++$(PD)/.lapackreplace:
+ 	cd $(PD)/atlas/lib; \
+ 	cp $(lapacklib).atlas $(lapacklib); \
+ 	mkdir tmp; cd tmp; \
+ 	ar x $(PD)/$(liblapack)/lapack_LINUX.a; \
+ 	ar r ../liblapack.a *.o; \
+-	cd ..; rm -rf tmp
++	cd ..; rm -rf tmp; \
++	touch $(PD)/.lapackreplace
+
+ lapack_mingw: FORCE
+ 	cd $(PD); \
+@@ -476,7 +478,8 @@
+ ############################
+
+ #petsclib = $(PETSC_DIR)/lib/PETSc-config-magpar/libpetsc.a
+-petsc: FORCE
++petsc: $(PD)/.compilepetsc
++$(PD)/.compilepetsc:
+ 	cd $(PD); \
+ 	lib=`basename $(PETSC_DIR)`; \
+ 	if [ ! -e $$lib.tar.gz ]; then wget ftp://ftp.mcs.anl.gov/pub/petsc/release-snapshots/$$lib.tar.gz; fi; \
+@@ -486,7 +489,8 @@
+ 	OPTFLAGS="$(OPTFLAGS)"; export OPTFLAGS; \
+ 	PRECISION="$(PRECISION)"; export PRECISION; \
+ 	./config/PETSc-config-magpar.py 2>&1 | tee config.log; \
+-	$(MAKE) all 2>&1 | tee make.log
++	$(MAKE) all 2>&1 | tee make.log; \
++	touch $(PD)/.compilepetsc
+
+ petsc_mingw: FORCE
+ 	cd $(PD); \
+@@ -539,3 +543,3 @@
+	lib=`basename $(TAO_DIR)`; \
+-	if [ ! -e $$lib.tar.gz ]; then wget -N http://www.mcs.anl.gov/research/projects/tao/download/$$lib.tar.gz; fi; \
++	if [ ! -e $$lib.tar.gz ]; then wget -N http://www.mcs.anl.gov/research/projects/tao/tao-deprecated/download/$$lib.tar.gz; fi; \
+ 	if [ ! -d $$lib ] ; then gunzip -c $$lib.tar.gz|tar xv ; fi ; \
+@@ -578,7 +582,7 @@
+ # libpng
+ ############################
+
+-pnglib = $(PNG_DIR)/lib/libpng12.a
++pnglib = $(PNG_DIR)/lib/libpng14.a
+ libpng: $(pnglib)
+ $(pnglib): $(zliblib)
+ 	cd $(PD); \
