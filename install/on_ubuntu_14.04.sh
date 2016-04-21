@@ -71,3 +71,4 @@ sudo pip install --upgrade\
 
 # install dolfinh5tools
 sudo pip install --upgrade git+https://github.com/fangohr/dolfinh5tools.git
+sudo pip install future
