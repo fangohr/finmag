@@ -1,46 +1,52 @@
-# This script attempts to solve a Temperature-based diffusion-like dolfin
-# problem within an array-based integrator.
+# This script attempts to solve an unphysical Temperature (T)-based dolfin
+# problem within an array-based integrator. It initialises a gaussian, and
+# decays all values independently.
+#
+# Written for dolfin 1.6.0.
 #
 # Run with mpirun -n 2 python array_intergrator_parallel.py.
 
 import dolfin as df
+import dolfinh5tools
+import integrators
 import numpy as np
+import scipy.integrate
+import sys
+
 
 # For parallelness, get rank.
 rank = df.mpi_comm_world().Get_rank()
 
 # Specifying the initial problem.
 mesh = df.IntervalMesh(20, -1, 1)
-# mesh = df.UnitSquareMesh(100, 100)
-# funcSpace = df.VectorFunctionSpace(mesh, 'CG', 1)
 funcSpace = df.FunctionSpace(mesh, 'CG', 1)
 initState = df.Expression("exp(-(pow(x[0], 2) / 0.2))")  # Gaussian
-# initState = df.Constant(rank)
 initFuncVal = df.interpolate(initState, funcSpace)
-
 initialArray = initFuncVal.vector().array()
-print("{}: My vector is of shape {}.".format(rank, initialArray.shape[0]))
-print("{}: My array looks like:\n {}.".format(rank, initialArray))
-print("{}: My mesh.coordinates are:\n {}.".format(rank, mesh.coordinates()))
 
 # Gather the initial array
 initRecv = df.Vector()
 initFuncVal.vector().gather(initRecv, np.array(range(funcSpace.dim()), "intc"))
+
+# Print stuff.
+print("{}: My vector is of shape {}.".format(rank, initialArray.shape[0]))
+print("{}: My array looks like:\n {}.".format(rank, initialArray))
+print("{}: My mesh.coordinates are:\n {}."
+      .format(rank, funcSpace.mesh().coordinates()))
 print("{}: The initial gathered array looks like:\n {}."
       .format(rank, initRecv.array()))
 
 # Defining behaviour in time using dolfin.
-def dTt_dolfin(T):
+def dTt_dolfin(T, t):
     """
     Finds dT/dt using dolfin.
 
     Arguments:
        T: Array representing the temperature at a specific time.
-       funcSpace: Dolfin function space to interpolate T to.
+       t: Single value of time at which to find the derivative.
     Returns:
        The derivative of T with respect to t as an array.
     """
-    # import ipdb; ipdb.set_trace()
 
     # Convert T to dolfin function from array.
     TOld = df.Function(funcSpace)
@@ -114,22 +120,7 @@ def dTt_dolfin(T):
 #     return T * -0.9
 
 
-# Euler
-def euler(Tn, dTndt, tStep):
-    """
-    Performs Euler integration to obtain T_{n+1}.
-
-    Arguments:
-       Tn: Array-like representing Temperature at time t_n.
-       dTndt: Array-like representing dT/dt at time t_n.
-       tStep: Float determining the time to step over.
-
-    Returns T_{n+1} as an array-like.
-    """
-    return Tn + dTndt * tStep
-
-
-def run_until(t, T0, steps=100):
+def run_until(t, T0, steps=100, integrator='odeint'):
     """
     Integrates the problem for time t.
 
@@ -137,25 +128,36 @@ def run_until(t, T0, steps=100):
        t: Float determining total time to integrate over.
        T0: Array denoting initial temperature.
        steps: Integer number of integration steps to perform over the time t.
+       integrator: String denoting the type of integrator to use for time
+                   integration. Options are 'odeint' and 'euler'.
     Returns integrated quantity as an array.
     """
 
-    tStep = t / float(steps)
+    tSteps = np.linspace(0, t, steps + 1)
     T = T0  # Initial Temperature
-    for step in xrange(int(steps)):
-        # T = euler(T, dTt_dolfin(T), tStep)
-        T = euler(T, dTt_dolfin(T), tStep)
+
+    # Here are two integrators you can choose between, because variety is
+    # the spice of life.
+    if integrator == 'odeint':
+        T = scipy.integrate.odeint(dTt_dolfin, T, tSteps)[-1]
+    elif integrator == 'euler':
+        for zI in xrange(1, len(tSteps)):
+            T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
+    else:
+        raise ValueError('Integrator not recognised. Please use "euler" or '
+                         '"odeint".')
     return T
 
 
 print("{}: Integrating...".format(rank))
-T = run_until(1, initFuncVal.vector().array())
+tEnd = 1
+T = run_until(tEnd, initFuncVal.vector().array())
 
 print("{}: My vector is of shape {}.".format(rank, len(T)))
 print("{}: My array looks like:\n {}.".format(rank, T))
 
 # Create function space (and by extension, a vector object) for a fancy Dolfin
-# gathering operation.
+# gathering operation, so we can plot data.
 TSend = df.Function(funcSpace)
 TSend.vector()[:] = T
 
@@ -163,10 +165,33 @@ TRecv = df.Vector()
 TSend.vector().gather(TRecv, np.array(range(funcSpace.dim()), "intc"))
 print("{}: The gathered array looks like:\n {}.".format(rank, TRecv.array()))
 
-# Plot the curves.
+# Plot the curves. This should look bizarre, as the gather reconstructs the
+# data in the incorrect order.
 if rank == 0:
     import matplotlib.pyplot as plt
     plt.plot(initRecv.array())
     plt.plot(TRecv.array())
+    plt.title("This should look bizarre\n when running in parallel.")
     plt.show()
     plt.close()
+
+# Save this data. This stores data in the correct order intelligently.
+sd = dolfinh5tools.lib.openh5("array_integrator_parallel", funcSpace, mode="w")
+sd.save_mesh()
+sd.write(initFuncVal, "T", 0)
+sd.write(TSend, "T", tEnd)
+sd.close()
+
+# Test our data against a known solution.
+T0 = initRecv.array()
+T1 = TRecv.array()
+try:
+    assert (np.abs(T0 / T1 - np.exp(0.9)) < 1e-6).all()  # Known solution.
+    print("{}: Solution is correct on this process.".format(rank))
+except AssertionError:
+    print("{}: T0/T1 =\n{}.".format(rank, T0/T1))
+    raise
+
+# Now that you've got to here, we run the script
+# "load_array_integrator_parallel_data.py" to plot the data in the correct
+# order, using the data we have just saved.
