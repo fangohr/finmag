@@ -1,26 +1,38 @@
 # This script attempts to solve a Temperature-based diffusion-like dolfin
-# problem within an array-based integrator. Look for the balloons <!>.
+# problem within an array-based integrator.
+#
+# Run with mpirun -n 2 python array_intergrator_parallel.py.
 
 import dolfin as df
+import numpy as np
 
+# For parallelness, get rank.
+rank = df.mpi_comm_world().Get_rank()
 
 # Specifying the initial problem.
-# mesh = df.IntervalMesh(100, -10, 10)
-mesh = df.UnitSquareMesh(100, 100)
+mesh = df.IntervalMesh(20, -1, 1)
+# mesh = df.UnitSquareMesh(100, 100)
 # funcSpace = df.VectorFunctionSpace(mesh, 'CG', 1)
 funcSpace = df.FunctionSpace(mesh, 'CG', 1)
 initState = df.Expression("exp(-(pow(x[0], 2) / 0.2))")  # Gaussian
+# initState = df.Constant(rank)
 initFuncVal = df.interpolate(initState, funcSpace)
 
 initialArray = initFuncVal.vector().array()
-print("My vector is of shape {}.".format(initialArray.shape[0]))
-print("My array looks like:\n {}.".format(initialArray))
+print("{}: My vector is of shape {}.".format(rank, initialArray.shape[0]))
+print("{}: My array looks like:\n {}.".format(rank, initialArray))
+print("{}: My mesh.coordinates are:\n {}.".format(rank, mesh.coordinates()))
 
+# Gather the initial array
+initRecv = df.Vector()
+initFuncVal.vector().gather(initRecv, np.array(range(funcSpace.dim()), "intc"))
+print("{}: The initial gathered array looks like:\n {}."
+      .format(rank, initRecv.array()))
 
-# Defining behaviour in time.
-def dTt(T):
+# Defining behaviour in time using dolfin.
+def dTt_dolfin(T):
     """
-    Finds dT/dt (eventually).
+    Finds dT/dt using dolfin.
 
     Arguments:
        T: Array representing the temperature at a specific time.
@@ -28,6 +40,8 @@ def dTt(T):
     Returns:
        The derivative of T with respect to t as an array.
     """
+    # import ipdb; ipdb.set_trace()
+
     # Convert T to dolfin function from array.
     TOld = df.Function(funcSpace)
     TOld.vector()[:] = T
@@ -41,8 +55,8 @@ def dTt(T):
     a = TNew * v * df.dx
 
     # 'f' here represents an expression (but not a dolfin expression) which
-    # describes the mathematical function that calcultes dT/dt from T.
-    f = df.grad(TOld) #df.inner(df.grad(TOld), df.grad(TOld)) # <!> Failure here?
+    # describes the mathematical function that calculates dT/dt from T.
+    f = TOld * df.Constant(-0.9) # df.inner(df.grad(TOld), df.grad(TOld)) # <!> Failure here?
 
     # This 'L' represents what we know, and will be used to calculate our
     # solution eventually.
@@ -80,9 +94,25 @@ def dTt(T):
     # Convert and return the derivative dT/dt.
     # return outFunc.vector().array()
 
-# <!>
-# df.plot(initFuncVal)
-# df.plot(dTt(initFuncVal.vector().array()))
+
+# Defining behaviour in time, clumsily. This behaviour is replicated by
+# dTt_dolfin.
+# def dTt(T):
+#     """
+#     Finds dT/dt clumsily.
+
+#     This represents an unphysical linear decay.
+
+#     Arguments:
+#        T: Array representing the temperature at a specific time.
+#        funcSpace: Dolfin function space to interpolate T to.
+#     Returns:
+#        The derivative of T with respect to t as an array.
+
+#     """
+
+#     return T * -0.9
+
 
 # Euler
 def euler(Tn, dTndt, tStep):
@@ -113,26 +143,30 @@ def run_until(t, T0, steps=100):
     tStep = t / float(steps)
     T = T0  # Initial Temperature
     for step in xrange(int(steps)):
-        T = euler(T, dTt(T), tStep)
+        # T = euler(T, dTt_dolfin(T), tStep)
+        T = euler(T, dTt_dolfin(T), tStep)
     return T
 
 
-print("Integrating...")
-T = run_until(10, initFuncVal.vector().array())
+print("{}: Integrating...".format(rank))
+T = run_until(1, initFuncVal.vector().array())
 
-print("My vector is of shape {}.".format(T))
-print("My array looks like:\n {}.".format(T))
+print("{}: My vector is of shape {}.".format(rank, len(T)))
+print("{}: My array looks like:\n {}.".format(rank, T))
 
-# Gather result arrays.
-# from mpi4py import MPI as mpi
-# comm = mpi.COMM_WORLD
+# Create function space (and by extension, a vector object) for a fancy Dolfin
+# gathering operation.
+TSend = df.Function(funcSpace)
+TSend.vector()[:] = T
 
-# # Plot the two curves.
-# import matplotlib.pyplot as plt
-# plt.plot(initialArray)
-# plt.plot(T)
-# plt.show()
-# plt.close()
+TRecv = df.Vector()
+TSend.vector().gather(TRecv, np.array(range(funcSpace.dim()), "intc"))
+print("{}: The gathered array looks like:\n {}.".format(rank, TRecv.array()))
 
-# Updating the array in this way updates the dolfin function?
-# print("My vector is of shape {}.".format(initFuncVal))
+# Plot the curves.
+if rank == 0:
+    import matplotlib.pyplot as plt
+    plt.plot(initRecv.array())
+    plt.plot(TRecv.array())
+    plt.show()
+    plt.close()
