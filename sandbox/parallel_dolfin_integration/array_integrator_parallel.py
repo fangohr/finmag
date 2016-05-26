@@ -5,6 +5,10 @@
 
 import dolfin as df
 import numpy as np
+import sys
+
+sys.path.append("/home/mark/repos/dolfinh5tools/")
+import dolfinh5tools
 
 
 # For parallelness, get rank.
@@ -42,7 +46,6 @@ def dTt_dolfin(T):
     Returns:
        The derivative of T with respect to t as an array.
     """
-    # import ipdb; ipdb.set_trace()
 
     # Convert T to dolfin function from array.
     TOld = df.Function(funcSpace)
@@ -168,18 +171,14 @@ print("{}: The gathered array looks like:\n {}.".format(rank, TRecv.array()))
 
 # Plot the curves.
 if rank == 0:
-
     import matplotlib.pyplot as plt
     plt.plot(initRecv.array())
     plt.plot(TRecv.array())
     plt.show()
     plt.close()
 
-# Save this data.
-import sys
-sys.path.append("/home/mark/repos/dolfinh5tools/")
-import dolfinh5tools
 
+# Save this data.
 sd = dolfinh5tools.lib.openh5("array_integrator_parallel", funcSpace, mode="w")
 sd.save_mesh()
 sd.write(initFuncVal, "T", 0)
