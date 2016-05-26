@@ -10,6 +10,7 @@ import dolfin as df
 import dolfinh5tools
 import integrators
 import numpy as np
+import scipy.integrate
 import sys
 
 
@@ -132,9 +133,13 @@ def run_until(t, T0, steps=100):
 
     tSteps = np.linspace(0, t, steps + 1)
     T = T0  # Initial Temperature
-
     for zI in xrange(1, len(tSteps)):
-        T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
+
+        # Here are two integrators you can choose between, because variety is
+        # the spice of life.
+        T = scipy.integrate.odeint(dTt_dolfin, T,
+                                   [tSteps[zI - 1], tSteps[zI]])[1]
+        # T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
     return T
 
 
