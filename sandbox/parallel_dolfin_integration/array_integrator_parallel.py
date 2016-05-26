@@ -1,5 +1,8 @@
-# This script attempts to solve a Temperature-based diffusion-like dolfin
-# problem within an array-based integrator.
+# This script attempts to solve an unphysical Temperature (T)-based dolfin
+# problem within an array-based integrator. It initialises a gaussian, and
+# decays all values independently.
+#
+# Written for dolfin 1.6.0.
 #
 # Run with mpirun -n 2 python array_intergrator_parallel.py.
 
@@ -14,8 +17,6 @@ rank = df.mpi_comm_world().Get_rank()
 
 # Specifying the initial problem.
 mesh = df.IntervalMesh(20, -1, 1)
-# mesh = df.UnitSquareMesh(100, 100)
-# funcSpace = df.VectorFunctionSpace(mesh, 'CG', 1)
 funcSpace = df.FunctionSpace(mesh, 'CG', 1)
 initState = df.Expression("exp(-(pow(x[0], 2) / 0.2))")  # Gaussian
 initFuncVal = df.interpolate(initState, funcSpace)
@@ -167,7 +168,8 @@ TRecv = df.Vector()
 TSend.vector().gather(TRecv, np.array(range(funcSpace.dim()), "intc"))
 print("{}: The gathered array looks like:\n {}.".format(rank, TRecv.array()))
 
-# Plot the curves.
+# Plot the curves. This should look bizarre, as the gather reconstructs the
+# data in the incorrect order.
 if rank == 0:
     import matplotlib.pyplot as plt
     plt.plot(initRecv.array())
@@ -175,10 +177,13 @@ if rank == 0:
     plt.show()
     plt.close()
 
-
-# Save this data.
+# Save this data. This stores data in the correct order intelligently.
 sd = dolfinh5tools.lib.openh5("array_integrator_parallel", funcSpace, mode="w")
 sd.save_mesh()
 sd.write(initFuncVal, "T", 0)
 sd.write(TSend, "T", tEnd)
 sd.close()
+
+# Now that you've got to here, you can run the script
+# "load_array_integrator_parallel_data.py" to plot the data in the correct
+# order, using the data we have just saved.
