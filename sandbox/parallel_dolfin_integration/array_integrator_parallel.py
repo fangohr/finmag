@@ -8,6 +8,7 @@
 
 import dolfin as df
 import dolfinh5tools
+import integrators
 import numpy as np
 import sys
 
@@ -118,21 +119,6 @@ def dTt_dolfin(T):
 #     return T * -0.9
 
 
-# Euler
-def euler(Tn, dTndt, tStep):
-    """
-    Performs Euler integration to obtain T_{n+1}.
-
-    Arguments:
-       Tn: Array-like representing Temperature at time t_n.
-       dTndt: Array-like representing dT/dt at time t_n.
-       tStep: Float determining the time to step over.
-
-    Returns T_{n+1} as an array-like.
-    """
-    return Tn + dTndt * tStep
-
-
 def run_until(t, T0, steps=100):
     """
     Integrates the problem for time t.
@@ -147,8 +133,7 @@ def run_until(t, T0, steps=100):
     tStep = t / float(steps)
     T = T0  # Initial Temperature
     for step in xrange(int(steps)):
-        # T = euler(T, dTt_dolfin(T), tStep)
-        T = euler(T, dTt_dolfin(T), tStep)
+        T = integrators.euler(T, dTt_dolfin(T), tStep)
     return T
 
 
