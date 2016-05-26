@@ -165,6 +165,7 @@ if rank == 0:
     import matplotlib.pyplot as plt
     plt.plot(initRecv.array())
     plt.plot(TRecv.array())
+    plt.title("This should look bizarre\n when running in parallel.")
     plt.show()
     plt.close()
 
