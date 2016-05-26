@@ -4,11 +4,9 @@
 # Run with mpirun -n 2 python array_intergrator_parallel.py.
 
 import dolfin as df
+import dolfinh5tools
 import numpy as np
 import sys
-
-sys.path.append("/home/mark/repos/dolfinh5tools/")
-import dolfinh5tools
 
 
 # For parallelness, get rank.
