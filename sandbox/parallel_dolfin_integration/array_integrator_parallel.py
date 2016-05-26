@@ -120,7 +120,7 @@ def dTt_dolfin(T, t):
 #     return T * -0.9
 
 
-def run_until(t, T0, steps=100):
+def run_until(t, T0, steps=100, integrator='odeint'):
     """
     Integrates the problem for time t.
 
@@ -128,18 +128,24 @@ def run_until(t, T0, steps=100):
        t: Float determining total time to integrate over.
        T0: Array denoting initial temperature.
        steps: Integer number of integration steps to perform over the time t.
+       integrator: String denoting the type of integrator to use for time
+                   integration. Options are 'odeint' and 'euler'.
     Returns integrated quantity as an array.
     """
 
     tSteps = np.linspace(0, t, steps + 1)
     T = T0  # Initial Temperature
-    for zI in xrange(1, len(tSteps)):
 
-        # Here are two integrators you can choose between, because variety is
-        # the spice of life.
-        T = scipy.integrate.odeint(dTt_dolfin, T,
-                                   [tSteps[zI - 1], tSteps[zI]])[1]
-        # T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
+    # Here are two integrators you can choose between, because variety is
+    # the spice of life.
+    if integrator == 'odeint':
+        T = scipy.integrate.odeint(dTt_dolfin, T, tSteps)[-1]
+    elif integrator == 'euler':
+        for zI in xrange(1, len(tSteps)):
+            T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
+    else:
+        raise ValueError('Integrator not recognised. Please use "euler" or '
+                         '"odeint".')
     return T
 
 
@@ -180,7 +186,7 @@ sd.close()
 T0 = initRecv.array()
 T1 = TRecv.array()
 try:
-    assert (T0 / T1 - np.exp(0.9) < 1e-3).all()  # Known solution.
+    assert (np.abs(T0 / T1 - np.exp(0.9)) < 1e-6).all()  # Known solution.
     print("{}: Solution is correct on this process.".format(rank))
 except AssertionError:
     print("{}: T0/T1 =\n{}.".format(rank, T0/T1))
