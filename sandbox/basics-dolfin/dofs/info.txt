@@ -1,0 +1,2 @@
+This looks useful: https://github.com/mikaem/fenicstools/wiki/DofMap-plotter 
+to understand the whole dofmap issue.
