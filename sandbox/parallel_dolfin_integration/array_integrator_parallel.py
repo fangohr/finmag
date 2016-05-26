@@ -130,10 +130,11 @@ def run_until(t, T0, steps=100):
     Returns integrated quantity as an array.
     """
 
-    tStep = t / float(steps)
+    tSteps = np.linspace(0, t, steps + 1)
     T = T0  # Initial Temperature
-    for step in xrange(int(steps)):
-        T = integrators.euler(T, dTt_dolfin(T, t), tStep)
+
+    for zI in xrange(1, len(tSteps)):
+        T = integrators.euler(T, dTt_dolfin(T, t), tSteps[1] - tSteps[0])
     return T
 
 
