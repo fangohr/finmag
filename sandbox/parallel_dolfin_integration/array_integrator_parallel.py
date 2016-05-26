@@ -36,13 +36,13 @@ print("{}: The initial gathered array looks like:\n {}."
       .format(rank, initRecv.array()))
 
 # Defining behaviour in time using dolfin.
-def dTt_dolfin(T):
+def dTt_dolfin(T, t):
     """
     Finds dT/dt using dolfin.
 
     Arguments:
        T: Array representing the temperature at a specific time.
-       funcSpace: Dolfin function space to interpolate T to.
+       t: Single value of time at which to find the derivative.
     Returns:
        The derivative of T with respect to t as an array.
     """
@@ -133,7 +133,7 @@ def run_until(t, T0, steps=100):
     tStep = t / float(steps)
     T = T0  # Initial Temperature
     for step in xrange(int(steps)):
-        T = integrators.euler(T, dTt_dolfin(T), tStep)
+        T = integrators.euler(T, dTt_dolfin(T, t), tStep)
     return T
 
 
