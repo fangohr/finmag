@@ -175,6 +175,16 @@ sd.write(initFuncVal, "T", 0)
 sd.write(TSend, "T", tEnd)
 sd.close()
 
-# Now that you've got to here, you can run the script
+# Test our data against a known solution.
+T0 = initRecv.array()
+T1 = TRecv.array()
+try:
+    assert (T0 / T1 - np.exp(0.9) < 1e-3).all()  # Known solution.
+    print("{}: Solution is correct on this process.".format(rank))
+except AssertionError:
+    print("{}: T0/T1 =\n{}.".format(rank, T0/T1))
+    raise
+
+# Now that you've got to here, we run the script
 # "load_array_integrator_parallel_data.py" to plot the data in the correct
 # order, using the data we have just saved.
