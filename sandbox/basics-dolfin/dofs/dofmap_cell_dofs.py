@@ -29,11 +29,27 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
+if rank == 0:
+    print("2d Example")
+
 mesh = df.UnitSquareMesh(4, 4)
 
 V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
-
 x = V.dofmap()
 
 for cell in df.cells(mesh):
     print "Process {}/{}, cell #{}:  {}, {}".format(rank, size, cell.index(), cell, V.dofmap().cell_dofs(cell.index()))
+
+#For a 1d example, uncomment the code below and run
+# mpirun -np 2 python dofmap_cell_dofs.py  | grep "topological" | sort
+#
+#if rank == 0:
+#    print("1d Example")
+#
+#mesh = df.IntervalMesh(20, -1, 1)
+#V = df.FunctionSpace(mesh, 'CG', 1)
+#x = V.dofmap()
+#for cell in df.cells(mesh):
+#    print("Process {}/{}, cell #{}:  {}, {}".format(rank, size, cell.index(), cell, V.dofmap().cell_dofs(cell.index())))
+#
+#
