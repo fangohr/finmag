@@ -6,6 +6,7 @@
 import dolfin as df
 import numpy as np
 
+
 # For parallelness, get rank.
 rank = df.mpi_comm_world().Get_rank()
 
@@ -15,17 +16,18 @@ mesh = df.IntervalMesh(20, -1, 1)
 # funcSpace = df.VectorFunctionSpace(mesh, 'CG', 1)
 funcSpace = df.FunctionSpace(mesh, 'CG', 1)
 initState = df.Expression("exp(-(pow(x[0], 2) / 0.2))")  # Gaussian
-# initState = df.Constant(rank)
 initFuncVal = df.interpolate(initState, funcSpace)
-
 initialArray = initFuncVal.vector().array()
-print("{}: My vector is of shape {}.".format(rank, initialArray.shape[0]))
-print("{}: My array looks like:\n {}.".format(rank, initialArray))
-print("{}: My mesh.coordinates are:\n {}.".format(rank, mesh.coordinates()))
 
 # Gather the initial array
 initRecv = df.Vector()
 initFuncVal.vector().gather(initRecv, np.array(range(funcSpace.dim()), "intc"))
+
+# Print stuff.
+print("{}: My vector is of shape {}.".format(rank, initialArray.shape[0]))
+print("{}: My array looks like:\n {}.".format(rank, initialArray))
+print("{}: My mesh.coordinates are:\n {}."
+      .format(rank, funcSpace.mesh().coordinates()))
 print("{}: The initial gathered array looks like:\n {}."
       .format(rank, initRecv.array()))
 
@@ -149,13 +151,14 @@ def run_until(t, T0, steps=100):
 
 
 print("{}: Integrating...".format(rank))
-T = run_until(1, initFuncVal.vector().array())
+tEnd = 1
+T = run_until(tEnd, initFuncVal.vector().array())
 
 print("{}: My vector is of shape {}.".format(rank, len(T)))
 print("{}: My array looks like:\n {}.".format(rank, T))
 
 # Create function space (and by extension, a vector object) for a fancy Dolfin
-# gathering operation.
+# gathering operation, so we can plot data.
 TSend = df.Function(funcSpace)
 TSend.vector()[:] = T
 
@@ -165,8 +168,20 @@ print("{}: The gathered array looks like:\n {}.".format(rank, TRecv.array()))
 
 # Plot the curves.
 if rank == 0:
+
     import matplotlib.pyplot as plt
     plt.plot(initRecv.array())
     plt.plot(TRecv.array())
     plt.show()
     plt.close()
+
+# Save this data.
+import sys
+sys.path.append("/home/mark/repos/dolfinh5tools/")
+import dolfinh5tools
+
+sd = dolfinh5tools.lib.openh5("array_integrator_parallel", funcSpace, mode="w")
+sd.save_mesh()
+sd.write(initFuncVal, "T", 0)
+sd.write(TSend, "T", tEnd)
+sd.close()
