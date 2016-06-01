@@ -15,7 +15,8 @@ fi
 
 required="fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev
     libboost-test-dev python-matplotlib python-visual python-scipy python-pip
-    python-setuptools python-progressbar paraview-python cython netgen netgen-doc python-zmq python-tornado"
+    python-setuptools python-progressbar paraview-python cython netgen netgen-doc
+    python-zmq python-tornado git"
 
 #Python-zmq and python-tornado are requirements for the ipython notebook.
 
@@ -72,3 +73,6 @@ sudo pip install --upgrade\
 # install dolfinh5tools
 sudo pip install --upgrade git+https://github.com/fangohr/dolfinh5tools.git
 sudo pip install future
+
+# install netifaces for requesting binary license
+sudo pip install netifaces
