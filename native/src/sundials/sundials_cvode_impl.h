@@ -82,7 +82,7 @@ namespace finmag { namespace sundials {
                 ASSERT(!cvode_error.get());
             } else {
                 // failure error code, we should have an error message
-                std::auto_ptr<std::string> msg(cvode_error.release());
+                std::shared_ptr<std::string> msg(cvode_error.release());
                 if (msg.get()) {
                     throw std::runtime_error(*msg);
                 } else {
