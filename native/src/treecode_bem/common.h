@@ -28,8 +28,8 @@ struct octree_node {
 
 };
 
-inline double pow2(double x);
-inline double det2(double *dx, double *dy, double *dz);
+extern inline double pow2(double x);
+extern inline double det2(double *dx, double *dy, double *dz);
 double **alloc_2d_double(int ndim1, int ndim2);
 void free_2d_double(double **p);
 double ***alloc_3d_double(int ndim1, int ndim2, int ndim3);
