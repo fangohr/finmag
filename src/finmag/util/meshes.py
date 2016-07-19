@@ -716,6 +716,41 @@ def sphere_inside_box(r_sphere, r_shell, l_box, maxh_sphere, maxh_box, maxh_shel
     return mesh
 
 
+def truncated_cone(r_base, r_top, h, maxh, save_result=True, filename='', directory=''):
+    """
+    Return a dolfin mesh representing a truncated-cone (a cone with the top
+    sliced off) of base-radius, `r_base` and top-radius, `r_top` with height,
+    `h`. The argument `maxh` controls the maximal element size in the mesh
+    (see the Netgen manual 4.x, Chapter 2).
+
+    If `save_result` is True (the default), both the generated geofile and the
+    dolfin mesh will be saved to disk. By default, the filename will be
+    automatically generated based on the values of `r_base`, `r_top`, `h` and
+    `maxh` (for example, 'cutcone-50_0-20_0-10_0-2_0.geo'), but a different
+    one can be specified by passing a name (without suffix) into `filename`.
+
+    If `save_result` is False, passing a filename has no effect. The
+    `directory` argument can be used to control where the files should be
+    saved in case no filename is given explicitly.
+    """
+    csg_string = textwrap.dedent("""\
+        algebraic3d
+        solid cutcone = cone ( 0, 0, 0; {r_base}; 0, 0, {h}; {r_top})
+            and plane (0, 0, 0; 0, 0, -1)
+            and plane (0, 0, {h}; 0, 0, 1) -maxh = {maxh};
+        tlo cutcone;
+        """).format(r_base=r_base, r_top=r_top, h=h, maxh=maxh)
+
+    if save_result == True and filename == '':
+        filename = "cutcone-{:.1f}-{:.1f}-{:.1f}-{:.1f}".format(
+                    r_base, r_top, h, maxh).replace(".", "_")
+
+    return from_csg(csg_string,
+                    save_result=save_result,
+                    filename=filename,
+                    directory=directory)
+
+
 def mesh_volume(mesh):
     """
     Computes the total volume of all tetrahedral cells in the mesh.
