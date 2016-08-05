@@ -12,7 +12,7 @@ class TestLengthScales(object):
 
         # Create a DG scalar function space.
         self.functionspace = df.FunctionSpace(self.mesh3d,
-                                              family="DG", degree=1)
+                                              "DG", 1)
 
     def test_exchange_length_constant(self):
         A = Field(self.functionspace, 2/mu0)
