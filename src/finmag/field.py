@@ -113,7 +113,8 @@ class Field(object):
                 assert (isinstance(expr, basestring) or
                         isinstance(expr, (tuple, list)) and len(expr) == 1)
                 expr = str(expr)  # dolfin does not like unicode in the expression
-            if isinstance(self.functionspace, df.VectorFunctionSpace):
+            if isinstance(self.functionspace, df.FunctionSpace) and \
+               self.functionspace.num_sub_spaces() == 3:
                 assert isinstance(expr, (tuple, list)) and len(expr) == 3
                 assert all(isinstance(item, basestring) for item in expr)
                 map(str, expr)  # dolfin does not like unicode in the expression
