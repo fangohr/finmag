@@ -588,9 +588,13 @@ def verify_function_space_type(function_space, family, degree, dim):
         (family == ufl_element.family() and
          degree == ufl_element.degree())
 
+    print 'Family', family
+    print 'Degree', degree
+    print family_and_degree_are_correct
+    
     if dim == None:
         # `function_space` should be a dolfin.FunctionSpace
-        return (isinstance(function_space, df.FunctionSpace) and
+        return (function_space.num_sub_spaces() == 0 and
                 family_and_degree_are_correct)
     else:
         # `function_space` should be a dolfin.VectorFunctionSpace
@@ -599,7 +603,7 @@ def verify_function_space_type(function_space, family, degree, dim):
         if len(value_shape) != 1:
             return False
         else:
-            return (isinstance(function_space, df.VectorFunctionSpace) and
+            return (function_space.num_sub_spaces() > 0 and
                     family_and_degree_are_correct and
                     dim == value_shape[0])
 
