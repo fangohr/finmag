@@ -137,8 +137,9 @@ class TestField(object):
                                    constrained_domain=self.pbc)
 
         self.vector3d_fspaces = [
-            self.fs1d_vector3d, self.fs2d_vector3d,
-            self.fs3d_vector3d, self.fs1d_vector3d_pbc,
+#            self.fs1d_vector3d, self.fs2d_vector3d,
+#            self.fs3d_vector3d,
+            self.fs1d_vector3d_pbc,
             self.fs2d_vector3d_pbc, self.fs3d_vector3d_pbc]
 
     def create_vector4d_function_spaces(self):
@@ -431,7 +432,6 @@ class TestField(object):
         for functionspace in self.vector3d_fspaces:
             for constant in constants:
                 field = Field(functionspace, constant)
-
                 # Check vector (numpy array) values (should be exact).
                 f_array = field.get_ordered_numpy_array_xxx()
                 f_array_split = np.split(f_array, field.value_dim())
@@ -1067,9 +1067,9 @@ class TestField(object):
             field = Field(functionspace)
             value_dim_expected = functionspace.ufl_element().value_shape()
             assert isinstance(field.value_dim(), int)
-            if isinstance(functionspace, df.FunctionSpace):
+            if functionspace.num_sub_spaces() == 0:
                 assert field.value_dim() == 1
-            elif isinstance(functionspace, df.VectorFunctionSpace):
+            elif functionspace.num_sub_spaces() > 0:
                 assert field.value_dim() == value_dim_expected[0]
 
     def test_mesh(self):

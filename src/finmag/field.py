@@ -83,7 +83,8 @@ class Field(object):
 
     def from_array(self, arr):
         assert isinstance(arr, np.ndarray)
-        if arr.shape == (3,) and isinstance(self.functionspace, df.VectorFunctionSpace):
+        if arr.shape == (3,) and (isinstance(self.functionspace, df.FunctionSpace) and
+                                  self.functionspace.num_sub_spaces() == self.value_dim()):
             self.from_constant(df.Constant(arr))
         else:
             if arr.shape[0] == self.f.vector().local_size():
@@ -109,7 +110,7 @@ class Field(object):
 
         """
         if not isinstance(expr, df.Expression):
-            if isinstance(self.functionspace, df.FunctionSpace):
+            if isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == 0:
                 assert (isinstance(expr, basestring) or
                         isinstance(expr, (tuple, list)) and len(expr) == 1)
                 expr = str(expr)  # dolfin does not like unicode in the expression
@@ -144,11 +145,11 @@ class Field(object):
         self.from_constant(df.Constant(seq))
 
     def _check_can_set_scalar_value(self):
-        if not isinstance(self.functionspace, df.FunctionSpace):
+        if not self.functionspace.num_sub_spaces() == 0:
             raise ValueError("Cannot set vector field with scalar value.")
 
     def _check_can_set_vector_value(self, seq):
-        if not isinstance(self.functionspace, df.VectorFunctionSpace):
+        if not (isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == self.value_dim()):
             raise ValueError("Cannot set scalar field with vector value.")
         if len(seq) != self.functionspace.num_sub_spaces():
             raise ValueError(
@@ -336,7 +337,8 @@ class Field(object):
         """
         Return `True` if the Field is a scalar field and `False` otherwise.
         """
-        return isinstance(self.functionspace, df.FunctionSpace)
+        if self.functionspace.num_sub_spaces() == 0:
+            return True
 
     def is_constant(self, eps=1e-14):
         """
@@ -572,7 +574,7 @@ class Field(object):
             return 1
         else:
             # value_shape() returns a tuple (N,) and int is required.
-            return self.functionspace.ufl_element().value_shape()[0]
+            return self.functionspace.num_sub_spaces()#ufl_element().value_shape()[0]
 
     def vector(self):
         return self.f.vector()
