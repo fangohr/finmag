@@ -770,7 +770,7 @@ def nodal_volume(space, unit_length=1):
     """
     v = df.TestFunction(space)
     dim = space.mesh().topology().dim()
-    if isinstance(space, df.VectorFunctionSpace):
+    if isinstance(space, df.FunctionSpace) and space.num_sub_spaces() == 3:
         return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array() * unit_length ** dim
     else:
         return df.assemble(v * df.dx).array() * unit_length ** dim
