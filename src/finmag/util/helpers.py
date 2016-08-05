@@ -552,7 +552,7 @@ def mesh_and_space(mesh_or_space):
     was passed in as argument and the other one built/extracted from it.
 
     """
-    if isinstance(mesh_or_space, df.VectorFunctionSpace):
+    if isinstance(mesh_or_space, df.FunctionSpace) and mesh_or_space.num_sub_spaces() == 3:
         S3 = mesh_or_space
         mesh = S3.mesh()
     else:
