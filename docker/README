@@ -1,0 +1,8 @@
+This docker file is for testing finmag with Ubuntu 16.04.
+It makes an image containing finmag's dependencies, and then mounts the finmag
+source directory.
+
+To use it:
+
+    make build
+    make run
