@@ -765,7 +765,6 @@ def scalar_valued_function(value, mesh_or_space):
         class HelperExpression(df.Expression):
 
             def __init__(self, value):
-                super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):
@@ -830,7 +829,6 @@ def scalar_valued_dg_function(value, mesh_or_space):
         class HelperExpression(df.Expression):
 
             def __init__(self, value):
-                super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):
