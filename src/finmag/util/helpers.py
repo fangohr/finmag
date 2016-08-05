@@ -696,7 +696,6 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
         class HelperExpression(df.Expression):
 
             def __init__(self, value):
-                super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):
