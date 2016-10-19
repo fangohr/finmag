@@ -6,6 +6,7 @@ from finmag.energies import Demag
 from finmag.util.meshes import from_geofile
 from finmag.util.helpers import stats, sphinx_sci as s
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
+import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -48,8 +49,8 @@ def start_table():
     table += table_delim
     return table
 
-
-def pytest_funcarg__finmag(request):
+@pytest.fixture
+def finmag(request):
     finmag = request.cached_setup(setup=setup_finmag, teardown=teardown_finmag,
                                   scope="module")
     return finmag

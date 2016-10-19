@@ -5,11 +5,12 @@ from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.energies import UniaxialAnisotropy, CubicAnisotropy
 from finmag.util.helpers import sphinx_sci as s
+import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-def pytest_funcarg__finmag(request):
+@pytest.fixture
+def finmag(request):
     finmag = request.cached_setup(setup=setup,
                                   teardown=teardown, scope="session")
     return finmag
