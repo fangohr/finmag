@@ -1,0 +1,11 @@
+--- drawing.tcl	2016-10-19 15:06:50.618255276 +0100
++++ drawing.tcl	2016-10-19 15:07:29.991592861 +0100
+@@ -11,7 +11,7 @@
+ # use this one for Togl 2.0
+ # if {[catch {togl .ndraw -width 400 -height 300  -rgba true -double true -depth true -privatecmap false -stereo false -indirect true -create init  -display draw -reshape reshape  }] } {    
+ 
+-if {[catch {togl .ndraw -width 400 -height 300  -rgba true -double true -depth true -privatecmap false -stereo false -indirect true }] } {    puts "no OpenGL" 
++if {[catch {togl .ndraw -width 400 -height 300  -rgba true -double true -depth true -privatecmap false -stereo false -indirect false }] } {    puts "no OpenGL" 
+ } {
+     #
+     pack .ndraw -expand true -fill both -padx 10 -pady 10
