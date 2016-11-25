@@ -2,8 +2,6 @@
 
 # Script that stops the master, and attempts to tear down the workers.
 
-. common.lib
-
 # Function to append the name of this script to output messages.
 # $1: Message (in quotes)
 # Returns nothing, but prints to stdout.
@@ -27,7 +25,7 @@ echo_stop "Master stopped"
 
 # Stopping and destroying workers.
 for zI in $(seq 1 2); do
-    if [ -d worker_$zI ]; then
+    if [ ! -d worker_$zI ]; then
         echo_stop "Worker worker_$zI not found. Not destroying."
     fi
     echo_stop "Stopping worker_$zI..."

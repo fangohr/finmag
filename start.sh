@@ -77,7 +77,7 @@ fi
 # Start the workers, but give up if there is a problem.
 for zI in $(seq 1 2); do
     echo_start "Starting worker worker_$zI..."
-    WORKER_START_OUTERR="$(create_buildbot_worker worker_$zI worker_$zI pass_$zI)"
+    WORKER_START_OUTERR="$($BUILDBOT_EXEC_PREFIX/buildbot-worker start worker_$zI 2>&1)"
     if [ $? -ne 0 ]; then
         echo_start "Error in starting worker worker_$zI:"
         echo_start "$WORKER_START_OUTERR"
