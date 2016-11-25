@@ -34,7 +34,6 @@ function create_buildbot_worker {
         abort
     else
         echo_start "Worker $2 created."
-        echo_start "Output: $CREATE_OUTERR"
     fi
 }
 
