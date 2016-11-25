@@ -27,7 +27,7 @@ RUN pip install --upgrade pytest
 # Install the newest netgen (to avoid segmentation fault)
 WORKDIR /usr/local
 RUN apt-get install -y wget autoconf tk8.5-dev tcl8.5-dev libxmu-dev gawk python3-tk python3-pip metis openmpi-bin libopenmpi-dev libtogl-dev python3-dev
-RUN wget http://kent.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz 
+RUN wget http://kent.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz
 RUN tar -xvf netgen-5.3.1.tar.gz
 WORKDIR /usr/local/netgen-5.3.1
 RUN autoconf
@@ -51,7 +51,3 @@ WORKDIR /io
 
 # not mounted yet
 # RUN cd /io/finmag/native && make
-
-
-
-
