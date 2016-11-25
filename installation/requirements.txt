@@ -1,5 +1,5 @@
-buildbot
-buildbot-console-view
-buildbot-waterfall-view
-buildbot-worker
-buildbot-www
+buildbot==0.9.0.post1
+buildbot-console-view==0.9.0.post1
+buildbot-waterfall-view==0.9.0.post1
+buildbot-worker==0.9.0.post1
+buildbot-www==0.9.0.post1
