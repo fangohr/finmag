@@ -1,0 +1,1 @@
+This orphan branch contains a BuildBot configuration to test finmag.
