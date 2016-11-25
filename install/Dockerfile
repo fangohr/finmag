@@ -15,7 +15,7 @@ RUN apt-get install -y cython libsundials-serial-dev libboost-python-dev \
 
 # Packages required to run tests
 RUN apt-get install -y python-pip git libpetsc3.6 libpetsc3.6.2-dev libslepc3.6.1 \
-    libslepc3.6.1-dev netgen gmsh
+    libslepc3.6.1-dev gmsh
 RUN PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.6.0.tar.gz --allow-all-external
 RUN pip install --upgrade pip aeon sh future git+https://github.com/fangohr/dolfinh5tools.git
 
