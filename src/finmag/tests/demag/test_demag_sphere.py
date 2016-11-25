@@ -6,7 +6,7 @@ from finmag.util.meshes import sphere
 from finmag.energies import Demag
 
 TOL = 1e-2
-solvers = ['FK', 'GCR', 'Treecode']
+solvers = ['FK', 'Treecode']
 
 
 @pytest.fixture(scope="module")
