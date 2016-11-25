@@ -1,0 +1,10 @@
+*~
+*.log
+*.hostname
+*.pid
+*.sample
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+worker_*
+master/gitpoller
