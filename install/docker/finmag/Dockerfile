@@ -39,7 +39,7 @@ ENV NETGENDIR /opt/netgen/bin
 
 
 # install buildbot
-RUN pip install buildbot buildbot-console-view buildbot-waterfall-view buildbot-worker buildbot-www
+RUN pip install --upgrade buildbot buildbot-console-view buildbot-waterfall-view buildbot-worker buildbot-www
 
 # create working directory, with the intention to mount /io from host.
 # We also expect that a finmag repository is checked out to /io/finmag
