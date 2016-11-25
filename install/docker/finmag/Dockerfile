@@ -16,8 +16,9 @@ RUN apt-get install -y cython libsundials-serial-dev libboost-python-dev \
 # Packages required to run tests
 RUN apt-get install -y python-pip git libpetsc3.6 libpetsc3.6.2-dev libslepc3.6.1 \
     libslepc3.6.1-dev gmsh
+RUN pip install --upgrade pip
 RUN PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.6.0.tar.gz --allow-all-external
-RUN pip install --upgrade pip aeon sh future git+https://github.com/fangohr/dolfinh5tools.git
+RUN pip install --upgrade aeon sh future git+https://github.com/fangohr/dolfinh5tools.git
 
 # Not necessary convenience packages (can be removed)!!!
 RUN apt-get install -y emacs
@@ -47,7 +48,6 @@ ENV PYTHONPATH=/io/finmag/src
 
 RUN mkdir /io
 WORKDIR /io
-
 
 # not mounted yet
 # RUN cd /io/finmag/native && make
