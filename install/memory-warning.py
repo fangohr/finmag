@@ -4,11 +4,11 @@ from psutil import virtual_memory
 mem = virtual_memory()
 mem.total  # total physical virtual_memory
 
-GB = 1024**3
+GB = float(1024**3)   # float need if we run with python 2
 
-if mem.total / GB < 4:
+if mem.total / GB < 3.8:
     print("Warning: building native modules may fail due to not enough physical memory.")
-    print("You have {} GB available.\n".format(mem.total/GB))
+    print("You have {:.1f} GB available.\n".format(mem.total/GB))
     print("\tContext: The C++ compiler needs lots of RAM. 4GB seem sufficient (Nov 2016)\n")
     print("\tIf you are on OSX / Windows, and using Docker, try this")
     print("""\t\tdocker-machine stop
