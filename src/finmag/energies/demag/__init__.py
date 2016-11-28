@@ -6,7 +6,7 @@ from treecode_bem import TreecodeBEM
 
 log = logging.getLogger("finmag")
 KNOWN_SOLVERS = {
-    'FK': FKDemag, 'GCR': FemBemGCRSolver, 'Treecode': TreecodeBEM}
+    'FK': FKDemag, 'Treecode': TreecodeBEM}
 
 
 def Demag(solver='FK', *args, **kwargs):
