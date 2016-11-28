@@ -13,6 +13,6 @@ if mem.total / GB < 3.8:
     print("\tIf you are on OSX / Windows, and using Docker, try this")
     print("""\t\tdocker-machine stop
 \t\tVBoxManage modifyvm default --memory 4096
-\t\tdocker-machine start)\n""")
+\t\tdocker-machine start\n""")
     print("\tSource: http://stackoverflow.com/questions/32834082/how-to-increase-docker-machine-memory-mac")
     sys.exit(1)
