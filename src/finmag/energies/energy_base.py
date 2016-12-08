@@ -50,7 +50,7 @@ class EnergyBase(object):
 
     """
     _supported_methods = ['box-assemble', 'box-matrix-numpy',
-                          'box-matrix-petsc', 'project']
+                          'box-matrix-petsc', 'project', 'direct']
 
     def __init__(self, method="box-matrix-petsc", in_jacobian=False):
         if method not in self._supported_methods:
@@ -126,6 +126,8 @@ class EnergyBase(object):
         elif self.method == 'project':
             self.__setup_field_project()
             self.__compute_field = self.__compute_field_project
+        elif self.method == 'direct':
+            self.__compute_field = self.__compute_field_petsc
         else:
             logger.error("Can't create '{}' object with method '{}'. "
                          "Possible choices are "
