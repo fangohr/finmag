@@ -50,8 +50,7 @@ def test_non_uniform_external_field():
     # applied field
     # (0, -H, 0) for 0 <= x <= a
     # (0, +H, 0) for a <  x <= length
-    H_expr = df.Expression(
-        ("0", "H*(x[0]-a)/fabs(x[0]-a)", "0"), a=length / 2, H=Ms / 2, degree=1)
+    H_expr = df.Expression(("0", "H*(x[0]-a)/fabs(x[0]-a)", "0"), a=length / 2, H=Ms / 2, degree=1)
     sim.add(Zeeman(H_expr))
     sim.alpha = 1.0
     sim.run_until(1e-9)
