@@ -170,7 +170,7 @@ class TestSimulation(object):
         m_init = df.Expression(("cos(x[0]*pi)",
                                 "sin(x[0]*pi)",
                                 "0.0"),
-                               unit_length=unit_length)
+                               unit_length=unit_length, degree=1)
         sim = sim_with(
             mesh, Ms=8.6e5, m_init=m_init, unit_length=unit_length, demag_solver=None)
 
@@ -917,7 +917,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
         sim = barmini()
         f = getattr(sim, method_name)
 
-        field_expr = df.Expression(("0", "t", "0"), t=0)
+        field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
         H_ext = TimeZeeman(field_expr, t_off=t_off)
         # this should automatically register H_ext.update(), which is what we
         # check next
@@ -939,7 +939,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     os.chdir(str(tmpdir))
     TOL = 1e-8
 
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     H_ext = TimeZeeman(field_expr, t_off=2e-11)
     sim = barmini()
     sim.add(H_ext)
