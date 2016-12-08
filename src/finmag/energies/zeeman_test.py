@@ -39,7 +39,7 @@ def test_interaction_accepts_name():
     """
     Check that the interaction accepts a 'name' argument and has a 'name' attribute.
     """
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
 
     zeeman = Zeeman([0, 0, 1], name='MyZeeman')
     assert hasattr(zeeman, 'name')
@@ -243,7 +243,7 @@ def test_value_set_update():
 
 
 def test_time_zeeman_init():
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     field_lst = [1, 0, 0]
     field_tpl = (1, 0, 0)
     field_arr = np.array([1, 0, 0])
@@ -267,7 +267,7 @@ def test_time_zeeman_init():
 
 
 def test_time_dependent_field_update():
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     H_ext = TimeZeeman(field_expr)
     H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
 
@@ -278,7 +278,7 @@ def test_time_dependent_field_update():
 
 def test_time_dependent_field_switched_off():
     # Check the time update (including switching off) with a varying field
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     H_ext = TimeZeeman(field_expr, t_off=1)
     H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
@@ -305,7 +305,7 @@ def test_time_dependent_field_switched_off():
 
 
 def test_discrete_time_zeeman_updates_in_intervals():
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=2)
     H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([0, 0, 0])) < TOL
@@ -319,7 +319,7 @@ def test_discrete_time_zeeman_check_arguments_are_sane():
     """
     At least one of the arguments 'dt_update' and 't_off' must be given.
     """
-    field_expr = df.Expression(("1", "2", "3"))
+    field_expr = df.Expression(("1", "2", "3"), degree=1)
     with pytest.raises(ValueError):
         H_ext = DiscreteTimeZeeman(field_expr, dt_update=None, t_off=None)
 
@@ -330,7 +330,7 @@ def test_discrete_time_zeeman_switchoff_only():
     given (i.e. the field is just a pulse that is switched off after a
     while).
     """
-    field_expr = df.Expression(("1", "2", "3"))
+    field_expr = df.Expression(("1", "2", "3"), degree=1)
     H_ext = DiscreteTimeZeeman(field_expr, dt_update=None, t_off=2)
     H_ext.setup(m, Field(df.FunctionSpace(m.mesh(), 'DG', 0), Ms))
     assert diff(H_ext, np.array([1, 2, 3])) < TOL

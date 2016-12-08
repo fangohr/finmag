@@ -197,7 +197,7 @@ if __name__ == "__main__":
     # mesh=sphere(3.0,0.3)
     # mesh=df.Mesh('tet.xml')
     #
-    #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'), degree=1)
     from finmag.util.meshes import elliptic_cylinder, sphere
     mesh = elliptic_cylinder(100, 150, 5, 4.5, directory='meshes')
     # mesh=box(0,0,0,5,5,100,5,directory='meshes')
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     Vv = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
     Ms = 8.6e5
-    expr = df.Expression(('cos(x[0])', 'sin(x[0])', '0'))
+    expr = df.Expression(('cos(x[0])', 'sin(x[0])', '0'), degree=1)
     m = Field(Vv, value=expr)
     #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
 

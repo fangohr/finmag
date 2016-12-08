@@ -37,7 +37,7 @@ def test_dmi_uses_unit_length_2dmesh():
         mesh = df.RectangleMesh(df.Point(0, 0),  df.Point(radius, radius), nx, ny)
 
         S3 = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-        m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k)
+        m_expr = df.Expression(("0", "cos(k * x[0])", "sin(k * x[0])"), k=k, degree=1)
         m = Field(S3, m_expr, name='m')
         dmi = DMI(D)
         Ms_dg = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
@@ -75,7 +75,7 @@ def test_dmi_pbc2d():
 
     pbc = PeriodicBoundary2D(mesh)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
-    m_expr = df.Expression(("0", "0", "1"))
+    m_expr = df.Expression(("0", "0", "1"), degree=1)
     m = Field(S3, m_expr, name='m')
 
     dmi = DMI(1)

@@ -29,7 +29,7 @@ def test_demag_2d(plot=False):
 
     Ms = 1.0
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
-    m0 = df.Expression(("0", "0", "1"))
+    m0 = df.Expression(("0", "0", "1"), degree=1)
 
     m = Field(S3, m0)
 

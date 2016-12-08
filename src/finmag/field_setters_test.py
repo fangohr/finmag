@@ -42,14 +42,14 @@ def test_set_with_dolfin_constant(setup):
 def test_set_with_dolfin_expression(setup):
     scalar_field, scalar_field_dg, vector_field = setup
 
-    v = df.Expression("x[0]")
+    v = df.Expression("x[0]", degree=1)
     for field, expected in ((scalar_field, 1), (scalar_field_dg, 0.5)):
         f = field.f
         assert f(1) == 0
         field.set(v)
         assert abs(f(1) - expected) <= EPSILON
 
-    v = df.Expression(("1", "2", "3 * x[0]"))
+    v = df.Expression(("1", "2", "3 * x[0]"), degree=1)
     f = vector_field.f
     assert np.allclose(f(1), (0, 0, 0))
     vector_field.set(v)
@@ -118,12 +118,12 @@ def test_assumption_that_interpolate_better_than_project_different_vectorspace(d
 
     V = df.FunctionSpace(mesh, "DG", 0)
     # models use case of material parameter
-    f = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1"), V)  
+    f = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1", degree=1), V)  
 
     W = df.FunctionSpace(mesh, "CG", 1)
     w_i = df.interpolate(f, W)
     w_p = df.project(f, W)
-    w_e = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1"), W)
+    w_e = df.interpolate(df.Expression("x[0] <= 0.5 ? 0 : 1", degree=1), W)
 
     if do_plot:  # proof by "looking at the picture" /s
         df.plot(f, title="original")
