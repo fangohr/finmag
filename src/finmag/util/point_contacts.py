@@ -22,7 +22,7 @@ def point_contacts(origins, radius, J, debug=False):
     expr_str = " || ".join(point_contact_conditions) + " ? J : 0"
     if debug:
         print expr_str
-    return df.Expression(expr_str, r=radius, J=J)
+    return df.Expression(expr_str, r=radius, J=J, degree=1)
 
 if __name__ == "__main__":
     mesh = df.RectangleMesh(df.Point(0, 0), df.Point(100, 100), 500, 500)

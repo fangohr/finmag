@@ -37,13 +37,13 @@ def test_vector_function_from_constant(vf):
 
 def test_function_from_expression(f):
     value = 1
-    from_expression(f, df.Expression(str(value)))
+    from_expression(f, df.Expression(str(value), degree=1))
     assert abs(f(0) - value) < EPSILON
 
 
 def test_vector_function_from_expression(vf):
     value = np.array((1, 2, 3))
-    from_expression(vf, df.Expression(map(str, value)))
+    from_expression(vf, df.Expression(map(str, value), degree=1))
     assert np.max(np.abs(vf(0) - value)) < EPSILON
 
 
