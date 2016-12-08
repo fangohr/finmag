@@ -56,7 +56,7 @@ def test_exchange_field_should_change_when_M_changes():
     sim.set_m(df.Expression(
         ('(2*x[0]-L)/L',
          'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-         '0'), L=length))
+         '0'), L=length, degree=1))
 
     exchange = Exchange(A)
     sim.add(exchange)
