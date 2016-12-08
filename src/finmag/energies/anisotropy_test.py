@@ -77,7 +77,7 @@ def test_anisotropy_energy_analytical(fixt):
     Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     a = df.Constant((0, 0, 1))
     m = Field(functionspace)
-    m.set(df.Expression(("0", "sqrt(1 - pow(x[0], 2))", "x[0]")))
+    m.set(df.Expression(("0", "sqrt(1 - pow(x[0], 2))", "x[0]"), degree=1))
     anis = UniaxialAnisotropy(K1, a)
     anis.setup(m, Ms)
 

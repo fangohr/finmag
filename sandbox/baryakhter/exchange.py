@@ -51,7 +51,7 @@ if __name__ == "__main__":
     mesh = df.Interval(3, 0, 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     C = 1
-    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'))
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'), degree=1)
     Ms = 2
     M = df.interpolate(expr, S3)
         
