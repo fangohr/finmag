@@ -23,8 +23,8 @@ class TestLengthScales(object):
         assert np.allclose(lex.get_numpy_array_debug(), 2)
 
     def test_exchange_length_varying(self):
-        A_expression = df.Expression('4/mu0*x[0] + 1e-100', mu0=mu0)
-        Ms_expression = df.Expression('2/mu0*x[0] + 1e-100', mu0=mu0)
+        A_expression = df.Expression('4/mu0*x[0] + 1e-100', mu0=mu0, degree=1)
+        Ms_expression = df.Expression('2/mu0*x[0] + 1e-100', mu0=mu0, degree=1)
 
         A = Field(self.functionspace, A_expression)
         Ms = Field(self.functionspace, Ms_expression)
@@ -42,8 +42,8 @@ class TestLengthScales(object):
         assert np.allclose(bloch_parameter.get_numpy_array_debug(), 2)
 
     def test_bloch_parameter_varying(self):
-        A_expression = df.Expression('4*x[0] + 1e-100')
-        K1_expression = df.Expression('x[0] + 1e-100')
+        A_expression = df.Expression('4*x[0] + 1e-100', degree=1)
+        K1_expression = df.Expression('x[0] + 1e-100', degree=1)
 
         A = Field(self.functionspace, A_expression)
         K1 = Field(self.functionspace, K1_expression)
@@ -61,8 +61,8 @@ class TestLengthScales(object):
         assert np.allclose(helical_period.get_numpy_array_debug(), 1)
 
     def test_helical_period_varying(self):
-        A_expression = df.Expression('2/pi*x[0] + 1e-100', pi=np.pi)
-        D_expression = df.Expression('8*x[0] + 1e-100')
+        A_expression = df.Expression('2/pi*x[0] + 1e-100', pi=np.pi, degree=1)
+        D_expression = df.Expression('8*x[0] + 1e-100', degree=1)
 
         A = Field(self.functionspace, A_expression)
         D = Field(self.functionspace, D_expression)
