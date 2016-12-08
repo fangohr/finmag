@@ -21,9 +21,9 @@ if __name__ == '__main__':
 
     V = df.FunctionSpace(mesh, 'CG', 1)
     Vv = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
-    f = df.interpolate(df.Expression("0"),V)
-    f1 = df.interpolate(df.Expression(("1","0","0")),Vv)
-    f2 = df.interpolate(df.Expression(("0","1","0")),Vv)
+    f = df.interpolate(df.Expression("0", degree=1),V)
+    f1 = df.interpolate(df.Expression(("1","0","0"), degree=1),Vv)
+    f2 = df.interpolate(df.Expression(("0","1","0"), degree=1),Vv)
     print 'a=',f1.vector().array()
     print 'b=',f2.vector().array()
     

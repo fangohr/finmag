@@ -93,7 +93,7 @@ pbc = PeriodicBoundary()
 # 3 dimensional vector space
 V = df.VectorFunctionSpace(mesh, 'CG', 1, 3, constrained_domain=pbc)
 # Set a vector field with values (x+0.1, x+0.2, x+0.3), defined on the interval
-expression = df.Expression(['x[0]+0.1', 'x[0]+0.2', 'x[0]+0.3'])
+expression = df.Expression(['x[0]+0.1', 'x[0]+0.2', 'x[0]+0.3'], degree=1)
 f = df.interpolate(expression, V)
 
 # Print the maps

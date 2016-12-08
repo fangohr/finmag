@@ -194,7 +194,7 @@ class LLB(object):
                 # a tuple of strings is considered to be the ingredient
                 # for a dolfin expression, whereas a tuple of numbers
                 # would signify a constant
-                val = df.Expression(value, **kwargs)
+                val = df.Expression(value, degree=1, **kwargs)
             else:
                 val = df.Constant(value)
             new_m = df.interpolate(val, self.S3)
