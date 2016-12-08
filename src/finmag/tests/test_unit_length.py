@@ -14,7 +14,7 @@ REL_TOL = 1e-4
 def exchange(mesh, unit_length):
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m = Field(S3, value=df.Expression(
-        ("x[1]*u", "0", "sqrt(1-pow(x[1]*u, 2))"), u=unit_length))
+        ("x[1]*u", "0", "sqrt(1-pow(x[1]*u, 2))"), u=unit_length, degree=1))
     exch = Exchange(A)
     exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=unit_length)
     H = exch.compute_field()
