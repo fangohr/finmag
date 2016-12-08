@@ -17,6 +17,8 @@ all : parallel
 #######################################
 #  Configurable options
 #
+# Fenics 2016.2 broke the building by changing where ufc.h is located:
+UFC_INC=-I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
@@ -143,14 +145,14 @@ nvec_serial :
 # Builds an object file from a .cc file
 %.o : %.cc $(PRECOMPILED_HEADER_FILE) Makefile
 	@echo Building object file: $@
-	@$(CXX) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@
+	@$(CXX) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
 
 # Creates the precompiled header file
 pch: $(PRECOMPILED_HEADER_FILE)
 $(PRECOMPILED_HEADER_FILE) : src/finmag_includes.h Makefile
 	@echo Building precompiled header file: $@
 	@mkdir -p $(PRECOMPILED_HEADER_DIR)
-	@$(CXX) $(CFLAGS_NOPCH) -o $@ -c $<
+	@$(CXX) $(CFLAGS_NOPCH) -o $@ -c $< ${UFC_INC}
 
 # Runs Boost.Test unit tests in native code
 run-ci-tests:
