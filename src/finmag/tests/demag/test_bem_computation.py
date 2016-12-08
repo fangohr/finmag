@@ -28,7 +28,7 @@ class MagSphereBase(object):
         self.m = (str(self.Ms), "0.0", "0.0")
         self.M = self.m  # do we need this?
         self.V = df.VectorFunctionSpace(self.mesh, "CG", 1)
-        self.m = df.interpolate(df.Expression(self.m), self.V)
+        self.m = df.interpolate(df.Expression(self.m, degree=1), self.V)
         self.r = radius
         self.maxh = maxh
 
@@ -186,7 +186,7 @@ class BemComputationTests(unittest.TestCase):
 
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
-        m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
+        m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)
         expressions = [m1, m2]
         for exp in expressions:
             for k in xrange(1, 5 + 1):
@@ -205,7 +205,7 @@ class BemComputationTests(unittest.TestCase):
     @pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
     def test_compute_scalar_potential_gcr(self):
         m1 = df.Constant([1, 0, 0])
-        m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"])
+        m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)
         tol = 1e-1
         expressions = [m1, m2]
         self.run_demag_computation_test(MagSphereBase(0.1, 1.).mesh, m1,
@@ -275,7 +275,7 @@ class BemComputationTests(unittest.TestCase):
 
     def test_facet_normal_direction(self):
         mesh = df.UnitCubeMesh(1, 1, 1)
-        field = df.Expression(["x[0]", "x[1]", "x[2]"])
+        field = df.Expression(["x[0]", "x[1]", "x[2]"], degree=1)
         n = df.FacetNormal(mesh)
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide
         # by 3
