@@ -10,7 +10,7 @@ from finmag.util.consts import bloch_parameter
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.mark.xfail(reason='1.5')
+#@pytest.mark.xfail(reason='1.5')
 def test_spatially_varying_anisotropy_axis(tmpdir, debug=False):
     Ms = 1e6
     A = 1.3e-11
@@ -25,7 +25,7 @@ def test_spatially_varying_anisotropy_axis(tmpdir, debug=False):
     # anisotropy axis goes from (0, 1, 0) at x=0 to (1, 0, 0) at x=Lx
     expr_a = df.Expression(("x[0] / sqrt(pow(x[0], 2) + pow(Lx-x[0], 2))",
                             "(Lx-x[0]) / sqrt(pow(x[0], 2) + pow(Lx-x[0], 2))",
-                            "0"), Lx=Lx)
+                            "0"), Lx=Lx, degree=1)
     # in theory, a discontinuous Galerkin (constant over the cell) is a good
     # choice to represent material parameters. In this case though, the
     # parameter varies linearly, so we use the usual CG.
