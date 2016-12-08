@@ -63,7 +63,7 @@ def test_exchange_energy_analytical(fixt):
     Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
     m = Field(functionspace)
-    m.set(df.Expression(("x[0]", "x[2]", "-x[1]")))
+    m.set(df.Expression(("x[0]", "x[2]", "-x[1]"), degree=1))
     exch = Exchange(A)
     exch.setup(m, Ms)
     E = exch.compute_energy()
@@ -94,7 +94,7 @@ def test_exchange_energy_analytical_2():
     m = Field(functionspace)
     m.set(
         df.Expression(['0', 'sin(2*pi*x[0]/l_x)', 'cos(2*pi*x[0]/l_x)'],
-                      l_x=lx))
+                      l_x=lx, degree=1))
     exch = Exchange(A)
     exch.setup(m, Ms, unit_length=unit_length)
     E_expected = A * 4 * pi ** 2 * \
@@ -117,7 +117,7 @@ def test_exchange_field_supported_methods(fixt):
     Ms = Field(df.FunctionSpace(mesh, 'DG', 0), 1)
     functionspace = df.VectorFunctionSpace(mesh, "CG", 1, 3)
     m = Field(functionspace)
-    m.set(df.Expression(("0", "sin(x[0])", "cos(x[0])")))
+    m.set(df.Expression(("0", "sin(x[0])", "cos(x[0])"), degree=1))
     exch = Exchange(A)
     exch.setup(m, Ms)
     H_default = exch.compute_field()
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     S = df.FunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
 
-    expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"))
+    expr = df.Expression(("0", "cos(x[0])", "sin(x[0])"), degree=1)
 
     m = df.interpolate(expr, S3)
 

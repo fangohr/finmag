@@ -119,7 +119,7 @@ class Field(object):
                 assert isinstance(expr, (tuple, list)) and len(expr) == 3
                 assert all(isinstance(item, basestring) for item in expr)
                 map(str, expr)  # dolfin does not like unicode in the expression
-            expr = df.Expression(expr, **kwargs)
+            expr = df.Expression(expr, degree=1, **kwargs)
         temp_function = df.interpolate(expr, self.functionspace)
         self.f.vector().set_local(temp_function.vector().get_local())
 

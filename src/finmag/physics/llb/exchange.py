@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     C = 1.3e-11  # J/m exchange constant
-    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])', '0'))
+    expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])', '0'), degree=1)
     m0 = df.interpolate(expr, S3)
 
     from finmag.physics.llb.material import Material

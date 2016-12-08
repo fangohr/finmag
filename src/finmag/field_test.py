@@ -244,9 +244,9 @@ class TestField(object):
         """Test setting the scalar field with an expression."""
         # Different expressions for setting the scalar field,
         # depending on the mesh dimension (1D, 2D, or 3D).
-        expressions = [df.Expression("11.2*x[0]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+        expressions = [df.Expression("11.2*x[0]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]", degree=1)]
 
         # Setting the scalar field for different
         # scalar function spaces and appropriate expressions.
@@ -286,9 +286,9 @@ class TestField(object):
         """Test setting the scalar field with a dolfin function."""
         # Different expressions for defining the dolfin function,
         # depending on the mesh dimension (1D, 2D, or 3D).
-        expressions = [df.Expression("11.2*x[0]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+        expressions = [df.Expression("11.2*x[0]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]", degree=1)]
 
         # Setting the scalar field for different
         # scalar function spaces and appropriate expressions.
@@ -332,9 +332,9 @@ class TestField(object):
         """Test setting the scalar field with a generic vector."""
         # Different expressions for defining the dolfin function,
         # depending on the mesh dimension (1D, 2D, or 3D).
-        expressions = [df.Expression("11.2*x[0]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1]"),
-                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]")]
+        expressions = [df.Expression("11.2*x[0]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1]", degree=1),
+                       df.Expression("11.2*x[0] - 3.01*x[1] + 2.7*x[2]", degree=1)]
 
         # Setting the scalar field for different
         # scalar function spaces and appropriate expressions.
@@ -483,9 +483,9 @@ class TestField(object):
     def test_set_vector_field_with_expression(self):
         """Test setting the 3D vector field with an expression."""
         # Different expressions for 3D vector fields.
-        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
+        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -537,9 +537,9 @@ class TestField(object):
     def test_set_vector_field_with_dolfin_function(self):
         """Test setting the 3D vector field with a dolfin function."""
         # Different expressions for 3D vector fields.
-        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
+        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -595,9 +595,9 @@ class TestField(object):
     def test_set_vector_field_with_generic_vector(self):
         """Test setting the 3D vector field with a generic_vector."""
         # Different expressions for 3D vector fields.
-        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]']),
-                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])]
+        expressions = [df.Expression(['1.1*x[0]', '-2.4*x[0]', '3*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[1]'], degree=1),
+                       df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -710,7 +710,7 @@ class TestField(object):
         expressions = [df.Constant((1.1, -2.4)),
                        (1.1, -2.4),
                        [1.1, -2.4],
-                       df.Expression(('1.1', '-2.4')),
+                       df.Expression(('1.1', '-2.4', degree=1), degree=1),
                        lambda x:(1.1, -2.4)]
 
         expected_value = (1.1, -2.4)
@@ -746,7 +746,7 @@ class TestField(object):
         expressions = [df.Constant((1.1, -2.4, 0, 0.9)),
                        (1.1, -2.4, 0, 0.9),
                        [1.1, -2.4, 0, 0.9],
-                       df.Expression(('1.1', '-2.4', '0', '0.9')),
+                       df.Expression(('1.1', '-2.4', '0', '0.9', degree=1), degree=1),
                        lambda x:(1.1, -2.4, 0, 0.9)]
 
         expected_value = (1.1, -2.4, 0, 0.9)
@@ -785,7 +785,7 @@ class TestField(object):
     def test_normalise(self):
         mesh = df.UnitIntervalMesh(50)
         V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"))
+        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3", degree=1), degree=1)
         field = Field(V, value=expr)
         field2 = Field(V, value=expr)
         field.normalise()
@@ -844,7 +844,7 @@ class TestField(object):
 
         # TODO: Add test for computing average on different mesh regions.
         expressions = [df.Constant(5),
-                       df.Expression('10*x[0]'),
+                       df.Expression('10*x[0]', degree=1),
                        lambda x:10 * x[0]]
 
         f_av_expected = 5
@@ -865,7 +865,7 @@ class TestField(object):
         # Different expressions for setting the 2D vector field.
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1)),
-                       df.Expression(['2*x[0]', '10.2*x[0]']),
+                       df.Expression(['2*x[0]', '10.2*x[0]'], degree=1),
                        lambda x:(2 * x[0], 10.2 * x[0])]
 
         f_av_expected = (1, 5.1)
@@ -886,7 +886,7 @@ class TestField(object):
         # Different expressions for setting the 3D vector field.
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1, -3.6)),
-                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]']),
+                       df.Expression(['2*x[0]', '10.2*x[0]', '-7.2*x[0]'], degree=1),
                        lambda x:(2 * x[0], 10.2 * x[0], -7.2 * x[0])]
 
         f_av_expected = (1, 5.1, -3.6)
@@ -909,7 +909,7 @@ class TestField(object):
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1, -3.6, 0)),
                        df.Expression(['2*x[0]', '10.2*x[0]',
-                                      '-7.2*x[0]', '0']),
+, degree=1                                      '-7.2*x[0]', '0'], degree=1),
                        lambda x:(2 * x[0], 10.2 * x[0], -7.2 * x[0], 0)]
 
         f_av_expected = (1, 5.1, -3.6, 0)
@@ -933,7 +933,7 @@ class TestField(object):
         """Test coordinates and values for scalar field."""
         # Test for scalar fields on 1D, 2D, and 3D meshes,
         # initialised with a dolfin expression.
-        expression = df.Expression('1.3*x[0]')
+        expression = df.Expression('1.3*x[0]', degree=1)
 
         for functionspace in self.scalar_fspaces:
             expected_coords = functionspace.mesh().coordinates()
@@ -958,7 +958,7 @@ class TestField(object):
     def test_coords_and_values_vector_field(self):
         """Test coordinates and values for vector field."""
         # Different expressions for 3D vector fields.
-        expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'])
+        expression = df.Expression(['1.03*x[0]', '2.31*x[0]', '-1*x[0]'], degree=1)
 
         for functionspace in self.vector3d_fspaces:
             # Initialise the field with an appropriate expression for
@@ -996,15 +996,15 @@ class TestField(object):
             mesh_dim = field.mesh_dim()
 
             if mesh_dim == 1:
-                field.set(df.Expression('1.3*x[0]'))
+                field.set(df.Expression('1.3*x[0]', degree=1), degree=1)
                 exact_result_at_node = 1.3 * 0.5
                 exact_result_out_node = 1.3 * self.probing_coord
             elif mesh_dim == 2:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1]'))
+                field.set(df.Expression('1.3*x[0] - 2.3*x[1]', degree=1), degree=1)
                 exact_result_at_node = (1.3 - 2.3) * 0.5
                 exact_result_out_node = (1.3 - 2.3) * self.probing_coord
             elif mesh_dim == 3:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]'))
+                field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]', degree=1), degree=1)
                 exact_result_at_node = (1.3 - 2.3 + 6.1) * 0.5
                 exact_result_out_node = (1.3 - 2.3 + 6.1) * self.probing_coord
 
@@ -1026,7 +1026,7 @@ class TestField(object):
         # an appropriate expression for setting the value.
         for functionspace in self.vector3d_fspaces:
             field = Field(functionspace,
-                          df.Expression(['1.3*x[0]', '0.3*x[0]', '-6.2*x[0]']))
+                          df.Expression(['1.3*x[0]', '0.3*x[0]', '-6.2*x[0]'], degree=1))
             mesh_dim = field.mesh_dim()
 
             exact_result_at_node = (1.3 * 0.5, 0.3 * 0.5, -6.2 * 0.5)
@@ -1126,9 +1126,9 @@ class TestField(object):
     def test_set_nonlinear_vector_field(self):
         """Test setting the vector field with a nonlinear expression."""
         # Different nonlinear expressions for 2D vector fields.
-        expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]']),
-                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]']),
-                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]'])]
+        expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -1174,9 +1174,9 @@ class TestField(object):
             assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
 
         # Different nonlinear expressions for 3D vector fields.
-        expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]', '3*x[0]']),
-                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[1]']),
-                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[2]'])]
+        expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]', '3*x[0]'], degree=1),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[1]'], degree=1),
+                       df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]', '3*x[2]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -1227,11 +1227,11 @@ class TestField(object):
 
         # Different nonlinear expressions for 4D vector fields.
         expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]',
-                                      '3*x[0]', 'x[0]']),
+, degree=1                                      '3*x[0]', 'x[0]'], degree=1),
                        df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]',
-                                      '3*x[1]', 'x[0]']),
+, degree=1                                      '3*x[1]', 'x[0]'], degree=1),
                        df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]',
-                                      '3*x[2]', 'x[0]'])]
+, degree=1                                      '3*x[2]', 'x[0]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
@@ -1528,7 +1528,7 @@ class TestField(object):
         # define name of field
         fieldname = 'f'
 
-        expression = df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'])
+        expression = df.Expression(['1.1*x[0]', '-2.4*x[1]', '3*x[2]'], degree=1)
 
         # Define and set field
         field = Field(functionspace=self.fs3d_vector3d, name=fieldname)
