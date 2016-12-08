@@ -1865,7 +1865,9 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     # dolfin-convert.
     geofile_string = textwrap.dedent("""
         nz = 1;  // number of z-layers
-
+        lx = 50;
+        ly = 5;
+        lz = 3;
         lc_left = 2.0;
         lc_right = 0.1;
 
@@ -1893,8 +1895,7 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
 
     # Call gmsh and dolfin-convert to bring the mesh defined above
     # into a form that's readable by dolfin.
-    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string',
-            'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
+    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-o', 'nanostrip.msh', 'nanostrip.geo')
     sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
 
     mesh = df.Mesh('nanostrip.xml')
