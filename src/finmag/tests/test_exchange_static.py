@@ -53,8 +53,7 @@ def test_all_orientations_with_pinning():
 
 def test_exchange_field_should_change_when_M_changes():
     sim = Sim(mesh, Ms)
-    sim.set_m(df.Expression(
-        ('(2*x[0]-L)/L',
+    sim.set_m(df.Expression(('(2*x[0]-L)/L',
          'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
          '0'), L=length, degree=1))
 
