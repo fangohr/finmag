@@ -3,6 +3,10 @@
 .idea
 __pycache__
 src/**.so
+*.npy
+*.ndt
+*.tar.gz*
+*.so
 *.o
 *.d
 *.aux
@@ -17,7 +21,8 @@ src/**.so
 *.xml
 *.inp
 *.krn
-
+*.txt
+*.geo
 test-reports
 native/**.bin
 _build
