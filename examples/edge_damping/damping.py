@@ -22,7 +22,7 @@ def damping_expression(alpha, xmin, xmax, width):
     code = ("(x[0] <= xa || xb <= x[0])"
             " ? a * pow(b, fabs(x[0] - (x[0] <= xa ? xa : xb))) - eps"
             " : alpha")
-    expr = df.Expression(code, xa=xa, xb=xb, alpha=alpha, a=a, b=b, eps=eps)
+    expr = df.Expression(code, xa=xa, xb=xb, alpha=alpha, a=a, b=b, eps=eps, degree=1)
     return expr
 
 

@@ -49,7 +49,7 @@ def run_simulation(plot=False):
     # (1, 0, 0) in the upper half. This is a toy model of the exchange spring
     # systems that Bob Stamps is working on.
     boundary = Lz / 2.0
-    expr_a = df.Expression(("x[2] <= b ? 0 : 1", "0", "x[2] <= b ? 1 : 0"), b=boundary)
+    expr_a = df.Expression(("x[2] <= b ? 0 : 1", "0", "x[2] <= b ? 1 : 0"), b=boundary, degree=1)
     V = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
     a = Field(V, expr_a)
 
