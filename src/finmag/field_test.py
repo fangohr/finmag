@@ -710,7 +710,7 @@ class TestField(object):
         expressions = [df.Constant((1.1, -2.4)),
                        (1.1, -2.4),
                        [1.1, -2.4],
-                       df.Expression(('1.1', '-2.4', degree=1), degree=1),
+                       df.Expression(('1.1', '-2.4'), degree=1),
                        lambda x:(1.1, -2.4)]
 
         expected_value = (1.1, -2.4)
@@ -746,7 +746,7 @@ class TestField(object):
         expressions = [df.Constant((1.1, -2.4, 0, 0.9)),
                        (1.1, -2.4, 0, 0.9),
                        [1.1, -2.4, 0, 0.9],
-                       df.Expression(('1.1', '-2.4', '0', '0.9', degree=1), degree=1),
+                       df.Expression(('1.1', '-2.4', '0', '0.9'), degree=1),
                        lambda x:(1.1, -2.4, 0, 0.9)]
 
         expected_value = (1.1, -2.4, 0, 0.9)
@@ -785,7 +785,7 @@ class TestField(object):
     def test_normalise(self):
         mesh = df.UnitIntervalMesh(50)
         V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3", degree=1), degree=1)
+        expr = df.Expression(("10 * x[0] + 0.1", "10 * x[0] + 0.2", "10 * x[0] + 0.3"), degree=1)
         field = Field(V, value=expr)
         field2 = Field(V, value=expr)
         field.normalise()
@@ -909,7 +909,7 @@ class TestField(object):
         # All expressions set the field with same average value.
         expressions = [df.Constant((1, 5.1, -3.6, 0)),
                        df.Expression(['2*x[0]', '10.2*x[0]',
-, degree=1                                      '-7.2*x[0]', '0'], degree=1),
+                                      '-7.2*x[0]', '0'], degree=1),
                        lambda x:(2 * x[0], 10.2 * x[0], -7.2 * x[0], 0)]
 
         f_av_expected = (1, 5.1, -3.6, 0)
@@ -996,15 +996,15 @@ class TestField(object):
             mesh_dim = field.mesh_dim()
 
             if mesh_dim == 1:
-                field.set(df.Expression('1.3*x[0]', degree=1), degree=1)
+                field.set(df.Expression('1.3*x[0]', degree=1))
                 exact_result_at_node = 1.3 * 0.5
                 exact_result_out_node = 1.3 * self.probing_coord
             elif mesh_dim == 2:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1]', degree=1), degree=1)
+                field.set(df.Expression('1.3*x[0] - 2.3*x[1]', degree=1))
                 exact_result_at_node = (1.3 - 2.3) * 0.5
                 exact_result_out_node = (1.3 - 2.3) * self.probing_coord
             elif mesh_dim == 3:
-                field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]', degree=1), degree=1)
+                field.set(df.Expression('1.3*x[0] - 2.3*x[1] + 6.1*x[2]', degree=1))
                 exact_result_at_node = (1.3 - 2.3 + 6.1) * 0.5
                 exact_result_out_node = (1.3 - 2.3 + 6.1) * self.probing_coord
 
@@ -1227,11 +1227,11 @@ class TestField(object):
 
         # Different nonlinear expressions for 4D vector fields.
         expressions = [df.Expression(['1.1*x[0]*x[0]', '-2.4*x[0]',
-, degree=1                                      '3*x[0]', 'x[0]'], degree=1),
+                                      '3*x[0]', 'x[0]'], degree=1),
                        df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]',
-, degree=1                                      '3*x[1]', 'x[0]'], degree=1),
+                                      '3*x[1]', 'x[0]'], degree=1),
                        df.Expression(['1.1*x[0]*x[0]', '-2.4*x[1]',
-, degree=1                                      '3*x[2]', 'x[0]'], degree=1)]
+                                      '3*x[2]', 'x[0]'], degree=1)]
 
         # Test setting the vector field for different
         # vector function spaces and appropriate expressions.
