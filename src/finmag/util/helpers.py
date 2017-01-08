@@ -591,7 +591,7 @@ def verify_function_space_type(function_space, family, degree, dim):
     print 'Family', family
     print 'Degree', degree
     print family_and_degree_are_correct
-    
+
     if dim == None:
         # `function_space` should be a dolfin.FunctionSpace
         return (function_space.num_sub_spaces() == 0 and
@@ -1819,7 +1819,7 @@ def build_maps(functionspace, dim=3, scalar=False):
     d2v_xyz = df.dof_to_vertex_map(functionspace)
     n1, n2 = len(v2d_xyz), len(d2v_xyz)
 
-    v2d_xxx = ((v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
+    v2d_xxx = ((v2d_xyz.reshape(int(n1/dim), dim)).transpose()).reshape(-1,)
 
     d2v_xxx = d2v_xyz.copy()
     for i in xrange(n2):
