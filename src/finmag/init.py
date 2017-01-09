@@ -22,8 +22,6 @@ import example
 import signal
 
 # Convenience access to physics object Q
-from finmag.util.physics import Q
-
 
 def timings_report(n=10):
     """
