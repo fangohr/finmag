@@ -1817,6 +1817,12 @@ def print_boundary_element_matrix_size(mesh, generalised=False):
 def build_maps(functionspace, dim=3, scalar=False):
     v2d_xyz = df.vertex_to_dof_map(functionspace)
     d2v_xyz = df.dof_to_vertex_map(functionspace)
+
+    # Since version 2016, Dolfin returns the constrained boundary
+    # elements in the dof_to_vertex_map().  They are added as
+    # mapped-to-zero indices at the end.  Simply cut them off.
+    d2v_xyz = np.trim_zeros(d2v_xyz, trim='b')
+
     n1, n2 = len(v2d_xyz), len(d2v_xyz)
 
     v2d_xxx = ((v2d_xyz.reshape(int(n1/dim), dim)).transpose()).reshape(-1,)
