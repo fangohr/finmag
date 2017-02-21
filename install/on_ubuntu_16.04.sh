@@ -33,18 +33,17 @@ sudo add-apt-repository ppa:fenics-packages/fenics
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install $packages
-sudo pip install -U sphinx pytest aeon sh diff-match-patch future
+sudo python -m pip install -U sphinx pytest aeon sh diff-match-patch future
 # [Observation: We need IPython installed to be able to import finmag. So
 # we need to make sure to also install ipython.]
 
 # the debian 1404 package for ipython is 1.2, i.e. too old, so install
 # via pip:
-sudo pip install -U ipython
-sudo pip install -U pyzmq
+sudo python -m pip install -U ipython pyzmq
 
 # nbconvert for IPython 3.x seems to need mistune (caused fail on
 # jenkins for target 'doc-html' when this was missing).
-sudo pip install mistune
+sudo python -m pip install mistune
 
 
 # Eigenmodes need petsc4py. SLEPc and PETSc should also be installed for this.
@@ -58,7 +57,7 @@ sudo apt-get install libpetsc3.6 libpetsc3.6.2-dev\
 # PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc sudo pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.4.tar.gz
 
 # The following works on virtual micromagnetics and Mark's machine.
-sudo PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install\
+sudo PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc python -m pip install\
  https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.6.0.tar.gz\
  --allow-all-external
 
@@ -66,12 +65,10 @@ sudo PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install\
 # fenicstools that corresponds with the latest stable dolfin release, otherwise
 # some functionality may be missing.
 sudo apt-get install python-pyvtk python-h5py
-sudo pip install --upgrade\
+sudo python -m pip install --upgrade\
  https://github.com/mikaem/fenicstools/archive/v1.4.0.tar.gz
 
-# install dolfinh5tools
-sudo pip install --upgrade git+https://github.com/fangohr/dolfinh5tools.git
-sudo pip install future
+sudo python -m pip install --upgrade git+https://github.com/fangohr/dolfinh5tools.git
 
 # install netifaces for requesting binary license
 sudo pip install netifaces
