@@ -13,6 +13,10 @@ docker-image.done: Dockerfile
 docker-push: docker-image.done
 		docker push finmag/fenics_2016_2_base
 
+docker-pull:
+		docker pull finmag/fenics_2016_2_base
+		date > docker-image.done
+
 # clone firmag if note done yet
 finmag-repo-clone.done: docker-image.done 
 	# clone source code on host
