@@ -4,4 +4,4 @@
 #
 # CONTACT: h.fangohr@soton.ac.uk
 
-from init import *
+from initial import *

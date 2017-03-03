@@ -18,13 +18,13 @@ all : parallel
 #  Configurable options
 #
 # FENICS BOOST (1.63 or newer)
-FENICS_BOOST=-Wl,-rpath,/home/david/anaconda3/envs/fenicsproject/lib -L/home/david/anaconda3/envs/fenicsproject/lib
+FENICS_BOOST= -I/home/david/anaconda3/pkgs/scotch-6.0.4-1/lib -Wl,-rpath,/home/david/anaconda3/envs/fenicsproject/lib -L/home/david/anaconda3/envs/fenicsproject/lib
 # Fenics 2016.2 broke the building by changing where ufc.h is located:
 UFC_INC=-I/home/david/anaconda3/envs/fenicsproject/lib/python3.5/site-packages/ffc/backends/ufc/
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.cpython-35m-x86_64-linux-gnu.so neb.so #cvode_petsc.so
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
 # Name of the binary that runs all unit tests
@@ -69,7 +69,7 @@ run_ci_tests_LDFLAGS=$(FENICS_BOOST) -lboost_prg_exec_monitor -lboost_system -lb
 # Other variables
 #
 # The list of output binary files to link
-BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY)
+BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
 SOURCES = $(shell find src tests -name \*.cc)
 # The list of object files to be compiled
@@ -92,7 +92,7 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 #       to document these flags.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
-CFLAGS_PYTHON=-I/usr/include/python3.5 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython3.5
+CFLAGS_PYTHON=-I/usr/include/python3.5 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython3.5m
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
@@ -149,10 +149,10 @@ nvec_serial :
 	@echo Building object file: $@
 	@$(CXX) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
 
-# Builds an object file from a .c file
-%.o : %.c $(PRECOMPILED_HEADER_FILE) Makefile
-	@echo Building object file: $@
-	@$(CC) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
+# # Builds an object file from a .c file
+# %.o : %.c $(PRECOMPILED_HEADER_FILE) Makefile
+# 	@echo Building object file: $@
+# 	@$(CC) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
 
 # Creates the precompiled header file
 pch: $(PRECOMPILED_HEADER_FILE)

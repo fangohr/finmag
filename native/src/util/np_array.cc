@@ -55,8 +55,7 @@ int initialise_np_array()
     // install the segmentation fault handler that prints a stack trace
     signal(SIGSEGV, sigsegv_handler);
     // import the Python array object
-    int* err = import_array();
-    
+    import_array();
     // register the from-python converters
     mpl::for_each<numpy_types>(np_array_initialiser());
 }
