@@ -15,7 +15,7 @@ finmag-repo-clone.done: docker-image.done
 	# clone source code on host
 	git clone git@github.com:fangohr/finmag.git
 	# select right branch
-	cd finmag && git checkout df-2016
+	cd finmag && git checkout master
 	touch finmag-repo-clone.done
 
 finmag-compiled.done: finmag-repo-clone.done
