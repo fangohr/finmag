@@ -20,39 +20,30 @@ TOL = 1.9e-2
 
 @pytest.mark.slow
 def test_demag_energy_fk():
-    E, error = demag_energy("FK")
+    E, error = demag_energy()
     assert error < TOL
 
 
-@pytest.mark.xfail
-@pytest.mark.slow
-def test_demag_energy_gcr():
-    E, error = demag_energy("GCR")
-    assert error < TOL
-
-
-def demag_energy(solver):
+def demag_energy():
     mesh = from_geofile(os.path.join(MODULE_DIR, "sphere_fine.geo"))
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     m_function = df.interpolate(df.Constant((1, 0, 0)), S3)
     m = Field(S3, m_function)
 
-    demag = Demag(solver)
+    demag = Demag('FK')
     demag.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms), unit_length=1)
 
     E = demag.compute_energy()
     rel_error = abs(E - E_analytical) / abs(E_analytical)
-    print "Energy with {} method: {}.".format(solver, E)
+    print "Energy with FK method: {}.".format(E)
     return E, rel_error
 
 
 if __name__ == '__main__':
     with open(energy_file, "w") as f:
-        for solver in ["FK", "GCR"]:
-            try:
-                E, error = demag_energy(solver)
-            except Exception as e:
-                log.warning("Could not add {} demag energy to documentation example.".format(solver))
-                print e
-            else:
-                f.write("{}: E = {}, relative error = {}.\n".format(solver, E, error))
+        try:
+            E, error = demag_energy()
+        except Exception as e:
+            print e
+        else:
+            f.write("FK Method: E = {}, relative error = {}.\n".format(E, error))

@@ -75,6 +75,7 @@ class DMI(EnergyBase):
 
         super(DMI, self).__init__(method, in_jacobian=True)
 
+
     @timer.method
     def setup(self, m, Ms, unit_length=1):
         # Create an exchange constant Field object A in DG0 function space.
@@ -102,6 +103,20 @@ class DMI(EnergyBase):
             E_integrand = self.dmi_factor*self.D.f*times_curl(m.f, dmi_dim)
 
         super(DMI, self).setup(E_integrand, m, Ms, unit_length)
+        
+        if self.method == 'direct':
+            self.__setup_field_direct()
+
+    def __setup_field_direct(self):
+        dofmap = self.m.mesh_dofmap()
+        S3 = df.VectorFunctionSpace(self.m.mesh(), "CG", 1, dim=3,
+                                   constrained_domain=dofmap.constrained_domain)
+
+        u3 = df.TrialFunction(S3)
+        v3 = df.TestFunction(S3)
+        self.g_petsc = df.PETScMatrix()
+        df.assemble(-2*self.dmi_factor*self.D.f*df.inner(v3, df.curl(u3))*df.dx, tensor=self.g_petsc)
+        self.H_petsc = df.PETScVector()
 
 
 def DMI_interfacial(m, D, dim):

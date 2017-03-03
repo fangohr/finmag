@@ -5,7 +5,7 @@ import dolfin as df
 # Define a non-constant function with unique entries.
 mesh = df.IntervalMesh(100, 0, 10)
 V = df.FunctionSpace(mesh, 'CG', 1)
-f = df.interpolate(df.Expression('x[0]'), V)
+f = df.interpolate(df.Expression('x[0]'), V, degree=1)
 
 rank = df.cpp.common.MPI.rank(df.mpi_comm_world())
 size = df.cpp.common.MPI.size(df.mpi_comm_world())

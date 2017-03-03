@@ -1,0 +1,36 @@
+This docker file is for testing finmag with Ubuntu 16.04.  It makes an
+image containing finmag's dependencies, and then mounts the finmag
+source directory.
+
+The expectation is to run the following command from the directory
+that this file is in:
+
+If you have changed the docker file and need to update container, use: 
+
+    make build
+
+If you want to push the new container to hub.docker, run:
+
+    make push
+
+In most cases, to just use the container, use
+
+    make run
+    # this may take some time and will take you inside the docker container
+
+
+    # the next three lines are only required the first time we use this. 
+    cd src/finmag
+    make
+    cd ../..
+
+    # Let’s try the tests:
+    make tests
+
+Note that because the host system file directory is mounted into the
+container, we are operating on all the finmag (source) files that are
+on the host (and not on the file system of the container).
+
+(Not sure whether fenics compilation results that are cached would be
+hosted on the container [I think they might], and thus they are likely
+to be forgotten everytime we go into the container again. This would make working in the container a little slower, unless we can tell fenics to save its cacheed data into the finmag directory [which actually comes from the host file system and is persistent]. Needs exploration.)

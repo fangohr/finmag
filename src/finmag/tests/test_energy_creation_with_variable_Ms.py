@@ -7,7 +7,8 @@ from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 Ms = 8.6e5
 mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10e-9, 10e-9, 10e-9), 5, 5, 5)
 
-def pytest_funcarg__fixt(request):
+@pytest.fixture
+def fixt(request):
     fixt = request.cached_setup(setup=setup, scope="module")
     return fixt
 
@@ -31,7 +32,7 @@ def setup():
     """
 
     m_space = df.VectorFunctionSpace(mesh, "CG", 1)
-    m = Field(m_space, value=df.Expression(("1e-9", "x[0]/10", "0")))
+    m = Field(m_space, value=df.Expression(("1e-9", "x[0]/10", "0"), degree=1))
     m.set_with_numpy_array_debug(fnormalise(m.get_numpy_array_debug()))
 
     Ms_space = df.FunctionSpace(mesh, "DG", 0)

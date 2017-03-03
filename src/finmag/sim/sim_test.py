@@ -170,7 +170,7 @@ class TestSimulation(object):
         m_init = df.Expression(("cos(x[0]*pi)",
                                 "sin(x[0]*pi)",
                                 "0.0"),
-                               unit_length=unit_length)
+                               unit_length=unit_length, degree=1)
         sim = sim_with(
             mesh, Ms=8.6e5, m_init=m_init, unit_length=unit_length, demag_solver=None)
 
@@ -917,7 +917,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
         sim = barmini()
         f = getattr(sim, method_name)
 
-        field_expr = df.Expression(("0", "t", "0"), t=0)
+        field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
         H_ext = TimeZeeman(field_expr, t_off=t_off)
         # this should automatically register H_ext.update(), which is what we
         # check next
@@ -939,7 +939,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     os.chdir(str(tmpdir))
     TOL = 1e-8
 
-    field_expr = df.Expression(("0", "t", "0"), t=0)
+    field_expr = df.Expression(("0", "t", "0"), t=0, degree=1)
     H_ext = TimeZeeman(field_expr, t_off=2e-11)
     sim = barmini()
     sim.add(H_ext)
@@ -1865,7 +1865,9 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     # dolfin-convert.
     geofile_string = textwrap.dedent("""
         nz = 1;  // number of z-layers
-
+        lx = 50;
+        ly = 5;
+        lz = 3;
         lc_left = 2.0;
         lc_right = 0.1;
 
@@ -1893,8 +1895,7 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
 
     # Call gmsh and dolfin-convert to bring the mesh defined above
     # into a form that's readable by dolfin.
-    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-string',
-            'lx={}; ly={}; lz={};'.format(lx, ly, lz), '-o', 'nanostrip.msh', 'nanostrip.geo')
+    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-o', 'nanostrip.msh', 'nanostrip.geo')
     sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
 
     mesh = df.Mesh('nanostrip.xml')

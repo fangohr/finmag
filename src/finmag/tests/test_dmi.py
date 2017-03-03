@@ -23,7 +23,7 @@ def test_dmi_field():
     m_initial = df.Expression((
         '(2*x[0]-L)/L',
         'sqrt(1 - ((2*x[0]-L)/L)*((2*x[0]-L)/L))',
-        '0'), L=length)
+        '0'), L=length, degree=1)
     m = Field(V)
     m.set(m_initial)
     dmi1 = DMI(D=5e-3, method="box-assemble")

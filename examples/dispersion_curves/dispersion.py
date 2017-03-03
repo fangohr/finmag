@@ -37,9 +37,8 @@ def excite_system():
 
     """
     sim = Sim(mesh, Ms, unit_length=1e-9)
-    alpha_expression = df.Expression(
-        "(x[0] < x_left || x[0] > x_right) ? 1.0 : 0.01",
-        x_left=x0+dx_high_alpha, x_right=x1-dx_high_alpha)
+    alpha_expression = df.Expression("(x[0] < x_left || x[0] > x_right) ? 1.0 : 0.01",
+        x_left=x0+dx_high_alpha, x_right=x1-dx_high_alpha, degree=1)
     sim.alpha = alpha_expression
     sim.set_m(np.load(initial_m_file))
     sim.add(Exchange(A))
@@ -51,7 +50,7 @@ def excite_system():
         "H_0"
         " * (t == 0 ? 1 : sin(omega * t)/(omega * t))"
         " * (x[0] == 0 ? 1 : sin(k_c * x[0])/(k_c * x[0]))")
-    H = df.Expression(("0.0", sinc, "0.0"), H_0=1e5, k_c=1.0, omega=omega, t=0.0)
+    H = df.Expression(("0.0", sinc, "0.0"), H_0=1e5, k_c=1.0, omega=omega, t=0.0, degree=1)
     pulse = TimeZeeman(H)
     t_0 = 50e-12
     def update_pulse(t):
