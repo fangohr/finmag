@@ -18,7 +18,7 @@ all : parallel
 #  Configurable options
 #
 # FENICS BOOST (1.63 or newer)
-FENICS_BOOST=-Wl,--export-dynamic -Wl,-rpath,/home/david/anaconda3/envs/fenicsproject/lib -L/home/david/anaconda3/envs/fenicsproject/lib
+FENICS_BOOST=-Wl,-rpath,/home/david/anaconda3/envs/fenicsproject/lib -L/home/david/anaconda3/envs/fenicsproject/lib
 # Fenics 2016.2 broke the building by changing where ufc.h is located:
 UFC_INC=-I/home/david/anaconda3/envs/fenicsproject/lib/python3.5/site-packages/ffc/backends/ufc/
 # The directory where to place the extension modules
@@ -92,7 +92,7 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 #       to document these flags.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
-CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython2.7
+CFLAGS_PYTHON=-I/usr/include/python3.5 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython3.5
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
