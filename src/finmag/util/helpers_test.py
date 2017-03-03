@@ -92,9 +92,9 @@ def test_fnormalise():
 
     c = np.sqrt(4 ** 2 + 5 ** 2)
     expected = np.array([0, 0, 1, 4 / c, 0, 1, 0, 5 / c, 1, 0, 0, 0])
-    print "a3=\n", a3
-    print "expected=\n", expected
-    print "fnormalise(a3)=\n", fnormalise(a3)
+    print("a3=\n"), a3
+    print("expected=\n"), expected
+    print("fnormalise(a3)=\n"), fnormalise(a3)
     assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
 
     # check that normalisation also works if input vector happens to be an
@@ -103,9 +103,9 @@ def test_fnormalise():
     a4 = np.array([0., 1., 1.])
     c = np.sqrt(1 ** 2 + 1 ** 2)  # sqrt(2)
     expected = np.array([0, 1 / c, 1 / c])
-    print "a4=\n", a4
-    print "expected=\n", expected
-    print "fnormalise(a4)=\n", fnormalise(a4)
+    print("a4=\n"), a4
+    print("expected=\n"), expected
+    print("fnormalise(a4)=\n"), fnormalise(a4)
     assert np.allclose(fnormalise(a4), expected, rtol=TOLERANCE)
 
     # the same test with ints (i.e.
@@ -199,8 +199,8 @@ def test_vector_valued_function():
     assert(all(f_callable.vector() == v_ref_expr))
 
     assert(all(f_tuple_normalised.vector() == v_ref_normalised))
-    print "[DDD] #1: {}".format(f_expr_normalised.vector().array())
-    print "[DDD] #2: {}".format(v_ref_expr_normalised)
+    print("[DDD] #1: {}").format(f_expr_normalised.vector().array())
+    print("[DDD] #2: {}").format(v_ref_expr_normalised)
 
     assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
@@ -256,7 +256,7 @@ def test_cartesian_to_spherical():
         (1, hapi, np.pi), (2, hapi, -hapi), (1, np.pi, 0)))
     for i, v in enumerate(test_vectors):
         v_spherical = cartesian_to_spherical(v)
-        print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
+        print("Testing vector {}. Got {}. Expected {}.").format(v, v_spherical, expected[i])
         assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
 
 

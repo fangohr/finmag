@@ -71,7 +71,7 @@ def test_using_analytical_solution(finmag):
     finmag["table"] += table_entries.format(
         "analytical", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with analytical results, H, relative_difference:"
+    print("comparison with analytical results, H, relative_difference:")
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
@@ -88,7 +88,7 @@ def test_using_nmag(finmag):
 
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
-    print "comparison with nmag, H, relative_difference:"
+    print("comparison with nmag, H, relative_difference:")
     print stats(rel_diff)
 
     # Compare nmag with analytical solution
@@ -100,7 +100,7 @@ def test_using_nmag(finmag):
         np.sqrt(np.max(H_ref[0] ** 2 + H_ref[1] ** 2 + H_ref[2] ** 2))
     finmag["table"] += table_entries.format(
         "nmag/an.", "", s(np.max(nmag_rel_diff)), s(np.mean(nmag_rel_diff)), s(np.std(nmag_rel_diff)))
-    print "comparison beetween nmag and analytical solution, H, relative_difference:"
+    print("comparison beetween nmag and analytical solution, H, relative_difference:")
     print stats(nmag_rel_diff)
 
     # rel_diff beetween finmag and nmag
@@ -117,7 +117,7 @@ def test_using_magpar(finmag):
 
     finmag["table"] += table_entries.format(
         "magpar", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
-    print "comparison with magpar, H, relative_difference:"
+    print("comparison with magpar, H, relative_difference:")
     print stats(rel_diff)
 
     # Compare magpar with analytical solution
@@ -131,7 +131,7 @@ def test_using_magpar(finmag):
 
     finmag["table"] += table_entries.format(
         "magpar/an.", "", s(np.max(magpar_rel_diff)), s(np.mean(magpar_rel_diff)), s(np.std(magpar_rel_diff)))
-    print "comparison beetween magpar and analytical solution, H, relative_difference:"
+    print("comparison beetween magpar and analytical solution, H, relative_difference:")
     print stats(magpar_rel_diff)
 
     # rel_diff beetween finmag and magpar
@@ -140,10 +140,10 @@ def test_using_magpar(finmag):
 if __name__ == "__main__":
     f = setup_finmag()
     Hx, Hy, Hz = f["H"].reshape((3, -1))
-    print "Expecting (Hx, Hy, Hz) = (-1/3, 0, 0)."
-    print "demag field x-component:\n", stats(Hx)
-    print "demag field y-component:\n", stats(Hy)
-    print "demag field z-component:\n", stats(Hz)
+    print("Expecting (Hx, Hy, Hz) = (-1/3, 0, 0).")
+    print("demag field x-component:\n"), stats(Hx)
+    print("demag field y-component:\n"), stats(Hy)
+    print("demag field z-component:\n"), stats(Hz)
 
 # test_using_analytical_solution(f)
 # test_using_nmag(f)

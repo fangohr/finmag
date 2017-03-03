@@ -365,7 +365,7 @@ class AbstractEigenproblem(object):
                     k_right, size)
             else:
                 eigval_right = None
-            # print "eigval_right - a: {}".format(eigval_right - eigval)
+            # print("eigval_right - a: {}").format(eigval_right - eigval)
             raise ValueError(
                 "Not an eigenvalue of {}: {} (tolerance: {}). Closest "
                 "surrounding eigenvalues: ({}, {})".format(

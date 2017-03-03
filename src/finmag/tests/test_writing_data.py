@@ -30,5 +30,5 @@ def test_write_ndt_file(tmpdir):
     a_ref = np.array(f_ref['time', 'm_x', 'm_y', 'm_z'])
 
     diff = np.abs(a_out - a_ref)
-    print "Maximum difference: {}.".format(np.max(diff))
+    print("Maximum difference: {}.").format(np.max(diff))
     assert np.allclose(a_out, a_ref, atol=5e-6, rtol=1e-8)

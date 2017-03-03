@@ -48,16 +48,16 @@ def test_dmi_uses_unit_length_2dmesh():
         H.vector()[:] = dmi.compute_field()
         print H(0.0, 0.0)
 
-        print "Using unit_length = {}.".format(unit_length)
-        print "Helical period {}.".format(helical_period)
-        print "Energy {}.".format(dmi.compute_energy())
+        print("Using unit_length = {}.").format(unit_length)
+        print("Helical period {}.").format(helical_period)
+        print("Energy {}.").format(dmi.compute_energy())
 
     rel_diff_energies = abs(energies[0] - energies[1]) / abs(energies[1])
-    print "Relative difference of energy {}.".format(rel_diff_energies)
+    print("Relative difference of energy {}.").format(rel_diff_energies)
     assert rel_diff_energies < 1e-13
 
     rel_diff_energies2 = abs(energies[0] - energies[2]) / abs(energies[2])
-    print "Relative difference2 of energy {}.".format(rel_diff_energies2)
+    print("Relative difference2 of energy {}.").format(rel_diff_energies2)
     assert rel_diff_energies2 < 1e-13
 
 

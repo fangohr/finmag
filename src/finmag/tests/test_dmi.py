@@ -40,10 +40,10 @@ def test_dmi_field():
     diff12 = np.max(np.abs(H_dmi1 - H_dmi2))
     diff13 = np.max(np.abs(H_dmi1 - H_dmi3))
 
-    print "Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g" % diff12
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff12 / max(H_dmi1))
-    print "Difference between H_dmi1 and H_dmi3: max(abs(H_dmi1-H_dmi3))=%g" % diff13
-    print "Max value = %g, relative error = %g " % (max(H_dmi1), diff13 / max(H_dmi1))
+    print("Difference between H_dmi1 and H_dmi2: max(abs(H_dmi1-H_dmi2))=%g") % diff12
+    print("Max value = %g, relative error = %g ") % (max(H_dmi1), diff12 / max(H_dmi1))
+    print("Difference between H_dmi1 and H_dmi3: max(abs(H_dmi1-H_dmi3))=%g") % diff13
+    print("Max value = %g, relative error = %g ") % (max(H_dmi1), diff13 / max(H_dmi1))
 
     assert diff12 < 5e-8
     assert diff13 < 5e-8

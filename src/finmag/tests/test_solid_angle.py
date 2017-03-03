@@ -102,5 +102,5 @@ def test_octants_solid_angle():
 if __name__ == "__main__":
     for name in globals().keys():
         if name.startswith("test_"):
-            print "Running", name
+            print("Running"), name
             globals()[name]()

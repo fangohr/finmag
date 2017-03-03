@@ -26,7 +26,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.set_initial_value(ROBERTSON_Y0)
         integrator.set_integrator("vode", method="bdf", nsteps=5000)
         integrator.integrate(1e8)
-        print "Integration of the Robertson ODE until t=1e8 with scipy VODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,)
+        print("Integration of the Robertson ODE until t=1e8 with scipy VODE, BDF method: %d steps") % (robertson_ode.n_rhs_evals,)
         self.assertLess(robertson_ode.n_rhs_evals, 5000)
 
     def test_robertson_scipy_transposed(self):
@@ -54,7 +54,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)
         integrator.advance_time(1e8, yout)
-        print "Integration of the Robertson ODE until t=1e8 with CVODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,)
+        print("Integration of the Robertson ODE until t=1e8 with CVODE, BDF method: %d steps") % (robertson_ode.n_rhs_evals,)
 
     def test_robertson_sundials_transposed(self):
         robertson_reset_n_evals()

@@ -376,13 +376,13 @@ if __name__ == "__main__":
         my[t][:] = t * np.sin(
             2 * np.pi * 3 * xs / abs(np.min(xs) - np.max(xs))) / 100
 
-    print "# values on x-axis: {}, # values on y-axis (time): {}.".format(
+    print("# values on x-axis: {}, # values on y-axis (time): {}.").format(
         len(xs), len(ts))
-    print "Shape of the plotted array: {}.".format(my.shape)
-    print "Minimum: {}, Maximum: {}.".format(np.min(my), np.max(my))
+    print("Shape of the plotted array: {}.").format(my.shape)
+    print("Minimum: {}, Maximum: {}.").format(np.min(my), np.max(my))
 
     labels = ("x (nm)", "time (ps)", "m_y")
     surface_2d(xs, ts, my, labels, "2D surface", path="surface_2d.png")
     surface_3d(xs, ts, my, labels, "3D surface", path="surface_3d.png")
 
-    print "Saved plots in 'surface_2d.png' and 'surface_3d.png'."
+    print("Saved plots in 'surface_2d.png' and 'surface_3d.png'.")

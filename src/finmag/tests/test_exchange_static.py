@@ -38,7 +38,7 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
 def test_all_orientations_without_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0)
-        print "no pinning, all angles: "
+        print("no pinning, all angles: ")
         print angles
         assert np.nanmax(angles) < TOLERANCE
 
@@ -46,7 +46,7 @@ def test_all_orientations_without_pinning():
 def test_all_orientations_with_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0, [0, 10])
-        print "no pinning, all angles: "
+        print("no pinning, all angles: ")
         print angles
         assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE
 
@@ -76,7 +76,7 @@ def test_exchange_field_should_change_when_M_changes():
     assert not np.array_equal(old_H_ex, H_ex), "H_ex hasn't changed."
 
 if __name__ == "__main__":
-    print "without pinning"
+    print("without pinning")
     test_all_orientations_without_pinning()
-    print "with pinning"
+    print("with pinning")
     test_all_orientations_with_pinning()

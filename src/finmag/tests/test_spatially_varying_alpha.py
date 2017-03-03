@@ -36,6 +36,6 @@ def test_spatially_varying_alpha_using_LLG_class():
     llg.set_alpha(1)
     expected_alpha = np.ones(simplices + 1)
 
-    print "Got:\n", llg.alpha.vector().array()
-    print "Expected:\n", expected_alpha
+    print("Got:\n"), llg.alpha.vector().array()
+    print("Expected:\n"), expected_alpha
     assert np.array_equal(llg.alpha.vector().array(), expected_alpha)

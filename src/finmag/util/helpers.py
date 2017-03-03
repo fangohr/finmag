@@ -1205,10 +1205,10 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
     (ymin, ymax) = _find_limits(ylims, 1)
     (zmin, zmax) = _find_limits(zlims, 2)
 
-    print "Limits:"
-    print "xmin, xmax: {}, {}".format(xmin, xmax)
-    print "ymin, ymax: {}, {}".format(ymin, ymax)
-    print "zmin, zmax: {}, {}".format(zmin, zmax)
+    print("Limits:")
+    print("xmin, xmax: {}, {}").format(xmin, xmax)
+    print("ymin, ymax: {}, {}").format(ymin, ymax)
+    print("zmin, zmax: {}, {}").format(zmin, zmax)
 
     if nx == None or ny == None or nz == None:
         raise NotImplementedError("Please provide specific values "

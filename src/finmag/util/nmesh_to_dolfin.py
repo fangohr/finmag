@@ -40,12 +40,12 @@ class Parser(object):
         Create a parser for the nmesh ASCII file in `nmesh_file`.
 
         """
-        print "Reading from '{}'.".format(nmesh_file)
+        print("Reading from '{}'.").format(nmesh_file)
         self._fi = open(nmesh_file, 'r')
 
         self._version_string(self._next())
         dim, self._vertices, self._simplices = self._summary(self._next())
-        print "Found a mesh with {} dimensions, {} nodes and {} tetrahedra.".format(
+        print("Found a mesh with {} dimensions, {} nodes and {} tetrahedra.").format(
             dim, self._vertices, self._simplices)
 
     def vertices(self):
@@ -122,7 +122,7 @@ class Parser(object):
         try:
             region, v0, v1, v2, v3 = s.split()
         except ValueError as e:
-            print "Expected line with region number followed by indices of four nodes, got '{}'.".format(s)
+            print("Expected line with region number followed by indices of four nodes, got '{}'.").format(s)
             raise
         return region, v0, v1, v2, v3
 
@@ -146,7 +146,7 @@ class Emitter(object):
         self._done_with_vertices = False
         self._done_with_simplices = False
 
-        print "Writing to '{}'.".format(xml_file)
+        print("Writing to '{}'.").format(xml_file)
         self._fo = open(xml_file, 'w')
 
         # None of the python xml libraries I checked supports emitting chunks

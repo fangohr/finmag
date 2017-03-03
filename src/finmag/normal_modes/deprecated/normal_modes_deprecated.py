@@ -568,7 +568,7 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     #basename = os.path.basename(re.sub('\.vtk$', '', filename))
     #dirname = os.path.dirname(filename)
     # if not os.path.exists(dirname):
-    #    print "Creating directory '{}' as it doesn't exist.".format(dirname)
+    #    print("Creating directory '{}' as it doesn't exist.").format(dirname)
     #    os.makedirs(dirname)
     #mesh = comp.mesh
     #mesh_shape = mesh.mesh_size

@@ -24,8 +24,8 @@ def check_mesh_volume(mesh, vol_expected, rtol, atol=0.0):
     logger.debug("Checking mesh volume. Expected: {}, got: {} (relative error: {})".format(
                  vol_expected, vol_mesh, abs((vol_expected - vol_mesh) / vol_expected)))
     if not (np.allclose(vol_mesh, vol_expected, atol=atol, rtol=rtol)):
-        print "[DDD] Expected volume: {}".format(vol_expected)
-        print "[DDD] Computed volume: {}".format(vol_mesh)
+        print("[DDD] Expected volume: {}").format(vol_expected)
+        print("[DDD] Computed volume: {}").format(vol_mesh)
     assert(np.allclose(vol_mesh, vol_expected, atol=atol, rtol=rtol))
 
 

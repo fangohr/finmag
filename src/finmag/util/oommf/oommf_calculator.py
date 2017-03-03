@@ -119,7 +119,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     if not os.path.exists(cachedir):
         # Run the simulation
-        print "Running OOMMF simulation %s..." % basename,
+        print("Running OOMMF simulation %s...") % basename,
         sys.stdout.flush()
         dir = os.path.join(RUN_DIR, basename)
         with ignored(OSError):
@@ -141,7 +141,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         run_oommf(dir, ["boxsi", "-threads", "4", mif_file_name])
         # Move the results to the cache directory
         shutil.move(dir, cachedir)
-        print "success"
+        print("success")
 
     # Read the results
     fields = {}

@@ -86,7 +86,7 @@ def test_is_scalar_multiple(a, tol):
     Multiply each by the scalar factor `a` and check that the result is
     recognised as a scalar multiple.
     """
-    print "[DDD] a={}".format(a)
+    print("[DDD] a={}").format(a)
 
     N = 100
     rand_vec = np.random.random_sample(N)
@@ -104,7 +104,7 @@ def test_is_scalar_multiple(a, tol):
                           (5e-6, 50),
                           ])
 def test_not_is_scalar_multiple(eps, num_elements):
-    print "[DDD] eps={}, num_elements={}".format(eps, num_elements)
+    print("[DDD] eps={}, num_elements={}").format(eps, num_elements)
     N = 100
     w = np.random.random_sample(N)
     v = 3.24 * w
@@ -288,7 +288,7 @@ def test_as_petsc_matrix():
     A += np.diag(a, k=-1)
     A += np.diag(b, k=0)
     A += np.diag(c, k=+1)
-    print "[DDD] A:"
+    print("[DDD] A:")
     print A
 
     # Convert to PETSC matrix

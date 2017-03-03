@@ -14,7 +14,7 @@ def cp_file(sourcedir, filename, targetdir):
 
     # if directory does not exist, create (might be empty in the end)
     if not os.path.exists(targetdir):
-        print "Creating directory %s" % targetdir
+        print("Creating directory %s") % targetdir
         os.makedirs(targetdir)
 
     path = os.path.join(sourcedir, filename)
@@ -27,10 +27,10 @@ def cp_file(sourcedir, filename, targetdir):
                 f.close()
             return  # don't copy that Python file because we have a .so
     elif filename.endswith('pyc'):
-        print "Skipping pyc file (%s)" % filename
+        print("Skipping pyc file (%s)") % filename
         return
     elif filename.endswith('c'):
-        print "Skipping .c   file (%s)" % filename
+        print("Skipping .c   file (%s)") % filename
         return
     print("Copying %s" % path)
     shutil.copyfile(path, os.path.join(targetdir, filename))
@@ -39,7 +39,7 @@ def cp_file(sourcedir, filename, targetdir):
 def scandir(dir, files=[]):
     for file_ in os.listdir(dir):
         path = os.path.join(dir, file_)
-        # print "working %s / %s" % (dir, file_)
+        # print("working %s / %s") % (dir, file_)
         if os.path.isfile(path):
             cp_file(dir, file_, os.path.join(targetdir, dir))
         elif os.path.isdir(path) and os.path.split(path) not in directories_to_ignore:

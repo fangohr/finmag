@@ -29,7 +29,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
 
     sphere = Sphere(r=11)
     mesh = sphere.create_mesh(maxh=2.0)
-    print "[DDD] mesh: {}".format(mesh)
+    print("[DDD] mesh: {}").format(mesh)
     print mesh_info(mesh)
     if debug:
         plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')

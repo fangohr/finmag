@@ -36,7 +36,7 @@ def m_gen(r):
 
 
 def setup(K2=K2):
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(zip(* mesh.coordinates()))
 
@@ -56,7 +56,7 @@ def setup(K2=K2):
 
 
 def setup_cubic():
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(zip(* mesh.coordinates()))
 

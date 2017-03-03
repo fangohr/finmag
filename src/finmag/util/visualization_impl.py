@@ -484,7 +484,7 @@ def render_paraview_scene(
         lut.VectorMode = "Magnitude"
         lut.VectorComponent = color_by_axis
     if diffuse_color is not None:
-        print "diffuse_color: {} ({})".format(diffuse_color, type(diffuse_color))
+        print("diffuse_color: {} ({})").format(diffuse_color, type(diffuse_color))
         repr.DiffuseColor = diffuse_color
     else:
         repr.LookupTable = lut

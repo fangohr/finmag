@@ -125,7 +125,7 @@ def save_inp_of_inital_m(m, file_name):
     f.write(head)
     xyz = mesh.coordinates()
     if np.max(xyz) < 0.5:
-        print "Converting unit_length from m to nm."
+        print("Converting unit_length from m to nm.")
         xyz = xyz * 1e9
     for i in range(len(xyz)):
         f.write("%d %0.15e %0.15e %0.15e\n"

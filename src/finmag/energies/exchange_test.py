@@ -41,12 +41,12 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     fixt["m"].set((1, 0, 0))
 
     H = fixt["exch"].compute_field()
-    print "Asserted zero exchange field for uniform m = (1, 0, 0), " + \
+    print("Asserted zero exchange field for uniform m = (1, 0, 0), ") + \
         "got H =\n{}.".format(H.reshape((3, -1)))
     assert np.max(np.abs(H)) < TOLERANCE
 
     E = fixt["exch"].compute_energy()
-    print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
+    print("Asserted zero exchange energy for uniform m = (1, 0, 0), ") + \
         "got E = {}.".format(E)
     assert abs(E) < TOLERANCE
 
@@ -70,7 +70,7 @@ def test_exchange_energy_analytical(fixt):
     # integrating the vector laplacian, the latter gives 3 already
     expected_E = 3
 
-    print "With m = (0, sqrt(1-x^2), x), " + \
+    print("With m = (0, sqrt(1-x^2), x), ") + \
         "expecting E = {}. Got E = {}.".format(expected_E, E)
     assert abs(E - expected_E) / expected_E < REL_TOLERANCE
 
@@ -100,8 +100,8 @@ def test_exchange_energy_analytical_2():
     E_expected = A * 4 * pi ** 2 * \
         (ly * unit_length) * (lz * unit_length) / (lx * unit_length)
     E = exch.compute_energy()
-    print "expected energy: {}".format(E)
-    print "computed energy: {}".format(E_expected)
+    print("expected energy: {}").format(E)
+    print("computed energy: {}").format(E_expected)
     assert abs((E - E_expected) / E_expected) < REL_TOLERANCE
 
 
@@ -132,7 +132,7 @@ def test_exchange_field_supported_methods(fixt):
         exch = Exchange(A, method=method)
         exch.setup(m, Ms)
         H = exch.compute_field()
-        print "With method '{}', expecting H =\n{}\n, got H =\n{}.".format(
+        print("With method '{}', expecting H =\n{}\n, got H =\n{}.").format(
             method, H_default.reshape((3, -1)).mean(1),
             H.reshape((3, -1)).mean(1))
 

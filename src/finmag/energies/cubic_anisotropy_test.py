@@ -46,7 +46,7 @@ def test_cubic_anisotropy_energy():
     energy = ca.compute_energy()
     # energy_expected = 8.3e-20  # oommf cubicEight_100pc.mif -> ErFe2.odt
     energy_expected = compute_cubic_energy() * volume
-    print "cubic anisotropy energy = {}, expected {}.".format(energy, energy_expected)
+    print("cubic anisotropy energy = {}, expected {}.").format(energy, energy_expected)
 
     rel_diff = abs(energy - energy_expected) / abs(energy_expected)
     assert rel_diff < 1e-10

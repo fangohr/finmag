@@ -723,7 +723,7 @@ def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_s
     # for i in xrange(20):
     for i in xrange(num_frames):
         # if i % 20 == 0:
-        #    print "i={} ".format(i),
+        #    print("i={} ").format(i),
         #    import sys
         #    sys.stdout.flush()
         aaa[:] = signal_normal_mode[i][:]

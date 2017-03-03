@@ -90,7 +90,7 @@ def test_against_nmag(finmag):
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with nmag, m x H, relative difference:"
+    print("comparison with nmag, m x H, relative difference:")
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
@@ -114,7 +114,7 @@ def test_against_oommf(finmag):
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with oommf, H, relative_difference:"
+    print("comparison with oommf, H, relative_difference:")
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 

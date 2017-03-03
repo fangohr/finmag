@@ -13,7 +13,7 @@ tf = df.TestFunction(Vs)
 @pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
 def compare_dmi_term3d_with_dolfin(Mexp):
     """Expects string to feed into df.Expression for M"""
-    print "Working on Mexp=", Mexp
+    print("Working on Mexp="), Mexp
     Mexp = df.Expression(Mexp, degree=1)
     M = df.interpolate(Mexp, V1)
     E = dmi_term3d(M, tf, 1)[0] * df.dx
@@ -21,18 +21,18 @@ def compare_dmi_term3d_with_dolfin(Mexp):
     E_dolfin = dmi_term3d_dolfin(M, tf, 1)[0] * df.dx
     dolfin_curl = df.project(df.curl(M), V1)
     curlx, curly, curlz = dolfin_curl.split()
-    print "dolfin-curlx=", df.assemble(curlx * df.dx)
-    print "dolfin-curly=", df.assemble(curly * df.dx)
-    print "dolfin-curlz=", df.assemble(curlz * df.dx)
+    print("dolfin-curlx="), df.assemble(curlx * df.dx)
+    print("dolfin-curly="), df.assemble(curly * df.dx)
+    print("dolfin-curlz="), df.assemble(curlz * df.dx)
     E2 = df.assemble(E_dolfin)
     print E1, E2
-    print "Diff is %.18e" % (E1 - E2)
+    print("Diff is %.18e") % (E1 - E2)
     return abs(E1 - E2)
 
 @pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
 def compare_dmi_term2d_with_dolfin(Mexp):
     """Expects string to feed into df.Expression for M"""
-    print "Working on Mexp=", Mexp
+    print("Working on Mexp="), Mexp
     Mexp = df.Expression(Mexp, degree=1)
     V2d = df.VectorFunctionSpace(mesh, "CG", 1)
     M2d = df.interpolate(Mexp, V2d)
@@ -42,12 +42,12 @@ def compare_dmi_term2d_with_dolfin(Mexp):
     E_dolfin = dmi_term3d_dolfin(M, tf, 1)[0] * df.dx
     dolfin_curl = df.project(df.curl(M), V1)
     curlx, curly, curlz = dolfin_curl.split()
-    print "dolfin-curlx=", df.assemble(curlx * df.dx)
-    print "dolfin-curly=", df.assemble(curly * df.dx)
-    print "dolfin-curlz=", df.assemble(curlz * df.dx)
+    print("dolfin-curlx="), df.assemble(curlx * df.dx)
+    print("dolfin-curly="), df.assemble(curly * df.dx)
+    print("dolfin-curlz="), df.assemble(curlz * df.dx)
     E2 = df.assemble(E_dolfin)
     print E1, E2
-    print "Diff is %.18e" % (E1 - E2)
+    print("Diff is %.18e") % (E1 - E2)
     return abs(E1 - E2)
 
 @pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
@@ -85,9 +85,9 @@ def test_dmi_with_analytical_solution():
     c = 1.0
     E1 = df.assemble(dmi_term3d(M, tf, c)[0] * df.dx)
     Eexp = 1.0
-    print "Expect E=%e, computed E=%e" % (Eexp, E1)
+    print("Expect E=%e, computed E=%e") % (Eexp, E1)
     diff = abs(E1 - Eexp)
-    print "deviation between analytical result and numerical is %e" % diff
+    print("deviation between analytical result and numerical is %e") % diff
     assert diff < eps
 
     """For a vector field a(x,y,z)=0.5 * (-y, x, c), 
@@ -97,9 +97,9 @@ def test_dmi_with_analytical_solution():
     c = 3.0
     E1 = df.assemble(dmi_term3d(M, tf, c)[0] * df.dx)
     Eexp = 6.0
-    print "Expect E=%e, computed E=%e" % (Eexp, E1)
+    print("Expect E=%e, computed E=%e") % (Eexp, E1)
     diff = abs(E1 - Eexp)
-    print "deviation between analytical result and numerical is %e" % diff
+    print("deviation between analytical result and numerical is %e") % diff
     assert diff < eps
 
 @pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')

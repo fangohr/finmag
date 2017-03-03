@@ -14,7 +14,7 @@ def test_against_magpar(finmag=conftest.setup(K2=0)):
         finmag["S3"].mesh().coordinates(), finmag["H"].vector().array(),
         magpar_nodes, magpar_anis)
 
-    print "comparison with magpar, H, relative_difference:"
+    print("comparison with magpar, H, relative_difference:")
     print stats(rel_diff)
 
     finmag["table"] += conftest.table_entry("magpar", REL_TOLERANCE, rel_diff)

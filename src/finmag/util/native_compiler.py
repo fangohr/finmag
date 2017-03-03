@@ -51,7 +51,7 @@ def run_make(cmd, **kwargs):
         output = replace_c_errors_with_python_errors(ex.output)
         with open(MODULES_OUTPUT_DIR + "/compiler_errors.log", "w") as f:
             f.write(output)
-        print "If you can't see the error message below, either set your term to deal with utf8, or check the file src/finmag/native/compiler_errors.log"
+        print("If you can't see the error message below, either set your term to deal with utf8, or check the file src/finmag/native/compiler_errors.log")
         sys.stderr.write(output)
         raise Exception("make_modules: Make failed")
 

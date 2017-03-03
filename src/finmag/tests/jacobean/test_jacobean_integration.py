@@ -36,7 +36,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         t = datetime.now()
         ys = integrator.integrate(END_TIME)
         dt = datetime.now() - t
-        print "scipy integration: method=%s, n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
+        print("scipy integration: method=%s, n_rhs_evals=%d, error=%g, elapsed time=%s") % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
 
     def test_scipy_bdf(self):
         self.run_scipy_test("bdf")
@@ -62,7 +62,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         t = datetime.now()
         integrator.advance_time(END_TIME, ys)
         dt = datetime.now() - t
-        print "sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
+        print("sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g, elapsed time=%s") % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
 
     def test_sundials_diag_bdf(self):
         self.run_sundials_test_no_jacobean("bdf")
@@ -84,7 +84,7 @@ class JacobeanIntegrationTests(unittest.TestCase):
         t = datetime.now()
         integrator.advance_time(END_TIME, ys)
         dt = datetime.now() - t
-        print "sundials integration, with jacobean: n_rhs_evals=%d, error=%g, elapsed time=%s" % (self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
+        print("sundials integration, with jacobean: n_rhs_evals=%d, error=%g, elapsed time=%s") % (self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt)
 
 if __name__ == '__main__':
     unittest.main()

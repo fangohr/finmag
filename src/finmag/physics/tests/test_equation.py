@@ -42,7 +42,7 @@ def same(v, w, TOL=1e-14):
     """
     diff = v - w
     diff.abs()
-    print "v = {}\nw = {}\ndiff = {}".format(v.array(), w.array(), diff.array())
+    print("v = {}\nw = {}\ndiff = {}").format(v.array(), w.array(), diff.array())
     return diff.sum() < TOL
 
 

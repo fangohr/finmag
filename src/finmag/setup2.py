@@ -13,8 +13,8 @@ from distutils.extension import Extension
 try:
     from Cython.Distutils import build_ext
 except:
-    print "You don't seem to have Cython installed. Please get a"
-    print "copy from www.cython.org and install it"
+    print("You don't seem to have Cython installed. Please get a")
+    print("copy from www.cython.org and install it")
     sys.exit(1)
 
 
@@ -52,8 +52,8 @@ extNames = scandir("sim")
 # and build up the set of Extension objects
 extensions = [makeExtension(name) for name in extNames]
 
-print "extNames are\n", extNames
-print "extensions are\n", extensions
+print("extNames are\n"), extNames
+print("extensions are\n"), extensions
 
 # finally, we can pass all this to distutils
 setup(

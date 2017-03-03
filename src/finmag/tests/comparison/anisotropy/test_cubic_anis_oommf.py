@@ -23,7 +23,7 @@ def test_against_oommf(finmag=conftest.setup_cubic()):
         np.sqrt(
             (np.max(oommf_anis[0] ** 2 + oommf_anis[1] ** 2 + oommf_anis[2] ** 2)))
 
-    print "comparison with oommf, H, relative_difference:"
+    print("comparison with oommf, H, relative_difference:")
     print stats(rel_diff)
 
     finmag["table"] += conftest.table_entry("oommf", REL_TOLERANCE, rel_diff)

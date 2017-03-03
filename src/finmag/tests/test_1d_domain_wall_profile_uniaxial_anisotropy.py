@@ -44,7 +44,7 @@ def test_domain_wall_profile(do_plot=False):
     coor = mesh.coordinates()
     n = len(m0.vector().array())
 
-    print "Double check that the length of the vectors are equal: %g and %g" \
+    print("Double check that the length of the vectors are equal: %g and %g") \
         % (n, len(coor) * dim)
     assert n == len(coor) * dim
 
@@ -73,7 +73,7 @@ def test_domain_wall_profile(do_plot=False):
         #Eani = anisotropy.compute_energy()/L
         #Eex = exchange.compute_energy()/L
         #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
-        print "Integrating time: %g" % t
+        print("Integrating time: %g") % t
     # f.close()
     print timer
 
@@ -100,25 +100,25 @@ def test_domain_wall_profile(do_plot=False):
     else:
         popt, pcov = scipy.optimize.curve_fit(
             Mz_exact, x, mz, p0=(x0 * 1.1, A * 1.1, Ms * 1.1))
-        print "popt=", popt
+        print("popt="), popt
 
         fittedx0, fittedA, fittedMs = popt
-        print "Error in fitted x0: %9.7f%%" % ((fittedx0 - x0) / x0 * 100)
-        print "Error in fitted Ms: %9.7f%%" % ((fittedMs - Ms) / Ms * 100)
-        print "Error in fitted A : %9.7f%%" % ((fittedA - A) / A * 100)
-        print "fitted A  : %9g" % (fittedA)
-        print "correct A : %9g" % (A)
-        print "difference A : %9g" % (fittedA - A)
-        print "rel difference A : %9g" % ((fittedA - A) / A)
-        print "quotient A/fittedA and fittedA/A : %9g %g" % (A / fittedA, fittedA / A)
+        print("Error in fitted x0: %9.7f%%") % ((fittedx0 - x0) / x0 * 100)
+        print("Error in fitted Ms: %9.7f%%") % ((fittedMs - Ms) / Ms * 100)
+        print("Error in fitted A : %9.7f%%") % ((fittedA - A) / A * 100)
+        print("fitted A  : %9g") % (fittedA)
+        print("correct A : %9g") % (A)
+        print("difference A : %9g") % (fittedA - A)
+        print("rel difference A : %9g") % ((fittedA - A) / A)
+        print("quotient A/fittedA and fittedA/A : %9g %g") % (A / fittedA, fittedA / A)
         assert abs(fittedA - A) / A < 0.004, "Fitted A too inaccurate"
 
     # Maximum deviation:
     maxdiff = max(abs(mz - Mz_exact(x)))
-    print "Absolute deviation in Mz", maxdiff
+    print("Absolute deviation in Mz"), maxdiff
     assert maxdiff < 1200
     maxreldiff = maxdiff / max(Mz_exact(x))
-    print "Relative deviation in Mz", maxreldiff
+    print("Relative deviation in Mz"), maxreldiff
     assert maxreldiff < 0.0009
 
 if __name__ == "__main__":

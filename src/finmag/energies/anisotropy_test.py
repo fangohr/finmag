@@ -56,7 +56,7 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
 
     E = anis.compute_energy()
 
-    print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
+    print("With m = {}, expecting E = {}. Got E = {}.").format(m, expected_E, E)
     #assert abs(E - expected_E) < TOLERANCE
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
@@ -84,7 +84,7 @@ def test_anisotropy_energy_analytical(fixt):
     E = anis.compute_energy()
     expected_E = float(2) / 3
 
-    print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
+    print("With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.").format(expected_E, E)
     #assert abs(E - expected_E) < TOLERANCE
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 

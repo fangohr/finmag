@@ -135,7 +135,7 @@ class OVFVersionError(Exception):
 class OVFNode(object):
 
     def __init__(self, subnodes=[], data=None):
-        # print "Creating node %s:%s" % (type(self), data)
+        # print("Creating node %s:%s") % (type(self), data)
         self._subnodes = list(subnodes)
         self._data = data
 
@@ -573,7 +573,7 @@ def known_value_node(name, value):
         value = val_type(value)
 
     else:
-        print "Unknown value '%s' while reading OVF file." % name
+        print("Unknown value '%s' while reading OVF file.") % name
 
     return OVFValueNode(data=(name, value))
 
@@ -589,7 +589,7 @@ def known_section_node(action, name):
     elif lname.startswith("data"):
         cls = OVFDataSectionNode
     else:
-        print "Unknown section '%s' while reading OVF file." % name
+        print("Unknown section '%s' while reading OVF file.") % name
         cls = OVFSectionNode
 
     return cls(data=(name, action))
@@ -899,12 +899,12 @@ class OVFFile:
 
 if __name__ == "__main__no":
     import sys
-    print "Reading"
+    print("Reading")
     ovf = OVFFile(sys.argv[1])
-    print "Writing"
+    print("Writing")
     #ovf.content.a_segment.a_databinary8.name = "Data Binary 4"
     ovf.write(sys.argv[2])
-    print "Done"
+    print("Done")
 
 elif __name__ == "__main__":
     # Here is how to create an OVF file from a FieldLattice object

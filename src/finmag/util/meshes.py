@@ -185,7 +185,7 @@ def run_netgen(geofile):
         logger.warning("Warning: Ignoring netgen's output status of 34304.")
     elif status != 0:
         print output
-        print "netgen failed with exit code", status
+        print("netgen failed with exit code"), status
         sys.exit(2)
     elif output.lower().find("error") != -1:
         logger.warning(
@@ -214,7 +214,7 @@ def convert_diffpack_to_xml(diffpackfile):
     status, output = commands.getstatusoutput(dolfin_conv_cmd)
     if status != 0:
         print output
-        print "dolfin-convert failed with exit code", status
+        print("dolfin-convert failed with exit code"), status
         sys.exit(3)
 
     files = ["%s.xml.bak" % basename,
@@ -297,7 +297,7 @@ def compress(filename):
     status, output = commands.getstatusoutput(compr_cmd)
     if status != 0:
         print output
-        print "gzip failed with exit code", status
+        print("gzip failed with exit code"), status
         sys.exit(4)
     return filename + ".gz"
 

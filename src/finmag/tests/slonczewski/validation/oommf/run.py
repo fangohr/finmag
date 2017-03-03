@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 if not os.path.isfile("spinxfer-onespin.odt"):
-    print "Please run oommf on the run.mif file."
+    print("Please run oommf on the run.mif file.")
     sys.exit(1)
 
 oommf_data = np.loadtxt("spinxfer-onespin.odt")

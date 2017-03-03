@@ -60,7 +60,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     xs, m = compute_domain_wall_cobalt()
-    print "max difference between simulation and reference: ", domain_wall_error(m, NODE_COUNT)
+    print("max difference between simulation and reference: "), domain_wall_error(m, NODE_COUNT)
     xs = np.linspace(0, LENGTH, NODE_COUNT)
     plt.plot(xs, np.transpose([m[2], [reference_mz(x) for x in xs]]), label=[
              'Simulation', 'Reference'])

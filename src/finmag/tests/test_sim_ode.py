@@ -60,4 +60,4 @@ def test_sim_ode(do_plot=False):
 
 if __name__ == "__main__":
     test_sim_ode(do_plot=True)
-    print "Saved plit in test_sim_ode.png."
+    print("Saved plit in test_sim_ode.png.")

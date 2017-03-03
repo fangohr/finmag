@@ -101,8 +101,8 @@ class BemComputationTests(unittest.TestCase):
         r3 = np.array([5., 0., 1.])
         be_magpar = compute_belement_magpar(r1, r2, r3)
         be_native = compute_lindholm_L(np.zeros(3), r1, r2, r3)
-        print "Magpar: ", be_magpar
-        print "Native C++: ", be_native
+        print("Magpar: "), be_magpar
+        print("Native C++: "), be_native
         self.assertAlmostEqual(
             np.max(np.abs(be_magpar - be_native)), 0, delta=1e-12)
 
@@ -117,7 +117,7 @@ class BemComputationTests(unittest.TestCase):
             p2 = coordinates[cell.entities(0)[1]]
             p3 = coordinates[cell.entities(0)[2]]
             n = np.cross(p2 - p1, p3 - p1)
-            print "Boundary face %d, normal orientation %g" % (i, np.sign(np.dot(n, p1 - centre)))
+            print("Boundary face %d, normal orientation %g") % (i, np.sign(np.dot(n, p1 - centre)))
 
     def run_bem_computation_test(self, mesh):
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
@@ -134,9 +134,9 @@ class BemComputationTests(unittest.TestCase):
                 j_finmag = g2finmag[b2g[j_dolfin]]
                 bem_finmag[i_finmag, j_finmag] = bem[i_dolfin, j_dolfin]
         if np.max(np.abs(bem_finmag - bem_magpar)) > 1e-12:
-            print "Finmag:", np.round(bem_finmag, 4)
-            print "Magpar:", np.round(bem_magpar, 4)
-            print "Difference:", np.round(bem_magpar - bem_finmag, 4)
+            print("Finmag:"), np.round(bem_finmag, 4)
+            print("Magpar:"), np.round(bem_magpar, 4)
+            print("Difference:"), np.round(bem_magpar - bem_finmag, 4)
             self.fail(
                 "Finmag and magpar computation of BEM differ, mesh: " + str(mesh))
 
@@ -153,16 +153,16 @@ class BemComputationTests(unittest.TestCase):
         c = time_counter.counter()
         while c.next():
             df.BoundaryMesh(mesh, 'exterior', False)
-        print "Boundary mesh computation for %s: %s" % (mesh, c)
+        print("Boundary mesh computation for %s: %s") % (mesh, c)
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem_fk(boundary_mesh)
             n = bem.shape[0]
-        print "FK BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c)
+        print("FK BEM computation for %dx%d (%.2f Mnodes/sec): %s") % (n, n, c.calls_per_sec(n * n / 1e6), c)
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem_gcr(boundary_mesh)
-        print "GCR BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c)
+        print("GCR BEM computation for %dx%d (%.2f Mnodes/sec): %s") % (n, n, c.calls_per_sec(n * n / 1e6), c)
 
     def test_bem_netgen(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -179,8 +179,8 @@ class BemComputationTests(unittest.TestCase):
         message = "Method: %s, mesh: %s, m: %s, error: %8g" % (
             method_name, mesh, m_expr, error)
         print message
-        print "K = ", k
-        print "m_expr = ", m_expr
+        print("K = "), k
+        print("m_expr = "), m_expr
         self.assertAlmostEqual(
             error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
@@ -279,7 +279,7 @@ class BemComputationTests(unittest.TestCase):
         n = df.FacetNormal(mesh)
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide
         # by 3
-        print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds) / 3.
+        print("Normal: +1=outward, -1=inward:"), df.assemble(df.dot(field, n) * df.ds) / 3.
 
 if __name__ == "__main__":
     unittest.main()

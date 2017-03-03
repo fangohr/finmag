@@ -11,7 +11,7 @@ Ms = 0.86e6
 def test_small_problem():
     results = small_problem()
     REL_TOLERANCE = 1e-15
-    print "0d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("0d: rel_diff_max:"), np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
@@ -19,14 +19,14 @@ def test_one_dimensional_problem():
     results = one_dimensional_problem()
     REL_TOLERANCE = 1e-9  # for 100,000 FE nodes, 6e-4 for 200 nodes
 
-    print "1d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("1d: rel_diff_max:"), np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
     REL_TOLERANCE = 9e-2
-    print "3d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("3d: rel_diff_max:"), np.nanmax(results["rel_diff"])
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
@@ -79,8 +79,8 @@ def three_dimensional_problem():
 
 if __name__ == '__main__':
     res0 = small_problem()
-    print "0D problem, relative difference:\n", stats(res0["rel_diff"])
+    print("0D problem, relative difference:\n"), stats(res0["rel_diff"])
     res1 = one_dimensional_problem()
-    print "1D problem, relative difference:\n", stats(res1["rel_diff"])
+    print("1D problem, relative difference:\n"), stats(res1["rel_diff"])
     res3 = three_dimensional_problem()
-    print "3D problem, relative difference:\n", stats(res3["rel_diff"])
+    print("3D problem, relative difference:\n"), stats(res3["rel_diff"])

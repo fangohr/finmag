@@ -306,7 +306,7 @@ class Simulation(object):
 
 
     def __del__(self):
-        print "Simulation object about to be destroyed."
+        print("Simulation object about to be destroyed.")
 
 
     def __str__(self):

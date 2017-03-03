@@ -43,7 +43,7 @@ try:
 except IOError:
     results = np.zeros((len(maxhs), 4))
     for i, maxh in enumerate(maxhs):
-        print "Mesh {}/{} with maxh = {:.3}.".format(i + 1, len(maxhs), maxh)
+        print("Mesh {}/{} with maxh = {:.3}.").format(i + 1, len(maxhs), maxh)
         mesh = create_mesh(maxh)
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
         m_function = df.Function(S3)
@@ -53,11 +53,11 @@ except IOError:
         # Pre-compute BEM to save time.
         bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
 
-        print "Computing demagnetising field with default solver parameters..."
+        print("Computing demagnetising field with default solver parameters...")
         H_default, runtime_default = run_demag(
             repetitions, default_params, m, Ms, unit_length, bem, b2g_map)
 
-        print "Computing demagnetising field with optimised solver parameters..."
+        print("Computing demagnetising field with optimised solver parameters...")
         H_opt, runtime_opt = run_demag(
             repetitions, opt_params, m, Ms, unit_length, bem, b2g_map)
 

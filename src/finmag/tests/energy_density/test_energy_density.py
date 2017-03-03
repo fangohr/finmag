@@ -55,9 +55,9 @@ def test_exchange_energy_density():
 
     print ("Nmag data   = %g" % nmag_data[0])
     print ("Finmag data = %g" % finmag_data[0])
-    print "Relative error from nmag data (expect array of 0):"
+    print("Relative error from nmag data (expect array of 0):")
     print rel_err
-    print "Max relative error:", np.max(rel_err)
+    print("Max relative error:"), np.max(rel_err)
     assert np.max(rel_err) < TOL, \
         "Max relative error is %g, should be zero." % np.max(rel_err)
 
@@ -116,9 +116,9 @@ def test_anisotropy_energy_density():
     density = anis.energy_density()
     deviation = np.abs(density - 0.5)
 
-    print "Anisotropy energy density (expect array of 0.5):"
+    print("Anisotropy energy density (expect array of 0.5):")
     print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("Max deviation: %g") % np.max(deviation)
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
@@ -140,9 +140,9 @@ def test_DMI_energy_density_2D():
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "2D energy density (expect array of 1):"
+    print("2D energy density (expect array of 1):")
     print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("Max deviation: %g") % np.max(deviation)
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
@@ -160,9 +160,9 @@ def test_DMI_energy_density_3D():
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "3D energy density (expect array of 1):"
+    print("3D energy density (expect array of 1):")
     print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("Max deviation: %g") % np.max(deviation)
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
@@ -199,9 +199,9 @@ def test_demag_energy_density():
     density = demag.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "Demag energy density (expect array of 1s):"
+    print("Demag energy density (expect array of 1s):")
     print density
-    print "Max deviation:", np.max(deviation)
+    print("Max deviation:"), np.max(deviation)
     assert np.max(deviation) < TOL, \
         "Max deviation is %g, should be zero." % np.max(deviation)
 

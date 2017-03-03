@@ -68,7 +68,7 @@ def test_analytical_inverse_DFT(tmpdir, debug=False):
         A_k = rfft_vals[k]  # Fourier coefficient at the peak
         B_k = A_k.real
         C_k = A_k.imag
-        print "Fourier coefficient at index k={} is: {}".format(k, A_k)
+        print("Fourier coefficient at index k={} is: {}").format(k, A_k)
 
         tt = 2 * pi * k * np.arange(n) / n
         signal_analytical_1 = np.squeeze(
@@ -79,7 +79,7 @@ def test_analytical_inverse_DFT(tmpdir, debug=False):
 
         base_oscillation = sin(ts) if (k == 2) else 2 * cos(3 * ts)
 
-        print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
+        print("Maximum deviation of filtered signal from the base sinusoidal oscillation: {}").format(max(abs(base_oscillation - signal_filtered)))
         assert np.allclose(
             base_oscillation, signal_filtered, atol=0.05, rtol=0)
         assert np.allclose(

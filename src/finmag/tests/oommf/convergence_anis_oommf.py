@@ -24,7 +24,7 @@ def m_gen(rs):
 
 
 def test_1d():
-    print "1D problem..."
+    print("1D problem...")
     for x_n in [1e1, 1e2, 1e3, 1e4, 1e5, 1e6]:
         dolfin_mesh = df.IntervalMesh(int(x_n), 0, x_max)
         oommf_mesh = mesh.Mesh((int(x_n), 1, 1), size=(x_max, 1e-12, 1e-12))

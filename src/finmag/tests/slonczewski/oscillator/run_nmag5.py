@@ -51,13 +51,13 @@ sim.model.quantities["sl_current_density"].set_value(
 
 
 if do_relaxation:
-    print "DOING RELAXATION"
+    print("DOING RELAXATION")
     sim.relax(save=[("fields", at("time", 0 * ps) | at("convergence"))])
     sim.save_m_to_file(relaxed_m)
     sys.exit(0)
 
 else:
-    print "DOING DYNAMICS"
+    print("DOING DYNAMICS")
     sim.load_m_from_h5file(relaxed_m)
     sim.set_params(stopping_dm_dt=0 * degrees_per_ns)
     sim.relax(save=[("averages", every("time", 5 * ps))],

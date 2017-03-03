@@ -27,9 +27,9 @@ def test_cubic_against_nmag(finmag=conftest.setup_cubic()):
     rel_diff = diff / \
         np.sqrt(np.max(mxH_ref[0] ** 2 + mxH_ref[1] ** 2 + mxH_ref[2] ** 2))
 
-    print "comparison with nmag, m x H, difference:"
+    print("comparison with nmag, m x H, difference:")
     print stats(diff)
-    print "comparison with nmag, m x H, relative difference:"
+    print("comparison with nmag, m x H, relative difference:")
     print stats(rel_diff)
 
     finmag["table"] += conftest.table_entry("nmag", REL_TOLERANCE, rel_diff)

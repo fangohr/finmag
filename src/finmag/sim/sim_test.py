@@ -128,8 +128,8 @@ class TestSimulation(object):
         v0_ref = v_ref[[0, N, 2 * N]]
 
         # Check that the results coincide
-        print "v0_probed: {}".format(v0_probed)
-        print "v0_ref: {}".format(v0_ref)
+        print("v0_probed: {}").format(v0_probed)
+        print("v0_ref: {}").format(v0_ref)
         assert(np.allclose(v0_probed, v0_ref))
         assert(np.allclose(v_probed_1d, v_ref))
 

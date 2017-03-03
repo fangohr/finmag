@@ -25,7 +25,7 @@ class MyLLG(LLG):
 
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
-        print "About to cal setup"
+        print("About to cal setup")
         exch.setup(self._m_field, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
@@ -129,7 +129,7 @@ def test_convergence_linear():
     errors = derivative_test(L, M, x, hs)
     rates = convergence_rates(hs, errors)
     for h, rate in zip(hs, rates):
-        print "h= %g, rate=%g, rate-1=%g " % (h, rate, rate - 1)
+        print("h= %g, rate=%g, rate-1=%g ") % (h, rate, rate - 1)
         assert abs(rate - 1) < h * CONV_TOL
 
 
@@ -138,20 +138,20 @@ def test_derivative_linear():
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
     for h, err in zip(hs, errors):
-        print "h= %g, error=%g" % (h, err)
+        print("h= %g, error=%g") % (h, err)
         assert abs(err) < h ** 2 * DERIV_TOL
 
 if __name__ == '__main__':
     # L is linear
-    print "Testing linear functional."
-    print "This should convert as O(h):"
+    print("Testing linear functional.")
+    print("This should convert as O(h):")
     errors = derivative_test(L, M, x, hs)
     print errors
-    print "This should be close to one:"
+    print("This should be close to one:")
     print convergence_rates(hs, errors)
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
-    print "This should be close to zero since L is linear:"
+    print("This should be close to zero since L is linear:")
     print errors
 
     test_derivative_linear()
@@ -160,16 +160,16 @@ if __name__ == '__main__':
     print ''
     '''
     # L is nonlinear
-    print "Testing nonlinear functional."
-    print "This should convert as O(h):"
+    print("Testing nonlinear functional.")
+    print("This should convert as O(h):")
     errors = derivative_test(L, M, x, hs)
     print errors
-    print "This should be close to one:"
+    print("This should be close to one:")
     print convergence_rates(hs, errors)
     J = llg.compute_jacobian()
-    print "This should converge as O(h^2):"
+    print("This should converge as O(h^2):")
     errors = derivative_test(L, M, x, hs, J=J)
     print errors
-    print "This should be close to two:"
+    print("This should be close to two:")
     print convergence_rates(hs, errors)
     '''

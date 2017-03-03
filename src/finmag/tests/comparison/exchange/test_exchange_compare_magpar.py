@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     res = three_dimensional_problem()
 
-    print "finmag:", res["exch"]
-    print "magpar:", res["magpar_exch"]
-    print "rel_diff:", res["rel_diff"]
-    print "max rel_diff", np.max(res["rel_diff"])
+    print("finmag:"), res["exch"]
+    print("magpar:"), res["magpar_exch"]
+    print("rel_diff:"), res["rel_diff"]
+    print("max rel_diff"), np.max(res["rel_diff"])

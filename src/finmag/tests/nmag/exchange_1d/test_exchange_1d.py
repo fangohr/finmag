@@ -77,8 +77,8 @@ def test_angles():
 
     max_diff = abs(angles.max() - angles.min())
     mean_angle = np.mean(angles)
-    print "test_angles: max_difference= {}.".format(max_diff)
-    print "test_angles: mean= {}.".format(mean_angle)
+    print("test_angles: max_difference= {}.").format(max_diff)
+    print("test_angles: mean= {}.").format(mean_angle)
     assert max_diff < TOLERANCE
     assert np.abs(mean_angle - np.pi / 10) < TOLERANCE
 
@@ -111,7 +111,7 @@ def test_averages():
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
     diff = ref - computed
-    print "test_averages, max. difference per axis:"
+    print("test_averages, max. difference per axis:")
     print np.nanmax(np.abs(diff), axis=0)
 
     assert np.nanmax(diff) < TOLERANCE
@@ -130,9 +130,9 @@ def test_third_node():
     diff = ref - computed
     rel_diff = np.abs(diff / ref)
 
-    print "test_third_node, max. difference per axis:"
+    print("test_third_node, max. difference per axis:")
     print np.nanmax(np.abs(diff), axis=0)
-    print "test_third_node, max. relative difference per axis:"
+    print("test_third_node, max. relative difference per axis:")
     max_diffs = np.nanmax(rel_diff, axis=0)
     print max_diffs
     assert max_diffs[0] < REL_TOLERANCE and max_diffs[1] < REL_TOLERANCE
@@ -161,7 +161,7 @@ def test_m_cross_H():
     max_norm = max([h.norm(v) for v in m_cross_H_ref])
     rel_diff = diff / max_norm
 
-    print "test_m_cross_H, max. relative difference per axis:"
+    print("test_m_cross_H, max. relative difference per axis:")
     print np.nanmax(rel_diff, axis=0)
     assert np.max(rel_diff) < REL_TOLERANCE
 

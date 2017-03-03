@@ -57,9 +57,9 @@ def test_try_to_restart_a_simulation(tmpdir):
         sim2.t, sim2.integrator.stats()))
 
     # Check that we have the same data in both simulation objects.
-    print "Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t)
+    print("Time for sim1: {} s, time for sim2: {} s.").format(sim1.t, sim2.t)
     assert abs(sim1.t - sim2.t) < 1e-16
-    print "Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
+    print("Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.").format(
         sim1.m_average, sim2.m_average)
     assert np.allclose(sim1.m, sim2.m, atol=5e-6, rtol=1e-8)
 

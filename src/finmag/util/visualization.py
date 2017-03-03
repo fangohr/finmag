@@ -75,9 +75,9 @@ def flight_path_rotation(start_pos, axis=[0, 0, 1], angle=360):
     # plane.
     r2 = np.cross(axis_normalised, r1)
 
-    print "P0: {}".format(P0)
-    print "r1: {}".format(r1)
-    print "r2: {}".format(r2)
+    print("P0: {}").format(P0)
+    print("r1: {}").format(r1)
+    print("r2: {}").format(r2)
 
     def flight_path(t):
         pos = P0 + cos(t * angle_rad) * r1 + sin(t * angle_rad) * r2

@@ -64,7 +64,7 @@ def run_sim_with_stt():
             f.write("{} {} {} {}\n".format(t, *sim.m_average))
 
 if __name__ == "__main__":
-    print "Running sim without STT."
+    print("Running sim without STT.")
     run_sim_without_stt()
-    print "Running sim with STT."
+    print("Running sim with STT.")
     run_sim_with_stt()

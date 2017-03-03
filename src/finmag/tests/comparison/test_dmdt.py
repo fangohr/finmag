@@ -61,7 +61,7 @@ def test_dmdt_computation_with_oommf():
     difference = np.abs(dmdt_finmag_like_oommf.flat - dmdt_oommf)
     relative_difference = difference / np.max(np.sqrt(dmdt_oommf[0] ** 2 +
                                                       dmdt_oommf[1] ** 2 + dmdt_oommf[2] ** 2))
-    print "comparison with oommf, dm/dt, relative difference:"
+    print("comparison with oommf, dm/dt, relative difference:")
     print stats(relative_difference)
     assert np.max(relative_difference) < TOLERANCE
 

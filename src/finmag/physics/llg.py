@@ -416,7 +416,7 @@ class LLG(object):
                 self.effective_field.update(t)
             else:
                 pass
-                # print "This actually happened."
+                # print("This actually happened.")
                 #import sys; sys.exit()
 
         m.shape = (3, -1)

@@ -109,8 +109,8 @@ def solve(*args, **kwargs):
             # Replace the existing solver setting with the benchmark one's.
             new_args, new_kwargs = replace_solver_settings(
                 args, kwargs, parameters)
-# print "args,", new_args
-# print "kwargs;", new_kwargs
+# print("args,"), new_args
+# print("kwargs;"), new_kwargs
 
             # Solve the problem
             timer = dolfin.Timer("Solver benchmark")

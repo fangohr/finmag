@@ -59,7 +59,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
 
     integrator.advance_time(END_TIME)
     dt = datetime.now() - t
-    print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
+    print("backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g") % (
         backend,
         method,
         dt,
@@ -70,14 +70,14 @@ def run_test(backend, method, mode='onego', nsteps=40000):
 
     if mode == 'twogoesreinit':
         # check that rhs counter goes back to zero
-        print "re-initialising"
+        print("re-initialising")
         integrator.reinit()
         assert integrator.n_rhs_evals == 0
     else:
-        print "Not re-initialising"
+        print("Not re-initialising")
 
     integrator.advance_time(END_TIME2)
-    print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
+    print("backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g") % (
         backend,
         method,
         dt,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # the actual test
     test_reinit_resets_num_rhs_eval_counter()
 
-    print "Demo how nhs_rhs_evals changes with and without reinit"
+    print("Demo how nhs_rhs_evals changes with and without reinit")
     int = run_test("sundials", "bdf_diag", mode='twogoes')
     int = run_test("sundials", "bdf_gmres_no_prec", mode='twogoesreinit')
     int = run_test("sundials", "adams", mode='onego')

@@ -31,7 +31,7 @@ def diff(H_ext, expected_field):
     and the expected field.
     """
     H = H_ext.compute_field().reshape((3, -1)).mean(1)
-    print "Got H={}, expecting H_ref={}.".format(H, expected_field)
+    print("Got H={}, expecting H_ref={}.").format(H, expected_field)
     return np.max(np.abs(H - expected_field))
 
 

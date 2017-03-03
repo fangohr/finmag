@@ -24,7 +24,7 @@ class IntegratorTests(unittest.TestCase):
         t = datetime.now()
         integrator.advance_time(END_TIME)
         dt = datetime.now() - t
-        print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
+        print("backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g") % (
             backend,
             method,
             dt,

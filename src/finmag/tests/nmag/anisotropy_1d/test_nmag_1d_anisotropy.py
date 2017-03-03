@@ -78,13 +78,13 @@ def test_averages():
     diff = ref - computed
     rel_diff = np.abs(diff / np.sqrt(ref[0] ** 2 + ref[1] ** 2 + ref[2] ** 2))
 
-    print "test_averages, max. relative difference per axis:"
+    print("test_averages, max. relative difference per axis:")
     print np.nanmax(rel_diff, axis=0)
 
     rel_err = np.nanmax(rel_diff)
     if rel_err > 1e-3:
-        print "nmag:\n", ref
-        print "finmag:\n", computed
+        print("nmag:\n"), ref
+        print("finmag:\n"), computed
     assert rel_err < REL_TOLERANCE
 
 
@@ -101,13 +101,13 @@ def test_third_node():
     diff = ref - computed
     rel_diff = np.abs(diff / np.sqrt(ref[0] ** 2 + ref[1] ** 2 + ref[2] ** 2))
 
-    print "test_third_node: max. relative difference per axis:"
+    print("test_third_node: max. relative difference per axis:")
     print np.nanmax(rel_diff, axis=0)
 
     rel_err = np.nanmax(rel_diff)
     if rel_err > 1e-3:
-        print "nmag:\n", ref
-        print "finmag:\n", computed
+        print("nmag:\n"), ref
+        print("finmag:\n"), computed
     assert rel_err < REL_TOLERANCE
 
 
@@ -135,7 +135,7 @@ def test_m_cross_H():
     max_norm = max([h.norm(v) for v in m_cross_H_ref])
     rel_diff = diff / max_norm
 
-    print "test_m_cross_H: max rel diff=", np.max(rel_diff)
+    print("test_m_cross_H: max rel diff="), np.max(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == '__main__':

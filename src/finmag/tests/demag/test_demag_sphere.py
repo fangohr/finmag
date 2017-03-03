@@ -30,7 +30,7 @@ def test_H_demag(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:
         H = solution.H.reshape((3, -1)).mean(1)
         H_expected = np.array([-1.0 / 3.0, 0, 0])
-        print "{}: Hx = {}, should be {}.".format(
+        print("{}: Hx = {}, should be {}.").format(
             solution.__class__.__name__, H, H_expected)
         diff = np.max(np.abs(H - H_expected))
         assert diff < TOL
