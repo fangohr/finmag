@@ -11,22 +11,24 @@ RUN apt-get dist-upgrade -y
 
 # Packages required to build finmag
 RUN apt-get install -y cython libsundials-serial-dev libboost-python-dev \
-    libboost-test-dev
+    libboost-test-dev ipython python-scipy --no-install-recommends
 
 # Packages required to run tests
-RUN apt-get install -y python-pip git libpetsc3.6 libpetsc3.6.2-dev libslepc3.6.1 \
-    libslepc3.6.1-dev gmsh
+RUN apt-get install -y python-pip python-setuptools git libpetsc3.6 libpetsc3.6.2-dev \
+    libslepc3.6.1 libslepc3.6.1-dev gmsh --no-install-recommends
 RUN pip install --upgrade pip
 RUN PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.6.0.tar.gz
 RUN pip install --upgrade aeon sh future git+https://github.com/fangohr/dolfinh5tools.git
 
 # Not necessary convenience packages (can be removed)!!!
-RUN apt-get install -y emacs
+#RUN apt-get install -y emacs
 RUN pip install --upgrade pytest
 
 # Install the newest netgen (to avoid segmentation fault)
 WORKDIR /usr/local
-RUN apt-get install -y wget autoconf tk8.5-dev tcl8.5-dev libxmu-dev gawk python3-tk python3-pip metis openmpi-bin libopenmpi-dev libtogl-dev python3-dev python-psutil
+RUN apt-get install -y wget autoconf tk8.5-dev tcl8.5-dev libxmu-dev gawk python3-tk \
+    python3-pip metis openmpi-bin libopenmpi-dev libtogl-dev python3-dev python-psutil \
+    --no-install-recommends
 RUN wget http://kent.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz
 RUN tar -xvf netgen-5.3.1.tar.gz
 WORKDIR /usr/local/netgen-5.3.1
@@ -40,7 +42,7 @@ ENV NETGENDIR /opt/netgen/bin
 
 
 # install buildbot
-RUN pip install --upgrade buildbot buildbot-console-view buildbot-waterfall-view buildbot-worker buildbot-www
+#RUN pip install --upgrade buildbot buildbot-console-view buildbot-waterfall-view buildbot-worker buildbot-www
 
 # create working directory, with the intention to mount /io from host.
 # We also expect that a finmag repository is checked out to /io/finmag
