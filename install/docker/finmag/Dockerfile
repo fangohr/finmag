@@ -11,7 +11,7 @@ RUN apt-get dist-upgrade -y
 
 # Packages required to build finmag
 RUN apt-get install -y cython libsundials-serial-dev libboost-python-dev \
-    libboost-test-dev ipython python-scipy --no-install-recommends
+    libboost-test-dev ipython python-scipy python-matplotlib --no-install-recommends
 
 # Packages required to run tests
 RUN apt-get install -y python-pip python-setuptools git libpetsc3.6 libpetsc3.6.2-dev \
