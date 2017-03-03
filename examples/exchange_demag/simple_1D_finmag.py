@@ -17,7 +17,7 @@ nd = np.load(os.path.join(MODULE_DIR, "nmag_hansconf.npy"))
 mesh = df.IntervalMesh(100, 0, 10e-9)
 S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
 DG0 = df.FunctionSpace(mesh, "DG", 0)
-m = Field(S3, df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
+m = Field(S3, df.Expression(("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0"), degree=1))
 Ms = Field(DG0, 1.0)
 
 exchange = Exchange(1.3e-11)

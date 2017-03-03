@@ -532,7 +532,7 @@ if __name__ == "__main__":
     Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
 
     Ms = 8.6e5
-    #expr = df.Expression(('cos(x[0])', 'sin(x[0])','0'))
+    #expr = df.Expression(('cos(x[0])', 'sin(x[0])','0') degree=1)
 
     m = interpolate(Constant((1, 0, 0)), Vv)
 

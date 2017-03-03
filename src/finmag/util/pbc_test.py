@@ -10,7 +10,7 @@ def test_pbc1d_2dmesh():
 
     S = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
 
-    expr = df.Expression('cos(x[0])')
+    expr = df.Expression('cos(x[0])', degree=1)
     M = df.interpolate(expr, S)
 
     assert abs(M(0, 0.1) - M(1, 0.1)) < 1e-15
@@ -26,7 +26,7 @@ def test_pbc2d_2dmesh():
 
     S = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
 
-    expr = df.Expression('cos(x[0])+x[1]')
+    expr = df.Expression('cos(x[0])+x[1]', degree=1)
     M = df.interpolate(expr, S)
 
     assert abs(M(0, 0.1) - M(1, 0.1)) < 1e-15
@@ -44,7 +44,7 @@ def test_pbc2d_3dmesh():
 
     S = df.FunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
 
-    expr = df.Expression('cos(x[0])+x[1]')
+    expr = df.Expression('cos(x[0])+x[1]', degree=1)
     M = df.interpolate(expr, S)
 
     assert abs(M(0, 0, 0) - M(1, 0, 0)) < 1e-15
@@ -64,7 +64,7 @@ def test_pbc2d_3dmesh2():
 
     S = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
 
-    expr = df.Expression(('cos(x[0]+x[2])', 'sin(x[0]+x[2])', '0'))
+    expr = df.Expression(('cos(x[0]+x[2])', 'sin(x[0]+x[2])', '0'), degree=1)
     M = df.interpolate(expr, S)
     #file = df.File('poisson.pvd')
     #file << M

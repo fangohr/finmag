@@ -4,6 +4,7 @@ import numpy as np
 from finmag.field import Field
 from finmag.energies import Exchange
 from finmag.util.helpers import vectors, norm, stats, sphinx_sci as s
+import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -61,8 +62,8 @@ def teardown_finmag(finmag):
     with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
-
-def pytest_funcarg__finmag(request):
+@pytest.fixture
+def finmag(request):
     finmag = request.cached_setup(setup=setup_finmag,
                                   teardown=teardown_finmag, scope="module")
     return finmag

@@ -47,6 +47,7 @@ def run_make(cmd, **kwargs):
     try:
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
     except subprocess.CalledProcessError, ex:
+        print(ex.output)
         output = replace_c_errors_with_python_errors(ex.output)
         with open(MODULES_OUTPUT_DIR + "/compiler_errors.log", "w") as f:
             f.write(output)

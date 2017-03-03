@@ -424,7 +424,9 @@ class SLEPcEigensolver(AbstractEigensolver):
                 print("----------------- ------------------")
             for i in range(nconv):
                 k = E.getEigenpair(i, vr, vi)
-                error = E.computeRelativeError(i)
+                print(type(E))
+                print(dir(E))
+                error = E.computeError(i, etype=1)
                 if self.verbose:
                     if k.imag != 0.0:
                         print(" %9f%+9f j %12g" % (k.real, k.imag, error))

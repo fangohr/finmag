@@ -44,7 +44,7 @@ def test_exchange_energy_density():
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     Ms = 42
     m = Field(S3, value=df.Expression(
-        ("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0")))
+        ("cos(x[0]*pi/10e-9)", "sin(x[0]*pi/10e-9)", "0"), degree=1))
 
     exch = Exchange(1.3e-11)
     Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), Ms)
@@ -132,7 +132,7 @@ def test_DMI_energy_density_2D():
     """
     mesh = df.UnitSquareMesh(4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    M = Field(V, value=df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")))
+    M = Field(V, value=df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1))
     Ms = 1
     D = 1
     dmi = DMI(D)
@@ -152,7 +152,7 @@ def test_DMI_energy_density_3D():
     """Same as above, on a 3D mesh."""
     mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
-    M = Field(V, df.Expression(("-0.5*x[1]", "0.5*x[0]", "1")))
+    M = Field(V, df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1))
     Ms = 10
     D = 1
     dmi = DMI(D)

@@ -91,10 +91,10 @@ class FemBemDeMagSolver(object):
         #     self.m = df.interpolate(m,self.W)
 
         # elif isinstance(m,tuple):
-        #     self.m = df.interpolate(df.Expression(m),self.W)
+        #     self.m = df.interpolate(df.Expression(m, degree=1),self.W)
 
         # elif isinstance(m,list):
-        #     self.m = df.interpolate(df.Expression(tuple(m)),self.W)
+        #     self.m = df.interpolate(df.Expression(tuple(m, degree=1)),self.W)
 
         # else:
         #     self.m = m
@@ -130,8 +130,8 @@ class FemBemDeMagSolver(object):
             # We're setting 'same_nonzero_pattern=True' to enforce the
             # same matrix sparsity pattern across different demag solves,
             # which should speed up things.
-            self.laplace_solver.parameters["preconditioner"][
-                "structure"] = "same_nonzero_pattern"
+            #self.laplace_solver.parameters["preconditioner"][
+            #    "structure"] = "same_nonzero_pattern"
         else:
             raise ValueError(
                 "Wrong solver type specified: '{}' (allowed values: 'Krylov', 'LU')".format(solver_type))

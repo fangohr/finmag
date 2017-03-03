@@ -15,7 +15,7 @@ It is convenient to channel the power of dolfin expressions for this task.
 
 """
 
-alpha_expression = df.Expression("(x[0] > x_limit) ? 1.0 : 0.5", x_limit=80e-9)
+alpha_expression = df.Expression("(x[0] > x_limit) ? 1.0 : 0.5", x_limit=80e-9, degree=1)
 llg.set_alpha(alpha_expression)
 
 print "alpha vector:\n", llg.alpha.vector().array()

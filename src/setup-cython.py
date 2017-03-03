@@ -30,7 +30,6 @@ files_to_ignore = ['llg.py',
                    'magpar.py',             # +3 failures
                    'consts.py',             # +37 failures when compiled.
                    'solid_angle_magpar.py', # +1 failure
-                   'arraytools.py',         # +1 failure
                    'material.py',           # +1 failure
                    'solver_gcr.py',         # +2 failures
                    'helpers.py',            # +1 failure

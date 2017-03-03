@@ -32,7 +32,7 @@ def expression_from_python_function(func, function_space):
         Turn a python function to a dolfin expression over given functionspace.
 
         """
-        def __init__(self, python_function):
+        def __init__(self, python_function, **kwargs):
             self.func = python_function
 
         def eval(self, eval_result, x):
@@ -41,7 +41,7 @@ def expression_from_python_function(func, function_space):
         def value_shape(self):
             # () for scalar field, (N,) for N dimensional vector field
             return function_space.ufl_element().value_shape()
-    return ExpressionFromPythonFunction(func)
+    return ExpressionFromPythonFunction(func, degree=1)
 
 
 def create_missing_directory_components(filename):
@@ -552,7 +552,7 @@ def mesh_and_space(mesh_or_space):
     was passed in as argument and the other one built/extracted from it.
 
     """
-    if isinstance(mesh_or_space, df.VectorFunctionSpace):
+    if isinstance(mesh_or_space, df.FunctionSpace) and mesh_or_space.num_sub_spaces() == 3:
         S3 = mesh_or_space
         mesh = S3.mesh()
     else:
@@ -588,9 +588,13 @@ def verify_function_space_type(function_space, family, degree, dim):
         (family == ufl_element.family() and
          degree == ufl_element.degree())
 
+    print 'Family', family
+    print 'Degree', degree
+    print family_and_degree_are_correct
+
     if dim == None:
         # `function_space` should be a dolfin.FunctionSpace
-        return (isinstance(function_space, df.FunctionSpace) and
+        return (function_space.num_sub_spaces() == 0 and
                 family_and_degree_are_correct)
     else:
         # `function_space` should be a dolfin.VectorFunctionSpace
@@ -599,7 +603,7 @@ def verify_function_space_type(function_space, family, degree, dim):
         if len(value_shape) != 1:
             return False
         else:
-            return (isinstance(function_space, df.VectorFunctionSpace) and
+            return (function_space.num_sub_spaces() > 0 and
                     family_and_degree_are_correct and
                     dim == value_shape[0])
 
@@ -671,7 +675,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
         # We recognise a sequence of strings as ingredient for a df.Expression.
         if all(isinstance(item, basestring) for item in value):
-            expr = df.Expression(value, **kwargs)
+            expr = df.Expression(value, degree=1, **kwargs)
             fun = df.interpolate(expr, S3)
         else:
             #fun = df.Function(S3)
@@ -695,8 +699,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
 
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
-                super(HelperExpression, self).__init__()
+            def __init__(self, value, **kwargs):
                 self.fun = value
 
             def eval(self, value, x):
@@ -705,7 +708,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
             def value_shape(self):
                 return (3,)
 
-        hexp = HelperExpression(value)
+        hexp = HelperExpression(value, degree=1)
         fun = df.interpolate(hexp, S3)
 
     else:
@@ -765,14 +768,13 @@ def scalar_valued_function(value, mesh_or_space):
         # if it's a normal function, we wrapper it into a dolfin expression
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
-                super(HelperExpression, self).__init__()
+            def __init__(self, value, **kwargs):
                 self.fun = value
 
             def eval(self, value, x):
                 value[0] = self.fun(x)
 
-        hexp = HelperExpression(value)
+        hexp = HelperExpression(value, degree=1)
         fun = df.interpolate(hexp, S1)
 
     else:
@@ -830,14 +832,13 @@ def scalar_valued_dg_function(value, mesh_or_space):
 
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
-                super(HelperExpression, self).__init__()
+            def __init__(self, value, **kwargs):
                 self.fun = value
 
             def eval(self, value, x):
                 value[0] = self.fun(x)
 
-        hexp = HelperExpression(value)
+        hexp = HelperExpression(value, degree=1)
         fun = df.interpolate(hexp, dg)
 
     else:
@@ -878,7 +879,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
     elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
         # We recognise a sequence of strings as ingredient for a df.Expression.
         if all(isinstance(item, basestring) for item in value):
-            expr = df.Expression(value, )
+            expr = df.Expression(value, degree=1)
             fun = df.interpolate(expr, dg)
         else:
             fun = df.Function(dg)
@@ -904,7 +905,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
 
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
+            def __init__(self, value, **kwargs):
                 super(HelperExpression, self).__init__()
                 self.fun = value
 
@@ -914,7 +915,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
             def value_shape(self):
                 return (3,)
 
-        hexp = HelperExpression(value)
+        hexp = HelperExpression(value, degree=1)
         fun = df.interpolate(hexp, dg)
 
     else:
@@ -1816,9 +1817,15 @@ def print_boundary_element_matrix_size(mesh, generalised=False):
 def build_maps(functionspace, dim=3, scalar=False):
     v2d_xyz = df.vertex_to_dof_map(functionspace)
     d2v_xyz = df.dof_to_vertex_map(functionspace)
+
+    # Since version 2016, Dolfin returns the constrained boundary
+    # elements in the dof_to_vertex_map().  They are added as
+    # mapped-to-zero indices at the end.  Simply cut them off.
+    d2v_xyz = np.trim_zeros(d2v_xyz, trim='b')
+
     n1, n2 = len(v2d_xyz), len(d2v_xyz)
 
-    v2d_xxx = ((v2d_xyz.reshape(n1/dim, dim)).transpose()).reshape(-1,)
+    v2d_xxx = ((v2d_xyz.reshape(int(n1/dim), dim)).transpose()).reshape(-1,)
 
     d2v_xxx = d2v_xyz.copy()
     for i in xrange(n2):

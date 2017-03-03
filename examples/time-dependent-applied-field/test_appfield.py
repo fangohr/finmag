@@ -27,7 +27,7 @@ def test_external_field_depends_on_t():
     llg.set_m(df.Constant((1, 0, 0)))
 
     #This is the time dependent field
-    H_app_expr = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0)
+    H_app_expr = df.Expression(("0.0", "0.0","H0*sin(omega*t)"), H0=1e5, omega=omega, t=0.0, degree=1)
     H_app = TimeZeeman(H_app_expr)
     Ms_field = Field(df.FunctionSpace(mesh, 'DG', 0), 8.6e5)
     H_app.setup(llg.m_field, Ms=Ms_field)

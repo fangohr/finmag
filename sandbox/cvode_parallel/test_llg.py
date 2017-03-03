@@ -8,7 +8,7 @@ import finmag.native.llg_petsc as llg_petsc
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange, Zeeman, Demag
 
-df.parameters.reorder_dofs_serial = False
+df.parameters.reorder_dofs_serial = True
 from mpi4py import MPI
 
 comm = MPI.COMM_WORLD

@@ -179,8 +179,8 @@ class FKDemag(object):
             # We're setting 'same_nonzero_pattern=True' to enforce the
             # same matrix sparsity pattern across different demag solves,
             # which should speed up things.
-            self._laplace_solver.parameters["preconditioner"][
-                "structure"] = "same_nonzero_pattern"
+            #self._laplace_solver.parameters["preconditioner"][
+            #    "structure"] = "same_nonzero_pattern"
         elif solver_type == 'LU':
             self._poisson_solver = df.LUSolver(self._poisson_matrix.copy())
             self._laplace_solver = df.LUSolver()
