@@ -50,12 +50,13 @@ static void sigsegv_handler(int sig)
     exit(1);
 }
 
-void initialise_np_array()
+int initialise_np_array()
 {
     // install the segmentation fault handler that prints a stack trace
     signal(SIGSEGV, sigsegv_handler);
     // import the Python array object
-    import_array();
+    int* err = import_array();
+    
     // register the from-python converters
     mpl::for_each<numpy_types>(np_array_initialiser());
 }

@@ -97,7 +97,7 @@ CFLAGS_PYTHON=-I/usr/include/python3.5 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_pyth
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x
 # Treat all warnings as errors
-CFLAGS_WARN=-Wall -Werror -Wno-error=unused-function
+CFLAGS_WARN=-Wall -Wno-error=unused-function
 # Add the source code directory to the include path
 CFLAGS_INCLUDE=-I$(abspath src)
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
@@ -148,6 +148,11 @@ nvec_serial :
 %.o : %.cc $(PRECOMPILED_HEADER_FILE) Makefile
 	@echo Building object file: $@
 	@$(CXX) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
+
+# Builds an object file from a .c file
+%.o : %.c $(PRECOMPILED_HEADER_FILE) Makefile
+	@echo Building object file: $@
+	@$(CC) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
 
 # Creates the precompiled header file
 pch: $(PRECOMPILED_HEADER_FILE)

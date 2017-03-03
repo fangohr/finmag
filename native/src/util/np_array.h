@@ -212,6 +212,6 @@ private:
     }
 };
 
-extern void initialise_np_array();
+extern int initialise_np_array();
 
 #endif
