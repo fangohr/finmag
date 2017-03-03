@@ -5,8 +5,8 @@ machine:
 dependencies:
   override:
     - docker info
+    - make -C install/docker/finmag docker-pull
 
 test:
   override:
-    - make -C install/docker/finmag docker-pull
     - make -C install/docker/finmag test-in-docker
