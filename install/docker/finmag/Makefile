@@ -1,14 +1,15 @@
 run: finmag-compiled.done
 	@echo "Expect to have a finmag repository checked out in ./finmag ."
-	docker run -ti -v `pwd`:/io buildbot bash
+	docker run -ti -v `pwd`:/io finmag/fenics_2016_2_base bash
 
 
 # build docker container if not done yet
 docker-image.done: Dockerfile
-	docker build -t buildbot .
+	docker build -t finmag/fenics_2016_2_base .
 	date > docker-image.done
 
-
+docker-push: docker-image.done
+		docker push finmag/fenics_2016_2_base
 
 # clone firmag if note done yet
 finmag-repo-clone.done: docker-image.done 
@@ -20,7 +21,7 @@ finmag-repo-clone.done: docker-image.done
 
 finmag-compiled.done: finmag-repo-clone.done
 
-	docker run -ti -v `pwd`:/io buildbot python finmag/install/memory-warning.py
+	docker run -ti --rm -v `pwd`:/io finmag/fenics_2016_2_base python finmag/install/memory-warning.py
 	# this line should come later
 	# but at the moment, the import fails,
 	# so we are always in this target
@@ -30,7 +31,7 @@ finmag-compiled.done: finmag-repo-clone.done
 	# (only makes sense if changes are persistent -> need to move location
 	#  of temporary files from /tmp to somewhere else. But where?)
 	# (de-activated for now)
-	#docker run -ti -v `pwd`:/io buildbot python -c "import finmag"
+	#docker run -ti -v `pwd`:/io finmag/fenics_2016_2_base python -c "import finmag"
 
 
 clean:
