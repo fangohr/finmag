@@ -1,0 +1,13 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - docker info
+
+test:
+  override:
+    - cd install/docker/finmag
+    - make docker-pull
+    - make test-in-docker
