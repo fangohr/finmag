@@ -2,6 +2,8 @@ run: finmag-compiled.done
 	@echo "Expect to have a finmag repository checked out in ./finmag ."
 	docker run -ti -v `pwd`:/io finmag/fenics_2016_2_base bash
 
+test-in-docker: finmag-compiled.done
+	docker run -ti --rm -v `pwd`:/io finmag/fenics_2016_2_base bash -c "cd finmag && make test-fast"
 
 # build docker container if not done yet
 docker-image.done: Dockerfile
@@ -14,7 +16,7 @@ docker-push: docker-image.done
 # clone firmag if note done yet
 finmag-repo-clone.done: docker-image.done 
 	# clone source code on host
-	git clone git@github.com:fangohr/finmag.git
+	if [ ! -d finmag ]; then git clone git@github.com:fangohr/finmag.git; fi
 	# select right branch
 	cd finmag && git checkout master
 	touch finmag-repo-clone.done
