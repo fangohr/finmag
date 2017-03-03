@@ -8,6 +8,5 @@ dependencies:
 
 test:
   override:
-    - cd install/docker/finmag
-    - make docker-pull
-    - make test-in-docker
+    - make -C install/docker/finmag docker-pull
+    - make -C install/docker/finmag test-in-docker
