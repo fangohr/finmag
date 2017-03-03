@@ -414,7 +414,7 @@ def vectors(vs):
     [[x0, y0, z0], ..., [xn, yn, zn]].
 
     """
-    number_of_nodes = len(vs) / 3
+    number_of_nodes = len(vs) // 3
     return vs.view().reshape((number_of_nodes, -1), order="F")
 
 
