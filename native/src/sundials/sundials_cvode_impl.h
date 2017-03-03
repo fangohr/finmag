@@ -57,10 +57,7 @@ constexpr int get_sundials_version_number(const char (&v)[6]) {
 }
 
 // Next, define the parameter type 'sundials_long_param_t' based on the version number
-template<int Version> struct sundials_traits;
-template<> struct sundials_traits<240> { typedef int param_t; };
-template<> struct sundials_traits<250> { typedef long param_t; };
-typedef typename sundials_traits<get_sundials_version_number(SUNDIALS_PACKAGE_VERSION)>::param_t sundials_long_param_t;
+typedef long sundials_long_param_t;
 
 namespace finmag { namespace sundials {
 

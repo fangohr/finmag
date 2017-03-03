@@ -17,8 +17,10 @@ all : parallel
 #######################################
 #  Configurable options
 #
+# FENICS BOOST (1.63 or newer)
+FENICS_BOOST=-Wl,--export-dynamic -Wl,-rpath,/home/david/anaconda3/envs/fenicsproject/lib -L/home/david/anaconda3/envs/fenicsproject/lib
 # Fenics 2016.2 broke the building by changing where ufc.h is located:
-UFC_INC=-I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/
+UFC_INC=-I/home/david/anaconda3/envs/fenicsproject/lib/python3.5/site-packages/ffc/backends/ufc/
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
@@ -61,7 +63,7 @@ $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_b
 #	install src/cvode/llg_petsc.so ../src/finmag/native
 
 $(UNIT_TEST_BINARY): tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
-run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(INSTALL_PATH)/lib -ldolfin
+run_ci_tests_LDFLAGS=$(FENICS_BOOST) -lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(INSTALL_PATH)/lib -ldolfin
 
 #######################################
 # Other variables
