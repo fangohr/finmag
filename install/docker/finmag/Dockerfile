@@ -6,7 +6,7 @@ RUN apt-get update -y
 RUN apt-get install -y software-properties-common
 RUN add-apt-repository ppa:fenics-packages/fenics
 RUN apt-get update -y
-RUN apt-get install -y fenics --allow-unauthenticated
+RUN apt-get install -y fenics --allow-unauthenticated --no-install-recommends
 RUN apt-get dist-upgrade -y
 
 # Packages required to build finmag
