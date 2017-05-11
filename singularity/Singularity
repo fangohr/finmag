@@ -1,0 +1,29 @@
+BootStrap: docker
+From: ubuntu:latest
+
+%post
+apt-get update -y
+apt-get upgrade -y
+apt-get install -y software-properties-common git
+add-apt-repository ppa:fenics-packages/fenics
+apt-get update -y
+apt-get install fenics -y
+apt-get dist-upgrade
+apt-get install python-pip -y
+python -m pip install -U sphinx pytest aeon sh diff-match-patch future pyzmq
+apt-get install -y libpetsc3.6 libpetsc3.6.2-dev libslepc3.6.1 libslepc3.6.1-dev fenics libboost-python-dev libboost-thread-dev libsundials-serial-dev libboost-test-dev python-matplotlib python-visual python-scipy python-pip python-setuptools python-progressbar paraview-python cython python-zmq python-tornado gmsh netgen -y
+PETSC_DIR=/usr/lib/petsc SLEPC_DIR=/usr/lib/slepc python -m pip install https://bitbucket.org/slepc/slepc4py/downloads/slepc4py-3.6.0.tar.gz --allow-all-external 
+apt-get install -y python-pyvtk python-h5py
+python -m pip install git+https://github.com/fangohr/dolfinh5tools.git
+python -m pip install netifaces
+
+cd /usr
+if [ ! -d finmag ]; then
+git clone https://github.com/fangohr/finmag.git;
+fi;
+
+echo "export PYTHONPATH=/usr/finmag/src" >> /etc/profile
+chsh -s /bin/bash
+
+%runscript
+export PYTHONPATH=/usr/finmag/src
