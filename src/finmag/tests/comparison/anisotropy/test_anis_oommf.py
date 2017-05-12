@@ -5,7 +5,8 @@ from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
 from finmag.util.helpers import stats
 
 
-def test_against_oommf(finmag=conftest.setup(K2=0)):
+def test_against_oommf():
+    finmag=conftest.setup(K2=0)
 
     REL_TOLERANCE = 7e-2
 
