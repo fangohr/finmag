@@ -3,6 +3,35 @@ from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 from math import log
 
+def setup():
+    # this needs to be run and variables made available to some of the tests
+
+    m = 1e-5
+    mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
+    S1 = FunctionSpace(mesh, "Lagrange", 1)
+    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+    llg = MyLLG(S1, S3)
+    llg.set_m((1, 0, 0))
+
+    M, V = llg._m_field.f, llg.S3
+    a, L = llg.variational_forms()
+
+    x = Function(V)
+    s = 0.25  # some random number
+    x.vector()[:] = s
+    hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
+
+    CONV_TOL = 1.5e-12
+    DERIV_TOL = 1.3e-13
+
+
+@pytest.mark.xfail
+def test_this_needs_fixing():
+    print("The content of the code in `setup()` above needs to be distributed into the other ")
+    print("test routines here. It used to be global code that was imported when py.test")
+    print("was collecting files. So as a quick fix to stop the py.test")
+    print("collection braking, we put it into the function.")
+
 
 class MyLLG(LLG):
 
@@ -25,7 +54,7 @@ class MyLLG(LLG):
 
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
-        print "About to cal setup"
+        print "About to call setup"
         exch.setup(self._m_field, self.Ms)
         H_ex.vector().array()[:] = exch.compute_field()
 
@@ -103,24 +132,6 @@ def convergence_rates(hs, ys):
     return rates
 
 
-m = 1e-5
-mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
-S1 = FunctionSpace(mesh, "Lagrange", 1)
-S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
-llg = MyLLG(S1, S3)
-llg.set_m((1, 0, 0))
-
-M, V = llg._m_field.f, llg.S3
-a, L = llg.variational_forms()
-
-x = Function(V)
-s = 0.25  # some random number
-x.vector()[:] = s
-hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
-
-CONV_TOL = 1.5e-12
-DERIV_TOL = 1.3e-13
-
 
 def test_convergence_linear():
     """All convergence rates should be 1 as the differences
@@ -142,6 +153,12 @@ def test_derivative_linear():
         assert abs(err) < h ** 2 * DERIV_TOL
 
 if __name__ == '__main__':
+
+
+
+
+
+
     # L is linear
     print "Testing linear functional."
     print "This should convert as O(h):"
