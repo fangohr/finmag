@@ -1,3 +1,4 @@
+import pytest
 from dolfin import *
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange
