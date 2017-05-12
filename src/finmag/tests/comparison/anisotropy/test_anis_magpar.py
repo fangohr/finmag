@@ -4,7 +4,8 @@ import finmag.util.magpar as magpar
 from finmag.util.helpers import stats
 
 
-def test_against_magpar(finmag=conftest.setup(K2=0)):
+def test_against_magpar():
+    finmag=conftest.setup(K2=0)
 
     REL_TOLERANCE = 5e-7
 
