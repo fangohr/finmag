@@ -4,27 +4,6 @@ from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 from math import log
 
-def setup():
-    # this needs to be run and variables made available to some of the tests
-
-    m = 1e-5
-    mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
-    S1 = FunctionSpace(mesh, "Lagrange", 1)
-    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
-    llg = MyLLG(S1, S3)
-    llg.set_m((1, 0, 0))
-
-    M, V = llg._m_field.f, llg.S3
-    a, L = llg.variational_forms()
-
-    x = Function(V)
-    s = 0.25  # some random number
-    x.vector()[:] = s
-    hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
-
-    CONV_TOL = 1.5e-12
-    DERIV_TOL = 1.3e-13
-
 
 @pytest.mark.xfail
 def test_this_needs_fixing():
@@ -153,6 +132,28 @@ def test_derivative_linear():
         print "h= %g, error=%g" % (h, err)
         assert abs(err) < h ** 2 * DERIV_TOL
 
+
+m = 1e-5
+mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
+S1 = FunctionSpace(mesh, "Lagrange", 1)
+S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+llg = MyLLG(S1, S3)
+llg.set_m((1, 0, 0))
+
+M, V = llg._m_field.f, llg.S3
+a, L = llg.variational_forms()
+
+x = Function(V)
+s = 0.25  # some random number
+x.vector()[:] = s
+hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
+
+CONV_TOL = 1.5e-12
+DERIV_TOL = 1.3e-13
+
+
+
+        
 if __name__ == '__main__':
 
 
