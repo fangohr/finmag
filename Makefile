@@ -1,4 +1,4 @@
-# FinMag - Copyright (C) 2012, 2013, 2014 University of Southampton
+# FinMag - Copyright (C) 2012-2017 University of Southampton
 # Contact: Hans Fangohr <h.fangohr@soton.ac.uk>
 # Do not distribute.
 #
