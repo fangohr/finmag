@@ -1,5 +1,4 @@
 import DMI_from_helix as dfh
-
 import numpy as np
 import pytest
 
@@ -19,7 +18,7 @@ def test_dmi_from_helix_solution():
 
     expectedSolution = 2.50e-8
 
-    assert abs(l - expectedSolution) < 1e-9
+    assert abs(l - expectedSolution) < 1.5e-9
 
 
 def test_helix_strong_field():

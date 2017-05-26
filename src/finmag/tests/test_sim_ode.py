@@ -17,11 +17,10 @@ def test_sim_ode(do_plot=False):
     sim.alpha = alpha
     sim.set_m((1, 0, 0))
 
-    sim.set_tol(1e-10, 1e-14)
+    sim.set_tol(1e-12, 1e-14)
 
     H0 = 1e5
     sim.add(Zeeman((0, 0, H0)))
-    # sim.add(Exchange(1.3e-11))
 
     dt = 1e-12
     ts = np.linspace(0, 500 * dt, 100)
