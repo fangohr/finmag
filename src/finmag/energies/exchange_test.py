@@ -5,7 +5,7 @@ from finmag.energies import Exchange
 from finmag.field import Field
 from math import sqrt, pi
 from finmag.util.consts import mu0
-
+from finmag.util.pbc2d import PeriodicBoundary2D
 
 @pytest.fixture(scope="module")
 def fixt():
@@ -138,6 +138,28 @@ def test_exchange_field_supported_methods(fixt):
 
         rel_diff = np.abs((H - H_default) / H_default)
         assert np.nanmax(rel_diff) < REL_TOLERANCE
+
+
+def test_exchange_periodic_boundary_conditions():
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
+
+    pbc = PeriodicBoundary2D(mesh)
+    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
+    m_expr = df.Expression(("0", "0", "1"), degree=1)
+    m = Field(S3, m_expr, name='m')
+
+    exch = Exchange(1)
+    exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), 1))
+    field = exch.compute_field()
+    energy = exch.compute_energy()
+    print(energy)
+    print(field.shape)
+    print(field)
+
+    assert np.max(field) < 1e-15
+
+
+
 
 if __name__ == "__main__":
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2 * np.pi, 1, 1), 10, 1, 1)
