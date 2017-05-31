@@ -1,0 +1,24 @@
+#+STARTUP: indent
+
+* Failing tests on <2017-05-31 Wed>
+- marijan_docker/Dockerfile
+- Fenics 2017.1
+- petsc4py, slepc4py removed from installation (dependencies of Fenics)
+- Last fixing on <2017-05-26 Fri> (with Ryan)
+** Periodic boundary conditions
+- only one test exists for DMI
+- assertion error
+- "" made the test pass with Fenics 2016.2, but did not actually fix it
+- added another test for Exchange to make sure it is not only DMI related
+- 2 tests fail in total
+** Treecode BEM
+- 2 tests fail
+- preconditioners that we used before do not exist in KrylovSolver anymore
+** Computing normal modes with different solvers
+- 1 test failing
+- assertion error
+- have not investigated the problem yet
+** NMAG, MAGPAR, OOMMF
+- we do not install these packages in Docker
+- 16 tests in total
+- Remove these packages as dependencies (get text file results)
