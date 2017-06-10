@@ -113,3 +113,18 @@ test-notebooks: create-dirs make-modules print-debugging-info
 	cd doc/ipython_notebooks_src/ && py.test . -v --ipynb --sanitize-with sanitize_file --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 .PHONY: default make-modules create-dirs doc test test-python test-fast test-slow test-native test-notebooks
+
+
+# Working with containers 2017. C stands for Container:
+
+cbuild:
+	@# builds a docker image for Finmag
+	make -C install/docker/marijan_docker build
+
+ctest: cbuild
+	@# runs tests in docker image
+	docker run -ti -v `pwd`:/io/finmag finmag bash -c "make test-fast"
+
+crun: cbuild
+	@# provides fenics environment in container
+	docker run -ti -v `pwd`:/io/finmag finmag bash
