@@ -144,8 +144,13 @@ def test_exchange_field_supported_methods(fixt):
 
 def test_exchange_periodic_boundary_conditions():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
+    mesh = df.UnitCubeMesh(10, 10, 10)
+
+    FIELD_TOLERANCE = 6e-7
+    ENERGY_TOLERANCE = 0.0
 
     pbc = PeriodicBoundary2D(mesh)
+    #S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
     m_expr = df.Expression(("0", "0", "1"), degree=1)
     m = Field(S3, m_expr, name='m')
@@ -154,11 +159,27 @@ def test_exchange_periodic_boundary_conditions():
     exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), 1))
     field = exch.compute_field()
     energy = exch.compute_energy()
+    print("m.shape={}".format(m.vector().array().shape))
+    print("m=")
+    print(m.vector().array())
+    print("energy=")
     print(energy)
+    print("shape=")
     print(field.shape)
+    print("field=")
     print(field)
 
-    assert np.max(field) < 1e-15
+    H = field
+    print "Asserted zero exchange field for uniform m = (1, 0, 0) " + \
+          "in periodic mesh, got H =\n{}.".format(H.reshape((3, -1)))
+    print "np.max(np.abs(H)) =", np.max(np.abs(H))
+    assert np.max(np.abs(H)) < FIELD_TOLERANCE
+    #assert np.max(field) < 1e-15
+
+    E = energy
+    print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
+          "in periodic mesh. Got E = {:g}.".format(E)
+    assert abs(E) <= ENERGY_TOLERANCE
 
 
 
