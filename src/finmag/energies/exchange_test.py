@@ -7,7 +7,7 @@ from math import sqrt, pi
 from finmag.util.consts import mu0
 from finmag.util.pbc2d import PeriodicBoundary2D
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fixt():
     """
     Create an Exchange object that will be re-used during testing.
