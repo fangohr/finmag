@@ -24,6 +24,8 @@ DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FI
 export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
 export DISABLE_PYTHON_MAKE = 1  # to only build native modules once per session
 
+CIRCLECI_TEST_REPORTS_DIR=$(abspath $CIRCLE_TEST_REPORTS)
+
 print-debugging-info: print-PROJECT_DIR print-PYTHON_ROOTS print-NETGENDIR
 	@echo
 
@@ -94,7 +96,7 @@ test-python: create-dirs make-modules
 # exclude tests marked as slow
 test-fast: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and not slow" \
-		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+		--junitxml=$(CIRCLECI_TEST_REPORTS_DIR)/reports/test-fast.xml
 
 # only run tests marked as slow
 test-slow: create-dirs make-modules
