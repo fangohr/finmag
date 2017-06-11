@@ -24,7 +24,7 @@ DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FI
 export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
 export DISABLE_PYTHON_MAKE = 1  # to only build native modules once per session
 
-CIRCLECI_TEST_REPORTS_DIR=$(abspath ${CIRCLE_TEST_REPORTS})
+CIRCLECI_TEST_REPORTS_DIR=${CIRCLE_TEST_REPORTS}
 
 print-debugging-info: print-PROJECT_DIR print-PYTHON_ROOTS print-NETGENDIR
 	@echo
