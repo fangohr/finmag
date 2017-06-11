@@ -37,18 +37,20 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     Check that exchange field and energy are 0 for uniform magnetisation.
 
     """
-    TOLERANCE = 1e-6
+    FIELD_TOLERANCE = 6e-7
     fixt["m"].set((1, 0, 0))
 
     H = fixt["exch"].compute_field()
     print "Asserted zero exchange field for uniform m = (1, 0, 0), " + \
         "got H =\n{}.".format(H.reshape((3, -1)))
-    assert np.max(np.abs(H)) < TOLERANCE
+    print "np.max(np.abs(H)) =", np.max(np.abs(H))
+    assert np.max(np.abs(H)) < FIELD_TOLERANCE
 
+    ENERGY_TOLERANCE = 0.0
     E = fixt["exch"].compute_energy()
     print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
-        "got E = {}.".format(E)
-    assert abs(E) < TOLERANCE
+        "got E = {:g}.".format(E)
+    assert abs(E) <= ENERGY_TOLERANCE
 
 
 def test_exchange_energy_analytical(fixt):
