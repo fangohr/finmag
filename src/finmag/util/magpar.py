@@ -1,4 +1,5 @@
 ##import io
+import gzip
 import numpy as np
 import dolfin as df
 import os
@@ -90,16 +91,23 @@ def read_femsh(file_name):
     return np.array(node_coord), np.array(connectivity)
 
 
-def read_inp_gz(file_name):
-    f = open(file_name, 'r')
-    a = f.readline()
-    num = int(a.split()[0])
-    names = []
-    for i in range(num):
-        names.append(f.readline().split(',')[0])
+def read_inp(file_name):
+    # magpar produces gzip-ed files, so look for file_name.gz as well as file_name
+    if os.path.isfile(file_name):
+        f = open(file_name, 'r')
+    elif os.path.isfile(file_name + '.gz'):
+        f = gzip.open(file_name + '.gz', 'r')
+    else:
+        raise OSError("No such file: %s" % file_name)
 
-    lines = f.readlines()
-    f.close()
+    with f:
+        a = f.readline()
+        num = int(a.split()[0])
+        names = []
+        for i in range(num):
+            names.append(f.readline().split(',')[0])
+
+        lines = f.readlines()
 
     data = []
     for line in lines:
@@ -169,7 +177,7 @@ def get_field(base_name, field="anis"):
 
     """
     file_name = base_name + ".0001"
-    fields = read_inp_gz(file_name)
+    fields = read_inp(file_name)
 
     if field == "anis":
         fx = fields["Hani_x"]
@@ -185,7 +193,7 @@ def get_field(base_name, field="anis"):
         fz = fields["Hdemag_z"]
     else:
         raise NotImplementedError(
-            "only exch and anis field can be extracted now")
+            "only exch, anis or demag field can be extracted now")
 
     field = np.array([fx, fy, fz]).reshape(1, -1, order='C')[0]
     field = field / (np.pi * 4e-7)
@@ -197,7 +205,7 @@ def get_field(base_name, field="anis"):
 
 
 def get_m0(file_name):
-    fields = read_inp_gz(file_name)
+    fields = read_inp(file_name)
     fx = fields["M_x"]
     fy = fields["M_y"]
     fz = fields["M_z"]
