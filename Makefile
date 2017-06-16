@@ -95,16 +95,13 @@ test-python: create-dirs make-modules
 
 # exclude tests marked as slow
 test-fast: create-dirs make-modules
-	@echo "Test reports should be in $(CIRCLECI_TEST_REPORTS_DIR)"
-	@dir -l $(CIRCLECI_TEST_REPORTS_DIR)/reports
-	@find $(CIRCLECI_TEST_REPORTS_DIR)
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and not slow" \
-			--junitxml=$(CIRCLECI_TEST_REPORTS_DIR)/reports/test-fast.xml
+        --junitxml=$(PROJECT_DIR)/test-reports/test-fast.xml
 
 # Only run tests marked as slow
 test-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and slow" \
-		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+		--junitxml=$(PROJECT_DIR)/test-reports/test-slow.xml
 
 # run both fast and slow tests
 tests: test-fast test-slow
