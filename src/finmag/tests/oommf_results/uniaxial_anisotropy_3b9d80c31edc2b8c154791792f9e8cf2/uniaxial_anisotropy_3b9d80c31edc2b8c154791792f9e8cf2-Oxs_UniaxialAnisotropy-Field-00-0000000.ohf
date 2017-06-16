@@ -1,41 +1,0 @@
-# OOMMF OVF 2.0
-#
-# Segment count: 1
-#
-# Begin: Segment
-# Begin: Header
-#
-# Title: Oxs_UniaxialAnisotropy::Field
-# Desc: Oxs vector field output
-# Desc:  MIF source file: /tmp/tmpeGkWu6_oommf_calculator/uniaxial_anisotropy_3b9d80c31edc2b8c154791792f9e8cf2/uniaxial_anisotropy_3b9d80c31edc2b8c154791792f9e8cf2.mif
-# Desc:  Iteration: 0, State id: 13
-# Desc:  Stage: 0, Stage iteration: 0
-# Desc:  Stage simulation time: 0 s
-# Desc:  Total simulation time: 0 s
-# meshunit: m
-# meshtype: rectangular
-# xbase: 2.5000000000000001e-09
-# ybase: 4.9999999999999999e-13
-# zbase: 4.9999999999999999e-13
-# xnodes: 20
-# ynodes: 1
-# znodes: 1
-# xstepsize: 5.0000000000000001e-09
-# ystepsize: 9.9999999999999998e-13
-# zstepsize: 9.9999999999999998e-13
-# xmin: 0
-# ymin: 0
-# zmin: 0
-# xmax: 9.9999999999999995e-08
-# ymax: 9.9999999999999998e-13
-# zmax: 9.9999999999999998e-13
-# valuedim: 3
-# valuelabels: Field_x Field_y Field_z
-# valueunits: A/m A/m A/m
-#
-# End: Header
-#
-# Begin: Data Binary 8
-@Şwƒ!ÜBÙø£Ûƒ\AÙø£Ûƒ\AÙø£Ûƒ\Al•N·†*Al•N·†*Al•N·†*AË¾R7˜íAË¾R7˜íAË¾R7˜íAìŞŠs¥AìŞŠs¥AìŞŠs¥Aæ+iø#RAæ+iø#RAæ+iø#RA¹®µÿòA¹®µÿòA¹®µÿòAÜ1§£‡AÜ1§£‡AÜ1§£‡Aî­&£rAî­&£rAî­&£rAŸŒJƒ ‰AŸŒJƒ ‰AŸŒJƒ ‰Anš¡)õAnš¡)õAnš¡)õA­@İöÀPA­@İöÀPA­@İöÀPA‘mP¶šA‘mP¶šA‘mP¶šAN&HÎĞAN&HÎĞAN&HÎĞA ‹¼>ğA ‹¼>ğA ‹¼>ğA¼p&*ôA¼p&*ôA¼p&*ôA,ß\JšÖA,ß\JšÖA,ß\JšÖAl“ì2œAl“ì2œAl“ì2œAÈ¸olAÈ¸olAÈ¸olAŞ¨Øµ5AŞ¨Øµ5AŞ¨Øµ5A}¿óOÌHA}¿óOÌHA}¿óOÌHA
-# End: Data Binary 8
-# End: Segment
