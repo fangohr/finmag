@@ -36,3 +36,4 @@ RUN mkdir -p /io/finmag
 #ENV PYTHONPATH=/root/finmag/src
 ENV PYTHONPATH=/io/finmag/src
 WORKDIR /io/finmag
+RUN pip install sphinx jupyter nbconvert
