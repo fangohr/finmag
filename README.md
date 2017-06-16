@@ -22,7 +22,7 @@ Finmag dependencies can be installed by running an appropriate script (for the U
 
 If you decide to install dependencies using a shell script in `install/` directory, you will need to add the path to the `finmag/src/` directory to your $PYTHONPATH.
 
-The code is developed by Weiwei Wang, Marc-Antonio Bisotti, David Cortes, Thomas Kluyver, Mark Vousden, Ryan Pepper, Oliver Laslett, Rebecca Carey, and Hans Fangohr at the University of Southampton.
+The code is developed by Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Hans Fangohr,	Marc-Antonio Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden, and Beckie Carey at the University of Southampton.
 
 This is an early version; contributions and pull requests to both the code and documentation are welcome.
 
