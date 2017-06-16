@@ -25,5 +25,5 @@ and run for 300 ps.
 
 The plot shows the good agreement between finmag's and nmag's results.
 
-.. image:: ../examples/nmag_example_2/agreement_averages.png
-    :align: center
+#.. image:: ../examples/nmag_example_2/agreement_averages.png
+#    :align: center

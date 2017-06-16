@@ -50,9 +50,9 @@ Because of this, the relative error is a bit higher in this case. The relative e
 nmag solution is as high as 0.028. The following plot shows the instability of nmag's energy
 density for a simple 1D case with m = (cos(x), sin(x), 0).
 
-.. image:: ../examples/exchange_demag/simple1D.png
-    :scale: 75
-    :align: center
+#.. image:: ../examples/exchange_demag/simple1D.png
+#    :scale: 75
+#    :align: center
 
 For the demag energy density, our implementation follows the
 nmag curve closer, and out relative error is approx. 0.006.
