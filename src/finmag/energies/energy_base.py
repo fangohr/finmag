@@ -222,6 +222,8 @@ class EnergyBase(object):
         self.H_petsc = df.PETScVector()
 
     def __compute_field_petsc(self):
+        if not hasattr(self, "g_petsc"):
+            self.__setup_field_petsc()
         self.g_petsc.mult(self.m.f.vector(), self.H_petsc)
         return self.H_petsc.array() / self.nodal_volume_S3
 

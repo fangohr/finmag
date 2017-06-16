@@ -5,9 +5,9 @@ from finmag.energies import Exchange
 from finmag.field import Field
 from math import sqrt, pi
 from finmag.util.consts import mu0
+from finmag.util.pbc2d import PeriodicBoundary2D
 
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def fixt():
     """
     Create an Exchange object that will be re-used during testing.
@@ -37,18 +37,20 @@ def test_there_should_be_no_exchange_for_uniform_m(fixt):
     Check that exchange field and energy are 0 for uniform magnetisation.
 
     """
-    TOLERANCE = 1e-6
+    FIELD_TOLERANCE = 6e-7
     fixt["m"].set((1, 0, 0))
 
     H = fixt["exch"].compute_field()
     print "Asserted zero exchange field for uniform m = (1, 0, 0), " + \
         "got H =\n{}.".format(H.reshape((3, -1)))
-    assert np.max(np.abs(H)) < TOLERANCE
+    print "np.max(np.abs(H)) =", np.max(np.abs(H))
+    assert np.max(np.abs(H)) < FIELD_TOLERANCE
 
+    ENERGY_TOLERANCE = 0.0
     E = fixt["exch"].compute_energy()
     print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
-        "got E = {}.".format(E)
-    assert abs(E) < TOLERANCE
+        "got E = {:g}.".format(E)
+    assert abs(E) <= ENERGY_TOLERANCE
 
 
 def test_exchange_energy_analytical(fixt):
@@ -138,6 +140,65 @@ def test_exchange_field_supported_methods(fixt):
 
         rel_diff = np.abs((H - H_default) / H_default)
         assert np.nanmax(rel_diff) < REL_TOLERANCE
+
+
+def test_exchange_periodic_boundary_conditions():
+
+    mesh1 = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
+    mesh2 = df.UnitCubeMesh(10, 10, 10)
+
+    print("""
+    # for debugging, to make sense of output
+    # testrun 0, 1 : mesh1
+    # testrun 2,3 : mesh2
+    # testrun 0, 2 : normal
+    # testrun 1,3 : pbc
+    """)
+    testrun = 0
+
+    for mesh in [mesh1, mesh2]:
+        pbc = PeriodicBoundary2D(mesh)
+        S3_normal = df.VectorFunctionSpace(mesh, "Lagrange", 1)
+        S3_pbc = df.VectorFunctionSpace(mesh, "Lagrange", 1, constrained_domain=pbc)
+
+        for S3 in [S3_normal, S3_pbc]:
+            print("Running test {}".format(testrun))
+            testrun += 1
+
+            FIELD_TOLERANCE = 6e-7
+            ENERGY_TOLERANCE = 0.0
+
+            m_expr = df.Expression(("0", "0", "1"), degree=1)
+
+            m = Field(S3, m_expr, name='m')
+
+            exch = Exchange(1)
+            exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), 1))
+            field = exch.compute_field()
+            energy = exch.compute_energy()
+            print("m.shape={}".format(m.vector().array().shape))
+            print("m=")
+            print(m.vector().array())
+            print("energy=")
+            print(energy)
+            print("shape=")
+            print(field.shape)
+            print("field=")
+            print(field)
+
+            H = field
+            print "Asserted zero exchange field for uniform m = (1, 0, 0) " + \
+                  "got H =\n{}.".format(H.reshape((3, -1)))
+            print "np.max(np.abs(H)) =", np.max(np.abs(H))
+            assert np.max(np.abs(H)) < FIELD_TOLERANCE
+
+            E = energy
+            print "Asserted zero exchange energy for uniform m = (1, 0, 0), " + \
+                  "Got E = {:g}.".format(E)
+            assert abs(E) <= ENERGY_TOLERANCE
+
+
+
 
 if __name__ == "__main__":
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2 * np.pi, 1, 1), 10, 1, 1)
