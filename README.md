@@ -12,6 +12,10 @@ simulations.
 
 The GitHub page of the project is https://github.com/fangohr/finmag
 
+The code is developed by Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Hans Fangohr,	Marc-Antonio Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden, and Beckie Carey at the University of Southampton.
+
+This is an early version; contributions and pull requests to both the code and documentation are welcome.
+
 Documentation
 -------------
 The documentation is available in the form of Jupyter notebooks is available in `doc/ipython_notebooks_src` directory.
@@ -21,10 +25,6 @@ Installation
 Finmag dependencies can be installed by running an appropriate script (for the Ubuntu version you use) in `install/` directory or by making a Docker container with Dockerfile in `install/docker/`.
 
 If you decide to install dependencies using a shell script in `install/` directory, you will need to add the path to the `finmag/src/` directory to your $PYTHONPATH.
-
-The code is developed by Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Hans Fangohr,	Marc-Antonio Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden, and Beckie Carey at the University of Southampton.
-
-This is an early version; contributions and pull requests to both the code and documentation are welcome.
 
 # How to cite Finmag
 
