@@ -1,0 +1,38 @@
+# MIF 2.1
+
+
+Specify Oxs_BoxAtlas:atlas {
+  xrange { 0.000000000000000000e+00  2.000000000000000000e+01}
+  yrange { 0.000000000000000000e+00  2.000000000000000000e+01}
+  zrange { 0.000000000000000000e+00  2.000000000000000000e+01}
+}
+
+Specify Oxs_RectangularMesh:mesh {
+  cellsize { 1.000000000000000000e+00  1.000000000000000000e+00  1.000000000000000000e+00}
+  atlas Oxs_BoxAtlas:atlas
+}
+
+Specify Oxs_UniaxialAnisotropy { K1     5.200000000000000e+05 axis {     1.000000000000000e+00     0.000000000000000e+00     0.000000000000000e+00 } }
+
+Specify Oxs_RungeKuttaEvolve:evolver {
+   gamma_G 0.0000000000000000000e+00
+   alpha 0.0000000000000000000e+00
+   method rkf54
+}
+
+Specify Oxs_TimeDriver {
+    basename uniaxial_anisotropy_707f2c25eb707d500eb86aa54a70d827
+    evolver :evolver
+    mesh :mesh
+    total_iteration_limit 1
+    Ms 8.6000000000000000000e+05
+    m0 { Oxs_FileVectorField  {
+        atlas :atlas
+        norm  1.0
+        file uniaxial_anisotropy_707f2c25eb707d500eb86aa54a70d827-start.omf
+    }}
+}
+
+Destination archive mmArchive:oommf_calculator
+Schedule Oxs_UniaxialAnisotropy::Field archive Step 1
+Schedule Oxs_TimeDriver::Spin archive Step 1
