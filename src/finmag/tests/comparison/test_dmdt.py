@@ -1,5 +1,3 @@
-import pytest
-import subprocess
 import dolfin as df
 import numpy as np
 from finmag.physics.llg import LLG
