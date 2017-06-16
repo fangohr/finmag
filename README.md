@@ -34,7 +34,5 @@ This is an early version; contributions and pull requests to both the code and d
 
 We acknowledge financial support from
 
-- EPSRC’s Centre for Doctoral Training in Next Generation
-  Computational Modelling, http://ngcm.soton.ac.uk (#EP/L015382/1) and
-  EPSRC’s Doctoral Training Centre in Complex System Simulation
+- EPSRC’s Doctoral Training Centre in Complex System Simulation
   (EP/G03690X/1), http://icss.soton.ac.uk
