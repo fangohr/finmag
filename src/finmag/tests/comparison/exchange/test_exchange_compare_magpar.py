@@ -44,7 +44,14 @@ def three_dimensional_problem():
     u_exch = Exchange(C)
     u_exch.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
     finmag_exch = u_exch.compute_field()
-    nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
+
+    magpar_result = os.path.join(MODULE_DIR, 'magpar_result', 'test_exch')
+    nodes, magpar_exch = magpar.get_field(magpar_result, 'exch')
+
+    ## Uncomment the line below to invoke magpar to compute the results,
+    ## rather than using our previously saved results.
+    # nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
+
     print magpar_exch
 
     # Because magpar have changed the order of the nodes!!!
