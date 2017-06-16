@@ -1,0 +1,45 @@
+simname: test_demag
+n_vert:        1084
+n_ele:         4601
+n_vert_bnd:     552
+n_bnd_fac:     1100
+n_prop:           1
+
+bounding box: (-9.99459,-9.96504,-9.96715) (10,9.9737,9.97887)
+
+elevol:
+  id_min: 3953
+  id_max: 1584
+  Vmax:   3.22993
+  Vmin:   0.240607
+  ratio:  13.4241
+  Vavg:   0.901052
+  Vtot:   4145.74
+
+vertvol:
+  id_min: 549
+  id_max: 234
+  Vmax:   15.4755
+  Vmin:   0.432213
+  ratio:  35.8053
+  Vavg:   0.901052
+  Vtot:   4145.74
+
+edge_len_min: 1.1112
+edge_len_max: 3.47748
+edge_len_avg: 2.04776
+
+elequal:
+  min:    0.477734
+  max:    0.99715
+  avg:    0.852493
+
+volume by property id
+
+  pid | vol
+-----------
+    1   4145.74
+-----------
+  sum = 4145.74
+
+average magnetization: 1e-06 T
