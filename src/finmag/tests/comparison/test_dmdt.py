@@ -20,7 +20,6 @@ S1 = df.FunctionSpace(msh, "Lagrange", 1)
 S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 
 
-@pytest.mark.skipif('subprocess.call(["which", "oommf"]) != 0')
 def test_dmdt_computation_with_oommf():
     # set up finmag
     llg = LLG(S1, S3)
