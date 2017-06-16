@@ -12,9 +12,9 @@ simulations.
 
 The GitHub page of the project is https://github.com/fangohr/finmag
 
-The code is developed by Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Hans Fangohr,	Marc-Antonio Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden, and Beckie Carey at the University of Southampton.
+The code is developed by Hans Fangohr's group with contributions from Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Marc-Antonio Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden, Beckie Carey, Ryan Pepper and Thomas Kluyver at the University of Southampton.
 
-This is an early version; contributions and pull requests to both the code and documentation are welcome.
+This is a working prototype - not polished, with some (in large parts outdated) attempts of documentation. Contributions and pull requests to both the code and documentation are welcome.
 
 Documentation
 -------------
@@ -28,7 +28,7 @@ If you decide to install dependencies using a shell script in `install/` directo
 
 # How to cite Finmag
 
-?
+Finmag, University of Southampton, Hans Fangohr and team (2017)
 
 # Acknowledgement 
 
@@ -36,3 +36,7 @@ We acknowledge financial support from
 
 - EPSRC’s Doctoral Training Centre in Complex System Simulation
   (EP/G03690X/1), http://icss.soton.ac.uk
+  
+- EPSRC's Centre for Doctoral Training in Next Generation Computational Modelling (#EP/L015382/1), http://ngcm.soton.ac.uk
+
+
