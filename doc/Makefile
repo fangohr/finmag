@@ -188,12 +188,15 @@ timing:
 collect-ipython-notebooks: ${IPYTHON_NOTEBOOK_DEST_DIR}
 	echo "IPYTHON_NOTEBOOK_SRC_DIR: ${IPYTHON_NOTEBOOK_SRC_DIR}"
         echo "IPYTHON_NOTEBOOK_DEST_DIR: ${IPYTHON_NOTEBOOK_DEST_DIR}"
-	rm -rf ${IPYTHON_NOTEBOOK_DEST_DIR}/*
+	#rm -rf ${IPYTHON_NOTEBOOK_DEST_DIR}/*
 	echo "Converting IPython notebooks in directory '${IPYTHON_NOTEBOOK_SRC_DIR}' to .html format..."
 	for FILE in ${IPYTHON_NOTEBOOK_SRC_FILES} ; do \
 	    echo "    Converting file: $$FILE"; \
-	    jupyter nbconvert --to=html ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb --output ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE && \
-	    python create_wrapper_for_ipynb_html_file.py ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
+	    jupyter nbconvert --to=rst  ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb
+	    mv ${IPYTHON_NOTEBOOK_SRC_DIR}/*html ${IPYTHON_NOTEBOOK_DEST_DIR}
+            # --output=${IPYTHON_NOTEBOOK_DEST_DIR} \
+            #&& mv ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.html ${IPYTHON_NOTEBOOK_DEST_DIR} \
+	    # && python create_wrapper_for_ipynb_html_file.py ${IPYTHON_NOTEBOOK_SRC_DIR}/$$FILE.ipynb ${IPYTHON_NOTEBOOK_DEST_DIR}/$$FILE.rst; \
 	done
 
 ${IPYTHON_NOTEBOOK_DEST_DIR}:
