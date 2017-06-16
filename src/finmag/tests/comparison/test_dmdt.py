@@ -7,7 +7,7 @@ from finmag.energies import Zeeman
 from finmag.util.oommf import mesh, oommf_dmdt
 from finmag.util.helpers import stats
 
-TOLERANCE = 3e-16
+TOLERANCE = 1e-15
 
 L = 20e-9
 W = 10e-9
