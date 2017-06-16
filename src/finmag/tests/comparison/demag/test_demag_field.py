@@ -5,6 +5,7 @@ from finmag.field import Field
 from finmag.energies import Demag
 from finmag.util.meshes import from_geofile
 from finmag.util.helpers import stats, sphinx_sci as s
+from finmag.util import magpar
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 import pytest
 
@@ -110,7 +111,13 @@ def test_using_nmag(finmag):
 def test_using_magpar(finmag):
     REL_TOLERANCE = 10.0
 
-    magpar_nodes, magpar_H = compute_demag_magpar(finmag["m"], Ms=finmag["Ms"])
+    magpar_result = os.path.join(MODULE_DIR, 'magpar_result', 'test_demag')
+    magpar_nodes, magpar_H = magpar.get_field(magpar_result, 'demag')
+
+    ## Uncomment the line below to invoke magpar to compute the results,
+    ## rather than using our previously saved results.
+    # magpar_nodes, magpar_H = magpar.compute_demag_magpar(finmag["m"], Ms=finmag["Ms"])
+
     _, _, diff, rel_diff = compare_field_directly(
         finmag["S3"].mesh().coordinates(), finmag["H"],
         magpar_nodes, magpar_H)
