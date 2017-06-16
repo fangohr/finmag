@@ -13,3 +13,4 @@ test:
   override:
     #- make -C install/docker/finmag test-in-docker
     - make ctest
+    - mv test-reports $CIRCLE_TEST_REPORTS
