@@ -27,9 +27,12 @@ RUN autoconf
 RUN ./configure --with-sysroot=/usr/lib/ --with-tcl=/usr/lib/tcl8.5/ --with-tk=/usr/lib/tk8.5 --with-togl=/usr/lib/ --with-metis=/usr/lib/x86_64-linux-gnu/ --enable-nglib
 RUN make
 RUN make install
-WORKDIR /root
+
 ENV PATH /opt/netgen/bin:$PATH
 ENV NETGENDIR /opt/netgen/bin
 
-ENV PYTHONPATH=/root/finmag/src
+RUN mkdir -p /io/finmag
 
+#ENV PYTHONPATH=/root/finmag/src
+ENV PYTHONPATH=/io/finmag/src
+WORKDIR /io/finmag

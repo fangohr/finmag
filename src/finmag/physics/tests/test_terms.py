@@ -1,7 +1,7 @@
 import pytest
 from os import path
 import dolfin as df
-
+import finmag.physics.equation as eqn
 
 @pytest.fixture
 def terms_module():
@@ -18,7 +18,7 @@ def terms_module():
         # declare dm_x, dm_y and dm_z as input/output parameters
         # they will turn up in Python as return values
         additional_declarations="%apply double& INOUT { double& dm_x, double& dm_y, double& dm_z };",
-        include_dirs=[SOURCE_DIR],)
+        include_dirs=[SOURCE_DIR, eqn.find_petsc(), eqn.find_slepc()],)
     return extension_module
 
 
