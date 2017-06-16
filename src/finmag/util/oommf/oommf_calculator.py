@@ -15,7 +15,7 @@ import cStringIO
 import sys
 import subprocess
 import shutil
-from finmag.util.helpers import ignored
+from finmag.util.helpers import ignored, get_source
 from finmag.util.oommf import ovf, lattice
 from finmag.util.oommf.mesh import MeshField, Mesh
 from subprocess import check_output, CalledProcessError
@@ -58,8 +58,7 @@ Destination archive mmArchive:oommf_calculator
 %(fields)s
 """
 
-SOURCE = open(os.path.abspath(__file__)).read()
-
+SOURCE = get_source(__file__)
 
 def run_oommf(dir, args, **kwargs):
     try:
