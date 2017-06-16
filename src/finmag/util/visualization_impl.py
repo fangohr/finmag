@@ -489,8 +489,7 @@ def render_paraview_scene(
     else:
         repr.LookupTable = lut
     if field_name is not None:
-        repr.ColorArrayName = field_name
-        repr.ColorAttributeType = "POINT_DATA"
+        repr.ColorArrayName = ("POINT_DATA", field_name)
 
     if add_glyphs:
         logger.debug("Adding cone glyphs.")
@@ -549,8 +548,7 @@ def render_paraview_scene(
         glyph.SetPropertyWithName('Source', cone)
         glyph_repr = servermanager.CreateRepresentation(glyph, view)
         glyph_repr.LookupTable = lut
-        glyph_repr.ColorArrayName = 'GlyphVector'
-        glyph_repr.ColorAttributeType = "POINT_DATA"
+        glyph_repr.ColorArrayName = ("POINT_DATA", 'GlyphVector')
 
     if show_colorbar:
         # XXX TODO: Remove the import of paraview.simple once I know why
