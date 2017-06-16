@@ -400,12 +400,10 @@ def render_paraview_scene(
     if palette == 'print':
         view.Background = [1.0, 1.0, 1.0]
         view.OrientationAxesLabelColor = [0.0, 0.0, 0.0]
-        repr.CubeAxesColor = [0.0, 0.0, 0.0]
         repr.AmbientColor = [0.0, 0.0, 0.0]
     elif palette == 'screen':
         view.Background = [0.32, 0.34, 0.43]
         view.OrientationAxesLabelColor = [1.0, 1.0, 1.0]
-        repr.CubeAxesColor = [1.0, 1.0, 1.0]
         repr.AmbientColor = [1.0, 1.0, 1.0]
     else:
         raise ValueError("Palette argument must be either 'print' "
@@ -518,7 +516,7 @@ def render_paraview_scene(
             "glyphs appear very large or very small.".format(
                 glyph_scale_factor_internal, mesh_spacing, max_field_magnitude))
 
-        glyph.SetScaleFactor = glyph_scale_factor * glyph_scale_factor_internal
+        glyph.ScaleFactor = glyph_scale_factor * glyph_scale_factor_internal
         glyph.ScaleMode = 'vector'
         glyph.Vectors = ['POINTS', field_name]
         try:
@@ -528,9 +526,8 @@ def render_paraview_scene(
             # Older version of Paraview which doesn't support this setting.
             # Ignoring for now.
             pass
-        glyph.RandomMode = glyph_random_mode
-        glyph.MaskPoints = glyph_mask_points
-        glyph.MaximumNumberofPoints = glyph_max_number_of_points
+        #glyph.MaskPoints = glyph_mask_points
+        #glyph.MaximumNumberofPoints = glyph_max_number_of_points
 
         if glyph_type != 'cones':
             glyph_type = 'cones'
