@@ -8,7 +8,7 @@ from finmag.util.helpers import stats
 def test_against_oommf():
     finmag=conftest.setup(K2=0)
 
-    REL_TOLERANCE = 7e-2
+    REL_TOLERANCE = 9e-2
 
     oommf_mesh = mesh.Mesh(
         (20, 20, 20), size=(conftest.x1, conftest.y1, conftest.z1))
