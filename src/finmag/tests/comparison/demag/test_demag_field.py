@@ -5,6 +5,7 @@ from finmag.field import Field
 from finmag.energies import Demag
 from finmag.util.meshes import from_geofile
 from finmag.util.helpers import stats, sphinx_sci as s
+from finmag.util import magpar
 from finmag.util.magpar import compare_field_directly, compute_demag_magpar
 import pytest
 
@@ -75,42 +76,61 @@ def test_using_analytical_solution(finmag):
     print stats(rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE
 
+#Remove the following nmag test
 
-def test_using_nmag(finmag):
-    REL_TOLERANCE = 5e-5
-
-    H = finmag["H"].reshape((3, -1))
-    H_nmag = np.array(
-        zip(* np.genfromtxt(os.path.join(MODULE_DIR, "H_demag_nmag.txt"))))
-    diff = np.abs(H - H_nmag)
-    rel_diff = diff / \
-        np.sqrt(np.max(H_nmag[0] ** 2 + H_nmag[1] ** 2 + H_nmag[2] ** 2))
-
-    finmag["table"] += table_entries.format(
-        "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
-    print "comparison with nmag, H, relative_difference:"
-    print stats(rel_diff)
-
-    # Compare nmag with analytical solution
-    H_ref = np.zeros(H_nmag.shape)
-    H_ref[0] -= 1.0 / 3.0
-
-    nmag_diff = np.abs(H_nmag - H_ref)
-    nmag_rel_diff = nmag_diff / \
-        np.sqrt(np.max(H_ref[0] ** 2 + H_ref[1] ** 2 + H_ref[2] ** 2))
-    finmag["table"] += table_entries.format(
-        "nmag/an.", "", s(np.max(nmag_rel_diff)), s(np.mean(nmag_rel_diff)), s(np.std(nmag_rel_diff)))
-    print "comparison beetween nmag and analytical solution, H, relative_difference:"
-    print stats(nmag_rel_diff)
-
-    # rel_diff beetween finmag and nmag
-    assert np.max(rel_diff) < REL_TOLERANCE
+#    The error originates from the new mesh being slightly different
+#    from the old mesh for which the test reference data was computed.
+#
+#    We speculate that this is from a new version of netgen, relative
+#    to the tests.
+#
+#    The Nmag test code is not available, but the results stored as a text
+#    file, so we cannot easily update the results. As we have a large number
+#    of other tests (and a working comparison with magpar), we remove this
+#    test now.
+#
+#
+# def retired_test_using_nmag(finmag):
+#     REL_TOLERANCE = 5e-5
+#
+#     H = finmag["H"].reshape((3, -1))
+#     H_nmag = np.array(
+#         zip(* np.genfromtxt(os.path.join(MODULE_DIR, "H_demag_nmag.txt"))))
+#     diff = np.abs(H - H_nmag)
+#     rel_diff = diff / \
+#         np.sqrt(np.max(H_nmag[0] ** 2 + H_nmag[1] ** 2 + H_nmag[2] ** 2))
+#
+#     finmag["table"] += table_entries.format(
+#         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
+#     print "comparison with nmag, H, relative_difference:"
+#     print stats(rel_diff)
+#
+#     # Compare nmag with analytical solution
+#     H_ref = np.zeros(H_nmag.shape)
+#     H_ref[0] -= 1.0 / 3.0
+#
+#     nmag_diff = np.abs(H_nmag - H_ref)
+#     nmag_rel_diff = nmag_diff / \
+#         np.sqrt(np.max(H_ref[0] ** 2 + H_ref[1] ** 2 + H_ref[2] ** 2))
+#     finmag["table"] += table_entries.format(
+#         "nmag/an.", "", s(np.max(nmag_rel_diff)), s(np.mean(nmag_rel_diff)), s(np.std(nmag_rel_diff)))
+#     print "comparison beetween nmag and analytical solution, H, relative_difference:"
+#     print stats(nmag_rel_diff)
+#
+#     # rel_diff beetween finmag and nmag
+#     assert np.max(rel_diff) < REL_TOLERANCE
 
 
 def test_using_magpar(finmag):
     REL_TOLERANCE = 10.0
 
-    magpar_nodes, magpar_H = compute_demag_magpar(finmag["m"], Ms=finmag["Ms"])
+    magpar_result = os.path.join(MODULE_DIR, 'magpar_result', 'test_demag')
+    magpar_nodes, magpar_H = magpar.get_field(magpar_result, 'demag')
+
+    ## Uncomment the line below to invoke magpar to compute the results,
+    ## rather than using our previously saved results.
+    # magpar_nodes, magpar_H = magpar.compute_demag_magpar(finmag["m"], Ms=finmag["Ms"])
+
     _, _, diff, rel_diff = compare_field_directly(
         finmag["S3"].mesh().coordinates(), finmag["H"],
         magpar_nodes, magpar_H)

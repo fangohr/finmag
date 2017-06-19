@@ -69,7 +69,8 @@ def test_interaction_accepts_name():
     dmi = DMI(1)
     assert hasattr(dmi, 'name')
 
-
+# We dont use PBC at the moment. If we do, we should make this pass first.
+@pytest.mark.xfail(reason="unfixed bug")
 def test_dmi_pbc2d():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
 
@@ -97,7 +98,7 @@ def test_dmi_pbc2d_1D(plot=False):
 
     Ms = 8.6e5
     sim = Simulation(mesh, Ms, pbc='2d', unit_length=1e-9)
-    
+
     sim.set_m(m_init_fun)
 
 

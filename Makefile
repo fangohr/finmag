@@ -1,4 +1,4 @@
-# FinMag - Copyright (C) 2012, 2013, 2014 University of Southampton
+# FinMag - Copyright (C) 2012-2017 University of Southampton
 # Contact: Hans Fangohr <h.fangohr@soton.ac.uk>
 # Do not distribute.
 #
@@ -23,6 +23,8 @@ DIST_WRAPPER_OPTIONS ?= --skip-tests --finmag-repo=$(FINMAG_REPO) --destdir=$(FI
 
 export PRECOMPILED_HEADER_DIR = $(PROJECT_DIR)/tmp/$(notdir $(abspath .))-$(BUILD_TAG)-$(BUILD_ID)
 export DISABLE_PYTHON_MAKE = 1  # to only build native modules once per session
+
+CIRCLECI_TEST_REPORTS_DIR=${CIRCLE_TEST_REPORTS}
 
 print-debugging-info: print-PROJECT_DIR print-PYTHON_ROOTS print-NETGENDIR
 	@echo
@@ -75,7 +77,7 @@ doc-%:
 
 # py.test options
 # example: `-sx` to disable capturing of STDOUT and exit on first error
-TEST_OPTIONS ?=
+TEST_OPTIONS ?= -v
 
 create-dirs:
 	mkdir -p test-reports/junit
@@ -94,12 +96,12 @@ test-python: create-dirs make-modules
 # exclude tests marked as slow
 test-fast: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and not slow" \
-		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+        --junitxml=$(PROJECT_DIR)/test-reports/test-fast.xml
 
-# only run tests marked as slow
+# Only run tests marked as slow
 test-slow: create-dirs make-modules
 	PYTHONPATH=$(PYTHON_ROOTS) py.test $(TEST_OPTIONS) -m "not requires_X_display and slow" \
-		--junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
+		--junitxml=$(PROJECT_DIR)/test-reports/test-slow.xml
 
 # run both fast and slow tests
 tests: test-fast test-slow
@@ -113,3 +115,18 @@ test-notebooks: create-dirs make-modules print-debugging-info
 	cd doc/ipython_notebooks_src/ && py.test . -v --ipynb --sanitize-with sanitize_file --junitxml=$(PROJECT_DIR)/test-reports/junit/TEST_pytest.xml
 
 .PHONY: default make-modules create-dirs doc test test-python test-fast test-slow test-native test-notebooks
+
+
+# Working with containers 2017. C stands for Container:
+
+cbuild:
+	@# builds a docker image for Finmag
+	make -C install/docker/marijan_docker build
+
+ctest: cbuild
+	@# runs tests in docker image
+	docker run -ti -v `pwd`:/io/finmag finmag bash -c "make test-fast"
+
+crun: cbuild
+	@# provides fenics environment in container
+	docker run -ti -v `pwd`:/io/finmag finmag bash

@@ -1,0 +1,45 @@
+simname: test_exch
+n_vert:         369
+n_ele:          960
+n_vert_bnd:     330
+n_bnd_fac:      656
+n_prop:           1
+
+bounding box: (0,0,0) (10,1,1)
+
+elevol:
+  id_min: 444
+  id_max: 432
+  Vmax:   0.0104167
+  Vmin:   0.0104167
+  ratio:  1
+  Vavg:   0.0104167
+  Vtot:   10
+
+vertvol:
+  id_min: 2
+  id_max: 13
+  Vmax:   0.0625
+  Vmin:   0.00520833
+  ratio:  12
+  Vavg:   0.0104167
+  Vtot:   10
+
+edge_len_min: 0.25
+edge_len_max: 0.75
+edge_len_avg: 0.536127
+
+elequal:
+  min:    0.547963
+  max:    0.629805
+  avg:    0.575243
+
+volume by property id
+
+  pid | vol
+-----------
+    1   10
+-----------
+  sum = 10
+
+average magnetization: 1.08071 T

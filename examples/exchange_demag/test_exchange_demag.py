@@ -1,5 +1,7 @@
 import os
 import logging
+import matplotlib
+matplotlib.use('Agg')
 import pylab as p
 import numpy as np
 import dolfin as df
@@ -153,6 +155,7 @@ def test_compare_energies():
     assert max(rel_diff) < REL_TOLERANCE*10, \
         "Max relative error in demag energy = {} is larger than " \
         "tolerance (= {})".format(max(rel_diff), REL_TOLERANCE)
+
 
     # Plot
     p.plot(exch_nmag, 'o', mfc='w', label='nmag')

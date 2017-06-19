@@ -38,5 +38,5 @@ def test_against_nmag():
     finally:
         os.chdir(cwd_backup)
 
-    assert max(map(np.linalg.norm, m_nmag - m_finmag)) < 3e-5
+    assert max(map(np.linalg.norm, m_nmag - m_finmag)) < 1.1e-4
     # atol is 0 by default when using assert_allclose

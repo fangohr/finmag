@@ -5,8 +5,12 @@ machine:
 dependencies:
   override:
     - docker info
-    - make -C install/docker/finmag docker-pull
+    #- make -C install/docker/finmag docker-pull
+    - make cbuild
+
 
 test:
   override:
-    - make -C install/docker/finmag test-in-docker
+    #- make -C install/docker/finmag test-in-docker
+    - make ctest
+    - cp -r test-reports $CIRCLE_TEST_REPORTS

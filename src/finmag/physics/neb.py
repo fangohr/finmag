@@ -242,7 +242,7 @@ def compute_dm(m0, m1):
     x = dm > np.pi
     dm[x] = 2 * np.pi - dm[x]
     x = dm < -np.pi
-    dm[x] += 2 * np.pi
+    np.add(dm[x], 2*np.pi, out=dm[x], casting="unsafe")  # dm[x] += 2 * np.pi
 
     dm = np.sqrt(np.sum(dm ** 2)) / length
     return dm

@@ -17,9 +17,14 @@ Demonstrating spatially varying anisotropy. Example with anisotropy vectors as f
 """
 import os
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
+
 import pylab
 import dolfin as df
+
 import matplotlib.pyplot as plt
+
 from finmag import Simulation
 from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy, Exchange
