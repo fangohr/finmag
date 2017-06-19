@@ -1,0 +1,45 @@
+simname: test_anis
+n_vert:        1537
+n_ele:         6886
+n_vert_bnd:     700
+n_bnd_fac:     1396
+n_prop:           1
+
+bounding box: (0,0,0) (20,20,20)
+
+elevol:
+  id_min: 4959
+  id_max: 2938
+  Vmax:   3.50965
+  Vmin:   0.317829
+  ratio:  11.0426
+  Vavg:   1.16178
+  Vtot:   8000
+
+vertvol:
+  id_min: 0
+  id_max: 925
+  Vmax:   18.766
+  Vmin:   0.333333
+  ratio:  56.2981
+  Vavg:   1.16178
+  Vtot:   8000
+
+edge_len_min: 1.18108
+edge_len_max: 4.1575
+edge_len_avg: 2.22756
+
+elequal:
+  min:    0.460849
+  max:    0.996755
+  avg:    0.86163
+
+volume by property id
+
+  pid | vol
+-----------
+    1   8000
+-----------
+  sum = 8000
+
+average magnetization: 1.08071 T

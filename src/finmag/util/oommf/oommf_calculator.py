@@ -15,11 +15,14 @@ import cStringIO
 import sys
 import subprocess
 import shutil
-from finmag.util.helpers import ignored
+from finmag.util.helpers import ignored, get_source
 from finmag.util.oommf import ovf, lattice
 from finmag.util.oommf.mesh import MeshField, Mesh
 from subprocess import check_output, CalledProcessError
 
+dirname = os.path.dirname
+FINMAG_PKG_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
+TEST_COMPARISON_RESULTS = os.path.join(FINMAG_PKG_DIR, 'tests', 'oommf_results')
 CACHE_DIR = os.environ['HOME'] + "/.oommf_calculator"
 RUN_DIR = tempfile.mkdtemp(suffix='_oommf_calculator')
 
@@ -55,8 +58,7 @@ Destination archive mmArchive:oommf_calculator
 %(fields)s
 """
 
-SOURCE = open(os.path.abspath(__file__)).read()
-
+SOURCE = get_source(__file__)
 
 def run_oommf(dir, args, **kwargs):
     try:
@@ -75,6 +77,12 @@ def run_oommf(dir, args, **kwargs):
 # Returns a hashtable of field names mapped to arrays compatible with the
 # given mesh
 
+
+def find_cached_result(basename):
+    test_cached = os.path.join(TEST_COMPARISON_RESULTS, basename)
+    if os.path.isdir(test_cached):
+        return test_cached
+    return os.path.join(CACHE_DIR, basename)
 
 def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields=[]):
     assert type(Ms) is float
@@ -112,10 +120,11 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     # print mif
 
-    # Check if the result is already known
-    cachedir = os.path.join(CACHE_DIR, basename)
     with ignored(OSError):
         os.makedirs(CACHE_DIR)
+
+    # Check if the result is already known
+    cachedir = find_cached_result(basename)
 
     if not os.path.exists(cachedir):
         # Run the simulation
@@ -138,7 +147,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         m0_file.new(fl, version=ovf.OVF10, data_type="binary8")
         m0_file.write(os.path.join(dir, basename + "-start.omf"))
         # Run the OOMMF simulation
-        run_oommf(dir, ["boxsi", "-threads", "4", mif_file_name])
+        run_oommf(dir, ["boxsi", mif_file_name])
         # Move the results to the cache directory
         shutil.move(dir, cachedir)
         print "success"

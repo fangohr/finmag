@@ -1,0 +1,4 @@
+-simName test_demag
+-init_mag 0
+-inp 0000
+-demag 1

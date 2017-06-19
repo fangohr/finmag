@@ -41,8 +41,7 @@ with discontinuous normal derivative,
 It is also required that the potential is zero at infinity, hence :math:`\phi(\vec r) \rightarrow 0` for :math:`\lvert \vec r \rvert \rightarrow \infty`.
 
 We have currently implemented two different approaches for solving the demagnetisation field, the
-:doc:`Fredkin-Koehler method <modules/FKDemag>` and the :doc:`Garcia-Cervera-Roma method
-<modules/GCRSolver>`.
+:doc:`Fredkin-Koehler method <modules/FKDemag>`
 
 
 Usage
@@ -154,7 +153,7 @@ of our case is
 
 Our implementation on a coarse unit sphere mesh with 10 cells in each direction, gives the energy
 
-.. literalinclude:: ../examples/demag/demagenergies.txt 
+# .. literalinclude:: ../examples/demag/demagenergies.txt 
 
 
 The reason for the difference from the analytical solution is mainly due to the coarseness of the
@@ -168,7 +167,7 @@ with more than 35,000 vertices, gives
 
 Complete code:
 
-.. literalinclude:: ../examples/demag/test_energy.py
+# .. literalinclude:: ../examples/demag/test_energy.py
 
 Demag field in uniformly magnetised sphere
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -177,66 +176,65 @@ Changing the unit sphere mesh to a sphere of radius 10nm, and :math:`M_s` to :ma
 `example <http://nmag.soton.ac.uk/nmag/0.2/manual/html/example1/doc.html>`_. Remember that we expect
 the demag field to be :math:`-1/3 M`, i.e. :math:`(-10^6/3, 0, 0)`. Our implementation gives
 
-.. literalinclude:: ../examples/demag/results_field.txt
+# .. literalinclude:: ../examples/demag/results_field.txt
 
 The complete code follows
 
-.. literalinclude:: ../examples/demag/test_field.py
+# .. literalinclude:: ../examples/demag/test_field.py
 
 Comparing nmag, Finmag FK and Finmag GCR
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this section the results from the nmag demag solver are compared to those of the Finmag FK
-:doc:`Fredkin-Koehler method <modules/FKDemag>` and Finmag GCR :doc:`Garcia-Cervera-Roma method
-<modules/GCRSolver>`. Additionally the GCR method is tested with two different methods of q vector assembly, the default
+:doc:`Fredkin-Koehler method <modules/FKDemag>` and Finmag GCR Additionally the GCR method is tested with two different methods of q vector assembly, the default
 point evaluation method, and the box method.
 
 The following log-log plot shows the development of the standard deviation for increasingly finer meshes.
 
-.. figure:: ../examples/demag/stddev_loglog.png
-    :scale: 75
+#.. figure:: ../examples/demag/stddev_loglog.png
+#    :scale: 75
 
 The development of the x-values, which should converge against -1/3, can be seen here. As nmag uses
 the FK method for demag computation as well, the results are quite similar to the finmag FK method:
 
-.. figure:: ../examples/demag/xvalues.png
-    :scale: 75
+#.. figure:: ../examples/demag/xvalues.png
+#    :scale: 75
 
 Comparing the GCR with nmag gives the following results
 
-..
-    .. figure:: ../examples/demag/xvaluesgcr.png
-        :scale: 75
+#..
+#    .. figure:: ../examples/demag/xvaluesgcr.png
+#        :scale: 75
 
 [This plot is currently de-activated because the GCR solver doesn't work with dolfin-1.1]
 
 The `errornorm <http://fenicsproject.org/documentation/dolfin/1.0.0/python/programmers-reference/fem/norms/errornorm.html#dolfin.fem.norms.errornorm>`_
 is decreasing as the mesh gets finer. The precision of the GCR method with point evaluation q assembly is better than the GCR method with the box method.  
 
-.. figure:: ../examples/demag/errnorm_loglog.png
-    :scale: 75
+#.. figure:: ../examples/demag/errnorm_loglog.png
+#    :scale: 75
 
 The bem assembly time is plotted here, increasing with the number of vertices.
 
-.. figure:: ../examples/demag/bemtimings.png
-    :scale: 75
+#.. figure:: ../examples/demag/bemtimings.png
+#    :scale: 75
 
 The runtime minus bem assembly is plotted here. The FK method is the fastest. The GCR method with point evaluation is slower
 than GCR with box method. The point evaluation method,  being implemented in python could be greatly sped up
 with a C++ implementation.
 
-.. figure:: ../examples/demag/solvetimings.png
-    :scale: 75
+#.. figure:: ../examples/demag/solvetimings.png
+#    :scale: 75
 
 The number of Krylov iterations are plotted here.
 
-.. figure:: ../examples/demag/krylovitr.png
-    :scale: 75
+#.. figure:: ../examples/demag/krylovitr.png
+#    :scale: 75
 
 
 The linear solver parameters that were used are
 
-.. include:: ../examples/demag/linsolveparams.rst
+# .. include:: ../examples/demag/linsolveparams.rst
     :literal:
 
 .. note::

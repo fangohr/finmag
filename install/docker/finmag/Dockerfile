@@ -1,9 +1,10 @@
 FROM ubuntu:16.04
 
-RUN apt-get update -y
+RUN apt-get  update -y
 
 # Install fenics
 RUN apt-get install -y software-properties-common
+# RUN add-apt-repository ppa:fenics-packages/fenics-2017.1.0
 RUN add-apt-repository ppa:fenics-packages/fenics
 RUN apt-get update -y
 RUN apt-get install -y fenics --allow-unauthenticated --no-install-recommends

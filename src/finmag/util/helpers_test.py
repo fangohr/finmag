@@ -414,8 +414,8 @@ def test_get_hg_revision_info(tmpdir):
 
 def test_binary_tarball_name(tmpdir):
     finmag_repo = MODULE_DIR
-    expected_tarball_name = 'FinMag-dist__2014-09-18__95b07562f00195f012720054aa165c167990dd5e_foobar.tar.bz2'
-    assert(binary_tarball_name(finmag_repo, revision='95b07562f00195f012720054aa165c167990dd5e',
+    expected_tarball_name = 'FinMag-dist__2017-06-16__3127873bac77fbade1ec4ed0f9017b3cb0204a1f_foobar.tar.bz2'
+    assert(binary_tarball_name(finmag_repo, revision='3127873bac77fbade1ec4ed0f9017b3cb0204a1f',
                                suffix='_foobar') == expected_tarball_name)
 
 

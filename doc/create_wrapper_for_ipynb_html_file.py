@@ -21,6 +21,8 @@ except IndexError:
     sys.exit()
 
 
+print("create_wrapper in:\n{}\n out: {}\n".format(infilename, outfilename))
+
 def get_level(cell):
     try:
         level = cell['level']

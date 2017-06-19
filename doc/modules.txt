@@ -4,6 +4,5 @@ EnergyBase finmag.energies.energy_base
 LLG finmag.physics.llg
 DMI finmag.energies.dmi
 FKDemag finmag.energies.demag.fk_demag
-GCRSolver finmag.energies.demag.solver_gcr
 Simulation finmag.sim.sim
 helpers finmag.util.helpers

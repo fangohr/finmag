@@ -1875,3 +1875,9 @@ def build_maps(functionspace, dim=3, scalar=False):
 
     #return v2d_xyz2, v2d_xxx2, d2v_xyz2, d2v_xxx2
     return v2d_xyz, v2d_xxx, d2v_xyz, d2v_xxx
+
+def get_source(file):
+    if file.endswith(('.pyc', '.pyo')):
+        file = file[:-1]
+    with open(file, 'rb') as f:
+        return f.read()
