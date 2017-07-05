@@ -1,5 +1,5 @@
 [![CircleCI](https://circleci.com/gh/fangohr/finmag.svg?style=svg&circle-token=6e89ca6e2d8bb3dadd4ac9ec84bec71d91336f9c)](https://circleci.com/gh/fangohr/finmag)
-<img src="https://raw.githubusercontent.com/fangohr/finmag/master/logos/finmag_logo.png?token=AER_n7rOxFgGQjsrubTgTikaiAL0v906ks5ZUP5ZwA%3D%3D" width="300" align="right">
+<img src="https://raw.github.com/fangohr/finmag/master/logos/finmag_logo.png" width="300" align="right">
 
 FinMag
 ======
