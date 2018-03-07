@@ -47,7 +47,12 @@ If you decide to install dependencies using a shell script in
 
 Docker
 ------
-We recommend using our finmag [Docker](https://www.docker.com) image available at ... Instructions on how to install Docker on your platform can be found [here](https://docs.docker.com/install/). After you have Docker installed on yor machine, you can pull the finmag docker image by running
+
+We recommend using our finmag [Docker](https://www.docker.com) image
+available at ... Instructions on how to install Docker on your
+platform can be found [here](https://docs.docker.com/install/). After
+you have Docker installed on yor machine, you can pull the finmag
+docker image by running
 ```
 docker pull finmag/finmag
 ```
@@ -59,6 +64,8 @@ To run your finmag code inside docker, please navigate to the directory where yo
 ```
 docker run -ti -v $(pwd):/io finmag/finmag bash -c "python my_finmag_script.py"
 ```
+
+This section will be extended and updated when Marijan pushes finmag images to the finmag DockerHub organisation.
 
 How to cite Finmag
 ------------------
