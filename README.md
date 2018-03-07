@@ -1,5 +1,5 @@
 [![CircleCI](https://circleci.com/gh/fangohr/finmag.svg?style=svg&circle-token=6e89ca6e2d8bb3dadd4ac9ec84bec71d91336f9c)](https://circleci.com/gh/fangohr/finmag)
-<img src="logos/finmag_logo.png" width="300" align="right">
+<img src="dev/logos/finmag_logo.png" width="300" align="right">
 
 FinMag
 ======
@@ -19,14 +19,14 @@ simulations.
 - The code is developed by Hans Fangohr's group with contributions from
   Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Marc-Antonio
   Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden,
-  Beckie Carey, Ryan Pepper, Leoni Breth, and Thomas Kluyver at the
-  University of Southampton.
+  Beckie Carey, Ryan A. Pepper, Leoni Breth, and Thomas Kluyver at the
+  University of Southampton and European XFEL GmbH.
 
 - This is a working prototype - not polished, with some (in large parts
   outdated) attempts of documentation. Contributions and pull requests
   to both the code and documentation are welcome.
 
-No support is available.
+- No support is available.
 
 
 Documentation
