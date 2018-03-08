@@ -57,7 +57,7 @@ Installing / Using the tool
 ---------------------------
 
 We recommend using our finmag [Docker](https://www.docker.com) image
-available at ... Instructions on how to install Docker on your
+available at https://hub.docker.com/u/finmag/dashboard/ (XXX) ... Instructions on how to install Docker on your
 platform can be found [here](https://docs.docker.com/install/). After
 you have Docker installed on yor machine, you can pull the finmag
 docker image by running
@@ -130,7 +130,7 @@ ing of magnetic skyrmion cores in nanodots. Applied Physics Letters 106, 102401 
 Acknowledgements
 ----------------
 
-We acknowledge financial support from
+We acknowledge support from
 
 - EPSRC’s Doctoral Training Centre in Complex System Simulation
   (EP/G03690X/1), http://icss.soton.ac.uk
