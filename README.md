@@ -10,11 +10,11 @@ FinMag
   FEniCS/Dolfin to enable Python-scripted multi-physics micromagnetic
   simulations. Some compiled code moved into the project. 
 
-- Executes not efficiently in parallel (time integration is serial)
+- Executes not efficiently in parallel (time integration is serial).
 
-- The name FINmag originates from the dolFIN interface to FEniCS
+- The name FINmag originates from the dolFIN interface to [FEniCS](http://fenicsproject.org).
 
-- The code was developed by Hans Fangohr's group with contributions from
+- The code was developed by [Hans Fangohr](http://fangohr.github.io)'s group with contributions from
   Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Marc-Antonio
   Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden,
   Beckie Carey, Ryan A. Pepper, Leoni Breth, and Thomas Kluyver at the
@@ -38,6 +38,8 @@ FinMag
   are welcome!) This is primarily a resource problem.
 
 - The GitHub page of the project is https://github.com/fangohr/finmag
+
+- The code is used for a number of scientific studies and publications (see list below).
 
 - The repository may well be of historical value and probably captures
   some of the typical research software engineering challenges. (We
@@ -83,7 +85,8 @@ Finmag, Hans Fangohr and team (2017), University of Southampton,
 
 Publications
 ------------
-Finmag was used to run micromagnetic simulations in the following publications (in reverse chronological order):
+
+Finmag was used to run micromagnetic simulations in the following publications, including:
 
 1. R. A. Pepper, M. Beg, D. Cortés-Ortuño, T. Kluyver, M.-A. Bisotti, R. Carey, M. Vousden,
 M. Albert, W. Wang, O. Hovorka, and H. Fangohr. Skyrmion states in thin confined polygonal
