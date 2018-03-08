@@ -4,49 +4,55 @@
 FinMag
 ======
 
-- a thin (and mostly) Python layer (hopefully!) on top of
-FEniCS/Dolfin to enable Python-scripted multi-physics micromagnetic
-simulations.
+- Is a micromagnetic simulation tool, using finite elements.
 
-- finmag solves micromagnetic problems using finite elements
+- Was intended to be a thin (and mostly) Python layer on top of
+  FEniCS/Dolfin to enable Python-scripted multi-physics micromagnetic
+  simulations. Some compiled code moved into the project. 
 
-- executes not efficiently in parallel (time integration is serial)
+- Executes not efficiently in parallel (time integration is serial)
 
-- the name FINmag originates from the dolFIN interface to FEniCS
+- The name FINmag originates from the dolFIN interface to FEniCS
 
-- The GitHub page of the project is https://github.com/fangohr/finmag
-
-- The code is developed by Hans Fangohr's group with contributions from
+- The code was developed by Hans Fangohr's group with contributions from
   Anders Johansen, Dmitri Chernyshenko, Gabriel Balaban, Marc-Antonio
   Bisotti, Maximilian Albert, Weiwei Wang, Marijan Beg, Mark Vousden,
   Beckie Carey, Ryan A. Pepper, Leoni Breth, and Thomas Kluyver at the
-  University of Southampton and European XFEL GmbH.
+  University of Southampton and European XFEL GmbH; from 2011 to 2018.
 
-- This is a working prototype - not polished, with some (in large parts
-  outdated) attempts of documentation. Contributions and pull requests
-  to both the code and documentation are welcome.
+- This is a working prototype - not polished, with some (in large
+  parts outdated) attempts of documentation. There is outdated code in
+  the repository.
 
-- No support is available.
+- There is and was no dedicated funding to support the software
+  development.
 
+- Contributions and pull requests to both the code and documentation
+  are welcome; but no promise can be made that these will be reviewed
+  and/or integrated.
+
+- There is no support is available.
+
+- We don't consider the codebase, documentation and other content of
+  sufficient quality to encourage uptake in the community. (Experts
+  are welcome!) This is primarily a resource problem.
+
+- The GitHub page of the project is https://github.com/fangohr/finmag
+
+- The repository may well be of historical value and probably captures
+  some of the typical research software engineering challenges. (We
+  should write up a summary of our gathered experiences.)
+  
 
 Documentation
 -------------
+
 The documentation available in the form of Jupyter notebooks is
 available in `doc/ipython_notebooks_src` directory.
 
 
-Installation
-------------
-Finmag dependencies can be installed by running an appropriate script
-(for the Ubuntu version you use) in `install/` directory or by making
-a Docker container with Dockerfile in `install/docker/`.
-
-If you decide to install dependencies using a shell script in
-`install/` directory, you will need to add the path to the
-`finmag/src/` directory to your $PYTHONPATH.
-
-Docker
-------
+Installing / Using the tool
+---------------------------
 
 We recommend using our finmag [Docker](https://www.docker.com) image
 available at ... Instructions on how to install Docker on your
@@ -67,10 +73,13 @@ docker run -ti -v $(pwd):/io finmag/finmag bash -c "python my_finmag_script.py"
 
 This section will be extended and updated when Marijan pushes finmag images to the finmag DockerHub organisation.
 
+There are more detailed comments on the installation in [install/README.md](install/README.md).
+
+
 How to cite Finmag
 ------------------
-Finmag, University of Southampton, Hans Fangohr and team (2017)
-zenodo DOI will go here when we make the repository public
+Finmag, Hans Fangohr and team (2017), University of Southampton, 
+(Zenodo DOI will go here when we make the repository public)
 
 Publications
 ------------
