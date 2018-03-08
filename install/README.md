@@ -2,7 +2,7 @@ Overview
 --------
 
 A major challenge in installing FinMag are the binary dependencies; in
-particular on FEniCS. The FEniCS API has changed occasionally, and we
+particular on FEniCS. The FEniCS API has changed occasionally, and
 the finmag project has not always kept up with these changes. As a
 result, it depends on a particular version of FEniCS. Through some
 mistake, that version has disappearend from dpkg servers. However,
