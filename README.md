@@ -35,7 +35,7 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 ## Installing / Using the tool via Docker
 
-We provide pre-built image at DockerHub under [`finmag/finmag`](XXX) repository. More information about Docker as well as on how to install it on your system can be found [here](https://www.docker.com/).
+We provide pre-built image at [DockerHub](https://hub.docker.com/) under [`finmag/finmag`](XXX) repository. More information about Docker as well as on how to install it on your system can be found [here](https://www.docker.com/).
 
 ### Getting the image
 
@@ -70,6 +70,10 @@ Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For detail
 If you use this OOMMF extension in your research, please cite it as:
 
 1. (Zenodo DOI will go here when we make the repository public)
+
+## Support
+
+We do not provide support on Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that the issue will be addressed.
 
 ## Publications
 
