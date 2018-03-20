@@ -34,21 +34,21 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 ## Installing / Using the tool via Docker
 
-We provide pre-built image at [DockerHub](https://hub.docker.com/) under [`finmag/finmag`](XXX) repository. More information about Docker as well as on how to install it on your system can be found [here](https://www.docker.com/).
+We provide a pre-built image at [DockerHub](https://hub.docker.com/) under the [`finmag/finmag`](XXX) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
 
 ### Getting the image
 
-You can obtain the most recent image by pulling it from DockerHub [`finmag/finmag`](XXX) repository
+You can obtain the most recent image by pulling it from the DockerHub [`finmag/finmag`](XXX) repository
 
     docker pull finmag/finmag
 
 ### Running the container
 
-In order to check whether the tests pass inside the docker container, you should run
+In order to check whether the tests pass inside the Docker container, you should run
 
     docker run -ti -v $(pwd):/io finmag/finmag bash -c "py.test"
 
-To run your finmag code inside docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
+To run your Finmag code inside Docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
 
     docker run -ti -v $(pwd):/io finmag/finmag bash -c "python my-finmag-script.py"
 
@@ -72,7 +72,7 @@ Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For detail
 
 ## Support
 
-We do not provide support on Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that the issue will be addressed.
+We do not provide support for Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that the issue will be addressed.
 
 ## Publications
 
