@@ -1,0 +1,25 @@
+Steps to remove sensitive data from the repository:
+
+1. Make sure to have a fresh clone of the repository.
+
+2. In the top level of the repository, run:
+
+    git filter-branch --force --index-filter \
+    'git rm --cached --ignore-unmatch path-to-file-with-sensitive-data' \
+    --prune-empty --tag-name-filter cat -- --all
+
+3. Double check everything was removed.
+
+4. Push the changes (all branches)
+
+    git push origin --force --all
+
+5. Push the changes (all tags and releases)
+
+    git push origin --force --tags
+
+6. If anybody with a local copy of repository pushes again, everything will be messed up. Everbody must make sure they start working in a freshly cloned repository (or rebase the existing one).
+
+References:
+
+[1] https://help.github.com/articles/removing-sensitive-data-from-a-repository/
