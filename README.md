@@ -1,7 +1,8 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
-# FinMag: finite elements micromagnetic simulation tool
+
+# FinMag: Finite Element Micromagnetic Simulation Tool
 
 Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Albert<sup>1</sup>, Weiwei Wang<sup>1</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Marijan Beg<sup>1,2</sup>, David Cortés-Ortuño<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1</sup>, and Hans Fangohr<sup>1,2</sup>
 
@@ -10,11 +11,11 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 ## About
 
-- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, The name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
+- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, The name FINmag originated from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
 
-- The code has beed developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton and European XFEL GmbH.
+- The code was developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton and at the European XFEL GmbH.
 
-- This is a working prototype - not polished, with some (in large parts outdated) attempts of documentation. There is also some outdated code in the repository.
+- This is a working prototype which is not polished, with some (in large parts outdated) attempts at documentation. There is also some outdated code in the repository.
 
 - Does not execute efficiently in parallel (time integration is serial).
 
