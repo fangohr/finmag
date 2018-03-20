@@ -61,15 +61,15 @@ More detailed comments on the installation are in [`install/README.md`](install/
 
 The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory.
 
-## License
-
-Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For details, please refer to the [LICENSE](LICENSE) file. However, portions of the source code (src/util/numpy.h) are subject to the Boost Software License.
-
 ## How to cite
 
 If you use this OOMMF extension in your research, please cite it as:
 
-1. (Zenodo DOI will go here when we make the repository public)
+- (Zenodo DOI will go here when we make the repository public)
+
+## License
+
+Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For details, please refer to the [LICENSE](LICENSE) file. However, portions of the source code (src/util/numpy.h) are subject to the Boost Software License.
 
 ## Support
 
@@ -77,7 +77,7 @@ We do not provide support on Finmag. However, you are welcome to raise an issue 
 
 ## Publications
 
-Finmag was used to run micromagnetic simulations in the following publications, including:
+Finmag was used to run micromagnetic simulations in the following publications (in reversed chronological order):
 
 1. R. A. Pepper, M. Beg, D. Cortés-Ortuño, T. Kluyver, M.-A. Bisotti, R. Carey, M. Vousden, M. Albert, W. Wang, O. Hovorka, and H. Fangohr. Skyrmion states in thin confined polygonal nanostructures. Journal of Applied Physics 9, 093903 (2018). (arXiv:1801.03275)
 
