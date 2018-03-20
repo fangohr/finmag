@@ -1,7 +1,6 @@
-[![CircleCI](https://circleci.com/gh/fangohr/finmag.svg?style=svg&circle-token=6e89ca6e2d8bb3dadd4ac9ec84bec71d91336f9c)](https://circleci.com/gh/fangohr/finmag)
-<img src="dev/logos/finmag_logo.png" width="300" align="right">
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
+<img src="dev/logos/finmag_logo.png" width="300" align="right">
 # FinMag: finite elements micromagnetic simulation tool
 
 Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Albert<sup>1</sup>, Weiwei Wang<sup>1</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Marijan Beg<sup>1,2</sup>, David Cortés-Ortuño<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1</sup>, and Hans Fangohr<sup>1,2</sup>
