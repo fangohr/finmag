@@ -13,7 +13,7 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, The name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
 
-- The code has beed developed from 2011 to 2018 by [Hans Fangohr's](http://fangohr.github.io) group at the University of Southampton and European XFEL GmbH.
+- The code has beed developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton and European XFEL GmbH.
 
 - This is a working prototype - not polished, with some (in large parts outdated) attempts of documentation. There is also some outdated code in the repository.
 
@@ -21,13 +21,13 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 - We do not consider the codebase, documentation, and other content of sufficient quality to encourage uptake in the community. (Experts are welcome!) This is primarily a resource problem.
 
-- There is no support is available.
+- There is no support available.
 
 - Contributions and pull requests to both the code and documentation are welcome, but no promise can be made that these will be reviewed and/or integrated.
 
 - The GitHub page of the project is [here](https://github.com/fangohr/finmag).
 
-- The code has been used for a number of scientific studies and publications (see the [Publications](#Publications) section).
+- The code has been used for a number of scientific studies and publications (see the [Publications](##Publications) section).
 
 - The repository may well be of historical value and probably captures some of the typical research software engineering challenges. (We should write up a summary of our gathered experiences.)
 
