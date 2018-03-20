@@ -11,9 +11,7 @@ Dmitri Chernyshenko<sup>1</sup>, Marc-Antonio Bisotti<sup>1</sup>, Maximilian Al
 
 ## About
 
-- It was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Some compiled code moved into the project. 
-
-- The name FINmag originates from the dolFIN interface to [FEniCS](http://fenicsproject.org).
+- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, The name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
 
 - The code has beed developed from 2011 to 2018 by [Hans Fangohr's](http://fangohr.github.io) group at the University of Southampton and European XFEL GmbH.
 
