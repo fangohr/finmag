@@ -19,3 +19,7 @@ Steps to remove sensitive data from the repository:
     git push origin --force --tags
 
 6. If anybody with a local copy of repository pushes again, everything will be messed up. Everbody must make sure they start working in a freshly cloned repository (or rebase the existing one).
+
+References:
+
+[1] https://help.github.com/articles/removing-sensitive-data-from-a-repository/
