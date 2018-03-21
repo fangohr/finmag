@@ -4,22 +4,23 @@
 
 # FinMag: finite-element micromagnetic simulation tool
 
-Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1</sup>, and Hans Fangohr<sup>1,2</sup>
+Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1</sup>, and Hans Fangohr<sup>1,2</sup>
 
 <sup>1</sup> Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom  
-<sup>2</sup> European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany
+<sup>2</sup> European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany  
+<sup>3</sup> Helmholtz-Zentrum Dresden-Rossendorf, Bautzner Landstraße 400, 01328 Dresden, Germany
 
 ## About
 
-- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, The name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
+- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
 
-- The code has beed developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton and European XFEL GmbH.
+- The code has beed developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
 
 - This is a working prototype - not polished, with some (in large parts outdated) attempts of documentation. There is also some outdated code in the repository.
 
-- Does not execute efficiently in parallel (time integration is serial).
-
 - We do not consider the codebase, documentation, and other content of sufficient quality to encourage uptake in the community. (Experts are welcome!) This is primarily a resource problem.
+
+- Does not execute efficiently in parallel (time integration is serial).
 
 - There is no support available.
 
@@ -59,21 +60,23 @@ More detailed comments on the installation are in [`install/README.md`](install/
 
 ## Documentation
 
-The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory.
+The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory. In order to open Jupyter notebooks, make sure you have Jupyter installed on your machine ([instructions](http://jupyter.org/install)). After that, please navigate to [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) and run
+
+    jupyter-notebook &
 
 ## How to cite
 
-If you use this OOMMF extension in your research, please cite it as:
+If you use Finmag in your research, please cite it as
 
 - (Zenodo DOI will go here when we make the repository public)
 
 ## License
 
-Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For details, please refer to the [LICENSE](LICENSE) file. However, portions of the source code (src/util/numpy.h) are subject to the Boost Software License.
+Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For details, please refer to the [LICENSE](LICENSE) file. However, portions of the source code (e.g. src/util/numpy.h) are subject to the Boost Software License.
 
 ## Support
 
-We do not provide support on Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that the issue will be addressed.
+We do not provide support for Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that your issue will be addressed.
 
 ## Publications
 
@@ -107,10 +110,10 @@ Finmag was used to run micromagnetic simulations in the following publications (
 
 We acknowledge the support from
 
-- EPSRC’s Doctoral Training Centre in Complex System Simulation (EP/G03690X/1),
+- EPSRC’s [Doctoral Training Centre in Complex System Simulation](http://www.icss.soton.ac.uk) (EP/G03690X/1),
 
-- EPSRC's Centre for Doctoral Training in Next Generation Computational Modelling (#EP/L015382/1).
+- EPSRC's [Centre for Doctoral Training in Next Generation Computational Modelling](http://ngcm.soton.ac.uk) (#EP/L015382/1),
 
-- Horizon 2020 European Research Infrastructure project [OpenDreamKit](http://opendreamkit.org/) (676541).
+- Horizon 2020 European Research Infrastructure project [OpenDreamKit](http://opendreamkit.org/) (676541),
 
-- EPSRC's Programme [grant](https://www.skyrmions.ac.uk/) on Skyrmionics (EP/N032128/1)
+- EPSRC's Programme [grant](https://www.skyrmions.ac.uk/) on Skyrmionics (EP/N032128/1).
