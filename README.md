@@ -14,9 +14,9 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
 
-- The code has beed developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
+- The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
 
-- This is a working prototype - not polished, with some (in large parts outdated) attempts of documentation. There is also some outdated code in the repository.
+- This is a working prototype which is not polished, with some (in large parts outdated) attempts at documentation. There is also some outdated code in the repository.
 
 - We do not consider the codebase, documentation, and other content of sufficient quality to encourage uptake in the community. (Experts are welcome!) This is primarily a resource problem.
 
@@ -36,21 +36,21 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 ## Installing / Using the tool via Docker
 
-We provide pre-built image at [DockerHub](https://hub.docker.com/) under [`finmag/finmag`](XXX) repository. More information about Docker as well as on how to install it on your system can be found [here](https://www.docker.com/).
+We provide a pre-built image at [DockerHub](https://hub.docker.com/) under the [`finmag/finmag`](XXX) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
 
 ### Getting the image
 
-You can obtain the most recent image by pulling it from DockerHub [`finmag/finmag`](XXX) repository
+You can obtain the most recent image by pulling it from the DockerHub [`finmag/finmag`](XXX) repository
 
     docker pull finmag/finmag
 
 ### Running the container
 
-In order to check whether the tests pass inside the docker container, you should run
+In order to check whether the tests pass inside the Docker container, you should run
 
     docker run -ti -v $(pwd):/io finmag/finmag bash -c "py.test"
 
-To run your finmag code inside docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
+To run your Finmag code inside Docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
 
     docker run -ti -v $(pwd):/io finmag/finmag bash -c "python my-finmag-script.py"
 
@@ -76,7 +76,7 @@ Finmag is licensed under the BSD 3-Clause "New" or "Revised" License. For detail
 
 ## Support
 
-We do not provide support for Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that your issue will be addressed.
+We do not provide support for Finmag. However, you are welcome to raise an issue in the GitHub [fangohr/finmag](https://github.com/fangohr/finmag) repository, but no promise can be made that the issue will be addressed.
 
 ## Publications
 
