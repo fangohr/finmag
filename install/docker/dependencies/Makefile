@@ -6,8 +6,8 @@ build: Dockerfile Makefile
 pull:
 	docker pull $(IMAGE)
 
-push: build
+push:
 	docker push $(IMAGE)
 
-run: build
-	docker run -ti -v $$(pwd):/io $(IMAGE)
+run:
+	docker run -ti -v $$(pwd):/io --rm $(IMAGE)
