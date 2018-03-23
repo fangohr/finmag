@@ -138,7 +138,7 @@ test-all:
 
 travis-build:
 	docker build --no-cache -t dockertestimage .
-	docker run -ti -d -w="/finmag" --name testcontainer dockertestimage
+	docker run -ti -d --name testcontainer dockertestimage
 	docker exec testcontainer make test-all
 	docker stop testcontainer
 	docker rm testcontainer
