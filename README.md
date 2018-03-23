@@ -44,7 +44,7 @@ The easiest way to get the most recent image is by pulling it from the DockerHub
 
     docker pull finmag/finmag:latest
     
-Alternatively, you can navigate to `install/docker/latest` and run `make pull`. You can also build it on your own machine by, again navigating to `install/docker/latest` and running
+Alternatively, you can navigate to `install/docker/latest` and run `make pull`. You can also build it on your own machine by, again navigating to `install/docker/latest`, and running
 
     make build
 
