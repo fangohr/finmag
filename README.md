@@ -28,7 +28,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - The GitHub page of the project is [here](https://github.com/fangohr/finmag).
 
-- The code has been used for a number of scientific studies and publications (see the [Publications](##Publications) section).
+- The code has been used for a number of scientific studies and publications (see the [Publications](# Publications) section).
 
 - The repository may well be of historical value and probably captures some of the typical research software engineering challenges. (We should write up a summary of our gathered experiences.)
 
@@ -36,27 +36,39 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 ## Installing / Using the tool via Docker
 
-We provide a pre-built image at [DockerHub](https://hub.docker.com/) under the [`finmag/finmag`](XXX) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
+There is a dedicated organisation on [DockerHub](https://hub.docker.com/) named [`finmag`](https://hub.docker.com/u/finmag/). We provide pre-built images in the [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
 
 ### Getting the image
 
-You can obtain the most recent image by pulling it from the DockerHub [`finmag/finmag`](XXX) repository
+The easiest way to get the most recent image is by pulling it from the DockerHub [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository
 
-    docker pull finmag/finmag
+    docker pull finmag/finmag:latest
+    
+Alternatively, you can navigate to `install/docker/latest` and run `make pull`. You can also build it on your own machine by, again navigating to `install/docker/latest` and running
+
+    make build
+
+### Testing
+
+After you pulled/built the `finmag/finmag:latest` image, you can test it with
+
+    docker run -ti -w="/finmag" --rm $(IMAGE) bash -c "py.test"
+    
+or by running `make test` in `install/docker/latest` directory.
 
 ### Running the container
 
-In order to check whether the tests pass inside the Docker container, you should run
-
-    docker run -ti -v $(pwd):/io finmag/finmag bash -c "py.test"
-
 To run your Finmag code inside Docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
 
-    docker run -ti -v $(pwd):/io finmag/finmag bash -c "python my-finmag-script.py"
+    docker run -ti -v $(pwd):/io --rm finmag/finmag:latest bash -c "python my-finmag-script.py"
 
-This section will be extended and updated when Marijan pushes finmag images to the finmag DockerHub organisation.
+### Finmag dependencies container
 
-More detailed comments on the installation are in [`install/README.md`](install/README.md).
+Docker image which contains all dependencies required to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
+
+### Installing on host
+
+More detailed comments on the installation of finmag on host machine are in [`install/README.md`](install/README.md).
 
 ## Documentation
 
