@@ -133,4 +133,4 @@ We acknowledge the support from
 
 ## See also
 
-- [fidimag](https://github.com/computationalmodelling/fidimag)
+- [fidimag](https://github.com/computationalmodelling/fidimag): finite-difference micromagnetic simulation tool
