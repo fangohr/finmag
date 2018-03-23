@@ -132,7 +132,7 @@ crun: cbuild
 	docker run -ti -v `pwd`:/io/finmag finmag/finmag:latest bash
 
 test-all:
-	py.test
+	py.test -v
 
 travis-build:
 	docker build --no-cache -t dockertestimage .
