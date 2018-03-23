@@ -121,12 +121,22 @@ test-notebooks: create-dirs make-modules print-debugging-info
 
 cbuild:
 	@# builds a docker image for Finmag
-	make -C install/docker/marijan_docker build
+	make -C install/docker/latest build
 
 ctest: cbuild
 	@# runs tests in docker image
-	docker run -ti -v `pwd`:/io/finmag finmag bash -c "make test-fast"
+	docker run -ti -v `pwd`:/io/finmag finmag/finmag:latest bash -c "make test-fast"
 
 crun: cbuild
 	@# provides fenics environment in container
-	docker run -ti -v `pwd`:/io/finmag finmag bash
+	docker run -ti -v `pwd`:/io/finmag finmag/finmag:latest bash
+
+test-all:
+	py.test
+
+travis-build:
+	docker build --no-cache -t dockertestimage .
+	docker run -ti -d -w="/finmag" --name testcontainer dockertestimage
+	docker exec testcontainer make test-all
+	docker stop testcontainer
+	docker rm testcontainer
