@@ -132,6 +132,8 @@ crun: cbuild
 	docker run -ti -v `pwd`:/io/finmag finmag/finmag:latest bash
 
 test-all:
+	pwd
+	ls
 	py.test -v
 
 travis-build:
