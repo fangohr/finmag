@@ -412,6 +412,7 @@ def test_get_hg_revision_info(tmpdir):
     assert(rev_date == '2012-02-02')
 
 
+@pytest.mark.skip(reason='Commit does not exist anymore (sensitive data removed)')
 def test_binary_tarball_name(tmpdir):
     finmag_repo = MODULE_DIR
     expected_tarball_name = 'FinMag-dist__2017-06-16__3127873bac77fbade1ec4ed0f9017b3cb0204a1f_foobar.tar.bz2'
