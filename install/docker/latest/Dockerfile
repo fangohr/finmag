@@ -1,5 +1,3 @@
-# docker run -ti -v $(pwd):/io marijanbeg/bloch_point:finmag bash -c "cd src; python stability.py"
-
 FROM finmag/finmag:dependencies
 
 # Tidy up the base image.
@@ -9,7 +7,7 @@ RUN rmdir /io/finmag
 WORKDIR /
 RUN git clone https://github.com/fangohr/finmag.git
 
-# try to pre-compile finmag
+# Pre-compile finmag.
 WORKDIR /finmag/native
 RUN make
 
