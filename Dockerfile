@@ -30,4 +30,7 @@ RUN adduser --disabled-password \
 COPY . ${HOME}
 USER root
 RUN chown -R ${NB_UID} ${HOME}
+RUN chown -R ${NB_UID} /finmag
 USER ${NB_USER}
+
+WORKDIR /finmag
