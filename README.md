@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/fangohr/finmag.svg?branch=master)](https://travis-ci.org/fangohr/finmag)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/)
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master)
 
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
 
@@ -72,6 +72,10 @@ Docker image which contains all dependencies required to run finmag is hosted on
 ### Installing on host
 
 More detailed comments on the installation of finmag on host machine are in [`install/README.md`](install/README.md).
+
+## Binder
+
+If you want to try using finmag anonymously in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
 ## Documentation
 
