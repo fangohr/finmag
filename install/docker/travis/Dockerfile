@@ -6,6 +6,8 @@ RUN rmdir /io/finmag
 # Copy the finmag repository.
 COPY . /finmag/
 
+RUN ls -al
+
 # Pre-compile finmag.
 WORKDIR /finmag/native
 RUN make
