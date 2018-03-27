@@ -83,9 +83,7 @@ If you want to try using finmag anonymously in the cloud you can do it on [Binde
 
 ## Documentation
 
-The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory. In order to open Jupyter notebooks, make sure you have Jupyter installed on your machine ([instructions](http://jupyter.org/install)). After that, please navigate to [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) and run
-
-    jupyter-notebook &
+The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory.
 
 ## How to cite
 
