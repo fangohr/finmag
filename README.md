@@ -71,15 +71,15 @@ If you want to run code interactively inside the container, then you can start w
 
 ### Finmag dependencies container
 
-Docker image which contains all dependencies required to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
+Docker image which contains all of the dependencies necessary to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to in previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
 
 ### Installing on host
 
-More detailed comments on the installation of finmag on host machine are in [`install/README.md`](install/README.md).
+More detailed comments on the installation of finmag on a host machine are in [`install/README.md`](install/README.md).
 
 ## Binder
 
-If you want to try using finmag anonymously in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
+If you want to try using Finmag anonymously in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
 ## Documentation
 
