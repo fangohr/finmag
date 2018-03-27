@@ -6,7 +6,7 @@ FROM finmag/finmag:latest
 # Commands to make Binder work.
 USER root
 RUN pip install --no-cache-dir notebook==5.*
-ENV NB_USER finmaguser
+ENV NB_USER binderuser
 ENV NB_UID 1000
 ENV HOME /home/${NB_USER}
 
