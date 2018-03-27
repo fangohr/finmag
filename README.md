@@ -53,9 +53,9 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 
 ### Testing
 
-After you pulled/built the `finmag/finmag:latest` image, you can test it with
+After you pulled/built the `finmag/finmag` image, you can test it with
 
-    docker run -ti -w="/finmag" --rm finmag/finmag:latest bash -c "py.test"
+    docker run -ti -w="/finmag" --rm finmag/finmag bash -c "py.test -v"
     
 or by running `make test` in `install/docker/latest` directory.
 
