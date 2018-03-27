@@ -48,7 +48,7 @@ def test_all_orientations_with_pinning():
         angles = angles_after_a_nanosecond(m0, [0, 10])
         print "no pinning, all angles: "
         print angles
-        assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE
+        assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE + 1e-7
 
 
 def test_exchange_field_should_change_when_M_changes():
