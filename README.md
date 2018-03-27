@@ -55,13 +55,13 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 
 After you pulled/built the `finmag/finmag:latest` image, you can test it with
 
-    docker run -ti -w="/finmag" --rm $(IMAGE) bash -c "py.test"
+    docker run -ti -w="/finmag" --rm finmag/finmag:latest bash -c "py.test"
     
 or by running `make test` in `install/docker/latest` directory.
 
 ### Running the container
 
-To run your Finmag code inside Docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
+To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
     docker run -ti -v $(pwd):/io --rm finmag/finmag:latest bash -c "python my-finmag-script.py"
 
