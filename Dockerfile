@@ -1,20 +1,7 @@
 # This Dockerfile is used for binder only. For other Dockerfiles, please go to
 # install/docker directory.
 
-FROM finmag/finmag:dependencies
-
-# Tidy up the base image.
-RUN rmdir /io/finmag
-
-# Clone the finmag repository.
-WORKDIR /
-RUN git clone https://github.com/fangohr/finmag.git
-
-# Pre-compile finmag.
-WORKDIR /finmag/native
-RUN make
-
-ENV PYTHONPATH /finmag/src
+FROM finmag/finmag:latest
 
 # Commands to make Binder work.
 RUN pip install --no-cache-dir notebook==5.*
