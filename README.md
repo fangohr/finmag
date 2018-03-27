@@ -63,7 +63,11 @@ or by running `make test` in `install/docker/latest` directory.
 
 To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
-    docker run -ti -v $(pwd):/io --rm finmag/finmag:latest bash -c "python my-finmag-script.py"
+    docker run -ti -v $(pwd):/io --rm finmag/finmag bash -c "python my-finmag-script.py"
+    
+If you want to run code interactively inside the container, then you can start with
+
+    docker run -ti -v $(pwd):/io --rm finmag/finmag
 
 ### Finmag dependencies container
 
