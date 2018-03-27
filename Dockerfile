@@ -1,5 +1,5 @@
-# This Dockerfile is used for binder only. For other Dockerfiles, please go to
-# install/docker directory.
+# This Dockerfile is used only for Binder only. For other
+# Dockerfiles, please go to install/docker directory.
 
 FROM finmag/finmag:dependencies
 
