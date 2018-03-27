@@ -4,6 +4,7 @@
 FROM finmag/finmag:latest
 
 # Commands to make Binder work.
+USER root
 RUN pip install --no-cache-dir notebook==5.*
 ENV NB_USER finmaguser
 ENV NB_UID 1000
@@ -15,7 +16,6 @@ RUN adduser --disabled-password \
     ${NB_USER}
 
 COPY . ${HOME}
-USER root
 RUN chown -R ${NB_UID} ${HOME}
 RUN chown -R ${NB_UID} /finmag
 USER ${NB_USER}
