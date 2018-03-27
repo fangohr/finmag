@@ -19,6 +19,8 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
 
+- The GitHub page of the project with the most recent version is https://github.com/fangohr/finmag.
+
 - This is a working prototype which is not polished, with some (in large parts outdated) attempts at documentation. There is also some outdated code in the repository.
 
 - We do not consider the codebase, documentation, and other content of sufficient quality to encourage uptake in the community. (Experts are welcome!) This is primarily a resource problem.
@@ -28,8 +30,6 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 - There is no support available.
 
 - Contributions and pull requests to both the code and documentation are welcome, but no promise can be made that these will be reviewed and/or integrated.
-
-- The GitHub page of the project is [here](https://github.com/fangohr/finmag).
 
 - The code has been used for a number of scientific studies and publications (see the [Publications](# Publications) section).
 
