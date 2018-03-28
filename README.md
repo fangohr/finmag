@@ -31,7 +31,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - Contributions and pull requests to both the code and documentation are welcome, but no promise can be made that these will be reviewed and/or integrated.
 
-- The code has been used for a number of scientific studies and publications (see the [Publications](# Publications) section).
+- The code has been used for a number of scientific studies and publications (see the [Publications](#Publications) section).
 
 - The repository may well be of historical value and probably captures some of the typical research software engineering challenges. (We should write up a summary of our gathered experiences.)
 
