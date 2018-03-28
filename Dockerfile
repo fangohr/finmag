@@ -8,7 +8,8 @@ RUN rmdir /io/finmag
 
 # Clone the finmag repository.
 WORKDIR /
-RUN git clone https://github.com/fangohr/finmag.git
+COPY . /finmag
+#RUN git clone https://github.com/fangohr/finmag.git
 
 # Pre-compile finmag.
 WORKDIR /finmag/native
