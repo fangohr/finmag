@@ -137,9 +137,9 @@ We acknowledge the support from
 
 - Horizon 2020 European Research Infrastructure project [OpenDreamKit](http://opendreamkit.org/) (676541),
 
-- EPSRC's Programme [grant](https://www.skyrmions.ac.uk/) on Skyrmionics (EP/N032128/1),
+- EPSRC's [Programme grant on Skyrmionics](https://www.skyrmions.ac.uk/) (EP/N032128/1),
 
-- The Gordon and Betty Moore Foundation through Grant GBMF #4856, by the Alfred P. Sloan Foundation and by the Helmsley Trust.
+- The [Gordon and Betty Moore Foundation](https://www.moore.org/) through Grant GBMF #4856, by the Alfred P. Sloan Foundation and by the Helmsley Trust.
 
 ## See also
 
