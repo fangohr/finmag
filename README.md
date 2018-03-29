@@ -19,6 +19,8 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
 
+- The GitHub page of the project with the most recent version is https://github.com/fangohr/finmag.
+
 - This is a working prototype which is not polished, with some (in large parts outdated) attempts at documentation. There is also some outdated code in the repository.
 
 - We do not consider the codebase, documentation, and other content of sufficient quality to encourage uptake in the community. (Experts are welcome!) This is primarily a resource problem.
@@ -29,9 +31,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - Contributions and pull requests to both the code and documentation are welcome, but no promise can be made that these will be reviewed and/or integrated.
 
-- The GitHub page of the project is [here](https://github.com/fangohr/finmag).
-
-- The code has been used for a number of scientific studies and publications (see the [Publications](# Publications) section).
+- The code has been used for a number of scientific studies and publications (see the [Publications](#Publications) section).
 
 - The repository may well be of historical value and probably captures some of the typical research software engineering challenges. (We should write up a summary of our gathered experiences.)
 
@@ -53,35 +53,37 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 
 ### Testing
 
-After you pulled/built the `finmag/finmag:latest` image, you can test it with
+After you pulled/built the `finmag/finmag` image, you can test it with
 
-    docker run -ti -w="/finmag" --rm $(IMAGE) bash -c "py.test"
+    docker run -ti -w="/finmag" --rm finmag/finmag bash -c "py.test -v"
     
 or by running `make test` in `install/docker/latest` directory.
 
 ### Running the container
 
-To run your Finmag code inside Docker, please navigate to the directory where your `.py` file is (`cd path/to/your/file`) and run
+To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
-    docker run -ti -v $(pwd):/io --rm finmag/finmag:latest bash -c "python my-finmag-script.py"
+    docker run -ti -v $(pwd):/io --rm finmag/finmag bash -c "python my-finmag-script.py"
+    
+If you want to run code interactively inside the container, then you can start with
+
+    docker run -ti -v $(pwd):/io --rm finmag/finmag
 
 ### Finmag dependencies container
 
-Docker image which contains all dependencies required to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
+Docker image which contains all of the dependencies necessary to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to in previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
 
 ### Installing on host
 
-More detailed comments on the installation of finmag on host machine are in [`install/README.md`](install/README.md).
+More detailed comments on the installation of finmag on a host machine are in [`install/README.md`](install/README.md).
 
 ## Binder
 
-If you want to try using finmag anonymously in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
+If you want to try using Finmag anonymously in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
 ## Documentation
 
-The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory. In order to open Jupyter notebooks, make sure you have Jupyter installed on your machine ([instructions](http://jupyter.org/install)). After that, please navigate to [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) and run
-
-    jupyter-notebook &
+The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is available in [`doc/ipython_notebooks_src`](doc/ipython_notebooks_src) directory. Large parts of documentation are currently outdated.
 
 ## How to cite
 
@@ -135,7 +137,9 @@ We acknowledge the support from
 
 - Horizon 2020 European Research Infrastructure project [OpenDreamKit](http://opendreamkit.org/) (676541),
 
-- EPSRC's Programme [grant](https://www.skyrmions.ac.uk/) on Skyrmionics (EP/N032128/1).
+- EPSRC's Programme [grant](https://www.skyrmions.ac.uk/) on Skyrmionics (EP/N032128/1),
+
+- The Gordon and Betty Moore Foundation through Grant GBMF #4856, by the Alfred P. Sloan Foundation and by the Helmsley Trust.
 
 ## See also
 
