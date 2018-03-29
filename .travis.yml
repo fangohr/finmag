@@ -4,7 +4,7 @@ services:
   - docker
 
 script:
-  - travis_wait 150 make travis-build
+  - travis_wait 300 make travis-build
 
 notifications:
   slack: finmag:JoNWDUvuuBomMziPhuIqvc4e
