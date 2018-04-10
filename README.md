@@ -2,6 +2,7 @@
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011)
 
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
 
@@ -89,7 +90,7 @@ The documentation in the form of [Jupyter](http://jupyter.org/) notebooks is ava
 
 If you use Finmag in your research, please cite it as
 
-- (Zenodo DOI will go here when we make the repository public)
+- Marc-Antonio Bisotti, Marijan Beg, Weiwei Wang, Maximilian Albert, Dmitri Chernyshenko, David Cortés-Ortuño, Ryan A. Pepper, Mark Vousden, Rebecca Carey, Hagen Fuchs, Anders Johansen, Gabriel Balaban, Leoni Breth, Thomas Kluyver, and Hans Fangohr. FinMag: finite-element micromagnetic simulation tool (Version 0.1). Zenodo. DOI: http://doi.org/10.5281/zenodo.1216011
 
 ## License
 
