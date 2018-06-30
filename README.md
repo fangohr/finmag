@@ -1,9 +1,3 @@
-[![Build Status](https://travis-ci.org/fangohr/finmag.svg?branch=master)](https://travis-ci.org/fangohr/finmag)
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb)
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011)
-
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
 
 # FinMag: finite-element micromagnetic simulation tool
@@ -13,6 +7,15 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 <sup>1</sup> Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom  
 <sup>2</sup> European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany  
 <sup>3</sup> Helmholtz-Zentrum Dresden-Rossendorf, Bautzner Landstraße 400, 01328 Dresden, Germany
+
+| Description | Badge |
+| --- | --- |
+| Build | [![Build Status](https://travis-ci.org/fangohr/finmag.svg?branch=master)](https://travis-ci.org/fangohr/finmag) |
+| Binder | [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb) |
+| License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
+| DockerHub | [![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/) |
+| DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011) |
+
 
 ## About
 
