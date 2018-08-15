@@ -1330,7 +1330,7 @@ class Simulation(object):
 
     get_submesh = sim_helpers.get_submesh
 
-    def set_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
+    def set_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
         """
         Activates the computation of the zhang-li spin-torque term in the LLG.
 
@@ -1344,7 +1344,7 @@ class Simulation(object):
 
         """
         self.llg.use_zhangli(
-            J_profile=J_profile, P=P, beta=beta, using_u0=using_u0)
+            J_profile=J_profile, P=P, beta=beta, using_u0=using_u0, with_time_update=with_time_update)
 
     def profile(self, statement, filename=None, N=20, sort='cumulative'):
         """
@@ -1500,6 +1500,3 @@ test suite. This is hopeful thinking at the moment and needs more
 testing to see that it delivers.
 
 """
-
-
-

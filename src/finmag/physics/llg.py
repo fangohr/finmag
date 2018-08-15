@@ -264,6 +264,12 @@ class LLG(object):
                 self.Lambda, self.epsilonprime,
                 self.J, self.P, self.d, self._Ms, self.p)
         elif self.do_zhangli:
+            if self.fun_zhangli_time_update != None:
+                J_profile = self.fun_zhangli_time_update(t)
+                self._J = helpers.vector_valued_function(J_profile, self.S3)
+                self.J = self._J.vector().array()
+                self.compute_gradient_matrix()
+
             H_gradm = self.compute_gradient_field()
             H_gradm.shape = (3, -1)
             native_llg.calc_llg_zhang_li_dmdt(
@@ -526,12 +532,19 @@ class LLG(object):
 
         return self.H_gradm.array() / self.nodal_volume_S3
 
-    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
         """
         if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
+
+        With with_time_update should be a function like:
+        def f(t):
+            return (0, 0, J*g(t))
+
+        We do not use a position dependent function for performance reasons.
         """
 
         self.do_zhangli = True
+        self.fun_zhangli_time_update = with_time_update
         self._J = helpers.vector_valued_function(J_profile, self.S3)
         self.J = self._J.vector().array()
         self.compute_gradient_matrix()
