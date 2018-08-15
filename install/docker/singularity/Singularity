@@ -1,0 +1,7 @@
+Bootstrap: docker
+From: ryanpepper/finmag:singularity
+
+
+%post
+    #git clone https://github.com/fangohr/finmag /io/finmag
+    chmod -R 777 /io
