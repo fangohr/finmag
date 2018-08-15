@@ -316,13 +316,13 @@ class LLG(object):
     """
     def sundials_rhs_petsc(self, t, y, ydot):
         #only for the testing of parallel stuff, will delete later.
-        
+
         self.effective_field.update(t)
         self.field.vector().set_local(self.effective_field.H_eff)
-        
+
         #this is not ideal, will change it after we make use of Field class for damping.
         alpha_petsc = df.as_backend_type(self.alpha.vector()).vec()
-        
+
         llg_petsc.compute_dm_dt(y,
                                 self.h_petsc,
                                 ydot,
@@ -330,7 +330,7 @@ class LLG(object):
                                 self.gamma,
                                 self.do_precession,
                                 self.c)
-                                
+
         return 0
     """
 

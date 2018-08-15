@@ -48,7 +48,7 @@ class Simulation(object):
 
 
     # see comment at end of file on 'INSTANCE'
-    instance_counter_max = 0   
+    instance_counter_max = 0
     instances = {}
 
 
@@ -94,7 +94,7 @@ class Simulation(object):
         # instance booking
         self.instance_id = Simulation.instance_counter_max
         Simulation.instance_counter_max += 1
-        assert self.instance_id not in Simulation.instances.keys() 
+        assert self.instance_id not in Simulation.instances.keys()
         Simulation.instances[self.instance_id] = self
 
 
@@ -104,7 +104,7 @@ class Simulation(object):
         self.tablewriter = Tablewriter(self.ndtfilename, self, override=True)
 
         # Note that we pass the simulation object ("self") to the Tablewrite in the line above, and
-        # that the table writer stores a reference. This is just a cyclic reference. If we want 
+        # that the table writer stores a reference. This is just a cyclic reference. If we want
         # the garbage collection to be able to collect this simulation object, we need to remove
         # that cyclic reference. This is what the 'delete()' method attempts to do.
 
@@ -196,7 +196,7 @@ class Simulation(object):
         self._render_scene_indices = {}
 
         #log.debug("__init__:sim-object '{}' refcount 85={}".format(self.name, sys.getrefcount(self)))
-        
+
         self.scheduler_shortcuts = {
             'eta': sim_helpers.eta,
             'ETA': sim_helpers.eta,
@@ -235,7 +235,7 @@ class Simulation(object):
 
     def shutdown(self):
         """Attempt to clear all cyclic dependencies and close all files.
-        The simulation object is unusable after this has been called, but 
+        The simulation object is unusable after this has been called, but
         should be garbage collected if going out of scope subsequently.
 
         Returns the number of references to self -- in my tests in March 2015,
