@@ -260,9 +260,10 @@ class SLLG(object):
 
         return self.H_gradm.array() / self.nodal_volume_S3
 
-    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
 
         self.zhangli_stt = True
+        self.fun_zhangli_time_update = with_time_update
 
         self.P = P
         self.beta = beta
