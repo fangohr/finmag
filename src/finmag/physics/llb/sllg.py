@@ -20,9 +20,7 @@ log = logging.getLogger(name="finmag")
 
 
 class SLLG(object):
-
     def __init__(self, S1, S3, method='RK2b', checking_length=False, unit_length=1):
-
         self.S1 = S1
         self.S3 = S3
         self.mesh = S1.mesh()
@@ -203,7 +201,7 @@ class SLLG(object):
         self._Ms = Ms.copy()
         self.Ms_av = np.average(self._Ms_dg.vector().array())
 
-        
+
         #self._Ms_dg = value.f#.vector().set_local(
             #helpers.scalar_valued_dg_function(value, self.mesh).vector().array())
 
@@ -260,10 +258,10 @@ class SLLG(object):
 
         return self.H_gradm.array() / self.nodal_volume_S3
 
-    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False):
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
 
         self.zhangli_stt = True
-
+        self.fun_zhangli_time_update = with_time_update
         self.P = P
         self.beta = beta
 
