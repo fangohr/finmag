@@ -608,6 +608,16 @@ class Field(object):
         When simulation/field saving is finished, it is recomended that close_hdf5() is
         called.
 
+        To load a file, do so as:
+        
+        ```
+        from dolfinh5tools import openh5
+        h5file = openh5(filename, field_name='fieldname', mode='r')
+        h5file.read(t=t)
+        ```
+
+        See explanatory notebook tutorial-saving-field-in-hdf5-file.ipynb
+        for more details.
         """
         # ask if file has already been created. If not, create it.
         if not hasattr(self, 'h5fileWrite'):
