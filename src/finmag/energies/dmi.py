@@ -159,8 +159,8 @@ def DMI_D2D(m, D, dim):
 
     gradm = df.grad(m.f)
 
-    dmxdx = gradm[0, 0]
     dmxdy = gradm[0, 1]
+    dmydx = gradm[1, 0]
     dmzdx = gradm[2, 0]
     dmzdy = gradm[2, 1]
 
