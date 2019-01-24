@@ -147,7 +147,7 @@ def DMI_D2D(m, D, dim):
 
     Hence:
 
-    w = D [(m_x dm_z / dy - m_z dm_x / dy) -
+    w = D [(m_x dm_z / dy - m_z dm_x / dy) +
            (m_y dm_z / dx - m_z dm_y / dx)]
 
       = D (m_x dm_z/dy + m_y dm_z/dx - m_z ( dm_x / dy + dm_y / dx))
