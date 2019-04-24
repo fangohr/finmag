@@ -4,8 +4,8 @@
 
 Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1</sup>, and Hans Fangohr<sup>1,2</sup>
 
-<sup>1</sup> Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom  
-<sup>2</sup> European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany  
+<sup>1</sup> Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom
+<sup>2</sup> European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany
 <sup>3</sup> Helmholtz-Zentrum Dresden-Rossendorf, Bautzner Landstraße 400, 01328 Dresden, Germany
 
 | Description | Badge |
@@ -19,7 +19,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 ## About
 
-- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project. 
+- Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project.
 
 - The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
 
@@ -50,7 +50,7 @@ There is a dedicated organisation on [DockerHub](https://hub.docker.com/) named 
 The easiest way to get the most recent image is by pulling it from the DockerHub [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository
 
     docker pull finmag/finmag:latest
-    
+
 Alternatively, you can navigate to `install/docker/latest` and run `make pull`. You can also build it on your own machine by, again navigating to `install/docker/latest`, and running
 
     make build
@@ -60,7 +60,7 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 After you pulled/built the `finmag/finmag` image, you can test it with
 
     docker run -ti -w="/finmag" --rm finmag/finmag bash -c "py.test -v"
-    
+
 or by running `make test` in `install/docker/latest` directory.
 
 ### Running the container
@@ -68,7 +68,7 @@ or by running `make test` in `install/docker/latest` directory.
 To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
     docker run -ti -v $(pwd):/io --rm finmag/finmag bash -c "python my-finmag-script.py"
-    
+
 If you want to run code interactively inside the container, then you can start with
 
     docker run -ti -v $(pwd):/io --rm finmag/finmag
@@ -107,29 +107,40 @@ We do not provide support for Finmag. However, you are welcome to raise an issue
 
 Finmag was used to run micromagnetic simulations in the following publications (in reversed chronological order):
 
-1. R. A. Pepper, M. Beg, D. Cortés-Ortuño, T. Kluyver, M.-A. Bisotti, R. Carey, M. Vousden, M. Albert, W. Wang, O. Hovorka, and H. Fangohr. Skyrmion states in thin confined polygonal nanostructures. [Journal of Applied Physics 9, 093903 (2018)](http://aip.scitation.org/doi/10.1063/1.5022567). (arXiv:1801.03275)
+- R. A. Pepper, M. Beg, D. Cortés-Ortuño, T. Kluyver, M.-A. Bisotti, R. Carey, M. Vousden, M. Albert, W. Wang, O. Hovorka, and H. Fangohr. Skyrmion states in thin confined polygonal nanostructures. [Journal of Applied Physics 9, 093903 (2018)](http://aip.scitation.org/doi/10.1063/1.5022567). (arXiv:1801.03275)
 
-2. D. Cortés-Ortuño, W. Wang, M. Beg, R. A. Pepper, M.-A. Bisotti, R. Carey, M. Vousden, T. Kluyver, O. Hovorka, and H. Fangohr. Thermal stability and topological protection of skyrmions in nanotracks. [Scientific Reports 7, 4061 (2017)](http://www.nature.com/articles/s41598-017-03391-8). (arXiv:1611.07079)
+- D. Cortés-Ortuño, W. Wang, M. Beg, R. A. Pepper, M.-A. Bisotti, R. Carey, M. Vousden, T. Kluyver, O. Hovorka, and H. Fangohr. Thermal stability and topological protection of skyrmions in nanotracks. [Scientific Reports 7, 4061 (2017)](http://www.nature.com/articles/s41598-017-03391-8). (arXiv:1611.07079)
 
-3. M. Beg, M. Albert, M.-A. Bisotti, D. Cortés-Ortuño, W. Wang, R. Carey, M. Vousden, O. Hovorka, C. Ciccarelli, C. S. Spencer, C. H. Marrows, and H. Fangohr. Dynamics of skyrmionic states in confined helimagnetic nanostructures. [Physical Review B 95, 014433 (2017)](http://link.aps.org/doi/10.1103/PhysRevB.95.014433). (arXiv:1604.08347)
+- M. Beg, M. Albert, M.-A. Bisotti, D. Cortés-Ortuño, W. Wang, R. Carey, M. Vousden, O. Hovorka, C. Ciccarelli, C. S. Spencer, C. H. Marrows, and H. Fangohr. Dynamics of skyrmionic states in confined helimagnetic nanostructures. [Physical Review B 95, 014433 (2017)](http://link.aps.org/doi/10.1103/PhysRevB.95.014433). (arXiv:1604.08347)
 
-4. A. Baker, M. Beg, G. Ashton, M. Albert, D. Chernyshenko, W. Wang, S. Zhang, M.-A. Bisotti, M. Franchin, C. Lian Hu, R. L. Stamps, T. Hesjedal, and H. Fangohr. Proposal of a micromagnetic standard problem for ferromagnetic resonance simulations. [Journal of Magnetism and Magnetic Materials 421, 428-439 (2017)](http://linkinghub.elsevier.com/retrieve/pii/S0304885316307545). (arXiv:1603.05419)
+- A. Baker, M. Beg, G. Ashton, M. Albert, D. Chernyshenko, W. Wang, S. Zhang, M.-A. Bisotti, M. Franchin, C. Lian Hu, R. L. Stamps, T. Hesjedal, and H. Fangohr. Proposal of a micromagnetic standard problem for ferromagnetic resonance simulations. [Journal of Magnetism and Magnetic Materials 421, 428-439 (2017)](http://linkinghub.elsevier.com/retrieve/pii/S0304885316307545). (arXiv:1603.05419)
 
-5. R. Carey, M. Beg, M. Albert, M.-A. Bisotti, D. Cortés-Ortuño, M. Vousden, W. Wang, O. Hovorka, and H. Fangohr. Hysteresis of nanocylinders with Dzyaloshinskii-Moriya interaction. [Applied Physics Letters 109, 122401 (2016)](http://scitation.aip.org/content/aip/journal/apl/109/12/10.1063/1.4962726). (arXiv:1606.05181)
+- P. J. Metaxas, M. Albert, S. Lequeux, V. Cros, J. Grollier, P. Bortolotti, A. Anane, and H. Fangohr. Resonant translational, breathing, and twisting modes of transverse magnetic domain walls pinned at notches. [Phys. Rev. B 93, 054414 (2016)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.93.054414)
 
-6. M. Albert, M. Beg, D. Chernyshenko, M.-A. Bisotti, R. L. Carey, H. Fangohr, and P. J. Metaxas. Frequency-based nanoparticle sensing over large field ranges using the ferromagnetic resonances of a magnetic nanodisc. [Nanotechnology 27, 455502 (2016)](http://stacks.iop.org/0957-4484/27/i=45/a=455502?key=crossref.2ac6ca2e40700c0c20b17814ae4f6a9d). (arXiv:1604.07277)
+- J. P. Fried, H. Fangohr, M. Kostylev, and P. J. Metaxas. Exchange-mediated, nonlinear, out-of-plane magnetic field dependence of the ferromagnetic vortex gyrotropic mode frequency driven by core deformation. [Phys. Rev. B 94, 224407 (2016)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.94.224407)
 
-7. M. Vousden, M. Albert, M. Beg, M.-A. Bisotti, R. Carey, D. Chernyshenko, D. Cortés-Ortuño, W. Wang, O. Hovorka, C. H. Marrows, and H. Fangohr. Skyrmions in thin films with easy-plane magnetocrystalline anisotropy. [Applied Physics Letters 108, 132406 (2016)](http://aip.scitation.org/doi/10.1063/1.4945262). (arXiv:1602.02064)
+- R. Carey, M. Beg, M. Albert, M.-A. Bisotti, D. Cortés-Ortuño, M. Vousden, W. Wang, O. Hovorka, and H. Fangohr. Hysteresis of nanocylinders with Dzyaloshinskii-Moriya interaction. [Applied Physics Letters 109, 122401 (2016)](http://scitation.aip.org/content/aip/journal/apl/109/12/10.1063/1.4962726). (arXiv:1606.05181)
 
-8. M. Beg, R. Carey, W. Wang, D. Cortés-Ortuño, M. Vousden, M.-A. Bisotti, M. Albert, D. Chernyshenko, O. Hovorka, R. L. Stamps, and H. Fangohr. Ground state search, hysteretic behaviour, and reversal mechanism of skyrmionic textures in confined helimagnetic nanostructures. [Scientific Reports 5, 17137 (2015)](http://www.nature.com/articles/srep17137). (arXiv:1312.7665)
+- M. Sushruth, J. Ding, J. Duczynski, R. C. Woodward, R. A. Begley, H. Fangohr, R. O. Fuller, A. O. Adeyeye, M. Kostylev, and P. J. Metaxas. Resonance-Based Detection of Magnetic Nanoparticles and Microbeads Using Nanopatterned Ferromagnets. [Phys. Rev. Applied 6, 044005 (2016)](https://journals.aps.org/prapplied/abstract/10.1103/PhysRevApplied.6.044005)
 
-9. W. Wang, M. Albert, M. Beg, M.-A. Bisotti, D. Chernyshenko, D. Cortés-Ortuño, I. Hawke, and H. Fangohr. Magnon driven domain wall motion with Dzyaloshinskii-Moriya interaction. [Physical Review Letters 114, 087203 (2015)](http://link.aps.org/doi/10.1103/PhysRevLett.114.087203). (arXiv:1406.5997)
+- M. Albert, M. Beg, D. Chernyshenko, M.-A. Bisotti, R. L. Carey, H. Fangohr, and P. J. Metaxas. Frequency-based nanoparticle sensing over large field ranges using the ferromagnetic resonances of a magnetic nanodisc. [Nanotechnology 27, 455502 (2016)](http://stacks.iop.org/0957-4484/27/i=45/a=455502?key=crossref.2ac6ca2e40700c0c20b17814ae4f6a9d). (arXiv:1604.07277)
 
-10. W. Wang, M. Beg, B. Zhang, W. Kuch, and H. Fangohr. Driving magnetic skyrmions with microwave fields. [Physical Review B (Rapid Communications) 92, 020403 (2015)](http://link.aps.org/doi/10.1103/PhysRevB.92.020403). (arXiv:1505.00445)
+- M. Vousden, M. Albert, M. Beg, M.-A. Bisotti, R. Carey, D. Chernyshenko, D. Cortés-Ortuño, W. Wang, O. Hovorka, C. H. Marrows, and H. Fangohr. Skyrmions in thin films with easy-plane magnetocrystalline anisotropy. [Applied Physics Letters 108, 132406 (2016)](http://aip.scitation.org/doi/10.1063/1.4945262). (arXiv:1602.02064)
 
-11. W. Wang, M. Dvornik, M.-A. Bisotti, D. Chernyshenko, M. Beg, M. Albert, A. Vansteenkiste, B. V. Waeyenberge, A. N. Kuchko, V. V. Kruglyak, and H. Fangohr. Phenomenological description of the nonlocal magnetization relaxation in magnonics, spintronics, and domain-wall dynamics. [Physical Review B 92, 054430 (2015)](http://link.aps.org/doi/10.1103/PhysRevB.92.054430). (arXiv:1508.01478)
+- J. P. Fried and P. J. Metaxas. Localized magnetic fields enhance the field sensitivity of the gyrotropic resonance frequency of a magnetic vortex. [Phys. Rev. B 93, 064422 (2016)](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.93.064422)
 
-12. B. Zhang, W. Wang, M. Beg, H. Fangohr, and W. Kuch. Microwave-induced dynamic switching of magnetic skyrmion cores in nanodots. [Applied Physics Letters 106, 102401 (2015)](http://scitation.aip.org/content/aip/journal/apl/106/10/10.1063/1.4914496). (arXiv:1503.02869)
+- M. Beg, R. Carey, W. Wang, D. Cortés-Ortuño, M. Vousden, M.-A. Bisotti, M. Albert, D. Chernyshenko, O. Hovorka, R. L. Stamps, and H. Fangohr. Ground state search, hysteretic behaviour, and reversal mechanism of skyrmionic textures in confined helimagnetic nanostructures. [Scientific Reports 5, 17137 (2015)](http://www.nature.com/articles/srep17137). (arXiv:1312.7665)
+
+- P. J. Metaxas, M. Sushruth, R. A. Begley,   J. Ding, R. C. Woodward, I. S. Maksymov, M. Albert, W. Wang, H. Fangohr, A. O. Adeyeye, and M. Kostylev. Sensing magnetic nanoparticles using nano-confined ferromagnetic resonances in a magnonic crystal. [Appl. Phys. Lett. 106, 232406 (2015)](https://aip.scitation.org/doi/abs/10.1063/1.4922392)
+
+- W. Wang, M. Albert, M. Beg, M.-A. Bisotti, D. Chernyshenko, D. Cortés-Ortuño, I. Hawke, and H. Fangohr. Magnon driven domain wall motion with Dzyaloshinskii-Moriya interaction. [Physical Review Letters 114, 087203 (2015)](http://link.aps.org/doi/10.1103/PhysRevLett.114.087203). (arXiv:1406.5997)
+
+- W. Wang, M. Beg, B. Zhang, W. Kuch, and H. Fangohr. Driving magnetic skyrmions with microwave fields. [Physical Review B (Rapid Communications) 92, 020403 (2015)](http://link.aps.org/doi/10.1103/PhysRevB.92.020403). (arXiv:1505.00445)
+
+- W. Wang, M. Dvornik, M.-A. Bisotti, D. Chernyshenko, M. Beg, M. Albert, A. Vansteenkiste, B. V. Waeyenberge, A. N. Kuchko, V. V. Kruglyak, and H. Fangohr. Phenomenological description of the nonlocal magnetization relaxation in magnonics, spintronics, and domain-wall dynamics. [Physical Review B 92, 054430 (2015)](http://link.aps.org/doi/10.1103/PhysRevB.92.054430). (arXiv:1508.01478)
+
+- B. Zhang, W. Wang, M. Beg, H. Fangohr, and W. Kuch. Microwave-induced dynamic switching of magnetic skyrmion cores in nanodots. [Applied Physics Letters 106, 102401 (2015)](http://scitation.aip.org/content/aip/journal/apl/106/10/10.1063/1.4914496). (arXiv:1503.02869)
+
 
 ## Acknowledgements
 
