@@ -1601,3 +1601,80 @@ def regular_polygon_extruded(n,r,t,f):
     cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
     os.system(cmd)
     return mesh
+
+
+
+def disk_with_internal_layers(d, layer_positions, lmax, name=''):
+    """Creates a disk mesh with a flat interface inside.
+    Args:
+        d - disk diameter
+        layer_positions - assuming layer 0 is at height 0, layer 1 is at layer_positions[0], etc...
+        lmax - discretisation
+
+    """
+
+    # First create the disk:
+    geo_script = textwrap.dedent("""\
+    lmax = DefineNumber[ $lmax$, Name "Parameters/lmax" ];
+    rad = DefineNumber[ $rad$, Name "Parameters/rad" ];
+    Point(1) = {0, 0, 0, lmax};
+    Point(2) = {rad, 0, 0, lmax};
+    Point(3) = {-rad, 0, 0, lmax};
+    Point(4) = {0, rad, 0, lmax};
+    Point(5) = {0, -rad, 0, lmax};
+    Circle(1) = {4, 1, 2};
+    Circle(2) = {2, 1, 5};
+    Circle(3) = {5, 1, 3};
+    Circle(4) = {3, 1, 4};
+    Line Loop(5) = {4, 1, 2, 3};
+    Ruled Surface(6) = {5};
+    """)
+
+    # Now extrude each multiple times, for each layer:
+    for i, l in enumerate(layer_positions):
+        if i == 0:
+            geo_script += textwrap.dedent("""\
+            
+                out1[] = Extrude {{0, 0, {}}} {{
+                    Surface{{6}};
+                }};
+
+            """).format(l)
+        else:
+            geo_script += textwrap.dedent("""\
+            
+                out{}[] = Extrude {{0, 0, {}}} {{
+                    Surface{{out{}[0]}};
+                }};
+                
+            """).format(i+1, l-layer_positions[i-1], i)
+
+    # Replace parameters in the gmsh geometry script.
+    geo_script = geo_script.replace('$rad$', str(d/2.))
+    geo_script = geo_script.replace('$lmax$', str(lmax))
+
+    #print(geo_script)
+    
+    # Write the geometry script to the .geo file.
+    # basename = 'disk_with_boundary-{}-{}-{}-{}-{}'.format(name, str(d/2.0), jid, aid, '_'.join(layers))
+    basename = 'disk_with_boundary-{}-{}'.format(name, str(d/2.0))
+    print('\n\nMESH FILENAMES = {}\n\n'.format(basename))
+    geo_file = open(basename + '.geo', 'w')
+    geo_file.write(geo_script)
+    geo_file.close()
+
+    # Create a 3d mesh.
+    gmsh_command = 'gmsh {}.geo -3 -optimize_netgen -o {}.msh'.format(basename, basename)
+    os.system(gmsh_command)
+
+    # Convert msh mesh format to the xml (required by dolfin).
+    dc_command = 'dolfin-convert {}.msh {}.xml'.format(basename, basename)
+    os.system(dc_command)
+
+    # Load the mesh and create a dolfin object.
+    mesh = df.Mesh('{}.xml'.format(basename))
+
+    # Delete all temporary files.
+    # os.system('rm {}.geo {}.msh {}.xml'.format(basename, basename, basename))
+
+    return mesh
