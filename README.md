@@ -10,7 +10,8 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 | Description | Badge |
 | --- | --- |
-| Build | [![Build Status](https://travis-ci.org/fangohr/finmag.svg?branch=master)](https://travis-ci.org/fangohr/finmag) |
+| Tests | [![workflow](https://github.com/fangohr/finmag/workflows/workflow/badge.svg)](https://github.com/fangohr/finmag/actions) |
+|       | [![docker-image](https://github.com/fangohr/finmag/workflows/docker-image/badge.svg)](https://github.com/fangohr/finmag/actions) |
 | Binder | [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
 | DockerHub | [![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/) |

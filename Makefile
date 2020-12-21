@@ -133,10 +133,3 @@ crun: cbuild
 
 test-all:
 	py.test -v
-
-travis-build:
-	docker build --no-cache -f install/docker/travis/Dockerfile -t dockertestimage .
-	docker run -ti -d --name testcontainer dockertestimage
-	docker exec testcontainer make test-all
-	docker stop testcontainer
-	docker rm testcontainer
