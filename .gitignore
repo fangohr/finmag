@@ -35,3 +35,4 @@ src/finmag/physics/build
 install/docker/finmag/docker-image.done
 install/docker/finmag/finmag-compiled.done
 install/docker/finmag/finmag-repo-clone.done
+.ipynb_checkpoints/
