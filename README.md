@@ -84,7 +84,7 @@ More detailed comments on the installation of finmag on a host machine are in [`
 
 ## Binder
 
-If you want to try using Finmag in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
+If you want to try using Finmag in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?urlpath=lab/tree/binder%2Findex.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
 ## Documentation
 
