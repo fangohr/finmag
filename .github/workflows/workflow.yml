@@ -14,15 +14,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build Docker image
-      run: docker build --no-cache -f install/docker/travis/Dockerfile -t dockertestimage .
+      run: docker build --no-cache -f install/docker/workflows/Dockerfile -t dockertestimage .
 
     - name: Create docker container
       run: docker run -ti -d --name testcontainer dockertestimage
 
     - name: Run tests
       run: docker exec testcontainer make test-all
-
-    # - name: Stop and remove Docker container
-    #   run: |
-    #     docker stop testcontainer
-    # 	docker rm testcontainer
