@@ -25,7 +25,7 @@ jobs:
     - name: Run tests
       run: docker exec testcontainer make test-all
 
-    - name: Stop and remove Docker container
-      run: |
-        docker stop testcontainer
-    	docker rm testcontainer
+    # - name: Stop and remove Docker container
+    #   run: |
+    #     docker stop testcontainer
+    # 	docker rm testcontainer
