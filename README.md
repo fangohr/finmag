@@ -72,7 +72,7 @@ To run your Finmag code inside Docker, please navigate to the directory where yo
 
 If you want to run code interactively inside the container, then you can start with
 
-    docker run -ti -v $(pwd):/io --rm finmag/finmag
+    $ docker run -ti -v $(pwd):/io --rm finmag/finmag
 
 ### Finmag dependencies container
 
@@ -108,7 +108,7 @@ We do not provide support for Finmag. However, you are welcome to raise an issue
 
 Finmag was used to run micromagnetic simulations in the following publications (in reversed chronological order):
 
-- M. Beg, R. A. Pepper, D. Cortés-Ortuño, B. Atie, M. A. Bisotti, G. Downing, T. Kluyver, O. Hovorka, H. Fangohr. Stable and manipulable Bloch point. [Scientific Reports 9, 7959](https://doi.org/10.1038/s41598-019-44462-2) (2019).
+- M. Beg, R. A. Pepper, D. Cortés-Ortuño, B. Atie, M. A. Bisotti, G. Downing, T. Kluyver, O. Hovorka, H. Fangohr. Stable and manipulable Bloch point. [Scientific Reports 9, 7959](https://doi.org/10.1038/s41598-019-44462-2) (2019). (arXiv:1808.10772)
 
 - R. A. Pepper, M. Beg, D. Cortés-Ortuño, T. Kluyver, M.-A. Bisotti, R. Carey, M. Vousden, M. Albert, W. Wang, O. Hovorka, and H. Fangohr. Skyrmion states in thin confined polygonal nanostructures. [Journal of Applied Physics 9, 093903](http://aip.scitation.org/doi/10.1063/1.5022567) (2018). (arXiv:1801.03275)
 
