@@ -1,0 +1,17 @@
+name: docker-image
+
+on:
+  push:
+  schedule:
+    - cron: '0 0 1 * *'  # run once-a-month
+
+jobs:
+  docker-image:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Pull docker image
+      run: docker pull finmag/finmag:latest
+
+    - name: Run simple command
+      run: docker run finmag/finmag:latest bash -c "python -c \"import finmag\""
