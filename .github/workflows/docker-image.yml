@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Pull finmag Docker image
+    - name: Pull finmag/finmag:latest
       run: docker pull finmag/finmag:latest
 
-    - name: Run simple command in finmag Docker container
+    - name: Run simple command in finmag/finmag:latest
       run: docker run finmag/finmag:latest bash -c "python -c \"import finmag\""
 
-    - name: Pull dependencies Docker image
+    - name: Pull finmag/finmag:dependencies
       run: docker pull finmag/finmag:dependencies
 
-    - name: Run simple command in dependencies Docker container
+    - name: Run simple command in finmag/finmag:dependencies
       run: docker run finmag/finmag:dependencies bash -c "python -c \"import dolfin\""
