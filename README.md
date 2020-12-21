@@ -12,7 +12,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 | --- | --- |
 | Tests | [![workflow](https://github.com/fangohr/finmag/workflows/workflow/badge.svg)](https://github.com/fangohr/finmag/actions) |
 |       | [![docker-image](https://github.com/fangohr/finmag/workflows/docker-image/badge.svg)](https://github.com/fangohr/finmag/actions) |
-| Binder | [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/fangohr/finmag/master?filepath=index.ipynb) |
+| Binder | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?urlpath=lab/tree/binder%2Findex.ipynb) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
 | DockerHub | [![DockerHub](https://img.shields.io/badge/DockerHub-finmag-blue.svg)](https://hub.docker.com/u/finmag/) |
 | DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011) |
