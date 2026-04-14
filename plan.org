@@ -1,0 +1,194 @@
+* Finmag Resurrection Plan
+
+** Goal
+
+Make Finmag usable again in a controlled sequence:
+
+1. preserve a known-good reference environment,
+2. port the Python layer from Python 2 to Python 3 while keeping the old FEniCS/dolfin stack,
+3. only then evaluate migration away from =dolfin= 2017.1.0.
+
+This sequencing is deliberate. Changing Python and the FEM stack at the same time would make failures hard to attribute.
+
+** Reference Environment
+
+The current ground truth is the Docker image:
+
+- =finmag/finmag:latest=
+
+Running the agreed minimal acceptance suite inside the image's own =/finmag= tree succeeds:
+
+- =21 passed, 6 warnings in 66.25s=
+
+Important caveat:
+
+- Running the same suite against a bind-mounted host checkout failed because the container tried to rebuild native modules into the mounted tree and hit write-permission issues.
+- For now, the image contents should be treated as the reliable oracle, not a bind-mounted checkout.
+
+** Acceptance Suites
+
+*** Barmini-First Smoke Suite
+
+Use this as the smallest practical gate:
+
+#+begin_src bash
+pytest -v \
+  src/finmag/tests/test_effective_field.py \
+  src/finmag/tests/test_writing_data.py \
+  src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+  src/finmag/tests/test_restart_simulation.py
+#+end_src
+
+*** Minimal Acceptance Suite
+
+Use this as the main resurrection gate:
+
+#+begin_src bash
+pytest -v \
+  src/finmag/tests/test_effective_field.py \
+  src/finmag/tests/test_writing_data.py \
+  src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+  src/finmag/tests/test_restart_simulation.py \
+  src/finmag/tests/test_sim_ode.py \
+  src/finmag/tests/test_applied_field.py \
+  src/finmag/tests/test_exchange_static.py \
+  src/finmag/tests/test_llg.py \
+  src/finmag/util/ode/tests/test_sundials_ode.py
+#+end_src
+
+This suite currently collects 21 tests.
+
+** Phases
+
+*** Phase 1: Stabilize the Test Harness
+
+Tasks:
+
+- record the exact passing Docker invocation in a script or =Makefile= target;
+- add a second command that copies the checkout into a writable directory inside the container before running tests;
+- avoid bind-mounted in-place test runs until native module write behavior is under control.
+
+Deliverable:
+
+- a repeatable baseline command for the oracle image;
+- a repeatable command for testing local edits inside a writable in-container copy.
+
+*** Phase 2: Python 3 Port While Keeping Old FEniCS
+
+Do this before any =dolfin= migration work.
+
+**** Batch 1: Import and Package Layer
+
+Files to port first:
+
+- =src/finmag/__init__.py=
+- =src/finmag/init.py=
+- =src/finmag/sim/__init__.py=
+- =src/finmag/energies/__init__.py=
+- =src/finmag/energies/init.py=
+- =src/finmag/native/__init__.py=
+- =src/finmag/util/ode/__init__.py=
+- =src/finmag/util/oommf/__init__.py=
+
+Primary goal:
+
+- make =import finmag= work under Python 3 without Python 2 implicit relative imports.
+
+**** Batch 2: Core Utility Types
+
+Files:
+
+- =src/finmag/field.py=
+- =src/finmag/util/helpers.py=
+- =src/finmag/util/fileio.py=
+
+Primary goal:
+
+- remove common Python 2 constructs that affect nearly all runtime paths:
+  =basestring=, =xrange=, old dict iterator methods, old exception syntax.
+
+**** Batch 3: Runtime Core
+
+Files:
+
+- =src/finmag/physics/effective_field.py=
+- =src/finmag/physics/llg.py=
+- =src/finmag/drivers/llg_integrator.py=
+- =src/finmag/drivers/sundials_integrator.py=
+- =src/finmag/scheduler/scheduler.py=
+- =src/finmag/sim/sim.py=
+
+Primary goal:
+
+- restore the execution path used by the acceptance suite:
+  =Simulation -> LLG -> EffectiveField -> energies -> integrator=.
+
+**** Batch 4: Common Energies
+
+Files:
+
+- =src/finmag/energies/energy_base.py=
+- =src/finmag/energies/exchange.py=
+- =src/finmag/energies/zeeman.py=
+- then anisotropy, DMI, and demag modules as required by failures
+
+Primary goal:
+
+- keep the acceptance suite green while broadening Python 3 compatibility.
+
+**** Batch 5: Native Build and Import Glue
+
+Files:
+
+- =src/finmag/native/init.py=
+- =src/finmag/util/native_compiler.py=
+
+Primary goal:
+
+- ensure native modules can still be found or rebuilt safely under the test harness.
+
+*** Phase 3: Packaging and Build Cleanup
+
+After the Python 3 runtime is stable:
+
+- modernize package metadata and entry points;
+- reduce reliance on ad hoc import behavior;
+- make native build paths explicit and reproducible.
+
+*** Phase 4: =dolfin= Migration
+
+Only start once Python 3 plus the old FEniCS stack is working.
+
+Decision required:
+
+- target a newer legacy FEniCS release, or
+- migrate to FEniCSx / =dolfinx=.
+
+This is a major project boundary. It should not be mixed into the Python 3 port.
+
+** Initial Exclusions
+
+Do not use these as first-pass acceptance gates:
+
+- =comparison/*=
+- =oommf/*=
+- =nmag/*=
+- broad mesh-generation tests that depend heavily on Netgen or external tooling
+- larger historical areas such as NEB, normal modes, skyrmion workflows, and specialized Jacobian paths
+
+They are useful later as validation suites, but they are not efficient first gates.
+
+** Risks and Notes
+
+- The codebase is Python 2 era and relies on implicit relative imports in several packages.
+- Native modules are tightly integrated with runtime behavior.
+- The demag path and compiled extensions are likely to be the most environment-sensitive areas.
+- The container already emits a Python 2 deprecation warning from =msg.message= in =src/finmag/drivers/sundials_integrator.py=; this is harmless in the reference image but should be fixed during the Python 3 port.
+
+** Success Criteria
+
+First meaningful milestone:
+
+- =import finmag= works under Python 3;
+- the minimal acceptance suite passes under Python 3 while keeping the old FEniCS stack;
+- native modules still load correctly in that environment.
