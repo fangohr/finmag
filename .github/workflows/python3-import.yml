@@ -1,0 +1,29 @@
+name: python3-import
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python3-import:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build Python 3 DOLFIN 2017 image
+      run: |
+        docker build \
+          -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
+          -t finmag-py3-dolfin2017 .
+
+    - name: Verify Python 3 import
+      run: |
+        docker run --rm \
+          -e OMPI_MCA_plm=isolated \
+          -v "${GITHUB_WORKSPACE}:/repo:ro" \
+          finmag-py3-dolfin2017 \
+          bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+                    PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
