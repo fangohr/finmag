@@ -2,7 +2,7 @@ import logging
 import dolfin as df
 from aeon import timer
 from finmag.field import Field
-from energy_base import EnergyBase
+from .energy_base import EnergyBase
 from finmag.util.helpers import times_curl
 
 logger = logging.getLogger('finmag')

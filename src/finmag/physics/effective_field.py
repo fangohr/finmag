@@ -88,7 +88,7 @@ class EffectiveField(object):
             update(t)
 
         self.H_eff[:] = 0
-        for interaction in self.interactions.itervalues():
+        for interaction in self.interactions.values():
             self.H_eff += interaction.compute_field()
 
     def compute(self, t=None):
@@ -112,7 +112,7 @@ class EffectiveField(object):
             update(t)
 
         H_eff = np.zeros(self.output_size)
-        for interaction in self.interactions.itervalues():
+        for interaction in self.interactions.values():
             if interaction.in_jacobian:
                 H_eff += interaction.compute_field()
         return H_eff
@@ -124,7 +124,7 @@ class EffectiveField(object):
 
         """
         energy = 0.
-        for interaction in self.interactions.itervalues():
+        for interaction in self.interactions.values():
             energy += interaction.compute_energy()
         return energy
 

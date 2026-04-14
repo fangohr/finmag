@@ -17,7 +17,7 @@ from finmag.native.llg import compute_bem_fk
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers, configuration
 from finmag.field import Field
-from fk_demag_pbc import BMatrixPBC
+from .fk_demag_pbc import BMatrixPBC
 
 
 logger = logging.getLogger('finmag')

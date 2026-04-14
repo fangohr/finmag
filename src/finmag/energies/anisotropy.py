@@ -2,7 +2,7 @@ import logging
 import dolfin as df
 import numpy as np
 from aeon import timer
-from energy_base import EnergyBase
+from .energy_base import EnergyBase
 from finmag.field import Field
 from finmag.util import helpers
 from finmag.util.consts import mu0

@@ -12,16 +12,31 @@ logger.propagate = False
 
 from finmag.sim.sim import Simulation, sim_with
 from finmag.energies.demag import MacroGeometry
-from finmag.sim.normal_mode_sim import NormalModeSimulation, normal_mode_simulation
+try:
+    from finmag.sim.normal_mode_sim import (
+        NormalModeSimulation,
+        normal_mode_simulation,
+    )
+    NORMAL_MODE_IMPORT_ERROR = None
+except Exception as error:
+    NormalModeSimulation = None
+    normal_mode_simulation = None
+    NORMAL_MODE_IMPORT_ERROR = error
 from finmag.util.helpers import set_logging_level
 from finmag.util import configuration
 from finmag.field import Field
-import util.versions
-from __version__ import __version__
-import example
+from finmag.util import versions
+from finmag import example
+from finmag.__version__ import __version__
 import signal
 
 # Convenience access to physics object Q
+
+
+def _version_or_unknown(version):
+    if version is None:
+        return '<unavailable>'
+    return str(version)
 
 def timings_report(n=10):
     """
@@ -45,30 +60,31 @@ display_module_versions = configuration.get_config_option(
 if display_module_versions == "True":
     double_column = "{:<15} {:<20} {:<15} {:20}"
     logger.debug(double_column.format(
-        "Dolfin", util.versions.get_version_dolfin(),
-        "Matplotlib", util.versions.get_version_matplotlib()))
+        "Dolfin", _version_or_unknown(versions.get_version_dolfin()),
+        "Matplotlib", _version_or_unknown(versions.get_version_matplotlib())))
     logger.debug(double_column.format(
-        "Numpy", util.versions.get_version_numpy(),
-        "Scipy", util.versions.get_version_scipy()))
+        "Numpy", _version_or_unknown(versions.get_version_numpy()),
+        "Scipy", _version_or_unknown(versions.get_version_scipy())))
     logger.debug(double_column.format(
-        "IPython", util.versions.get_version_ipython(),
-        "Python", util.versions.get_version_python()))
+        "IPython", _version_or_unknown(versions.get_version_ipython()),
+        "Python", _version_or_unknown(versions.get_version_python())))
     try:
-        sundials_version = util.versions.get_version_sundials()
+        sundials_version = versions.get_version_sundials()
     except NotImplementedError:
         sundials_version = '<unknown>'
     logger.debug(double_column.format(
-        "Paraview", util.versions.get_version_paraview(),
-        "Sundials", sundials_version))
+        "Paraview", _version_or_unknown(versions.get_version_paraview()),
+        "Sundials", _version_or_unknown(sundials_version)))
     try:
-        boost_version = util.versions.get_version_boostpython()
+        boost_version = versions.get_version_boostpython()
     except NotImplementedError:
         boost_version = '<unknown>'
     logger.debug(double_column.format(
-        "Boost-Python", boost_version, "Linux", util.versions.get_linux_issue()))
+        "Boost-Python", _version_or_unknown(boost_version),
+        "Linux", _version_or_unknown(versions.get_linux_issue())))
 
 
-if util.versions.running_binary_distribution():
+if versions.running_binary_distribution():
     # check that this is the same as the binary distribution has been compiled for
     # This matters for sundials: on 12.04 there is one version of sundials
     # on 12.10 there is a different one. They are not compatible, but we
@@ -76,19 +92,19 @@ if util.versions.running_binary_distribution():
     #
     # We thus assume that we use the system's sundials, and thus we
     # should be able to check by comparing the linux distribution.
-    import util.binary  # Where is this module?
-    logger.debug("%20s: %s" % ("Build Linux", util.binary.buildlinux))
-    vb = util.binary.buildlinux
-    vr = util.versions.get_linux_issue()
+    from finmag.util import binary
+    logger.debug("%20s: %s" % ("Build Linux", binary.buildlinux))
+    vb = binary.buildlinux
+    vr = versions.get_linux_issue()
     if vb == vr:
         logger.debug("Build Linux and host linux versions agree.")
     else:
-        if util.versions.loose_compare_ubuntu_version(vb, vr):
+        if versions.loose_compare_ubuntu_version(vb, vr):
             logger.warn(
                 "Build Linux and host linux versions only agree approximately.")
         else:
-            logger.warn("Build Linux = %s" % util.binary.buildlinux)
-            logger.warn("Host Linux = %s" % util.versions.get_linux_issue())
+            logger.warn("Build Linux = %s" % binary.buildlinux)
+            logger.warn("Host Linux = %s" % versions.get_linux_issue())
 
 # create extreme debugging logging level, which has numerical value 5
 logging.EXTREMEDEBUG = 5
@@ -96,6 +112,24 @@ logging.addLevelName(logging.EXTREMEDEBUG, 'EXTREMEDEBUG')
 
 # and register a function function for this for our logger
 logger.extremedebug = lambda msg: logger.log(logging.EXTREMEDEBUG, msg)
+
+
+def _require_normal_modes():
+    if NormalModeSimulation is None:
+        raise ImportError(
+            "Normal mode support is not available in this environment: "
+            "{}".format(NORMAL_MODE_IMPORT_ERROR)
+        )
+
+
+if NormalModeSimulation is None:
+    class NormalModeSimulation(object):
+        def __init__(self, *args, **kwargs):
+            _require_normal_modes()
+
+
+    def normal_mode_simulation(*args, **kwargs):
+        _require_normal_modes()
 
 
 # Register a function which starts the debugger when the program

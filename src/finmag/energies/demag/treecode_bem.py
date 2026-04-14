@@ -9,7 +9,7 @@ from finmag.native.treecode_bem import FastSum
 from finmag.native.treecode_bem import compute_solid_angle_single
 from finmag.util import helpers
 
-from fk_demag import FKDemag
+from .fk_demag import FKDemag
 
 logger = logging.getLogger(name='finmag')
 
@@ -230,7 +230,7 @@ if __name__ == "__main__":
     stop = time.time()
 
     f3 = f1 - f2
-    print f1[0:10], f2[0:10]
-    print np.average(np.abs(f3[:200] / f1[:200]))
+    print(f1[0:10], f2[0:10])
+    print(np.average(np.abs(f3[:200] / f1[:200])))
 
-    print 'max errror:', compare_field(f1, f2)
+    print('max errror:', compare_field(f1, f2))

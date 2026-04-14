@@ -3,7 +3,10 @@ from datetime import datetime
 from glob import glob
 from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
-from finmag.util.visualization import render_paraview_scene
+try:
+    from finmag.util.visualization import render_paraview_scene
+except Exception:
+    render_paraview_scene = None
 from finmag.util.versions import get_version_dolfin
 from finmag.util import ansistrm
 from threading import Timer
@@ -21,9 +24,32 @@ import types
 import sys
 import os
 import re
-import sh
+try:
+    import sh
+except ImportError:
+    sh = None
 
 logger = logging.getLogger("finmag")
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
+try:
+    long
+except NameError:
+    long = int
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
+try:
+    izip = itertools.izip
+except AttributeError:
+    izip = zip
 
 
 def expression_from_python_function(func, function_space):
@@ -588,9 +614,9 @@ def verify_function_space_type(function_space, family, degree, dim):
         (family == ufl_element.family() and
          degree == ufl_element.degree())
 
-    print 'Family', family
-    print 'Degree', degree
-    print family_and_degree_are_correct
+    print('Family', family)
+    print('Degree', degree)
+    print(family_and_degree_are_correct)
 
     if dim == None:
         # `function_space` should be a dolfin.FunctionSpace
@@ -1105,22 +1131,24 @@ def spherical_to_cartesian(v):
     return np.array((x, y, z))
 
 
-def pointing_upwards((x, y, z)):
+def pointing_upwards(coords):
     """
     Returns a boolean that is true when the vector is pointing upwards.
     Upwards is defined as having a polar angle smaller than 45 degrees.
 
     """
+    x, y, z = coords
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return theta <= (np.pi / 4)
 
 
-def pointing_downwards((x, y, z)):
+def pointing_downwards(coords):
     """
     Returns a boolean that is true when the vector is pointing downwards.
     Downwards is defined as having a polar angle between 135 and 225 degrees.
 
     """
+    x, y, z = coords
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return abs(theta - np.pi) < (np.pi / 4)
 
@@ -1205,10 +1233,10 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
     (ymin, ymax) = _find_limits(ylims, 1)
     (zmin, zmax) = _find_limits(zlims, 2)
 
-    print "Limits:"
-    print "xmin, xmax: {}, {}".format(xmin, xmax)
-    print "ymin, ymax: {}, {}".format(ymin, ymax)
-    print "zmin, zmax: {}, {}".format(zmin, zmax)
+    print("Limits:")
+    print("xmin, xmax: {}, {}".format(xmin, xmax))
+    print("ymin, ymax: {}, {}".format(ymin, ymax))
+    print("zmin, zmax: {}, {}".format(zmin, zmax))
 
     if nx == None or ny == None or nz == None:
         raise NotImplementedError("Please provide specific values "
@@ -1420,7 +1448,7 @@ def save_dg_fun(fun, name='unnamed.vtk', dataname='m', binary=False):
     m = fun.vector().array()
 
     m.shape = (3, -1)
-    print m
+    print(m)
     data = pyvtk.CellData(pyvtk.Vectors(np.transpose(m)))
     m.shape = (-1,)
 
@@ -1508,7 +1536,7 @@ def pairwise(iterable):
     """
     a, b = itertools.tee(iterable)
     next(b, None)
-    return itertools.izip(a, b)
+    return izip(a, b)
 
 
 def apply_vertexwise(f, *args):
@@ -1544,10 +1572,10 @@ def apply_vertexwise(f, *args):
     # Reshape each array according to the dimension of the VectorFunctionSpace
     dims = [u.domain().geometric_dimension() for u in args]
     aa_reshaped = [
-        a.reshape(dim, -1).T for (a, dim) in itertools.izip(aa, dims)]
+        a.reshape(dim, -1).T for (a, dim) in izip(aa, dims)]
 
     # Evaluate f on successive rows of the reshaped arrays
-    aa_evaluated = [f(*args) for args in itertools.izip(*aa_reshaped)]
+    aa_evaluated = [f(*args) for args in izip(*aa_reshaped)]
 
     #import ipdb; ipdb.set_trace()
     try:

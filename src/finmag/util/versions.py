@@ -1,6 +1,5 @@
 import os
 import re
-import sh
 import sys
 import logging
 import finmag
@@ -132,8 +131,11 @@ def get_debian_package_version(pkg_name):
             logger.warning("Can't determine cause of error.")
         return None
 
+    if not isinstance(output, str):
+        output = output.decode('utf-8')
+
     lines = output.split('\n')
-    version_str = filter(lambda s: s.startswith('Version'), lines)[0]
+    version_str = [line for line in lines if line.startswith('Version')][0]
     version = re.sub('Version: ', '', version_str)
     return version
 
@@ -143,6 +145,11 @@ def get_version_sundials():
 
 
 def get_version_paraview():
+    try:
+        import sh
+    except ImportError:
+        sh = None
+
     try:
         # XXX TODO: There should be a more cross-platform way of
         # determining the Paraview version, but the only method I could
@@ -154,6 +161,8 @@ def get_version_paraview():
         # [1] http://blog.gmane.org/gmane.comp.science.paraview.user/month=20090801/page=34
         version = get_debian_package_version('paraview')
     except:
+        if sh is None:
+            return None
         try:
             sh.pvpython('--version')
         except sh.ErrorReturnCode_1 as ex:
@@ -206,4 +215,4 @@ if __name__ == "__main__":
     print("Binary distribution: %s" % running_binary_distribution())
     print("Sundials version: %s" % get_version_sundials())
 
-    print loose_compare_ubuntu_version('Ubuntu 12.04.1 LTS', "Ubuntu 12.04.2 LTS")
+    print(loose_compare_ubuntu_version('Ubuntu 12.04.1 LTS', "Ubuntu 12.04.2 LTS"))

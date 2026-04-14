@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 from aeon import timer
 from finmag.field import Field
-from energy_base import EnergyBase
+from .energy_base import EnergyBase
 from finmag.util import helpers
 from finmag.util.consts import mu0
 from finmag.native import llg as native_llg

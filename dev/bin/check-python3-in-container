@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# Run Python 3 syntax checks for selected Finmag files inside the reference
+# Docker image, but against a writable in-container copy of the current checkout.
+#
+# Why this exists:
+# - bind-mounting the repo directly into finmag/finmag:latest can trigger native
+#   rebuild attempts that write into the mounted tree and fail;
+# - the image already contains python3, which is enough for py_compile checks;
+# - python3 in the image does not provide dolfin, so this script is for syntax
+#   and parse-time validation only, not full runtime verification.
+#
+# Usage:
+#   dev/bin/check-python3-in-container
+#     Runs the default first-pass Python 3 file set.
+#
+#   dev/bin/check-python3-in-container path/to/file1.py path/to/file2.py
+#     Runs python3 -m py_compile on the given files inside the container.
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+if [ "$#" -eq 0 ]; then
+    set -- \
+        src/finmag/__init__.py \
+        src/finmag/init.py \
+        src/finmag/sim/__init__.py \
+        src/finmag/energies/__init__.py \
+        src/finmag/energies/init.py \
+        src/finmag/native/__init__.py \
+        src/finmag/util/ode/__init__.py \
+        src/finmag/util/oommf/__init__.py \
+        src/finmag/field.py \
+        src/finmag/util/helpers.py \
+        src/finmag/util/fileio.py \
+        src/finmag/physics/effective_field.py \
+        src/finmag/drivers/sundials_integrator.py \
+        src/finmag/sim/sim.py
+fi
+
+docker run --rm \
+    -v "${repo_root}:/src-ro" \
+    finmag/finmag:latest \
+    bash -lc '
+        rm -rf /tmp/finmag-py3 &&
+        cp -a /src-ro /tmp/finmag-py3 &&
+        cd /tmp/finmag-py3 &&
+        python3 -m py_compile "$@"
+    ' bash "$@"

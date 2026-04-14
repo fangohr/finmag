@@ -160,6 +160,21 @@ Conclusion:
 - use the in-image checkout as the current oracle;
 - for local edits, copy the checkout into a writable directory inside the container before running tests.
 
+### Python 3 in the Image
+
+The image also contains Python 3.5.x, but not Python 3 DOLFIN bindings.
+
+Observed behavior:
+
+- `python` imports `dolfin 2017.1.0`
+- `python3` exists
+- `python3` does not import `dolfin`
+
+This is an important migration constraint:
+
+- Python 3 syntax and compatibility work can proceed in-container,
+- but a real Python 3 Finmag runtime will require a separate strategy for obtaining `dolfin` under Python 3.
+
 ## Minimal Acceptance Suite
 
 Current agreed suite:
@@ -212,6 +227,123 @@ These are widespread, but the most important early files are concentrated in the
 5. native build/import glue
 
 Do not mix this with a `dolfin` migration until the Python 3 port is stable.
+
+## Python 3 Runtime Progress
+
+The Python 3 path has moved past the initial package-layer work.
+
+Confirmed working environment:
+
+- image: `finmag-py3-dolfin2017`
+- `python3 = 3.5.4`
+- `dolfin.__version__ = 2017.1.0`
+
+The image also needs:
+
+- `OMPI_MCA_plm=isolated`
+
+for reliable `import dolfin` inside Docker.
+
+## Import Frontier Reached So Far
+
+After the recent Python 3 fixes, `import finmag` now gets through:
+
+- explicit relative package imports
+- configuration/logging startup
+- optional plotting/version helper imports
+- `Field` import with optional `dolfinh5tools`
+- energies package import
+- native module build and load
+- scheduler and PBC helper imports
+- example package imports
+- startup version reporting
+
+Current verified result in the Python 3 DOLFIN image:
+
+- `import finmag` succeeds
+- `print(finmag)` reports the imported module object from `src/finmag/__init__.py`
+
+## Important Python 3 Compatibility Decisions
+
+To reach the import milestone without broadening scope unnecessarily, some
+subsystems are now optional at import time:
+
+- `SLLG` is imported lazily and only required when the `sllg` kernel is selected
+- the SciPy integrator backend is optional and raises only if explicitly requested
+- normal-mode support is optional and raises only if explicitly requested
+
+This keeps the base package importable while preserving a clear failure mode for
+unfinished or missing optional dependencies.
+
+## Native Build Findings
+
+The Python 3 import path now depends on a functioning native rebuild in the
+snapshot image.
+
+Important findings:
+
+- `native/Makefile` had to become Python-version-aware instead of assuming Python 2
+- the vendored Sundials wrapper needed explicit handling for `libsundials-dev 2.7.0+dfsg-2`
+- the vendored custom `nvector_serial` library needed local definitions for old math helper macros such as `MIN`, `ABS`, and `SQR`
+- import-time builds are more robust when they do not try to build the native unit-test binary
+
+## Next Milestone
+
+The next milestone is no longer package import.
+
+It is:
+
+- construct a minimal `Simulation` in the Python 3 container
+- run a minimal `barmini`-based smoke path
+- then start validating the agreed acceptance suite under Python 3
+
+## Native Build Findings
+
+The Python 3 DOLFIN image initially failed to build Finmag native modules
+because Sundials headers were missing. Adding this package fixed that layer:
+
+- `libsundials-dev = 2.7.0+dfsg-2`
+
+After that, the native build proceeds and fails specifically in:
+
+- `native/src/sundials/sundials_cvode_impl.h`
+
+The cause is version handling in the wrapper:
+
+- it only knows Sundials 2.4 and 2.5
+- the snapshot image provides Sundials 2.7
+- the wrapper therefore resolves `sundials_traits<-1>`
+
+This in turn causes the compile-time type mismatches now observed:
+
+- direct linear solver Jacobian callback signatures use `long` in Sundials 2.7
+- `CVDlsGetLastFlag` and related APIs expect `long int *`
+- Finmag currently falls back to `int` because the version trait is unresolved
+
+Practical implication:
+
+- the next work item is not general Python 3 cleanup
+- it is a native compatibility patch for the Sundials 2.7 wrapper
+
+## Useful Commands
+
+Reference import check in the Python 3 image:
+
+```bash
+docker run --rm -e OMPI_MCA_plm=isolated finmag-py3-dolfin2017 \
+  bash -lc 'python3 - <<\"PY\"
+import dolfin
+print(dolfin.__version__)
+PY'
+```
+
+Current Finmag import probe:
+
+```bash
+docker run --rm -e OMPI_MCA_plm=isolated -v "$PWD:/repo:ro" finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+  PYTHONPATH=/tmp/finmag/src python3 -c "import finmag"'
+```
 
 ## Test and Warning Notes
 

@@ -13,7 +13,12 @@ from aeon import timer
 from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
-from finmag.physics.llb.sllg import SLLG
+try:
+    from finmag.physics.llb.sllg import SLLG
+    SLLG_IMPORT_ERROR = None
+except Exception as error:
+    SLLG = None
+    SLLG_IMPORT_ERROR = error
 from finmag.sim import sim_details
 from finmag.sim import sim_relax
 from finmag.sim import sim_savers
@@ -165,6 +170,11 @@ class Simulation(object):
             self.llg = LLG(
                 self.S1, self.S3, average=average, unit_length=unit_length)
         elif kernel == 'sllg':
+            if SLLG is None:
+                raise ImportError(
+                    "The 'sllg' kernel is not available in this Python 3 "
+                    "port yet: {}".format(SLLG_IMPORT_ERROR)
+                )
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         elif kernel == 'llg_stt':
             self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
@@ -306,7 +316,7 @@ class Simulation(object):
 
 
     def __del__(self):
-        print "Simulation object about to be destroyed."
+        print("Simulation object about to be destroyed.")
 
 
     def __str__(self):
@@ -1300,7 +1310,7 @@ class Simulation(object):
         # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
         #           Can this be improved?
         all_ids = set([fun_regions(pt) for pt in self.mesh.coordinates()])
-        self.region_ids = dict(itertools.izip(all_ids, xrange(len(all_ids))))
+        self.region_ids = dict(zip(all_ids, range(len(all_ids))))
 
         # Create the CellFunction which marks the different mesh regions with
         # integers

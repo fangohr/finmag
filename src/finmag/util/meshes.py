@@ -16,17 +16,31 @@ import sys
 import copy
 import math
 import shutil
-import commands
+import subprocess
 import logging
 import textwrap
 import hashlib
 import tempfile
 import dolfin as df
 import numpy as np
-from types import ListType, TupleType
 from math import sin, cos, pi
 
 logger = logging.getLogger(name='finmag')
+
+try:
+    ListType
+except NameError:
+    ListType = list
+
+try:
+    TupleType
+except NameError:
+    TupleType = tuple
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 def from_geofile(geofile, save_result=True):
@@ -180,12 +194,17 @@ def run_netgen(geofile):
     netgen_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
         geofile, diffpackfile)
 
-    status, output = commands.getstatusoutput(netgen_cmd)
+    proc = subprocess.Popen(
+        netgen_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    status = proc.returncode
     if status == 34304:
         logger.warning("Warning: Ignoring netgen's output status of 34304.")
     elif status != 0:
-        print output
-        print "netgen failed with exit code", status
+        print(output)
+        print("netgen failed with exit code", status)
         sys.exit(2)
     elif output.lower().find("error") != -1:
         logger.warning(
@@ -211,10 +230,15 @@ def convert_diffpack_to_xml(diffpackfile):
     basename = os.path.splitext(diffpackfile)[0]
     xmlfile = basename + ".xml"
     dolfin_conv_cmd = 'dolfin-convert {0} {1}'.format(diffpackfile, xmlfile)
-    status, output = commands.getstatusoutput(dolfin_conv_cmd)
+    proc = subprocess.Popen(
+        dolfin_conv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    status = proc.returncode
     if status != 0:
-        print output
-        print "dolfin-convert failed with exit code", status
+        print(output)
+        print("dolfin-convert failed with exit code", status)
         sys.exit(3)
 
     files = ["%s.xml.bak" % basename,
@@ -294,10 +318,15 @@ def compress(filename):
     """
     logger.debug("Compressing {}".format(filename))
     compr_cmd = 'gzip -f %s' % filename
-    status, output = commands.getstatusoutput(compr_cmd)
+    proc = subprocess.Popen(
+        compr_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    status = proc.returncode
     if status != 0:
-        print output
-        print "gzip failed with exit code", status
+        print(output)
+        print("gzip failed with exit code", status)
         sys.exit(4)
     return filename + ".gz"
 
@@ -880,7 +909,7 @@ def longest_edges(mesh):
 
 
 def print_mesh_info(mesh):
-    print mesh_info(mesh)
+    print(mesh_info(mesh))
 
 
 def order_of_magnitude(value):
@@ -1023,7 +1052,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
     # work reasonably well for most cases. (However, for very oblong
     # structures it may make more sense to check the extent in each
     # dimension individually rather than the mesh volume as a whole.)
-    if not kwargs.has_key('linewidth'):
+    if 'linewidth' not in kwargs:
         lw_threshold = 500.0 if geom_dim == 2 else 5000.0
         a = mesh.num_cells() / mesh_volume(mesh)
         if a > lw_threshold:
@@ -1032,9 +1061,9 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
     # Set default values for some keyword arguments
-    if not kwargs.has_key('color'):
+    if 'color' not in kwargs:
         kwargs['color'] = 'blue'
-    if kwargs.has_key('cmap'):
+    if 'cmap' in kwargs:
         if scalar_field is None:
             kwargs.pop('cmap')
             logger.warning("Ignoring 'cmap' argument since no 'scalar_field' "
@@ -1115,12 +1144,12 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
 
         if scalar_field != None:
             try:
-                scalar_field = np.array(map(scalar_field, coords))
+                scalar_field = np.array(list(map(scalar_field, coords)))
             except TypeError:
                 scalar_field = np.array(scalar_field)
 
         # Set shade = False by default because it looks nicer
-        if not kwargs.has_key('shade'):
+        if 'shade' not in kwargs:
             kwargs['shade'] = False
 
         try:
@@ -1440,7 +1469,7 @@ def mesh_is_periodic(mesh, axes):
 
     # Convert 'axes' into a list of values between 0 and 2
     try:
-        axes = map(lambda val: {'x': 0, 'y': 1, 'z': 2}[val], axes)
+        axes = [{'x': 0, 'y': 1, 'z': 2}[val] for val in axes]
     except KeyError:
         raise ValueError(
             "Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")

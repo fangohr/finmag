@@ -46,12 +46,15 @@ def replace_c_errors_with_python_errors(s):
 def run_make(cmd, **kwargs):
     try:
         subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
-    except subprocess.CalledProcessError, ex:
-        print(ex.output)
-        output = replace_c_errors_with_python_errors(ex.output)
+    except subprocess.CalledProcessError as ex:
+        output = ex.output
+        if not isinstance(output, str):
+            output = output.decode('utf-8', 'replace')
+        print(output)
+        output = replace_c_errors_with_python_errors(output)
         with open(MODULES_OUTPUT_DIR + "/compiler_errors.log", "w") as f:
             f.write(output)
-        print "If you can't see the error message below, either set your term to deal with utf8, or check the file src/finmag/native/compiler_errors.log"
+        print("If you can't see the error message below, either set your term to deal with utf8, or check the file src/finmag/native/compiler_errors.log")
         sys.stderr.write(output)
         raise Exception("make_modules: Make failed")
 
@@ -61,13 +64,13 @@ modules_compiled = False
 def make_modules():
     global modules_compiled
     if not modules_compiled:
-        if not os.environ.has_key('DISABLE_PYTHON_MAKE') and os.path.exists(MAKEFILE):
+        if 'DISABLE_PYTHON_MAKE' not in os.environ and os.path.exists(MAKEFILE):
             # FIXME: The next line always prints, even if modules are built.
             # It may be possible to fix this by running 'make -q' first and
             # checking its exit status, but this seems to require some
             # restructuring of the build logic in 'native'.
             logger.debug("Building modules in 'native'...")
-            run_make(["make"], cwd=NATIVE_DIR)
+            run_make(["make", "PYTHON={}".format(sys.executable)], cwd=NATIVE_DIR)
         modules_compiled = True
 
 
@@ -78,6 +81,8 @@ def pipe_output(cmd):
         line = process.stdout.readline()
         if not line:
             break
-        print replace_c_errors_with_python_errors(line),
+        if not isinstance(line, str):
+            line = line.decode('utf-8', 'replace')
+        print(replace_c_errors_with_python_errors(line), end="")
     process.communicate()
     return process.poll()

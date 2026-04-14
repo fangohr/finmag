@@ -1,8 +1,8 @@
 import logging
-from fk_demag import FKDemag
-from fk_demag_pbc import MacroGeometry
-from fk_demag_2d import Demag2D
-from treecode_bem import TreecodeBEM
+from .fk_demag import FKDemag
+from .fk_demag_pbc import MacroGeometry
+from .fk_demag_2d import Demag2D
+from .treecode_bem import TreecodeBEM
 
 log = logging.getLogger("finmag")
 KNOWN_SOLVERS = {

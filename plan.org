@@ -192,3 +192,76 @@ First meaningful milestone:
 - =import finmag= works under Python 3;
 - the minimal acceptance suite passes under Python 3 while keeping the old FEniCS stack;
 - native modules still load correctly in that environment.
+
+Second meaningful milestone:
+
+- construct a minimal =Simulation= under Python 3;
+- run the smallest =barmini=-based smoke path under Python 3;
+- then move on to the agreed acceptance suite.
+
+** Current Status
+
+*** Completed Since The Initial Plan
+
+- a Python 3 DOLFIN 2017 image now exists and builds successfully:
+  =finmag-py3-dolfin2017=
+- that image imports =dolfin= under Python 3 and reports:
+  - =python3 = 3.5.4=
+  - =dolfin.__version__ = 2017.1.0=
+- =import finmag= now succeeds under Python 3 in that image
+- the import path now tolerates missing optional dependencies and unfinished
+  subsystems where necessary
+
+*** Notable Work Completed
+
+- explicit relative imports for the package layer
+- Python 3 compatibility fixes in the core runtime path
+- Python-3-aware native builds via =PYTHON=$(sys.executable)=
+- Sundials wrapper support for =libsundials-dev 2.7.0+dfsg-2=
+- local fixes in the vendored custom =nvector_serial= library so the native
+  shared library loads correctly
+- startup logging hardened so missing optional packages do not crash import
+- optional/lazy handling for features not yet required for the current
+  milestone:
+  - =SLLG=
+  - SciPy integrator backend
+  - normal-mode support
+
+*** Current Verified Import Command
+
+The current Python 3 import milestone is verified with:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
+#+end_src
+
+Expected result:
+
+- =<module 'finmag' from '/tmp/finmag/src/finmag/__init__.py'>=
+
+*** Current Limitations
+
+The Python 3 container path is usable for the base import milestone, but some
+features are still intentionally not part of the guaranteed working surface:
+
+- SciPy-backed functionality is unavailable unless SciPy is installed
+- normal-mode support is unavailable unless its SciPy-based stack is present
+- the =sllg= kernel is still blocked by its own Python 2 era code path
+
+*** Immediate Next Step
+
+Move from:
+
+- =import finmag=
+
+to:
+
+- constructing a minimal =Simulation=
+- then running a small =barmini=-based smoke test under Python 3
+
+Only after that should the effort expand to the agreed acceptance suite.

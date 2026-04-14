@@ -1,0 +1,451 @@
+* Finmag Transition Notes
+
+** Purpose
+
+This file records concrete environment and packaging findings relevant to the
+transition from:
+
+- Python 2 to Python 3
+- old `dolfin` packaging to a reproducible Python 3 runtime for the same
+  DOLFIN generation
+
+The emphasis here is on exact versions, package sources, and constraints that
+were observed directly during probing.
+
+** Current Reference Environment
+
+Reference container:
+
+- `finmag/finmag:latest`
+
+Verified contents:
+
+- `python` = Python 2.7.12
+- `python3` = Python 3.5.x
+- `python` can import `dolfin`
+- `python3` cannot import `dolfin`
+
+Verified DOLFIN version in the reference container:
+
+- `dolfin.__version__ == 2017.1.0`
+
+Installed package metadata observed in the container:
+
+- `python-dolfin` = `2017.1.0-1~ppa3~xenial1`
+- `libdolfin2017.1` = `2017.1.0-1~ppa3~xenial1`
+- `libdolfin-dev` = `2017.1.0-1~ppa3~xenial1`
+- `python-ffc` = `2017.1.0-1~ppa1~xenial1`
+- `python-fiat` = `2017.1.0-1~ppa1~xenial1`
+- `python-ufl` = `2017.1.0-1~ppa1~xenial1`
+
+Observed package source configuration in the container:
+
+- binary packages come from `ppa:fenics-packages/fenics`
+- the `deb-src` entry for that PPA was commented out by default
+
+** Important Constraint
+
+Ubuntu/xenial packaging in the current Finmag image provides:
+
+- `python-dolfin`
+
+but not:
+
+- `python3-dolfin`
+
+for the installed `2017.1.0` stack.
+
+This is why the Python 3 port can proceed with syntax and import cleanup, but
+cannot yet run Finmag end to end under Python 3 in the current image.
+
+** Upstream / Packaging Findings
+
+*** DOLFIN 2017.1.0
+
+During probing we established that upstream `dolfin 2017.1.0` switched the
+default build to Python 3, with Python 2 requiring:
+
+- `-DDOLFIN_USE_PYTHON3=off`
+
+This is important because it means a Python 3 build of the 2017 generation is
+not conceptually alien to DOLFIN itself; the limitation is mainly packaging and
+dependency availability in the current reference image.
+
+*** PPA Source Mismatch
+
+After enabling the PPA `deb-src` entry in a disposable container, `apt-get
+source dolfin` did not fetch `2017.1.0`. It fetched:
+
+- `dolfin 2019.1.0-1~ppa0~xenial2`
+
+This means the current PPA source state no longer matches the installed binary
+`2017.1.0` packages in `finmag/finmag:latest`.
+
+So:
+
+- the PPA is useful to inspect newer packaging patterns,
+- but not sufficient to reconstruct the exact old source package used by the
+  reference image.
+
+*** Debian Snapshot With Matching Python 3 Packages
+
+The decisive finding came from Debian snapshot probing.
+
+Snapshot tested:
+
+- `http://snapshot.debian.org/archive/debian/20170920T000000Z sid`
+
+Observed package availability there:
+
+- `python3-dolfin = 2017.1.0-4`
+- `python3-ffc = 2017.1.0-2`
+- `python3-ufl = 2017.1.0-2`
+- `python3-dijitso = 2017.1.0-2`
+- `python3-fiat = 2017.1.0-2`
+- `python3-instant = 2017.1.0-2`
+- `python3-petsc4py = 3.7.0-3+b2`
+- `python3-slepc4py = 3.7.0-3+b1`
+
+This is the first verified source of a historically matching Python 3 DOLFIN
+stack for the 2017 generation.
+
+The same snapshot also contains the corresponding source package:
+
+- `dolfin = 2017.1.0-4`
+
+The package metadata and build logs for this generation show Debian/Ubuntu
+building with both Python 2 and Python 3 via:
+
+- `dh ... --with python2,python3`
+
+and using:
+
+- `-D DOLFIN_USE_PYTHON3:BOOL=OFF` for the Python 2 build directories
+
+which confirms that the `2017.1.0-4` packaging is a real dual-runtime baseline.
+
+** Snapshot Package Resolution Notes
+
+Initial install probing against the `20170920T000000Z sid` snapshot showed:
+
+- installing `python3-dolfin=2017.1.0-4` alone is insufficient
+- it requires `libdolfin-dev=2017.1.0-4`
+- `libdolfin-dev=2017.1.0-4` in turn requires additional dev/runtime packages,
+  including:
+  - `libhdf5-mpi-dev`
+  - `libscotch-dev`
+  - `libvtk6-dev`
+  - `libpetsc3.7.6-dev`
+  - `libslepc3.7.4-dev`
+
+This means the snapshot image needs either:
+
+1. a broader install of the full matching dependency closure from the same
+   snapshot, or
+2. a staged `dist-upgrade` onto that historical snapshot before package
+   installation.
+
+The experimental Dockerfile under:
+
+- `install/docker/python3-dolfin2017-snapshot/Dockerfile`
+
+follows the second approach.
+
+*** Exact package versions currently targeted
+
+The current experimental Python 3 image is pinned to the following package
+versions from the same snapshot:
+
+- `libdolfin-dev = 2017.1.0-4`
+- `python3-dolfin = 2017.1.0-4`
+- `python3-ffc = 2017.1.0-2`
+- `python3-ufl = 2017.1.0-2`
+- `python3-dijitso = 2017.1.0-2`
+- `python3-fiat = 2017.1.0-2`
+- `python3-instant = 2017.1.0-2`
+- `python3-petsc4py = 3.7.0-3+b2`
+- `python3-slepc4py = 3.7.0-3+b1`
+- `libpetsc3.7.6-dev`
+- `libslepc3.7.4-dev`
+- `zlib1g = 1:1.2.8.dfsg-5`
+
+In addition to the DOLFIN-specific packages, the current install attempt also
+pulls in development headers required by the historical dependency closure,
+including:
+
+- `libhdf5-openmpi-dev`
+- `libhdf5-mpi-dev`
+- `libptscotch-dev`
+- `libscotch-dev`
+- `libvtk6-dev`
+
+The `zlib1g` pin was added because the resolver otherwise tried to combine:
+
+- `zlib1g-dev = 1:1.2.8.dfsg-5`
+
+with:
+
+- `zlib1g = 1:1.2.8.dfsg-5+deb9u1`
+
+which is not accepted by `apt`.
+
+** Comparison With Other Archive Routes
+
+Other archive probes were less suitable:
+
+- Ubuntu 18.04 (`bionic`) offers `dolfin 2017.2.0.post0-2`, not `2017.1.0`
+- Debian `stretch` snapshot route provided `dolfin 2016.2.0-2`, not `2017.1.0`
+
+Therefore the currently best historically matching route for a Python 3 DOLFIN
+runtime is:
+
+- Debian snapshot `20170920T000000Z sid`
+
+** Working Assumption Going Forward
+
+For the purpose of getting Finmag running under Python 3 with an old DOLFIN
+stack, the most promising path is:
+
+1. build or install a Python 3 environment from the Debian snapshot carrying
+   `python3-dolfin=2017.1.0-4`,
+2. copy the Finmag checkout into that environment,
+3. continue validating:
+   - `python3 -c "import dolfin"`
+   - `python3 -c "import finmag"`
+   - then progressively larger test subsets.
+
+** Current Build Result
+
+The experimental image defined in:
+
+- `install/docker/python3-dolfin2017-snapshot/Dockerfile`
+
+now builds successfully as:
+
+- `finmag-py3-dolfin2017`
+
+Verified build-time import result:
+
+- `python3 = 3.5.4`
+- `dolfin.__version__ = 2017.1.0`
+- `dolfin.__file__ = /usr/lib/python3/dist-packages/dolfin/__init__.py`
+
+Verified runtime import result in the built image:
+
+- `docker run --rm -e OMPI_MCA_plm=isolated finmag-py3-dolfin2017 ...`
+
+and again:
+
+- `python3 = 3.5.4`
+- `dolfin.__version__ = 2017.1.0`
+
+** Open MPI Runtime Note
+
+Importing `dolfin` in this snapshot-based image triggers MPI initialization.
+In both Docker build and container runtime contexts, this required:
+
+- `OMPI_MCA_plm=isolated`
+
+Without that override, `import dolfin` failed with Open MPI errors about:
+
+- `plm_rsh_agent`
+- `Unable to start a daemon on the local node`
+- `MPI_Init_thread`
+
+So the current working assumption is that any Python 3 Finmag test runs in this
+image should start with at least:
+
+- `OMPI_MCA_plm=isolated`
+
+** Native Build Progress
+
+With the additional snapshot package:
+
+- `libsundials-dev = 2.7.0+dfsg-2`
+
+the Finmag native build in the Python 3 image now gets past missing-header
+failures such as:
+
+- `cvode/cvode.h`
+- `nvector/nvector_serial.h`
+
+The build now fails later, inside the Finmag Sundials wrapper itself.
+
+Current failing file:
+
+- `native/src/sundials/sundials_cvode_impl.h`
+
+Observed issue:
+
+- the wrapper only recognises Sundials `2.4.0` and `2.5.0`
+- the snapshot image provides Sundials `2.7.0`
+- the internal version-to-type mapping therefore resolves to:
+  - `sundials_traits<-1>`
+
+This causes the compile-time API mismatches now seen in the Python 3 image:
+
+- callback signatures for `CVDlsSetDenseJacFn` and `CVDlsSetBandJacFn`
+- `int*` vs `long int*` mismatches for:
+  - `CVDlsGetLastFlag`
+  - `CVDiagGetLastFlag`
+  - `CVSpilsGetLastFlag`
+
+Working assumption:
+
+- Sundials `2.7.0` should be mapped like `2.5.0` here, i.e. use `long`
+  parameter types in the CVODE wrapper
+- the next patch should therefore start by extending the wrapper's version
+  trait handling to `2.7.0`
+
+** Native Build Result
+
+The native blocker above has now been resolved sufficiently for the current
+milestone.
+
+Changes that proved necessary:
+
+- extend the Sundials wrapper in:
+  - `native/src/sundials/sundials_cvode_impl.h`
+  to recognize Sundials `2.7.0`
+- make the native build Python-version-aware in:
+  - `native/Makefile`
+  - `src/finmag/util/native_compiler.py`
+- fix NumPy C-API initialization for Python 3 in:
+  - `native/src/util/np_array.cc`
+  - `native/src/util/np_array.h`
+- restore expected math helper macros locally in:
+  - `native/src/sundials/nvec_serial/nvector_serial_custom_malloc.c`
+
+Observed result:
+
+- the native modules now build and load far enough for:
+  - `PYTHONPATH=/tmp/finmag/src python3 -c "import finmag"`
+  to succeed in the Python 3 DOLFIN image
+
+** Python 3 Import Milestone
+
+The following command now succeeds:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
+#+end_src
+
+Observed output at the end of startup:
+
+- module import succeeds
+- `print(finmag)` reports:
+  - `<module 'finmag' from '/tmp/finmag/src/finmag/__init__.py'>`
+
+Additional observations from the successful import path:
+
+- startup logging now reports:
+  - `Python = 3.5.4`
+  - `Dolfin = 2017.1.0`
+  - `Sundials = 2.7.0`
+- missing optional packages such as SciPy no longer abort the import
+- `paraview` is absent in this image, which only triggers warnings
+
+** Manual Verification Workflow
+
+For manual verification of the current milestone, use the following steps from
+the repository root.
+
+*** 1. Build the Python 3 DOLFIN image
+
+#+begin_src bash
+docker build \
+  -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
+  -t finmag-py3-dolfin2017 .
+#+end_src
+
+*** 2. Start an interactive container
+
+#+begin_src bash
+docker run --rm -it \
+  -e OMPI_MCA_plm=isolated \
+  -v "$PWD":/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash
+#+end_src
+
+*** 3. Copy the checkout to a writable location and test the import
+
+Inside the container:
+
+#+begin_src bash
+rm -rf /tmp/finmag
+cp -a /repo /tmp/finmag
+cd /tmp/finmag
+PYTHONPATH=/tmp/finmag/src python3
+#+end_src
+
+Then at the Python prompt:
+
+#+begin_src python
+import finmag
+print(finmag)
+#+end_src
+
+*** 4. One-shot non-interactive verification command
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v "$PWD":/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
+#+end_src
+
+*** 5. Helper script
+
+The repository now contains:
+
+- `dev/bin/verify-python3-import`
+
+This helper:
+
+- builds the image
+- runs the one-shot import verification command
+
+It can be invoked as:
+
+#+begin_src bash
+dev/bin/verify-python3-import
+#+end_src
+
+** Scope-Limiting Import Decisions
+
+To reach the import milestone without pulling in the entire unfinished Python 3
+port, a few non-core features are now optional at import time:
+
+- `SLLG` support is deferred unless the `sllg` kernel is explicitly selected
+- the SciPy integrator backend is deferred unless explicitly selected
+- normal-mode support is deferred unless explicitly selected
+
+These are intentional scope boundaries for the current phase, not final
+feature-complete Python 3 support.
+
+** Next Transition Step
+
+The next concrete validation target is:
+
+1. create a minimal `Simulation` under Python 3 in `finmag-py3-dolfin2017`
+2. run a small `barmini`-based smoke path
+3. then begin bringing the agreed minimal acceptance suite across
+
+** Related Repo Files
+
+These files were added to support this transition work:
+
+- `dev/bin/check-python3-in-container`
+- `dev/bin/verify-python3-import`
+- `install/docker/python3-bootstrap/Dockerfile`
+- `install/docker/python3-bootstrap/README.md`
+- `install/docker/python3-dolfin2017-snapshot/Dockerfile`
+- `install/docker/python3-dolfin2017-snapshot/README.md`

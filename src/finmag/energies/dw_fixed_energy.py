@@ -2,7 +2,7 @@ import os
 import textwrap
 import dolfin as df
 import numpy as np
-from demag import Demag
+from .demag import Demag
 
 
 class FixedEnergyDW(object):
@@ -142,6 +142,6 @@ if __name__ == '__main__':
     m = df.Function(S3)
     dw.setup(S3, 1, 8.6e5, unit_length=1)
     m.vector().set_local(dw.compute_field())
-    print dw.compute_field().reshape((3, -1))
+    print(dw.compute_field().reshape((3, -1)))
     for x in range(100):
-        print x * 5 + 2.5, m(x * 5 + 2.5, 17.5, 2.5)
+        print(x * 5 + 2.5, m(x * 5 + 2.5, 17.5, 2.5))

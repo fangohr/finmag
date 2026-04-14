@@ -5,4 +5,4 @@
 # CONTACT: h.fangohr@soton.ac.uk
 #
 # AUTHOR(S) OF THIS FILE: Maximilian Albert
-from disk import disk
+from .disk import disk

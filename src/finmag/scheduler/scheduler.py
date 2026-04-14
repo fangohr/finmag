@@ -221,7 +221,7 @@ class Scheduler(object):
         for item in self.items:
             # this will call __str__ on the item, which should be defined for
             # all events
-            print item
+            print(item)
         for item in self.realtime_items:
             self._print_realtime_item(item, func_print)
 

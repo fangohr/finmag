@@ -1,4 +1,7 @@
-import ConfigParser as configparser
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 import os
 
 __all__ = ["get_configuration"]

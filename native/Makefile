@@ -17,8 +17,14 @@ all : parallel
 #######################################
 #  Configurable options
 #
-# Fenics 2016.2 broke the building by changing where ufc.h is located:
-UFC_INC=-I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/
+# Python executable used for native builds.
+PYTHON ?= python
+PYTHON_CONFIG ?= $(PYTHON)-config
+PYTHON_BOOST_TAG := py$(shell $(PYTHON) -c 'import sys; print("{}{}".format(sys.version_info[0], sys.version_info[1]))')
+BOOST_PYTHON_LIB ?= boost_python-$(PYTHON_BOOST_TAG)
+
+# Fenics 2016.2 broke the building by changing where ufc.h is located.
+UFC_INC=$(shell if [ -f /usr/include/ufc.h ]; then echo -I/usr/include; else echo -I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/; fi)
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The list of extension modules to build
@@ -48,15 +54,15 @@ $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/mater
 $(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helper.o
 
 #$(MODULE_DIR)/fast_sum_lib.so:
-#	cd src/fast_sum_lib && python setup.py build_ext --inplace
+#	cd src/fast_sum_lib && $(PYTHON) setup.py build_ext --inplace
 #	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
 $(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx 
-	cd src/treecode_bem && python setup.py build_ext --inplace
-	install src/treecode_bem/treecode_bem.so ../src/finmag/native
+	cd src/treecode_bem && $(PYTHON) setup.py build_ext --inplace
+	install src/treecode_bem/treecode_bem*.so ../src/finmag/native
 
 #$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
-#	cd src/cvode && python setup.py build_ext --inplace
+#	cd src/cvode && $(PYTHON) setup.py build_ext --inplace
 #	install src/cvode/cvode_petsc.so ../src/finmag/native
 #	install src/cvode/llg_petsc.so ../src/finmag/native
 
@@ -67,7 +73,7 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 # Other variables
 #
 # The list of output binary files to link
-BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES)) $(UNIT_TEST_BINARY)
+BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
 SOURCES = $(shell find src tests -name \*.cc)
 # The list of object files to be compiled
@@ -90,7 +96,7 @@ CFLAGS_USE_PCH = -include $(PRECOMPILED_HEADER_DIR)/finmag_includes.h
 #       to document these flags.
 EIGEN_INCLUDE_DIR ?= /usr/include/eigen3
 CFLAGS_OPT ?= -O3 -funroll-loops -mfpmath=sse -march=native
-CFLAGS_PYTHON=-I/usr/include/python2.7 -I$(EIGEN_INCLUDE_DIR) -fPIC -lboost_python -lpython2.7
+CFLAGS_PYTHON=$(shell $(PYTHON_CONFIG) --includes) -I$(EIGEN_INCLUDE_DIR) -fPIC $(shell $(PYTHON_CONFIG) --ldflags) -l$(BOOST_PYTHON_LIB)
 # -rdynamic keeps private symbols in .so files, providing more detailed stack traces
 # -MMD -MP generates .d dependency files
 CFLAGS_OTHER=-g -rdynamic -fopenmp -MMD -MP -std=c++0x

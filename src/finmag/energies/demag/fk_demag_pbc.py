@@ -146,7 +146,7 @@ if __name__ == '__main__':
     b = BMatrixPBC(mesh)
     b.compute_bmatrix()
 
-    print b.b2g_map, b.g2b_map
+    print(b.b2g_map, b.g2b_map)
 
     #bem, b2g_map = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
 

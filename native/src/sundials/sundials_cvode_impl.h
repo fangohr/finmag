@@ -53,13 +53,16 @@ constexpr bool const_str_equal(const char (&a)[6], const char (&b)[6]) {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3] && a[4] == b[4] && a[5] == b[5];
 }
 constexpr int get_sundials_version_number(const char (&v)[6]) {
-    return const_str_equal(v, "2.5.0") ? 250 : const_str_equal(v, "2.4.0") ? 240 : -1;
+    return const_str_equal(v, "2.7.0") ? 270 :
+           const_str_equal(v, "2.5.0") ? 250 :
+           const_str_equal(v, "2.4.0") ? 240 : -1;
 }
 
 // Next, define the parameter type 'sundials_long_param_t' based on the version number
 template<int Version> struct sundials_traits;
 template<> struct sundials_traits<240> { typedef int param_t; };
 template<> struct sundials_traits<250> { typedef long param_t; };
+template<> struct sundials_traits<270> { typedef long param_t; };
 typedef typename sundials_traits<get_sundials_version_number(SUNDIALS_PACKAGE_VERSION)>::param_t sundials_long_param_t;
 
 namespace finmag { namespace sundials {

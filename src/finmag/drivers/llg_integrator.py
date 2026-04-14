@@ -1,7 +1,12 @@
 import logging
 from finmag.field import Field
 from finmag.drivers.sundials_integrator import SundialsIntegrator
-from finmag.drivers.scipy_integrator import ScipyIntegrator
+try:
+    from finmag.drivers.scipy_integrator import ScipyIntegrator
+    SCIPY_INTEGRATOR_IMPORT_ERROR = None
+except Exception as error:
+    ScipyIntegrator = None
+    SCIPY_INTEGRATOR_IMPORT_ERROR = error
 
 log = logging.getLogger(name='finmag')
 
@@ -22,6 +27,11 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
 
     log.info("Creating integrator with backend {} and arguments {}.".format(backend, kwargs))
     if backend == "scipy":
+        if ScipyIntegrator is None:
+            raise ImportError(
+                "The 'scipy' integrator backend is not available in this "
+                "environment: {}".format(SCIPY_INTEGRATOR_IMPORT_ERROR)
+            )
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
         return SundialsIntegrator(llg, m0.get_ordered_numpy_array_xxx(), **kwargs)

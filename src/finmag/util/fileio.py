@@ -1,11 +1,16 @@
 import os
 import logging
-import types
 import numpy as np
 from glob import glob
-from types import TupleType, StringType
 from aeon import timer
 logger = logging.getLogger(name='finmag')
+
+try:
+    StringType = basestring
+except NameError:
+    StringType = str
+
+TupleType = tuple
 
 
 class Tablewriter(object):
@@ -176,7 +181,7 @@ class Tablewriter(object):
             self.delete_entity_get_method(key)
 
     def default_entity_order(self):
-        keys = self._entities.keys()
+        keys = list(self._entities.keys())
         # time needs to go first
         if 'time' in keys:
             keys.remove('time')
@@ -247,7 +252,7 @@ class Tablewriter(object):
 
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
-                elif isinstance(value, types.NoneType):
+                elif value is None:
                     #f.write(self.string_format % value)
                     f.write(self.string_format % "nan")
                 else:
@@ -435,8 +440,8 @@ def demo1():
 
     # now open file for reading
     f = Tablereader(filename)
-    print f.timesteps()
-    print f['m_x']
+    print(f.timesteps())
+    print(f['m_x'])
 
 if __name__ == "__main__":
     print("Demo 1")

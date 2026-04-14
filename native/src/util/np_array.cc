@@ -50,14 +50,19 @@ static void sigsegv_handler(int sig)
     exit(1);
 }
 
-void initialise_np_array()
+int initialise_np_array()
 {
     // install the segmentation fault handler that prints a stack trace
     signal(SIGSEGV, sigsegv_handler);
     // import the Python array object
-    import_array();
+    if (_import_array() < 0) {
+        PyErr_Print();
+        PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+        return -1;
+    }
     // register the from-python converters
     mpl::for_each<numpy_types>(np_array_initialiser());
+    return 0;
 }
 
 void assertion_failed(const char *msg, const char* file, int line) {

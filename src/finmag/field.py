@@ -14,12 +14,28 @@ import dolfin as df
 import numpy as np
 import numbers
 import os
-import dolfinh5tools
+try:
+    import dolfinh5tools
+except ImportError:
+    dolfinh5tools = None
 from finmag.util import helpers
 from finmag.util.helpers import expression_from_python_function
-from finmag.util.visualization import plot_dolfin_function
+try:
+    from finmag.util.visualization import plot_dolfin_function
+except Exception:
+    plot_dolfin_function = None
 
 log = logging.getLogger(name="finmag")
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 def associated_scalar_space(functionspace):
@@ -118,7 +134,7 @@ class Field(object):
                self.functionspace.num_sub_spaces() == 3:
                 assert isinstance(expr, (tuple, list)) and len(expr) == 3
                 assert all(isinstance(item, basestring) for item in expr)
-                map(str, expr)  # dolfin does not like unicode in the expression
+                expr = tuple(map(str, expr))  # dolfin does not like unicode in the expression
             expr = df.Expression(expr, degree=1, **kwargs)
         temp_function = df.interpolate(expr, self.functionspace)
         self.f.vector().set_local(temp_function.vector().get_local())

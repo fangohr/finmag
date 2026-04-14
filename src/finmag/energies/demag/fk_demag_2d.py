@@ -6,7 +6,7 @@ from finmag.native.llg import compute_bem_fk
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
-from fk_demag import FKDemag
+from .fk_demag import FKDemag
 
 
 class Demag2D(FKDemag):

@@ -88,11 +88,11 @@ class SundialsIntegrator(object):
 
         try:
             self.integrator.advance_time(t, self.m)
-        except RuntimeError, msg:
+        except RuntimeError as msg:
             # if we have reached max_num_steps, the error message will read
             # something like "Error in CVODE:CVode (CV_TOO_MUCH_WORK):
             # At t = 0.258733, mxstep steps taken before reaching tout."
-            if "CV_TOO_MUCH_WORK" in msg.message:
+            if "CV_TOO_MUCH_WORK" in str(msg):
                 # we have integrated up to cvode's internal time
                 self.cur_t = self.integrator.get_current_time()
 
@@ -130,8 +130,8 @@ class SundialsIntegrator(object):
             # so we try integrating for a very long time but set it to
             # stop after the specified number of steps
             self.integrator.advance_time(self.cur_t + 1, self.m)
-        except RuntimeError, msg:
-            if "CV_TOO_MUCH_WORK" in msg.message:
+        except RuntimeError as msg:
+            if "CV_TOO_MUCH_WORK" in str(msg):
                 pass  # this is the error we expect
             else:
                 raise
