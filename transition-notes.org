@@ -290,6 +290,39 @@ For manual verification:
 The GitHub Actions transition workflow now runs the =barmini=-first subset
 instead of only the one-step smoke test.
 
+** Minimal Acceptance Suite Progress
+
+The agreed minimal acceptance suite now also runs successfully in the Python 3
+transition container.
+
+Verified command:
+
+- =dev/bin/verify-python3-minimal-suite=
+
+Verified result:
+
+- =20 passed, 1 skipped in 103.08s=
+
+Included tests:
+
+- =src/finmag/tests/test_effective_field.py=
+- =src/finmag/tests/test_writing_data.py=
+- =src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py=
+- =src/finmag/tests/test_restart_simulation.py=
+- =src/finmag/tests/test_sim_ode.py=
+- =src/finmag/tests/test_applied_field.py=
+- =src/finmag/tests/test_exchange_static.py=
+- =src/finmag/tests/test_llg.py=
+- =src/finmag/util/ode/tests/test_sundials_ode.py=
+
+The single skipped test is:
+
+- =OdeSundialsTests.test_simple_1d_scipy=
+
+That test depends on SciPy as an external comparison backend rather than on
+Finmag's own runtime path, so it now skips cleanly when SciPy is not available
+in the transition image.
+
 With the additional snapshot package:
 
 - `libsundials-dev = 2.7.0+dfsg-2`

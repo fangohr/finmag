@@ -215,6 +215,10 @@ Second meaningful milestone:
   - =test_integrator_raises_exception_on_exceed_maxsteps.py=
   - =test_restart_simulation.py=
   - total: =7 passed=
+- the full agreed Python 3 minimal acceptance suite now passes:
+  - =20 passed, 1 skipped=
+  - the single skip is the SciPy comparison test in
+    =test_sundials_ode.py= when SciPy is not installed in the transition image
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
 
@@ -264,6 +268,7 @@ docker run --rm \
 For local verification there is now also:
 
 - =dev/bin/verify-python3-barmini-suite=
+- =dev/bin/verify-python3-minimal-suite=
 
 Expected result:
 

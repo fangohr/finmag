@@ -1,9 +1,6 @@
 import os
 import dolfin as df
 import numpy as np
-import matplotlib as mpl
-mpl.use("Agg")
-import matplotlib.pyplot as plt
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
 
@@ -41,6 +38,9 @@ def test_sim_ode(do_plot=False):
         length_error.append(abs(length - 1.0))
 
     if do_plot:
+        import matplotlib as mpl
+        mpl.use("Agg")
+        import matplotlib.pyplot as plt
         ts_ns = ts * 1e9
         plt.plot(ts_ns, mzs, "b.", label="computed")
         plt.plot(ts_ns, mz_ref, "r-", label="analytical")
@@ -59,4 +59,4 @@ def test_sim_ode(do_plot=False):
 
 if __name__ == "__main__":
     test_sim_ode(do_plot=True)
-    print "Saved plit in test_sim_ode.png."
+    print("Saved plit in test_sim_ode.png.")

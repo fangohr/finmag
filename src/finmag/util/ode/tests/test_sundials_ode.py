@@ -22,11 +22,14 @@ class OdeSundialsTests(unittest.TestCase):
             integrator.advance_time(1, y)
             self.fail("Exception was not raised")
             pass
-        except RuntimeError, ex:
-            print ex
+        except RuntimeError as ex:
+            print(ex)
 
     def test_simple_1d_scipy(self):
-        import scipy.integrate
+        try:
+            import scipy.integrate
+        except ImportError:
+            self.skipTest("scipy is not available in the Python 3 transition container")
         integrator = scipy.integrate.ode(lambda t, y: 0.5 * y)
         integrator.set_integrator('vode', rtol=1e-8, atol=1e-8)
         integrator.set_initial_value(np.array([1.]), 0)

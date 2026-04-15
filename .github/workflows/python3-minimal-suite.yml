@@ -1,4 +1,4 @@
-name: python3-barmini-suite
+name: python3-minimal-suite
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  python3-barmini-suite:
+  python3-minimal-suite:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
           -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
           -t finmag-py3-dolfin2017 .
 
-    - name: Verify Python 3 barmini subset
+    - name: Verify Python 3 minimal acceptance suite
       run: |
         docker run --rm \
           -e OMPI_MCA_plm=isolated \
@@ -30,4 +30,9 @@ jobs:
                       src/finmag/tests/test_effective_field.py \
                       src/finmag/tests/test_writing_data.py \
                       src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
-                      src/finmag/tests/test_restart_simulation.py'
+                      src/finmag/tests/test_restart_simulation.py \
+                      src/finmag/tests/test_sim_ode.py \
+                      src/finmag/tests/test_applied_field.py \
+                      src/finmag/tests/test_exchange_static.py \
+                      src/finmag/tests/test_llg.py \
+                      src/finmag/util/ode/tests/test_sundials_ode.py'
