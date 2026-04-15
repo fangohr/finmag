@@ -2,10 +2,14 @@ import dolfin as df
 import numpy as np
 import pytest
 import os
-import shutil
 from finmag.util.meshes import *
 from finmag.util.mesh_templates import *
 from math import sin, cos, pi
+
+
+def _require_netgen():
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
 def test_mesh_size():
     """
@@ -13,8 +17,7 @@ def test_mesh_size():
     the mesh size is reported as expected.
 
     """
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    _require_netgen()
     RTOL = 1e-3
     box_mesh = df.BoxMesh(df.Point(-20, -30, 10), df.Point(30, 42, 20), 4, 4, 4)
     assert(np.isclose(mesh_size(box_mesh, unit_length=1.0), 72.0, rtol=RTOL))
@@ -68,8 +71,7 @@ def test_sphere_inside_box(tmpdir, debug=False):
     """
     TODO: Currently this test doesn't do much; it only checks whether we can execute the command `sphere_inside_box`.
     """
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    _require_netgen()
     os.chdir(str(tmpdir))
     mesh = sphere_inside_box(r_sphere=10, r_shell=15, l_box=50,
                              maxh_sphere=5.0, maxh_box=10.0, center_sphere=(10, -5, 8))

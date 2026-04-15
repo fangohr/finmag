@@ -9,7 +9,7 @@ from finmag.util.versions import get_version_dolfin
 from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
 from finmag.util import time_counter
 from finmag.util import helpers
-from finmag.util.meshes import mesh_volume, sphere
+from finmag.util.meshes import mesh_volume, sphere, netgen_is_usable
 from finmag.energies.demag import belement_magpar
 from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
@@ -20,8 +20,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is required for sphere-based demag mesh-generation tests")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable for sphere-based demag mesh-generation tests")
 
 
 class MagSphereBase(object):

@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =307 passed, 55 skipped, 10 xfailed, 4 warnings=
+  - =307 passed, 62 skipped, 10 xfailed, 4 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -243,6 +243,7 @@ Second meaningful milestone:
     - =util/length_scales_test.py=
     - =util/meshes_test.py=
     - =util/mesh_templates_test.py=
+    - =tests/test_meshes.py=
     - =util/pbc_test.py=
     - =util/plot_helpers_test.py=
     - =util/vtk_saver_test.py=
@@ -291,8 +292,8 @@ Second meaningful milestone:
     - additional existing =xfail= cases inside =sim_test.py=
     - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
     - existing =xfail= in =energies/test_energies_in_regions.py=
-    - clean skips for =netgen=-dependent tests when =netgen= is not installed
-      in the transition image
+    - clean skips for =netgen=-dependent tests when =netgen= is not usable in
+      the transition image
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
       are not installed
     - clean skips when optional =dolfinh5tools= support is unavailable
@@ -300,6 +301,12 @@ Second meaningful milestone:
       unported in Python 3
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
+- the transition image now includes =netgen=, =tix=, =xauth=, and =xvfb= plus
+  Tcl/Tix compatibility symlinks for the 8.5-era paths expected by
+  =netgen 4.9.13=
+- =netgen= now starts headlessly under =xvfb=, but it still aborts after some
+  successful mesh-generation runs; mesh-dependent tests therefore use a
+  =netgen_is_usable()= probe instead of checking only whether the binary exists
 
 *** Notable Work Completed
 

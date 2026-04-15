@@ -34,6 +34,7 @@ docker run --rm \
               src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
               src/finmag/scheduler/scheduler_test.py \
               src/finmag/tests/test_restart_simulation.py \
+              src/finmag/tests/test_meshes.py \
               src/finmag/tests/test_sim_ode.py \
               src/finmag/tests/test_applied_field.py \
               src/finmag/tests/test_anis.py \

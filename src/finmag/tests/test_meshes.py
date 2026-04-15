@@ -4,10 +4,11 @@ import pytest
 import shutil
 import tempfile
 import textwrap
+from finmag.util.meshes import netgen_is_usable
 from finmag.util.meshes import *
 from dolfin import Mesh
 from math import pi
-from StringIO import StringIO
+from io import StringIO
 
 import logging
 logger = logging.getLogger("finmag")
@@ -18,13 +19,19 @@ TOLERANCE = 0.05
 BOX_TOLERANCE = 1e-10
 
 
+def _require_netgen():
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
+
+
 def test_from_geofile_and_from_csg():
+    _require_netgen()
     radius = 1.0
     maxh = 0.3
 
     tmpdir = tempfile.mkdtemp()
     tmpfile = tempfile.NamedTemporaryFile(
-        suffix='.geo', dir=tmpdir, delete=False)
+        suffix='.geo', dir=tmpdir, delete=False, mode='w')
 
     csg_string = textwrap.dedent("""\
         algebraic3d
@@ -98,6 +105,7 @@ def test_from_geofile_and_from_csg():
 
 
 def test_box():
+    _require_netgen()
     # We deliberately choose the two corners so that x1 > y1, to see
     # whether the box() function can cope with this.
     (x0, x1, x2) = (-0.2, 1.4, 3.0)
@@ -115,6 +123,7 @@ def test_box():
 
 
 def test_sphere():
+    _require_netgen()
     r = 1.0
     maxh = 0.2
 
@@ -125,6 +134,7 @@ def test_sphere():
 
 
 def test_cylinder():
+    _require_netgen()
     r = 1.0
     h = 2.0
     maxh = 0.2
@@ -137,6 +147,7 @@ def test_cylinder():
 
 
 def test_elliptic_cylinder():
+    _require_netgen()
     r1 = 2.0
     r2 = 1.0
     h = 2.5
@@ -150,6 +161,7 @@ def test_elliptic_cylinder():
 
 
 def test_ellipsoid():
+    _require_netgen()
     r1 = 2.0
     r2 = 1.0
     r3 = 0.5
@@ -164,6 +176,7 @@ def test_ellipsoid():
 
 @pytest.mark.requires_X_display
 def test_plot_mesh_regions():
+    _require_netgen()
     """
     This test simply calls the function
     `finmag.util.meshes.plot_mesh_regions` to see if it can be called

@@ -7,7 +7,7 @@ import os
 import re
 import shutil
 from finmag.util.helpers import *
-from finmag.util.meshes import box, cylinder
+from finmag.util.meshes import box, cylinder, netgen_is_usable
 from finmag.util.mesh_templates import Sphere
 from finmag.example import barmini
 import finmag
@@ -18,8 +18,8 @@ TOLERANCE = 1e-15
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
 def test_logging_handler_str():

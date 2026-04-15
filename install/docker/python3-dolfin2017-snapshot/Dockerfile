@@ -43,6 +43,7 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     libhdf5-openmpi-dev \
     libhdf5-mpi-dev \
     libnetcdf-dev \
+    netgen \
     libpng-dev \
     libptscotch-dev \
     libscotch-dev \
@@ -53,7 +54,10 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     libpetsc3.7.6-dev \
     libslepc3.7.4-dev \
     tcl-dev \
+    tix \
     tk-dev \
+    xauth \
+    xvfb \
     zlib1g=1:1.2.8.dfsg-5 \
     zlib1g-dev \
     libdolfin-dev=2017.1.0-4 \
@@ -65,6 +69,13 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     python3-instant=2017.1.0-2 \
     python3-petsc4py=3.7.0-3+b2 \
     python3-slepc4py=3.7.0-3+b1
+
+# Netgen 4.9.13 in this snapshot links against Tcl/Tk 8.5 and looks for Tix in
+# historical 8.5-era locations, while Debian's `tix` package installs the files
+# under the shared 8.6 paths. Provide the compatibility links it expects.
+RUN ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/share/tcltk/tcl8.5/Tix8.4 && \
+    ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/share/tcltk/Tix8.4 && \
+    ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/lib/Tix8.4
 
 RUN pip3 install --no-cache-dir pytest==3.2.1
 

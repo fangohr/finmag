@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 import shutil
 from finmag.field import Field
-from finmag.util.meshes import sphere
+from finmag.util.meshes import sphere, netgen_is_usable
 from finmag.energies import Demag
 
 TOL = 1e-2
@@ -11,8 +11,8 @@ solvers = ['FK']
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is required for sphere-based demag tests")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable for sphere-based demag tests")
 
 
 @pytest.fixture(scope="module")

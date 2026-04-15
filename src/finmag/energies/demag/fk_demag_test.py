@@ -7,7 +7,7 @@ from math import pi
 from finmag.energies.demag.fk_demag import FKDemag
 from finmag.field import Field
 from finmag.util.consts import mu0
-from finmag.util.meshes import sphere, box
+from finmag.util.meshes import sphere, box, netgen_is_usable
 
 radius = 1.0
 maxh = 0.2
@@ -16,8 +16,8 @@ volume = 4 * pi * (radius * unit_length) ** 3 / 3
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is required for FK demag mesh-generation tests")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable for FK demag mesh-generation tests")
 
 
 def setup_demag_sphere(Ms):

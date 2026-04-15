@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 import dolfin as df
 from math import pi
-from finmag.util.meshes import mesh_volume
+from finmag.util.meshes import mesh_volume, netgen_is_usable
 from finmag.util.mesh_templates import *
 import logging
 
@@ -21,8 +21,8 @@ logger = logging.getLogger("finmag")
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
 def check_mesh_volume(mesh, vol_expected, rtol, atol=0.0):

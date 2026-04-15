@@ -262,12 +262,13 @@ The current Python 3 progress is now stronger than plain import:
 - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
   plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `307 passed, 55 skipped, 10 xfailed, 4 warnings`
+  - `307 passed, 62 skipped, 10 xfailed, 4 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
     `energies/dmi_test.py`, the util batch (`fileio`, `helpers`,
-    `length_scales`, `meshes`, `mesh_templates`, `pbc`, `plot_helpers`,
+    `length_scales`, `meshes`, `mesh_templates`, `tests/test_meshes.py`,
+    `pbc`, `plot_helpers`,
     `vtk_saver`, `dmi_helper`, `set_function_values`, `DMI_from_helix`),
     relax/restart/time regressions,
     `sim/hysteresis_test.py`, `sim/magnetisation_patterns_test.py`,
@@ -309,6 +310,10 @@ Intentional skips and xfails are explicit:
 
 - `netgen`, `gmsh`, `dolfin-convert`, and `dolfinh5tools` dependent tests skip
   cleanly when those tools are absent
+- the transition image now contains `netgen`, `tix`, `xauth`, and `xvfb`, but
+  the historical `netgen 4.9.13` still aborts after some mesh-generation runs;
+  tests therefore use a `netgen_is_usable()` probe instead of checking only
+  whether the binary is installed
 - `sllg`-dependent tests skip when that subsystem is unavailable on the current
   Python 3 path
 - a small number of historical failures remain marked `xfail`, including known

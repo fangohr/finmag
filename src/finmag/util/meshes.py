@@ -21,6 +21,7 @@ import logging
 import textwrap
 import hashlib
 import tempfile
+import functools
 import dolfin as df
 import numpy as np
 from math import sin, cos, pi
@@ -193,8 +194,7 @@ def run_netgen(geofile):
 
     logger.debug(
         "Using netgen to convert {} to DIFFPACK format.".format(geofile))
-    netgen_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
-        geofile, diffpackfile)
+    netgen_cmd = _netgen_command(geofile, diffpackfile)
 
     proc = subprocess.Popen(
         netgen_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -217,6 +217,53 @@ def run_netgen(geofile):
         logger.warning("<====\n")
     logger.debug('Done!')
     return diffpackfile
+
+
+def _netgen_command(geofile, diffpackfile):
+    netgen_inner_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
+        geofile, diffpackfile)
+    if os.environ.get("DISPLAY") or shutil.which("xvfb-run") is None:
+        return netgen_inner_cmd
+    # Netgen's batch mode still touches Tk/OpenGL startup paths, so run it
+    # under a virtual X server when no display is available.
+    return "xvfb-run -a {}".format(netgen_inner_cmd)
+
+
+@functools.lru_cache(maxsize=1)
+def netgen_is_usable():
+    """
+    Return True if Netgen is present and can complete a minimal mesh-generation
+    run in the current environment.
+    """
+    if shutil.which("netgen") is None:
+        return False
+
+    tmpdir = tempfile.mkdtemp(prefix="finmag-netgen-probe-")
+    geofile = os.path.join(tmpdir, "probe.geo")
+    diffpackfile = os.path.join(tmpdir, "probe.grid")
+    csg = textwrap.dedent("""\
+        algebraic3d
+        solid main = sphere (0, 0, 0; 1.0) -maxh = 0.8;
+        tlo main;""")
+
+    try:
+        with open(geofile, "w") as f:
+            f.write(csg)
+        proc = subprocess.Popen(
+            _netgen_command(geofile, diffpackfile),
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
+        output, _ = proc.communicate()
+        if not isinstance(output, str):
+            output = output.decode('utf-8', 'replace')
+        if proc.returncode != 0:
+            logger.debug("Netgen usability probe failed with exit code %s.", proc.returncode)
+            logger.debug("Netgen usability probe output:\n%s", output)
+            return False
+        return os.path.isfile(diffpackfile)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def convert_diffpack_to_xml(diffpackfile):

@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =307 passed, 55 skipped, 10 xfailed, 4 warnings in 984.85s=
+- =307 passed, 62 skipped, 10 xfailed, 4 warnings in 993.55s=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -386,6 +386,7 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/util/length_scales_test.py=
 - =src/finmag/util/meshes_test.py=
 - =src/finmag/util/mesh_templates_test.py=
+- =src/finmag/tests/test_meshes.py=
 - =src/finmag/util/pbc_test.py=
 - =src/finmag/util/plot_helpers_test.py=
 - =src/finmag/util/vtk_saver_test.py=
@@ -408,6 +409,40 @@ Manual verification helper:
 GitHub Actions transition workflow:
 
 - =.github/workflows/python3-core-suite.yml=
+
+** Netgen / Mesh-Test Findings
+
+The transition image now also installs:
+
+- =netgen=
+- =tix=
+- =xauth=
+- =xvfb=
+
+plus compatibility symlinks for the Tcl/Tix lookup paths expected by
+=netgen 4.9.13=.
+
+This fixes the earlier headless startup issue:
+
+- =netgen= now starts under =xvfb-run=
+- the Tcl/Tix startup failure is gone
+
+But the historical binary still is not fully stable in this container:
+
+- it can abort with =corrupted double-linked list= after successful mesh
+  generation/export for some generated meshes
+
+Operational consequence:
+
+- tests should not treat =shutil.which("netgen")= as sufficient
+- mesh-generation tests now use =finmag.util.meshes.netgen_is_usable()=
+- in the transition image, affected mesh-generation tests skip cleanly instead
+  of hard-failing
+
+Verified mesh-test result:
+
+- =src/finmag/tests/test_meshes.py src/finmag/util/meshes_test.py=
+- =3 passed, 12 skipped in 46.85s=
 
 One real runtime bug was fixed while bringing this suite across:
 

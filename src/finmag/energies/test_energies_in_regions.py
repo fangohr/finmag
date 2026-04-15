@@ -9,7 +9,7 @@ from finmag.field import Field
 #from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.energies import Zeeman
 #from finmag.util.consts import mu0
-from finmag.util.meshes import pair_of_disks
+from finmag.util.meshes import pair_of_disks, netgen_is_usable
 from finmag.util.helpers import vector_valued_function
 #from math import sqrt, pi, cos, sin
 
@@ -88,8 +88,8 @@ def test_energies_in_separated_subdomains(tmpdir):
 
     """
     os.chdir(str(tmpdir))
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
     # Create a mesh consisting of two disks (with different heights)
     d = 30.0

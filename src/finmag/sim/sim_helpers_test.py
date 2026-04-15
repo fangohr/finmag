@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from distutils.version import LooseVersion
 from finmag import Simulation
 from finmag.example import barmini
-from finmag.util.meshes import nanodisk
+from finmag.util.meshes import nanodisk, netgen_is_usable
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.util.helpers import assert_number_of_files
 from finmag.util.fileio import Tablereader
@@ -212,8 +212,8 @@ def test_skyrmion_number():
     assert(abs(skX_3D - 4) < 4e-1)  # There are four skyrmions here...
 
     # Test using another geometry (a nanodisk)
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
     meshNanodisk = nanodisk(d=100, h=10, maxh=3.0, save_result=False)
     simNanodisk = Simulation(meshNanodisk, Ms=1e5, unit_length=1e-9)
 

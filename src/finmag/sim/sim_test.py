@@ -15,7 +15,7 @@ from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str, fnormalise
-from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg
+from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg, netgen_is_usable
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy, DMI
@@ -30,8 +30,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def _require_netgen():
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
 def num_interactions(sim):

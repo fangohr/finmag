@@ -10,7 +10,7 @@ from finmag.field import Field
 from finmag import sim_with
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
-from finmag.util.meshes import pair_of_disks
+from finmag.util.meshes import pair_of_disks, netgen_is_usable
 from finmag.example import sphere_inside_airbox
 from math import sqrt, pi, cos, sin
 from finmag.energies.zeeman import DipolarField
@@ -126,8 +126,8 @@ def test_energy_density_function():
 
 def test_compute_energy_in_regions(tmpdir):
     os.chdir(str(tmpdir))
-    if shutil.which("netgen") is None:
-        pytest.skip("netgen is not available in the Python 3 transition container")
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
     d = 30.0
     h1 = 5.0
     h2 = 10.0
