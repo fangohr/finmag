@@ -173,7 +173,7 @@ class TimeZeeman(Zeeman):
                     "this is what you really want.")
             # Convert the array to a dolfin constant so that we can proceed as
             # normal
-            field_expression = df.Constant(map(str, field_expression))
+            field_expression = df.Constant(tuple(map(float, field_expression)))
 
         assert isinstance(field_expression, (df.Expression, df.Constant))
         super(TimeZeeman, self).__init__(field_expression, name=name)
@@ -395,7 +395,7 @@ class OscillatingZeeman(TimeZeemanPython):
             Time at which the field is switched off.
 
         """
-        H0_expr = df.Constant(map(str, H0))
+        H0_expr = df.Constant(tuple(map(float, H0)))
 
         def amplitude(t):
             return cos(2 * pi * freq * t + phase)

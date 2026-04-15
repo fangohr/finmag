@@ -229,8 +229,15 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =105 passed, 15 skipped, 5 xfailed, 2 warnings=
+  - =196 passed, 17 skipped, 7 xfailed, 3 warnings=
   - this adds:
+    - =field_test.py=
+    - =field_setters_test.py=
+    - =scheduler/scheduler_test.py=
+    - =energies/exchange_test.py=
+    - =energies/anisotropy_test.py=
+    - =energies/zeeman_test.py=
+    - =energies/dmi_test.py=
     - relaxation tests
     - cyclic-reference regression tests
     - bug/regression tests for =.ndt= writing
@@ -249,8 +256,10 @@ Second meaningful milestone:
   - current non-passing statuses inside that file are expected:
     - one existing =xfail= for =test_get_submesh=
     - additional existing =xfail= cases inside =sim_test.py=
+    - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
     - clean skips for =netgen=-dependent tests when =netgen= is not installed
       in the transition image
+    - clean skips when optional =dolfinh5tools= support is unavailable
     - clean skips for the =sllg= kernel tests while that kernel remains
       unported in Python 3
 - the import path now tolerates missing optional dependencies and unfinished

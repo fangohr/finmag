@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 import pytest
 import os
+import shutil
 import finmag
 import logging
 from finmag.field import Field
@@ -12,7 +13,7 @@ from finmag.util.consts import mu0
 from finmag.util.meshes import pair_of_disks
 from finmag.example import sphere_inside_airbox
 from math import sqrt, pi, cos, sin
-from zeeman import DipolarField
+from finmag.energies.zeeman import DipolarField
 
 mesh = df.UnitCubeMesh(2, 2, 2)
 S1 = df.FunctionSpace(mesh, "Lagrange", 1)
@@ -31,7 +32,7 @@ def diff(H_ext, expected_field):
     and the expected field.
     """
     H = H_ext.compute_field().reshape((3, -1)).mean(1)
-    print "Got H={}, expecting H_ref={}.".format(H, expected_field)
+    print("Got H={}, expecting H_ref={}.".format(H, expected_field))
     return np.max(np.abs(H - expected_field))
 
 
@@ -125,6 +126,8 @@ def test_energy_density_function():
 
 def test_compute_energy_in_regions(tmpdir):
     os.chdir(str(tmpdir))
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
     d = 30.0
     h1 = 5.0
     h2 = 10.0
@@ -360,7 +363,7 @@ def test_oscillating_zeeman():
 
     # Check that the field has the original value at the end of the
     # first few cycles.
-    for i in xrange(19):
+    for i in range(19):
         check_field_at_time(i * 1.0 / freq, H)
 
     # Check that the field is switched off at the specified time (and
@@ -446,4 +449,4 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     assert np.mean(reldiffs) < 0.15
     assert np.max(absdiffs) < 140.0
 
-    print np.max(reldiffs), np.mean(reldiffs), np.max(absdiffs)
+    print(np.max(reldiffs), np.mean(reldiffs), np.max(absdiffs))

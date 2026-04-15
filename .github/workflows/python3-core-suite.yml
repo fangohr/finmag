@@ -29,10 +29,17 @@ jobs:
                     PYTHONPATH=/tmp/finmag/src python3 -m pytest -v \
                       src/finmag/tests/test_effective_field.py \
                       src/finmag/tests/test_writing_data.py \
+                      src/finmag/field_test.py \
+                      src/finmag/field_setters_test.py \
                       src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+                      src/finmag/scheduler/scheduler_test.py \
                       src/finmag/tests/test_restart_simulation.py \
                       src/finmag/tests/test_sim_ode.py \
                       src/finmag/tests/test_applied_field.py \
+                      src/finmag/energies/exchange_test.py \
+                      src/finmag/energies/anisotropy_test.py \
+                      src/finmag/energies/zeeman_test.py \
+                      src/finmag/energies/dmi_test.py \
                       src/finmag/tests/test_exchange_static.py \
                       src/finmag/tests/test_llg.py \
                       src/finmag/util/ode/tests/test_sundials_ode.py \

@@ -3,7 +3,7 @@ import numpy as np
 import functools
 import pytest
 import os
-from field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space
 
 
 class TestField(object):
@@ -1519,6 +1519,7 @@ class TestField(object):
         to json file.
 
         """
+        pytest.importorskip("dolfinh5tools")
         # -----------------------------------------------------------------
         # Create test data and files
         # -----------------------------------------------------------------

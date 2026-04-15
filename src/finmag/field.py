@@ -506,6 +506,8 @@ class Field(object):
         v_res = df.assemble(df.dot(self.f / a.f, w) * df.dP)
         return Field(self.functionspace, value=v_res)
 
+    __truediv__ = __div__
+
     def cross(self, other):
         """
         Return vector field representing the cross product of this field with `other`.
