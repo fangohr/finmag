@@ -259,6 +259,37 @@ image should start with at least:
 
 ** Native Build Progress
 
+The Python 3 container path now goes beyond plain import:
+
+- =import finmag= works
+- constructing =finmag.example.barmini(...)= works
+- =sim.run_until(1e-12)= works
+- the first =barmini=-based acceptance subset now passes under Python 3
+
+Current verified subset:
+
+- =src/finmag/tests/test_effective_field.py=
+- =src/finmag/tests/test_writing_data.py=
+- =src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py=
+- =src/finmag/tests/test_restart_simulation.py=
+
+Verified result:
+
+- =7 passed in 58.73s=
+
+The remaining issue that had blocked this subset was Python-3-specific `.ndt`
+readback in =Tablereader=. The old =numpy.genfromtxt= path was replaced with
+explicit line parsing, which avoids the Python 3.5 / NumPy 1.13 bytes-text
+mismatch seen in the snapshot image.
+
+For manual verification:
+
+- =dev/bin/verify-python3-barmini-smoke=
+- =dev/bin/verify-python3-barmini-suite=
+
+The GitHub Actions transition workflow now runs the =barmini=-first subset
+instead of only the one-step smoke test.
+
 With the additional snapshot package:
 
 - `libsundials-dev = 2.7.0+dfsg-2`

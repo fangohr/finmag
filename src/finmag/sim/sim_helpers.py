@@ -3,7 +3,6 @@ import finmag
 import logging
 import shutil
 import os
-import types
 import dolfin as df
 import numpy as np
 from datetime import datetime, timedelta
@@ -102,7 +101,7 @@ def load_restart_data(filename_or_simulation):
     use canonical name."""
     if isinstance(filename_or_simulation, finmag.Simulation):
         filename = canonical_restart_filename(filename_or_simulation)
-    elif isinstance(filename_or_simulation, types.StringTypes):
+    elif isinstance(filename_or_simulation, str):
         filename = filename_or_simulation
     else:
         ValueError("Can only deal with simulations or filenames, "

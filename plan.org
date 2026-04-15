@@ -27,7 +27,7 @@ Important caveat:
 
 ** Acceptance Suites
 
-*** Barmini-First Smoke Suite
+*** Barmini-First Suite
 
 Use this as the smallest practical gate:
 
@@ -197,7 +197,7 @@ Second meaningful milestone:
 
 - construct a minimal =Simulation= under Python 3;
 - run the smallest =barmini=-based smoke path under Python 3;
-- then move on to the agreed acceptance suite.
+- then make the =barmini=-first acceptance subset pass under Python 3.
 
 ** Current Status
 
@@ -209,6 +209,12 @@ Second meaningful milestone:
   - =python3 = 3.5.4=
   - =dolfin.__version__ = 2017.1.0=
 - =import finmag= now succeeds under Python 3 in that image
+- the =barmini=-first Python 3 acceptance subset now passes:
+  - =test_effective_field.py=
+  - =test_writing_data.py=
+  - =test_integrator_raises_exception_on_exceed_maxsteps.py=
+  - =test_restart_simulation.py=
+  - total: =7 passed=
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
 
@@ -227,7 +233,7 @@ Second meaningful milestone:
   - SciPy integrator backend
   - normal-mode support
 
-*** Current Verified Import Command
+*** Current Verified Python 3 Commands
 
 The current Python 3 import milestone is verified with:
 
@@ -239,6 +245,25 @@ docker run --rm \
   bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
             PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
 #+end_src
+
+The current =barmini=-first subset is verified with:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -m pytest -v \
+              src/finmag/tests/test_effective_field.py \
+              src/finmag/tests/test_writing_data.py \
+              src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+              src/finmag/tests/test_restart_simulation.py'
+#+end_src
+
+For local verification there is now also:
+
+- =dev/bin/verify-python3-barmini-suite=
 
 Expected result:
 

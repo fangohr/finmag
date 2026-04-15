@@ -289,20 +289,28 @@ class Tablereader(object):
 
         assert len(headers) == len(units)
 
-        # use numpy to read remaining data (genfromtxt will
-        # complain if there are rows with different sizes)
+        expected_columns = len(headers) - 1
+        rows = []
         try:
-            self.data = np.genfromtxt(self.f)
-        except ValueError:
+            for line in self.f:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#'):
+                    continue
+
+                values = stripped.split()
+                if len(values) != expected_columns:
+                    raise RuntimeError
+                rows.append([float(value) for value in values])
+        except (TypeError, ValueError, RuntimeError):
             raise RuntimeError("Cannot load data from file '{}'." +
                                "Maybe the file was incompletely written?".
-                               format(self.f))
+                               format(self.filename))
         self.f.close()
 
-        # Make sure we have a 2d array even if the file only contains a single
-        # line (or none)
-        if self.data.ndim == 1:
-            self.data = self.data[np.newaxis, :]
+        if rows:
+            self.data = np.array(rows, dtype=float)
+        else:
+            self.data = np.empty((0, expected_columns))
 
         # Check if the number of data columns is equal to the number of headers
         assert self.data.shape[1] == len(headers) - 1

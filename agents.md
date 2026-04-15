@@ -244,6 +244,18 @@ The image also needs:
 
 for reliable `import dolfin` inside Docker.
 
+The current Python 3 progress is now stronger than plain import:
+
+- `import finmag` works
+- `finmag.example.barmini()` constructs
+- `sim.run_until(1e-12)` works
+- the first `barmini`-based acceptance subset passes under Python 3:
+  - `src/finmag/tests/test_effective_field.py`
+  - `src/finmag/tests/test_writing_data.py`
+  - `src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py`
+  - `src/finmag/tests/test_restart_simulation.py`
+  - total: `7 passed`
+
 ## Import Frontier Reached So Far
 
 After the recent Python 3 fixes, `import finmag` now gets through:

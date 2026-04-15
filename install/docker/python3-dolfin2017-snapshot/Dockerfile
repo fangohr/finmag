@@ -64,6 +64,8 @@ RUN apt-get install -y --allow-unauthenticated --allow-downgrades \
     python3-petsc4py=3.7.0-3+b2 \
     python3-slepc4py=3.7.0-3+b1
 
+RUN pip3 install --no-cache-dir pytest==3.2.1
+
 RUN OMPI_MCA_plm=isolated python3 - <<'PY'
 import dolfin
 import sys
