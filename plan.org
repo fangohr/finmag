@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =299 passed, 50 skipped, 10 xfailed, 4 warnings=
+  - =307 passed, 55 skipped, 10 xfailed, 4 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -269,6 +269,8 @@ Second meaningful milestone:
     - =energies/demag/demag_pbc_test.py=
     - =energies/demag/fk_demag_test.py=
     - =energies/demag/fk_demag_2d_test.py=
+    - =tests/demag/test_bem_computation.py=
+    - =tests/demag/test_demag_sphere.py=
     - relaxation tests
     - cyclic-reference regression tests
     - bug/regression tests for =.ndt= writing

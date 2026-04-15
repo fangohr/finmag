@@ -1,4 +1,5 @@
 import os
+import shutil
 import pytest
 import unittest
 import numpy as np
@@ -16,6 +17,11 @@ from finmag.energies import Demag
 
 compute_belement = belement_magpar.return_bele_magpar()
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def _require_netgen():
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is required for sphere-based demag mesh-generation tests")
 
 
 class MagSphereBase(object):
@@ -101,8 +107,8 @@ class BemComputationTests(unittest.TestCase):
         r3 = np.array([5., 0., 1.])
         be_magpar = compute_belement_magpar(r1, r2, r3)
         be_native = compute_lindholm_L(np.zeros(3), r1, r2, r3)
-        print "Magpar: ", be_magpar
-        print "Native C++: ", be_native
+        print("Magpar: ", be_magpar)
+        print("Native C++: ", be_native)
         self.assertAlmostEqual(
             np.max(np.abs(be_magpar - be_native)), 0, delta=1e-12)
 
@@ -111,13 +117,13 @@ class BemComputationTests(unittest.TestCase):
         centre = np.array([0.5, 0.5, 0.5])
         boundary_mesh = df.BoundaryMesh(mesh, 'exterior', False)
         coordinates = boundary_mesh.coordinates()
-        for i in xrange(boundary_mesh.num_cells()):
+        for i in range(boundary_mesh.num_cells()):
             cell = df.Cell(boundary_mesh, i)
             p1 = coordinates[cell.entities(0)[0]]
             p2 = coordinates[cell.entities(0)[1]]
             p3 = coordinates[cell.entities(0)[2]]
             n = np.cross(p2 - p1, p3 - p1)
-            print "Boundary face %d, normal orientation %g" % (i, np.sign(np.dot(n, p1 - centre)))
+            print("Boundary face %d, normal orientation %g" % (i, np.sign(np.dot(n, p1 - centre))))
 
     def run_bem_computation_test(self, mesh):
         S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
@@ -127,20 +133,21 @@ class BemComputationTests(unittest.TestCase):
         bem_magpar, g2finmag = belement.BEM_matrix(mesh)
         bem_finmag = np.zeros(bem_magpar.shape)
         bem, b2g = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
-        for i_dolfin in xrange(bem.shape[0]):
+        for i_dolfin in range(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
-            for j_dolfin in xrange(bem.shape[0]):
+            for j_dolfin in range(bem.shape[0]):
                 j_finmag = g2finmag[b2g[j_dolfin]]
                 bem_finmag[i_finmag, j_finmag] = bem[i_dolfin, j_dolfin]
         if np.max(np.abs(bem_finmag - bem_magpar)) > 1e-12:
-            print "Finmag:", np.round(bem_finmag, 4)
-            print "Magpar:", np.round(bem_magpar, 4)
-            print "Difference:", np.round(bem_magpar - bem_finmag, 4)
+            print("Finmag:", np.round(bem_finmag, 4))
+            print("Magpar:", np.round(bem_magpar, 4))
+            print("Difference:", np.round(bem_magpar - bem_finmag, 4))
             self.fail(
                 "Finmag and magpar computation of BEM differ, mesh: " + str(mesh))
 
     def test_bem_computation(self):
+        _require_netgen()
         self.run_bem_computation_test(sphere(1., 0.8))
         self.run_bem_computation_test(sphere(1., 0.4))
         self.run_bem_computation_test(sphere(1., 0.3))
@@ -153,16 +160,16 @@ class BemComputationTests(unittest.TestCase):
         c = time_counter.counter()
         while c.next():
             df.BoundaryMesh(mesh, 'exterior', False)
-        print "Boundary mesh computation for %s: %s" % (mesh, c)
+        print("Boundary mesh computation for %s: %s" % (mesh, c))
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem_fk(boundary_mesh)
             n = bem.shape[0]
-        print "FK BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c)
+        print("FK BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c))
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem_gcr(boundary_mesh)
-        print "GCR BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c)
+        print("GCR BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c))
 
     def test_bem_netgen(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
@@ -178,9 +185,9 @@ class BemComputationTests(unittest.TestCase):
         error = df.errornorm(phi_a, phi_b, mesh=mesh)
         message = "Method: %s, mesh: %s, m: %s, error: %8g" % (
             method_name, mesh, m_expr, error)
-        print message
-        print "K = ", k
-        print "m_expr = ", m_expr
+        print(message)
+        print("K = ", k)
+        print("m_expr = ", m_expr)
         self.assertAlmostEqual(
             error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
@@ -189,7 +196,8 @@ class BemComputationTests(unittest.TestCase):
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)
         expressions = [m1, m2]
         for exp in expressions:
-            for k in xrange(1, 5 + 1):
+            _require_netgen()
+            for k in range(1, 5 + 1):
                 self.run_demag_computation_test(df.UnitCubeMesh(k, k, k), exp,
                                                 compute_scalar_potential_native_fk,
                                                 "native, FK", k=k)
@@ -213,7 +221,8 @@ class BemComputationTests(unittest.TestCase):
                                         "native, GCR",
                                         ref=compute_scalar_potential_native_fk, tol=tol)
         for exp in expressions:
-            for k in xrange(3, 10 + 1, 2):
+            _require_netgen()
+            for k in range(3, 10 + 1, 2):
                 self.run_demag_computation_test(df.UnitCubeMesh(k, k, k), exp,
                                                 compute_scalar_potential_native_gcr,
                                                 "native, GCR, cube", tol=tol,
@@ -227,7 +236,7 @@ class BemComputationTests(unittest.TestCase):
     def run_symmetry_test(self, formula):
         func = globals()[formula]
         np.random.seed(1)
-        for i in xrange(100):
+        for i in range(100):
             r = np.random.rand(3) * 2 - 1
             r1 = np.random.rand(3) * 2 - 1
             r2 = np.random.rand(3) * 2 - 1
@@ -259,7 +268,7 @@ class BemComputationTests(unittest.TestCase):
         # the double layer potential is the derivative of the single layer potential
         # with respect to displacements of the triangle in the normal direction
         np.random.seed(1)
-        for i in xrange(100):
+        for i in range(100):
             r = np.random.rand(3) * 2 - 1
             r1 = np.random.rand(3) * 2 - 1
             r2 = np.random.rand(3) * 2 - 1
@@ -279,7 +288,7 @@ class BemComputationTests(unittest.TestCase):
         n = df.FacetNormal(mesh)
         # Divergence of R is 3, the volume of the unit cube is 1 so we divide
         # by 3
-        print "Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds) / 3.
+        print("Normal: +1=outward, -1=inward:", df.assemble(df.dot(field, n) * df.ds) / 3.)
 
 if __name__ == "__main__":
     unittest.main()

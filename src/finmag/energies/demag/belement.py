@@ -1,6 +1,6 @@
 import dolfin as df
 import numpy as np
-import belement_magpar
+from . import belement_magpar
 import finmag.util.solid_angle_magpar as solid_angle_solver
 compute_belement = belement_magpar.return_bele_magpar()
 compute_solid_angle = solid_angle_solver.return_csa_magpar()
@@ -80,19 +80,19 @@ def compute_bnd_mapping(mesh, debug=False):
             gnodes_to_bnodes[i] = -1
 
     if debug:
-        print 'cells number:', mesh.num_cells()
-        print 'nodes number:', mesh.num_vertices()
+        print('cells number:', mesh.num_cells())
+        print('nodes number:', mesh.num_vertices())
         # print mesh.coordinates()
-        print 'faces:', mesh.num_faces()
-        print 'faces number at the boundary:', number_faces_bnd
-        print 'nodes number at the boundary:', number_nodes_bnd
+        print('faces:', mesh.num_faces())
+        print('faces number at the boundary:', number_faces_bnd)
+        print('nodes number at the boundary:', number_nodes_bnd)
 
         for i in range(number_nodes):
             tmp = gnodes_to_bnodes[i]
-            print 'global id=', i, nodes_xyz[i][0], nodes_xyz[i][1], nodes_xyz[i][2], tmp
+            print('global id=', i, nodes_xyz[i][0], nodes_xyz[i][1], nodes_xyz[i][2], tmp)
 
         for i in range(number_faces_bnd):
-            print '   ', bnd_face_verts[i][0], bnd_face_verts[i][1], bnd_face_verts[i][2]
+            print('   ', bnd_face_verts[i][0], bnd_face_verts[i][1], bnd_face_verts[i][2])
 
     return (bnd_face_verts, gnodes_to_bnodes, number_faces_bnd, number_nodes_bnd)
 
@@ -158,21 +158,21 @@ def BEM_matrix(mesh):
 def test_order():
     mesh = df.Mesh('tet.xml')
     xs = mesh.coordinates()
-    print xs
-    print mesh.cells()
+    print(xs)
+    print(mesh.cells())
 
-    print 'volume:', GetTetVol(xs[0], xs[1], xs[2], xs[3])
-    print 'volume:', GetTetVol(xs[1], xs[0], xs[2], xs[3])
+    print('volume:', GetTetVol(xs[0], xs[1], xs[2], xs[3]))
+    print('volume:', GetTetVol(xs[1], xs[0], xs[2], xs[3]))
 
-    print 'solid angle 1', compute_solid_angle(xs[0], xs[1], xs[2], xs[3])
-    print 'solid angle 2', compute_solid_angle(xs[0], xs[2], xs[1], xs[3])
+    print('solid angle 1', compute_solid_angle(xs[0], xs[1], xs[2], xs[3]))
+    print('solid angle 2', compute_solid_angle(xs[0], xs[2], xs[1], xs[3]))
 
     bele = np.array([0, 0.0, 0])
     compute_belement(xs[0], xs[1], xs[2], xs[3], bele)
-    print 'belement 1', bele
+    print('belement 1', bele)
 
     compute_belement(xs[0], xs[2], xs[1], xs[3], bele)
-    print 'belement 2', bele
+    print('belement 2', bele)
 
 
 if __name__ == "__main__":
@@ -180,4 +180,4 @@ if __name__ == "__main__":
     # test_order()
 
     mesh = df.Mesh('cube.xml')
-    print BEM_matrix(mesh)
+    print(BEM_matrix(mesh))

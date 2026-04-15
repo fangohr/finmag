@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =299 passed, 50 skipped, 10 xfailed, 4 warnings in 968.91s=
+- =307 passed, 55 skipped, 10 xfailed, 4 warnings in 984.85s=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -378,6 +378,8 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/energies/demag/demag_pbc_test.py=
 - =src/finmag/energies/demag/fk_demag_test.py=
 - =src/finmag/energies/demag/fk_demag_2d_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
 - =src/finmag/energies/dmi_test.py=
 - =src/finmag/util/fileio_test.py=
 - =src/finmag/util/helpers_test.py=
