@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# Build the Python 3 DOLFIN 2017 transition image and verify that Finmag can
+# construct and advance the barmini example inside it against a writable copy
+# of the current checkout.
+#
+# Usage:
+#   dev/bin/verify-python3-barmini-smoke
+#
+# Notes:
+# - the repository is mounted read-only into the container;
+# - the checkout is copied to /tmp/finmag inside the container because
+#   importing and running Finmag may trigger native rebuilds that need write
+#   access;
+# - OMPI_MCA_plm=isolated is required so `import dolfin` works reliably
+#   inside Docker.
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+image_name="finmag-py3-dolfin2017"
+
+docker build \
+    -f "${repo_root}/install/docker/python3-dolfin2017-snapshot/Dockerfile" \
+    -t "${image_name}" \
+    "${repo_root}"
+
+docker run --rm \
+    -e OMPI_MCA_plm=isolated \
+    -v "${repo_root}:/repo:ro" \
+    "${image_name}" \
+    bash -lc '
+        rm -rf /tmp/finmag &&
+        cp -a /repo /tmp/finmag &&
+        cd /tmp/finmag &&
+        PYTHONPATH=/tmp/finmag/src python3 - <<"PY"
+import finmag
+sim = finmag.example.barmini(name="barmini_py3_smoke")
+print("constructed", sim.__class__.__name__)
+sim.run_until(1e-12)
+print("advanced", sim.t)
+PY
+    '

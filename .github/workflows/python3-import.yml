@@ -1,4 +1,4 @@
-name: python3-import
+name: python3-barmini-smoke
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  python3-import:
+  python3-barmini-smoke:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +19,17 @@ jobs:
           -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
           -t finmag-py3-dolfin2017 .
 
-    - name: Verify Python 3 import
+    - name: Verify Python 3 barmini smoke test
       run: |
         docker run --rm \
           -e OMPI_MCA_plm=isolated \
           -v "${GITHUB_WORKSPACE}:/repo:ro" \
           finmag-py3-dolfin2017 \
           bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
-                    PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
+                    PYTHONPATH=/tmp/finmag/src python3 - <<"PY"
+import finmag
+sim = finmag.example.barmini(name="barmini_py3_ci")
+print("constructed", sim.__class__.__name__)
+sim.run_until(1e-12)
+print("advanced", sim.t)
+PY'

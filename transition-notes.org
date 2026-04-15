@@ -407,6 +407,7 @@ docker run --rm \
 The repository now contains:
 
 - `dev/bin/verify-python3-import`
+- `dev/bin/verify-python3-barmini-smoke`
 
 This helper:
 
@@ -417,6 +418,12 @@ It can be invoked as:
 
 #+begin_src bash
 dev/bin/verify-python3-import
+#+end_src
+
+and:
+
+#+begin_src bash
+dev/bin/verify-python3-barmini-smoke
 #+end_src
 
 ** Scope-Limiting Import Decisions
@@ -439,12 +446,75 @@ The next concrete validation target is:
 2. run a small `barmini`-based smoke path
 3. then begin bringing the agreed minimal acceptance suite across
 
+** Barmini Smoke Milestone
+
+The runtime milestone above has now been reached.
+
+The following command succeeds:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 - <<\"PY\"
+import finmag
+sim = finmag.example.barmini(name=\"barmini_py3_smoke\")
+print(\"constructed\", sim.__class__.__name__)
+sim.run_until(1e-12)
+print(\"advanced\", sim.t)
+PY'
+#+end_src
+
+Observed result:
+
+- `constructed Simulation`
+- `advanced 1e-12`
+
+** What Fixed The Runtime Regression
+
+After `import finmag` was working, the next blocker was a CVODE runtime failure
+even for trivial ODEs under Python 3:
+
+- `CV_CONV_FAILURE` at `t = 0`
+
+Important narrowing observations:
+
+- the same `barmini().run_until(1e-12)` step succeeds in the Python 2 reference image
+- the initial Finmag RHS for `barmini` is identical in Python 2 and Python 3
+- even a one-dimensional test problem `y' = 0.5 y` failed in the Python 3 image
+
+This showed that the regression was in the native Sundials/NVector runtime
+path, not in the Python-level field setup.
+
+The fix that restored runtime integration was:
+
+- stop linking the Python 3 Sundials module against Finmag's vendored custom
+  `libnvector_serial_custom_malloc`
+- link it against the system:
+  - `libsundials_nvecserial`
+- construct callback-local NumPy array views directly from raw NVector memory in:
+  - `native/src/sundials/numpy_malloc.cc`
+
+This keeps the callback bridge working under Python 3 while avoiding the
+runtime incompatibility between the old vendored NVector implementation and
+SUNDIALS `2.7.0`.
+
+** Updated Next Step
+
+The next concrete validation target is now:
+
+1. bring across the `barmini`-based subset of the agreed minimal acceptance suite
+2. then broaden to the rest of the minimal suite under Python 3
+
 ** Related Repo Files
 
 These files were added to support this transition work:
 
 - `dev/bin/check-python3-in-container`
 - `dev/bin/verify-python3-import`
+- `dev/bin/verify-python3-barmini-smoke`
 - `install/docker/python3-bootstrap/Dockerfile`
 - `install/docker/python3-bootstrap/README.md`
 - `install/docker/python3-dolfin2017-snapshot/Dockerfile`

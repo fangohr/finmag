@@ -244,6 +244,30 @@ Expected result:
 
 - =<module 'finmag' from '/tmp/finmag/src/finmag/__init__.py'>=
 
+*** Current Verified Barmini Smoke Command
+
+The next milestone is now also verified:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 - <<\"PY\"
+import finmag
+sim = finmag.example.barmini(name=\"barmini_py3_smoke\")
+print(\"constructed\", sim.__class__.__name__)
+sim.run_until(1e-12)
+print(\"advanced\", sim.t)
+PY'
+#+end_src
+
+Expected result:
+
+- =constructed Simulation=
+- =advanced 1e-12=
+
 *** Current Limitations
 
 The Python 3 container path is usable for the base import milestone, but some
@@ -255,13 +279,13 @@ features are still intentionally not part of the guaranteed working surface:
 
 *** Immediate Next Step
 
-Move from:
+Move from the verified Python 3 smoke path:
 
 - =import finmag=
+- =barmini().run_until(1e-12)=
 
 to:
 
-- constructing a minimal =Simulation=
-- then running a small =barmini=-based smoke test under Python 3
-
-Only after that should the effort expand to the agreed acceptance suite.
+- a first Python 3 execution of the agreed minimal acceptance suite, probably
+  starting with the =barmini=-based subset
+- then broadening to the full agreed suite

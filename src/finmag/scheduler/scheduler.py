@@ -52,6 +52,9 @@ class Scheduler(object):
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def add(self, func, args=None, kwargs=None, at=None, at_end=False,
             every=None, after=None, realtime=False):
         """
@@ -173,7 +176,7 @@ class Scheduler(object):
         if stop is True:
             raise StopIteration
 
-        if next_step < self.last:
+        if self.last is not None and next_step < self.last:
             log.error("Scheduler computed the next time step should be t = {:.2g} s, but the last one was already t = {:.2g} s.".format(
                 next_step, self.last))
             raise ValueError("Scheduler is corrupted. Requested a time step in the past: dt = {:.2g}.".format(

@@ -263,6 +263,14 @@ Current verified result in the Python 3 DOLFIN image:
 - `import finmag` succeeds
 - `print(finmag)` reports the imported module object from `src/finmag/__init__.py`
 
+Current verified runtime result in the same image:
+
+- `sim = finmag.example.barmini(...)` succeeds
+- `sim.run_until(1e-12)` succeeds
+- the printed smoke result is:
+  - `constructed Simulation`
+  - `advanced 1e-12`
+
 ## Important Python 3 Compatibility Decisions
 
 To reach the import milestone without broadening scope unnecessarily, some
@@ -284,18 +292,18 @@ Important findings:
 
 - `native/Makefile` had to become Python-version-aware instead of assuming Python 2
 - the vendored Sundials wrapper needed explicit handling for `libsundials-dev 2.7.0+dfsg-2`
-- the vendored custom `nvector_serial` library needed local definitions for old math helper macros such as `MIN`, `ABS`, and `SQR`
+- the original vendored custom `nvector_serial` path was not reliable enough for SUNDIALS 2.7 at runtime
+- switching the Python 3 build to the system `libsundials_nvecserial` and exposing callback-local NumPy views from raw NVector memory fixed the CVODE runtime regression
 - import-time builds are more robust when they do not try to build the native unit-test binary
 
 ## Next Milestone
 
-The next milestone is no longer package import.
+The next milestone is no longer package import or the first smoke step.
 
 It is:
 
-- construct a minimal `Simulation` in the Python 3 container
-- run a minimal `barmini`-based smoke path
-- then start validating the agreed acceptance suite under Python 3
+- start validating the agreed acceptance suite under Python 3
+- most likely begin with the `barmini`-based subset
 
 ## Native Build Findings
 
