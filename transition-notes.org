@@ -332,6 +332,55 @@ That test only needs plotting when =do_plot=True=, so importing =matplotlib=
 inside the plotting branch keeps normal test collection lighter and avoids
 making plotting a hard import-time dependency of the test module.
 
+** Core Transition Suite Progress
+
+The transition CI now goes beyond the minimal acceptance suite and runs a
+broader Python 3 core suite.
+
+Verified result:
+
+- =45 passed, 1 skipped, 1 xfailed in 178.41s=
+
+This broader suite adds the following green areas on top of the minimal suite:
+
+- =src/finmag/drivers/tests/test_relaxation.py=
+- =src/finmag/drivers/tests/test_relax_two_times.py=
+- =src/finmag/tests/test_cyclic_references_in_sim.py=
+- =src/finmag/tests/bugs/test_bug_ndt_file_writing.py=
+- =src/finmag/tests/test_time.py=
+- =src/finmag/sim/sim_helpers_test.py= (full file)
+- =src/finmag/drivers/tests/sundials_nsteps_test.py=
+- =src/finmag/drivers/tests/test_scipy.py=
+- =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
+
+Manual verification helper:
+
+- =dev/bin/verify-python3-core-suite=
+
+GitHub Actions transition workflow:
+
+- =.github/workflows/python3-core-suite.yml=
+
+One real runtime bug was fixed while bringing this suite across:
+
+- =src/finmag/scheduler/derivedevents.py=
+
+Specifically, =RepeatingTimeEvent= claimed to support callable intervals, but
+its constructor still compared the interval directly against zero. Under
+Python 3 this failed for =functools.partial= during =sim.relax()=. The fix was
+to validate negativity only for non-callable intervals.
+
+Additional Python 3/runtime fixes made while broadening the core suite:
+
+- =src/finmag/sim/sim.py=: =dict.has_key= to membership test for VTK saver lookup
+- =src/finmag/sim/sim_savers.py=: =dict.has_key= to membership test for field saver lookup
+- =src/finmag/sim/magnetisation_patterns.py=: fix =xrange=, and avoid comparing
+  NumPy arrays directly against the =\"singleCentre\"= sentinel string
+- =src/finmag/util/meshes.py=: encode CSG text before =hashlib.md5(...)= under
+  Python 3
+- =src/finmag/sim/sim_helpers_test.py=: Python 3 imports/prints and a clean
+  skip when =netgen= is unavailable for the nanodisk skyrmion subcase
+
 With the additional snapshot package:
 
 - `libsundials-dev = 2.7.0+dfsg-2`

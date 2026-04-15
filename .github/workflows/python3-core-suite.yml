@@ -1,4 +1,4 @@
-name: python3-minimal-suite
+name: python3-core-suite
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  python3-minimal-suite:
+  python3-core-suite:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
           -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
           -t finmag-py3-dolfin2017 .
 
-    - name: Verify Python 3 minimal acceptance suite
+    - name: Verify Python 3 core transition suite
       run: |
         docker run --rm \
           -e OMPI_MCA_plm=isolated \
@@ -35,4 +35,13 @@ jobs:
                       src/finmag/tests/test_applied_field.py \
                       src/finmag/tests/test_exchange_static.py \
                       src/finmag/tests/test_llg.py \
-                      src/finmag/util/ode/tests/test_sundials_ode.py'
+                      src/finmag/util/ode/tests/test_sundials_ode.py \
+                      src/finmag/drivers/tests/test_relaxation.py \
+                      src/finmag/drivers/tests/test_relax_two_times.py \
+                      src/finmag/tests/test_cyclic_references_in_sim.py \
+                      src/finmag/tests/bugs/test_bug_ndt_file_writing.py \
+                      src/finmag/tests/test_time.py \
+                      src/finmag/sim/sim_helpers_test.py \
+                      src/finmag/drivers/tests/sundials_nsteps_test.py \
+                      src/finmag/drivers/tests/test_scipy.py \
+                      src/finmag/util/ode/tests/test_sundials_stiff_ode.py'

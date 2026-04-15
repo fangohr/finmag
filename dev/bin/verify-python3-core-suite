@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -eu
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+docker build \
+  -f "${REPO_ROOT}/install/docker/python3-dolfin2017-snapshot/Dockerfile" \
+  -t finmag-py3-dolfin2017 \
+  "${REPO_ROOT}"
+
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v "${REPO_ROOT}:/repo:ro" \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -m pytest -v \
+              src/finmag/tests/test_effective_field.py \
+              src/finmag/tests/test_writing_data.py \
+              src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+              src/finmag/tests/test_restart_simulation.py \
+              src/finmag/tests/test_sim_ode.py \
+              src/finmag/tests/test_applied_field.py \
+              src/finmag/tests/test_exchange_static.py \
+              src/finmag/tests/test_llg.py \
+              src/finmag/util/ode/tests/test_sundials_ode.py \
+              src/finmag/drivers/tests/test_relaxation.py \
+              src/finmag/drivers/tests/test_relax_two_times.py \
+              src/finmag/tests/test_cyclic_references_in_sim.py \
+              src/finmag/tests/bugs/test_bug_ndt_file_writing.py \
+              src/finmag/tests/test_time.py \
+              src/finmag/sim/sim_helpers_test.py \
+              src/finmag/drivers/tests/sundials_nsteps_test.py \
+              src/finmag/drivers/tests/test_scipy.py \
+              src/finmag/util/ode/tests/test_sundials_stiff_ode.py'

@@ -1,8 +1,9 @@
 import os
+import shutil
 import pytest
 import numpy as np
 import dolfin as df
-import sim_helpers
+from finmag.sim import sim_helpers
 from datetime import datetime, timedelta
 from distutils.version import LooseVersion
 from finmag import Simulation
@@ -57,10 +58,10 @@ def test_try_to_restart_a_simulation(tmpdir):
         sim2.t, sim2.integrator.stats()))
 
     # Check that we have the same data in both simulation objects.
-    print "Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t)
+    print("Time for sim1: {} s, time for sim2: {} s.".format(sim1.t, sim2.t))
     assert abs(sim1.t - sim2.t) < 1e-16
-    print "Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
-        sim1.m_average, sim2.m_average)
+    print("Average magnetisation for sim1:\n\t{}\nfor sim2:\n\t{}.".format(
+        sim1.m_average, sim2.m_average))
     assert np.allclose(sim1.m, sim2.m, atol=5e-6, rtol=1e-8)
 
     # Check that sim2 had less work to do, since it got the
@@ -211,6 +212,8 @@ def test_skyrmion_number():
     assert(abs(skX_3D - 4) < 4e-1)  # There are four skyrmions here...
 
     # Test using another geometry (a nanodisk)
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
     meshNanodisk = nanodisk(d=100, h=10, maxh=3.0, save_result=False)
     simNanodisk = Simulation(meshNanodisk, Ms=1e5, unit_length=1e-9)
 

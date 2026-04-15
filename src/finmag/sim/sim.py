@@ -1177,7 +1177,7 @@ class Simulation(object):
         if filename == None:
             filename = self.sanitized_name + '.pvd'
 
-        if self.vtk_savers.has_key(filename) and (overwrite == False):
+        if filename in self.vtk_savers and (overwrite == False):
             # Retrieve an existing VTKSaver for appending data
             s = self.vtk_savers[filename]
         else:

@@ -130,6 +130,8 @@ def from_csg(csg, save_result=True, filename="", directory=""):
     `directory` is ignored.
     """
     if filename == "":
+        if isinstance(csg, str):
+            csg = csg.encode("utf-8")
         filename = hashlib.md5(csg).hexdigest()
     if os.path.isabs(filename) and directory != "":
         logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(

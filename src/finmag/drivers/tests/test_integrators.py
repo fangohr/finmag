@@ -24,12 +24,12 @@ class IntegratorTests(unittest.TestCase):
         t = datetime.now()
         integrator.advance_time(END_TIME)
         dt = datetime.now() - t
-        print "backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
+        print("backend=%s, method=%s: elapsed time=%s, n_rhs_evals=%s, error=%g" % (
             backend,
             method,
             dt,
             integrator.n_rhs_evals,
-            domain_wall_error(llg.m_field.as_array(), NODE_COUNT))
+            domain_wall_error(llg.m_field.as_array(), NODE_COUNT)))
 
     def test_scipy_bdf(self):
         self.run_test("scipy", "bdf")

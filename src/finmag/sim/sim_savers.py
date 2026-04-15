@@ -24,7 +24,7 @@ def _get_field_saver(sim, field_name, filename=None, overwrite=False, incrementa
         filename += '.npy'
 
     s = None
-    if sim.field_savers.has_key(filename) and sim.field_savers[filename].incremental == incremental:
+    if filename in sim.field_savers and sim.field_savers[filename].incremental == incremental:
         s = sim.field_savers[filename]
 
     if s is None:

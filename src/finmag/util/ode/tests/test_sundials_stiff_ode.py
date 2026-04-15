@@ -10,8 +10,8 @@ import unittest
 import numpy as np
 import finmag.native.sundials as sundials
 from finmag.util.ode import scipy_to_cvode_jtimes, scipy_to_cvode_rhs
-import robertson_ode
-from robertson_ode import robertson_jacobean, robertson_rhs, robertson_reset_n_evals
+from . import robertson_ode
+from .robertson_ode import robertson_jacobean, robertson_rhs, robertson_reset_n_evals
 
 ROBERTSON_Y0 = np.array([1., 0., 0.])
 
@@ -26,7 +26,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.set_initial_value(ROBERTSON_Y0)
         integrator.set_integrator("vode", method="bdf", nsteps=5000)
         integrator.integrate(1e8)
-        print "Integration of the Robertson ODE until t=1e8 with scipy VODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,)
+        print("Integration of the Robertson ODE until t=1e8 with scipy VODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,))
         self.assertLess(robertson_ode.n_rhs_evals, 5000)
 
     def test_robertson_scipy_transposed(self):
@@ -54,7 +54,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         integrator.set_max_num_steps(5000)
         yout = np.zeros(3)
         integrator.advance_time(1e8, yout)
-        print "Integration of the Robertson ODE until t=1e8 with CVODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,)
+        print("Integration of the Robertson ODE until t=1e8 with CVODE, BDF method: %d steps" % (robertson_ode.n_rhs_evals,))
 
     def test_robertson_sundials_transposed(self):
         robertson_reset_n_evals()
@@ -70,9 +70,9 @@ class SundialsStiffOdeTests(unittest.TestCase):
         yout = np.zeros(3)
         try:
             integrator.advance_time(1e8, yout)
-        except RuntimeError, ex:
+        except RuntimeError as ex:
             self.assertGreater(robertson_ode.n_rhs_evals, 5000)
-            assert ex.message.find("CV_TOO_MUCH_WORK") >= 0
+            assert "CV_TOO_MUCH_WORK" in str(ex)
 
 if __name__ == '__main__':
     unittest.main()
