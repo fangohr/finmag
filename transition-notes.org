@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =196 passed, 17 skipped, 7 xfailed, 3 warnings=
+- =253 passed, 39 skipped, 7 xfailed, 4 warnings=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -359,6 +359,17 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/energies/anisotropy_test.py=
 - =src/finmag/energies/zeeman_test.py=
 - =src/finmag/energies/dmi_test.py=
+- =src/finmag/util/fileio_test.py=
+- =src/finmag/util/helpers_test.py=
+- =src/finmag/util/length_scales_test.py=
+- =src/finmag/util/meshes_test.py=
+- =src/finmag/util/mesh_templates_test.py=
+- =src/finmag/util/pbc_test.py=
+- =src/finmag/util/plot_helpers_test.py=
+- =src/finmag/util/vtk_saver_test.py=
+- =src/finmag/util/dmi_helper_test.py=
+- =src/finmag/util/test_set_function_values.py=
+- =src/finmag/util/test_dmi_from_helix.py=
 - =src/finmag/drivers/tests/sundials_nsteps_test.py=
 - =src/finmag/drivers/tests/sundials_reinit_test.py=
 - =src/finmag/drivers/tests/test_integrators.py=
@@ -411,6 +422,16 @@ Additional Python 3/runtime fixes made while broadening the core suite:
   =netgen=-dependent regional-energy test
 - =src/finmag/energies/exchange_test.py=, =anisotropy_test.py=,
   =dmi_test.py=: Python 3 print cleanup
+- =src/finmag/util/fileio_test.py=, =helpers_test.py=, =length_scales_test.py=,
+  =meshes_test.py=, =mesh_templates_test.py=, =pbc_test.py=,
+  =vtk_saver_test.py=, =dmi_helper_test.py=, =test_set_function_values.py=,
+  =test_dmi_from_helix.py=: Python 3 import/syntax cleanup and explicit skips
+  for missing external mesh tools
+- =src/finmag/util/helpers.py=: decode subprocess output in
+  =run_cmd_with_timeout()= for Python 3
+- =src/finmag/util/mesh_templates.py=: encode CSG strings before hashing
+- =src/finmag/util/DMI_from_helix.py=: Python 3 =range= and integer-division
+  cleanup on the helix-analysis path
 - =src/finmag/sim/magnetisation_patterns_test.py=: clean skip when =netgen=
   is unavailable in the transition image
 - =src/finmag/sim/normal_mode_sim.py=: remove =past.builtins.basestring= and

@@ -2,7 +2,7 @@ import os
 import pytest
 import dolfin as df
 import numpy as np
-from vtk_saver import VTKSaver
+from finmag.util.vtk_saver import VTKSaver
 from finmag.util.helpers import assert_number_of_files
 
 

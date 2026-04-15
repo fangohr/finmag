@@ -1,5 +1,5 @@
 import dolfin as df
-from pbc2d import PeriodicBoundary2D, PeriodicBoundary1D
+from finmag.util.pbc2d import PeriodicBoundary2D, PeriodicBoundary1D
 
 
 def test_pbc1d_2dmesh():
@@ -71,7 +71,7 @@ def test_pbc2d_3dmesh2():
     # df.plot(M)
     # df.interactive()
 
-    print abs(M(0, 0, 1) - M(0.5, 0.5, 1))
+    print(abs(M(0, 0, 1) - M(0.5, 0.5, 1)))
 
 
 if __name__ == "__main__":

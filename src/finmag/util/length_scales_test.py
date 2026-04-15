@@ -1,6 +1,6 @@
 import dolfin as df
 import numpy as np
-import length_scales as ls
+from finmag.util import length_scales as ls
 from finmag.field import Field
 from finmag.util.consts import mu0
 

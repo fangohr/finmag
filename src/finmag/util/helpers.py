@@ -1660,6 +1660,10 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     timer.start()
     stdout, stderr = proc.communicate()
     timer.cancel()
+    if isinstance(stdout, bytes):
+        stdout = stdout.decode("utf-8")
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode("utf-8")
     return proc.returncode, stdout, stderr
 
 

@@ -2,10 +2,10 @@ import dolfin as df
 import numpy as np
 import pytest
 import os
-from meshes import *
-from mesh_templates import *
+import shutil
+from finmag.util.meshes import *
+from finmag.util.mesh_templates import *
 from math import sin, cos, pi
-import mshr
 
 def test_mesh_size():
     """
@@ -13,6 +13,8 @@ def test_mesh_size():
     the mesh size is reported as expected.
 
     """
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
     RTOL = 1e-3
     box_mesh = df.BoxMesh(df.Point(-20, -30, 10), df.Point(30, 42, 20), 4, 4, 4)
     assert(np.isclose(mesh_size(box_mesh, unit_length=1.0), 72.0, rtol=RTOL))
@@ -66,6 +68,8 @@ def test_sphere_inside_box(tmpdir, debug=False):
     """
     TODO: Currently this test doesn't do much; it only checks whether we can execute the command `sphere_inside_box`.
     """
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
     os.chdir(str(tmpdir))
     mesh = sphere_inside_box(r_sphere=10, r_shell=15, l_box=50,
                              maxh_sphere=5.0, maxh_box=10.0, center_sphere=(10, -5, 8))
@@ -83,6 +87,8 @@ def test_build_mesh():
     to build_mesh() to rebuild the mesh. Then check that the result is the same
     as the original.
     """
+    mshr = pytest.importorskip("mshr")
+
     def assert_mesh_builds_correctly(mesh):
         coords = mesh.coordinates()
         cells = mesh.cells()
@@ -216,11 +222,15 @@ def test_mesh_is_periodic(tmpdir):
     assert mesh_is_periodic(mesh_box, 'xy')
 
 def test_regular_polygon():
+    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
+        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
     testmesh = regular_polygon(6,50,5)
     testmesh = regular_polygon(6,50,5)
     assert np.max(testmesh.coordinates()) == 50
     assert np.min(testmesh.coordinates()) == -50
 
 def test_regular_polygon_extruded():
+    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
+        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
     testmesh = regular_polygon_extruded(5,50,30,10)
     assert np.amax(testmesh.coordinates(),axis=0)[0] == 50

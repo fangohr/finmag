@@ -5,10 +5,10 @@ import logging
 import pytest
 import os
 import re
+import shutil
 from finmag.util.helpers import *
 from finmag.util.meshes import box, cylinder
 from finmag.util.mesh_templates import Sphere
-from finmag.util.visualization import render_paraview_scene
 from finmag.example import barmini
 import finmag
 
@@ -17,12 +17,17 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 1e-15
 
 
+def _require_netgen():
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
+
+
 def test_logging_handler_str():
     """
     """
     hdlr = logging.NullHandler()
     hdlr_str = logging_handler_str(hdlr)
-    print hdlr_str
+    print(hdlr_str)
     assert(re.match("^<logging.NullHandler object at .*>$", hdlr_str) != None)
 
 
@@ -32,7 +37,7 @@ def test_logging_status_str():
     non-empty string.
     """
     status_str = logging_status_str()
-    print status_str
+    print(status_str)
     assert(isinstance(status_str, str) and (status_str != ""))
 
 
@@ -92,9 +97,9 @@ def test_fnormalise():
 
     c = np.sqrt(4 ** 2 + 5 ** 2)
     expected = np.array([0, 0, 1, 4 / c, 0, 1, 0, 5 / c, 1, 0, 0, 0])
-    print "a3=\n", a3
-    print "expected=\n", expected
-    print "fnormalise(a3)=\n", fnormalise(a3)
+    print("a3=\n", a3)
+    print("expected=\n", expected)
+    print("fnormalise(a3)=\n", fnormalise(a3))
     assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
 
     # check that normalisation also works if input vector happens to be an
@@ -103,9 +108,9 @@ def test_fnormalise():
     a4 = np.array([0., 1., 1.])
     c = np.sqrt(1 ** 2 + 1 ** 2)  # sqrt(2)
     expected = np.array([0, 1 / c, 1 / c])
-    print "a4=\n", a4
-    print "expected=\n", expected
-    print "fnormalise(a4)=\n", fnormalise(a4)
+    print("a4=\n", a4)
+    print("expected=\n", expected)
+    print("fnormalise(a4)=\n", fnormalise(a4))
     assert np.allclose(fnormalise(a4), expected, rtol=TOLERANCE)
 
     # the same test with ints (i.e.
@@ -199,8 +204,8 @@ def test_vector_valued_function():
     assert(all(f_callable.vector() == v_ref_expr))
 
     assert(all(f_tuple_normalised.vector() == v_ref_normalised))
-    print "[DDD] #1: {}".format(f_expr_normalised.vector().array())
-    print "[DDD] #2: {}".format(v_ref_expr_normalised)
+    print("[DDD] #1: {}".format(f_expr_normalised.vector().array()))
+    print("[DDD] #2: {}".format(v_ref_expr_normalised))
 
     assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
@@ -256,7 +261,7 @@ def test_cartesian_to_spherical():
         (1, hapi, np.pi), (2, hapi, -hapi), (1, np.pi, 0)))
     for i, v in enumerate(test_vectors):
         v_spherical = cartesian_to_spherical(v)
-        print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
+        print("Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i]))
         assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
 
 
@@ -303,6 +308,7 @@ def test_vector_field_from_dolfin_function():
     values with the ones obtained by directly computing the field
     values from the grid coordinates and check that they coincide.
     """
+    _require_netgen()
 
     (xmin, xmax) = (-2, 3)
     (ymin, ymax) = (-1, 2.5)
@@ -349,6 +355,7 @@ def test_probe():
     supplying a function which should be applied to the probed field
     points. The results are compared with the expected values.
     """
+    _require_netgen()
     # Define a vector-valued function on the mesh
     mesh = cylinder(10, 1, 3)
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
@@ -547,6 +554,7 @@ def test_jpg2avi(tmpdir):
 
     """
     os.chdir(str(tmpdir))
+    from finmag.util.visualization import render_paraview_scene
     sim = finmag.example.normal_modes.disk()
     sim.compute_normal_modes(n_values=3)
     sim.export_normal_mode_animation(k=0, filename='foo/bar.pvd')
@@ -608,6 +616,7 @@ def test_restriction(tmpdir):
     have the correct lengths.
 
     """
+    _require_netgen()
     os.chdir(str(tmpdir))
     sphere1 = Sphere(10, center=(-20, 0, 0), name="sphere1")
     sphere2 = Sphere(20, center=(+30, 0, 0), name="sphere2")
