@@ -262,9 +262,13 @@ The current Python 3 progress is now stronger than plain import:
   - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
     plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `45 passed, 1 skipped, 1 xfailed`
+  - `62 passed, 1 skipped, 1 xfailed, 1 warning`
   - includes relax/restart/time regressions, full `sim_helpers_test.py`,
-    and stiff/scipy ODE driver coverage
+    Sundials reinit and stiff/scipy ODE driver coverage,
+    `drivers/tests/test_integrators.py`,
+    `tests/jacobean/test_jacobean_computation.py`,
+    `tests/jacobean/test_jacobean_integration.py`, and
+    `tests/jacobean/test_native_llg.py`
 
 ## Import Frontier Reached So Far
 

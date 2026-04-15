@@ -43,5 +43,10 @@ jobs:
                       src/finmag/tests/test_time.py \
                       src/finmag/sim/sim_helpers_test.py \
                       src/finmag/drivers/tests/sundials_nsteps_test.py \
+                      src/finmag/drivers/tests/sundials_reinit_test.py \
+                      src/finmag/drivers/tests/test_integrators.py \
                       src/finmag/drivers/tests/test_scipy.py \
+                      src/finmag/tests/jacobean/test_jacobean_computation.py \
+                      src/finmag/tests/jacobean/test_jacobean_integration.py \
+                      src/finmag/tests/jacobean/test_native_llg.py \
                       src/finmag/util/ode/tests/test_sundials_stiff_ode.py'

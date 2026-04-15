@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =45 passed, 1 skipped, 1 xfailed in 178.41s=
+- =62 passed, 1 skipped, 1 xfailed, 1 warning=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -350,7 +350,12 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/tests/test_time.py=
 - =src/finmag/sim/sim_helpers_test.py= (full file)
 - =src/finmag/drivers/tests/sundials_nsteps_test.py=
+- =src/finmag/drivers/tests/sundials_reinit_test.py=
+- =src/finmag/drivers/tests/test_integrators.py=
 - =src/finmag/drivers/tests/test_scipy.py=
+- =src/finmag/tests/jacobean/test_jacobean_computation.py=
+- =src/finmag/tests/jacobean/test_jacobean_integration.py=
+- =src/finmag/tests/jacobean/test_native_llg.py=
 - =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
 
 Manual verification helper:
@@ -380,6 +385,18 @@ Additional Python 3/runtime fixes made while broadening the core suite:
   Python 3
 - =src/finmag/sim/sim_helpers_test.py=: Python 3 imports/prints and a clean
   skip when =netgen= is unavailable for the nanodisk skyrmion subcase
+- =src/finmag/tests/jacobean/domain_wall_cobalt.py=: Python 3 cleanup for the
+  shared domain-wall helper used by integrator tests
+- =src/finmag/tests/jacobean/test_jacobean_integration.py= and related helper
+  imports/prints/integer-division assumptions cleaned up for Python 3
+- =src/finmag/tests/jacobean/test_jacobean_computation.py=: Python 3 relative
+  import and integer-division cleanup for the Jacobian comparison coverage
+- =src/finmag/tests/jacobean/test_native_llg.py=: Python 3 relative import and
+  print cleanup for the native LLG coverage
+- =src/finmag/util/time_counter.py=: Python 3 print cleanup required by the
+  native LLG test import path
+- =src/finmag/drivers/tests/sundials_reinit_test.py=: Python 3 print cleanup
+  for the Sundials reinitialisation coverage
 
 With the additional snapshot package:
 

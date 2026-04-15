@@ -229,15 +229,19 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =45 passed, 1 skipped, 1 xfailed=
+  - =62 passed, 1 skipped, 1 xfailed, 1 warning=
   - this adds:
     - relaxation tests
     - cyclic-reference regression tests
     - bug/regression tests for =.ndt= writing
     - time-handling tests
     - the full =sim_helpers_test.py= file
-    - Sundials n-steps and stiff ODE tests
+    - Sundials n-steps, reinit, and stiff ODE tests
     - SciPy integrator smoke coverage
+    - =tests/jacobean/test_jacobean_computation.py=
+    - =drivers/tests/test_integrators.py=
+    - =tests/jacobean/test_jacobean_integration.py=
+    - =tests/jacobean/test_native_llg.py=
   - current non-passing statuses inside that file are expected:
     - one existing =xfail= for =test_get_submesh=
     - one clean skip for the nanodisk skyrmion subcase when =netgen= is not

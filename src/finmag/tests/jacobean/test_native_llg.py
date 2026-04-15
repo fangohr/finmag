@@ -1,7 +1,7 @@
 import numpy as np
 import unittest
 from finmag.native import llg as native_llg
-from test_jacobean_computation import setup_llg_params_near_one
+from .test_jacobean_computation import setup_llg_params_near_one
 from finmag.util.time_counter import counter
 
 
@@ -21,7 +21,7 @@ class NativeLlgTests(unittest.TestCase):
         while c.next():
             native_llg.calc_llg_dmdt(m, H_eff, 0.0, dmdt, llg.pins, llg.gamma, llg.alpha.vector(
             ).array(), 0.1 / llg.c, llg.do_precession)
-        print "Computing dm/dt via native C++ code", c
+        print("Computing dm/dt via native C++ code", c)
 
 if __name__ == "__main__":
     unittest.main()
