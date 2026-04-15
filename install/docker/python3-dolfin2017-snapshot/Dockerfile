@@ -27,10 +27,12 @@ RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositor
 RUN apt-get update -y && \
     apt-get dist-upgrade -y --allow-unauthenticated
 
-RUN apt-get install -y --allow-unauthenticated --allow-downgrades \
+RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downgrades \
     python3 \
     python3-dev \
+    python3-matplotlib \
     python3-pip \
+    python3-scipy \
     python3-setuptools \
     default-libmysqlclient-dev \
     cython3 \

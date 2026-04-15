@@ -26,10 +26,7 @@ class OdeSundialsTests(unittest.TestCase):
             print(ex)
 
     def test_simple_1d_scipy(self):
-        try:
-            import scipy.integrate
-        except ImportError:
-            self.skipTest("scipy is not available in the Python 3 transition container")
+        import scipy.integrate
         integrator = scipy.integrate.ode(lambda t, y: 0.5 * y)
         integrator.set_integrator('vode', rtol=1e-8, atol=1e-8)
         integrator.set_initial_value(np.array([1.]), 0)

@@ -256,9 +256,11 @@ The current Python 3 progress is now stronger than plain import:
   - `src/finmag/tests/test_restart_simulation.py`
   - total: `7 passed`
 - the full agreed minimal acceptance suite also passes under Python 3:
-  - `20 passed, 1 skipped`
-  - the single skip is the SciPy comparison test in
-    `src/finmag/util/ode/tests/test_sundials_ode.py`
+  - `21 passed`
+  - `python3-scipy` and `python3-matplotlib` are installed in the transition
+    image
+  - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
+    plotting is optional and only used for `do_plot=True`
 
 ## Import Frontier Reached So Far
 

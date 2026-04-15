@@ -216,9 +216,11 @@ Second meaningful milestone:
   - =test_restart_simulation.py=
   - total: =7 passed=
 - the full agreed Python 3 minimal acceptance suite now passes:
-  - =20 passed, 1 skipped=
-  - the single skip is the SciPy comparison test in
-    =test_sundials_ode.py= when SciPy is not installed in the transition image
+  - =21 passed=
+  - =python3-scipy= is installed in the transition image, so the old SciPy
+    comparison test no longer skips
+  - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
+    optional during normal test collection
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
 

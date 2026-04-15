@@ -301,7 +301,7 @@ Verified command:
 
 Verified result:
 
-- =20 passed, 1 skipped in 103.08s=
+- =21 passed in 125.69s=
 
 Included tests:
 
@@ -315,13 +315,22 @@ Included tests:
 - =src/finmag/tests/test_llg.py=
 - =src/finmag/util/ode/tests/test_sundials_ode.py=
 
-The single skipped test is:
+The transition image now includes:
 
-- =OdeSundialsTests.test_simple_1d_scipy=
+- =python3-scipy=
+- =python3-matplotlib=
 
-That test depends on SciPy as an external comparison backend rather than on
-Finmag's own runtime path, so it now skips cleanly when SciPy is not available
-in the transition image.
+Those were added from the same Debian snapshot used for the DOLFIN 2017 stack.
+The install line now uses =--no-install-recommends= to avoid dragging in a very
+large TeX/doc recommendation set.
+
+As a result, =OdeSundialsTests.test_simple_1d_scipy= now runs normally instead
+of skipping.
+
+For =test_sim_ode.py=, the lazy =matplotlib= import was kept intentionally.
+That test only needs plotting when =do_plot=True=, so importing =matplotlib=
+inside the plotting branch keeps normal test collection lighter and avoids
+making plotting a hard import-time dependency of the test module.
 
 With the additional snapshot package:
 
