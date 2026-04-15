@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =62 passed, 1 skipped, 1 xfailed, 1 warning=
+- =105 passed, 15 skipped, 5 xfailed, 2 warnings=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -348,7 +348,10 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/tests/test_cyclic_references_in_sim.py=
 - =src/finmag/tests/bugs/test_bug_ndt_file_writing.py=
 - =src/finmag/tests/test_time.py=
+- =src/finmag/sim/hysteresis_test.py=
+- =src/finmag/sim/magnetisation_patterns_test.py=
 - =src/finmag/sim/sim_helpers_test.py= (full file)
+- =src/finmag/sim/sim_test.py= (full file)
 - =src/finmag/drivers/tests/sundials_nsteps_test.py=
 - =src/finmag/drivers/tests/sundials_reinit_test.py=
 - =src/finmag/drivers/tests/test_integrators.py=
@@ -385,6 +388,13 @@ Additional Python 3/runtime fixes made while broadening the core suite:
   Python 3
 - =src/finmag/sim/sim_helpers_test.py=: Python 3 imports/prints and a clean
   skip when =netgen= is unavailable for the nanodisk skyrmion subcase
+- =src/finmag/sim/sim_test.py=: Python 3 print/xrange/iteritems cleanup,
+  clean skips for =netgen=-dependent and =sllg=-dependent tests, and normal
+  mode test path repaired
+- =src/finmag/sim/magnetisation_patterns_test.py=: clean skip when =netgen=
+  is unavailable in the transition image
+- =src/finmag/sim/normal_mode_sim.py=: remove =past.builtins.basestring= and
+  fix Python 3 array/None comparisons in the normal mode workflow
 - =src/finmag/tests/jacobean/domain_wall_cobalt.py=: Python 3 cleanup for the
   shared domain-wall helper used by integrator tests
 - =src/finmag/tests/jacobean/test_jacobean_integration.py= and related helper
@@ -397,6 +407,14 @@ Additional Python 3/runtime fixes made while broadening the core suite:
   native LLG test import path
 - =src/finmag/drivers/tests/sundials_reinit_test.py=: Python 3 print cleanup
   for the Sundials reinitialisation coverage
+- =src/finmag/sim/sim_helpers.py=: Python 3-compatible loading/decoding of
+  legacy Python 2 restart =.npz= files
+- =src/finmag/util/fft.py=: final =xrange= cleanup on the normal mode export
+  path
+- =src/finmag/normal_modes/eigenmodes/*=: relative-import and Python 3 syntax
+  cleanup so normal-mode support imports again
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated.py=: Python 3
+  iterator cleanup and relative import for custom colormaps
 
 With the additional snapshot package:
 

@@ -109,7 +109,7 @@ def logging_status_str():
 
     # This keeps the loggers (with the exception of root)
     loggers = logging.Logger.manager.loggerDict
-    for loggername, logger in [('root', rootlog)] + loggers.items():
+    for loggername, logger in [('root', rootlog)] + list(loggers.items()):
         # check that we have any handlers at all before we attempt
         # to iterate
         if hasattr(logger, 'handlers'):

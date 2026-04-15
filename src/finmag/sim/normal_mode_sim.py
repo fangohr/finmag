@@ -14,7 +14,6 @@ from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, \
     export_normal_mode_animation, plot_spatially_resolved_normal_mode, \
     compute_tangential_space_basis, mf_mult
-from past.builtins import basestring
 
 log = logging.getLogger(name="finmag")
 
@@ -153,10 +152,10 @@ class NormalModeSimulation(Simulation):
 
     def _compute_spectrum(self, use_averaged_m=False, mesh_region=None, **kwargs):
         try:
-            if self.psd_freqs[mesh_region, use_averaged_m] != None and \
-                    self.psd_mx[mesh_region, use_averaged_m] != None and \
-                    self.psd_my[mesh_region, use_averaged_m] != None and \
-                    self.psd_mz[mesh_region, use_averaged_m] != None:
+            if self.psd_freqs[mesh_region, use_averaged_m] is not None and \
+                    self.psd_mx[mesh_region, use_averaged_m] is not None and \
+                    self.psd_my[mesh_region, use_averaged_m] is not None and \
+                    self.psd_mz[mesh_region, use_averaged_m] is not None:
                 # We can use the cached results since the spectrum was computed
                 # before.
                 return
@@ -323,7 +322,7 @@ class NormalModeSimulation(Simulation):
 
         if f_approx is None:
             raise TypeError("Argument 'f_approx' must not be None.")
-        if not isinstance(component, types.StringTypes):
+        if not isinstance(component, str):
             raise TypeError("Argument 'component' must be of type string.")
 
         self._compute_spectrum(
@@ -456,7 +455,7 @@ class NormalModeSimulation(Simulation):
                                        force_recompute_matrices=False, check_hermitian=False,
                                        differentiate_H_numerically=True, use_real_matrix=True):
         if use_generalized:
-            if (self.A == None or self.M == None) or force_recompute_matrices:
+            if (self.A is None or self.M is None) or force_recompute_matrices:
                 df.tic()
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices(
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
@@ -467,7 +466,7 @@ class NormalModeSimulation(Simulation):
                 log.debug(
                     'Re-using previously computed eigenproblem matrices.')
         else:
-            if self.D == None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
+            if self.D is None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
                 df.tic()
                 self.D = compute_eigenproblem_matrix(
                     self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
@@ -612,7 +611,7 @@ class NormalModeSimulation(Simulation):
               of `w`, but this has changed in the interface!
 
         """
-        if isinstance(solver, basestring):
+        if isinstance(solver, str):
             try:
                 solver = self.predefined_eigensolvers[solver]
             except KeyError:

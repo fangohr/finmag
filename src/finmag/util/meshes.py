@@ -162,11 +162,11 @@ def from_csg(csg, save_result=True, filename="", directory=""):
 
         if not os.path.exists(geofile):
             with open(geofile, "w") as f:
-                f.write(csg)
+                f.write(csg.decode("utf-8") if isinstance(csg, bytes) else csg)
         mesh = from_geofile(geofile, save_result=True)
     else:
         tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
-        tmp.write(csg)
+        tmp.write(csg if isinstance(csg, bytes) else csg.encode("utf-8"))
         tmp.close()
         mesh = from_geofile(tmp.name, save_result=False)
         # Since we used delete=False in NamedTemporaryFile, we are

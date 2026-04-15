@@ -6,7 +6,7 @@ import textwrap
 import logging
 import pytest
 import os
-import sh
+import shutil
 import matplotlib.pyplot as plt
 from glob import glob
 from distutils.version import LooseVersion
@@ -27,6 +27,11 @@ from finmag.util.consts import gamma
 
 logger = logging.getLogger("finmag")
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def _require_netgen():
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
 
 
 def num_interactions(sim):
@@ -128,8 +133,8 @@ class TestSimulation(object):
         v0_ref = v_ref[[0, N, 2 * N]]
 
         # Check that the results coincide
-        print "v0_probed: {}".format(v0_probed)
-        print "v0_ref: {}".format(v0_ref)
+        print("v0_probed: {}".format(v0_probed))
+        print("v0_ref: {}".format(v0_ref))
         assert(np.allclose(v0_probed, v0_ref))
         assert(np.allclose(v_probed_1d, v_ref))
 
@@ -193,7 +198,7 @@ class TestSimulation(object):
         m_probed_vals2 = np.concatenate([vals1, vals2])
 
         # Check that we get m_init everywhere.
-        for i in xrange(len(probing_pts)):
+        for i in range(len(probing_pts)):
             m = m_probed_vals[i]
             m2 = m_probed_vals2[i]
             pt = probing_pts[i]
@@ -220,8 +225,8 @@ class TestSimulation(object):
         ny = 10
         z = 5.0  # use cutting plane in the middle of the cuboid
         X, Y = np.mgrid[0:3:nx * 1j, 0:3:ny * 1j]
-        pts = np.array([[(X[i, j], Y[i, j], z) for j in xrange(ny)]
-                        for i in xrange(nx)])
+        pts = np.array([[(X[i, j], Y[i, j], z) for j in range(ny)]
+                        for i in range(nx)])
 
         # Probe the field
         res = sim.probe_field('m', pts)
@@ -729,6 +734,9 @@ class TestSimulation(object):
         assert(len(glob('mag_[0-9]*.npy')) == 3)
 
     def test_sim_sllg(self, do_plot=False):
+        from finmag.sim.sim import SLLG_IMPORT_ERROR
+        if SLLG_IMPORT_ERROR is not None:
+            pytest.skip("sllg kernel is not available in the Python 3 transition container")
         mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         alpha = 0.1
@@ -774,6 +782,9 @@ class TestSimulation(object):
         assert np.max(np.abs(mz - mz_ref)) < 8e-7
 
     def test_sim_sllg_time(self):
+        from finmag.sim.sim import SLLG_IMPORT_ERROR
+        if SLLG_IMPORT_ERROR is not None:
+            pytest.skip("sllg kernel is not available in the Python 3 transition container")
         mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(5, 5, 5), 1, 1, 1)
         sim = Simulation(mesh, 8.6e5, unit_length=1e-9, kernel='sllg')
         sim.alpha = 0.1
@@ -988,7 +999,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
         optionally closing previously created logfiles.
 
         """
-        for i in xrange(N):
+        for i in range(N):
             sim = Simulation(mesh, Ms, unit_length)
             if close_logfiles:
                 sim.close_logfile()
@@ -1014,7 +1025,7 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     # Check that no file logging handler is left
     # The next line creates an error, presumably because the loop above
     # removes too many Handlers
-    print logging_status_str()
+    print(logging_status_str())
 
     # Restore the maximum number of allowed open file descriptors. Not
     # sure this is actually necessary but can't hurt.
@@ -1047,6 +1058,7 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     inspection.
     """
     os.chdir(str(tmpdir))
+    _require_netgen()
     mesh = nanodisk(d=60, h=5, maxh=3.0)
     sim = sim_with(mesh, Ms=8e6, m_init=[1, 0, 0], unit_length=1e-9)
 
@@ -1101,9 +1113,9 @@ def test_set_m_after_relaxation(tmpdir):
     assert sim.m_average[2] >= 0.9
 
     # Set the spins again so that they will point in -Z upon relaxation.
-    print sim.integrator.m
+    print(sim.integrator.m)
     sim.set_m((0.2, 0.2, -1))
-    print sim.integrator.m
+    print(sim.integrator.m)
     sim.relax()
     assert sim.m_average[2] <= -0.9
 
@@ -1207,6 +1219,7 @@ def test_NormalModeSimulation(tmpdir):
 @pytest.mark.slow
 def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
     os.chdir(str(tmpdir))
+    _require_netgen()
     csg_string = textwrap.dedent("""
         algebraic3d
         solid cube = orthobrick (0, 0, 0; 50, 50, 3) -maxh = 3.0;
@@ -1230,6 +1243,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
 @pytest.mark.slow
 def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     os.chdir(str(tmpdir))
+    _require_netgen()
     csg_string = textwrap.dedent("""
         algebraic3d
         solid cube = orthobrick (0, 0, 0; 150, 150, 3) -maxh = 10.0;
@@ -1288,6 +1302,7 @@ def test_compute_normal_modes(tmpdir):
     of those modes to vtk files.
     """
     os.chdir(str(tmpdir))
+    _require_netgen()
 
     d = 100
     h = 10
@@ -1367,6 +1382,7 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     eigensolvers (this is far from exhaustive, though).
     """
     os.chdir(str(tmpdir))
+    _require_netgen()
 
     d = 100
     h = 10
@@ -1428,7 +1444,7 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
         is linearly dependent, which means that they define
         the same eigenspace.
         """
-        for v, w in itertools.izip(vs, ws):
+        for v, w in zip(vs, ws):
             # Check that v is a constant multiple of w
             a = v / w
             assert np.allclose(a, a[0])
@@ -1582,7 +1598,7 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     # 3 represents the dimension of the mesh cells
     cell_markers = mesh.domains().markers(3)
     fun_subdomains = df.CellFunction('size_t', mesh)
-    for (cell_no, marker) in cell_markers.iteritems():
+    for (cell_no, marker) in cell_markers.items():
         fun_subdomains[cell_no] = marker
 
     submesh_nanodisk = df.SubMesh(mesh, fun_subdomains, 0)
@@ -1654,7 +1670,7 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
         assert np.allclose(m_norms, a, atol=1e-12, rtol=1e-12)
 
         # Check that the energy terms scale correctly
-        for (name, exponent) in scaling_exponents.iteritems():
+        for (name, exponent) in scaling_exponents.items():
             if name == 'Anisotropy':
                 # We need a separate case for the anisotropy due to the constant that
                 # we're adding in the definition of the anisotropy energy.
@@ -1855,6 +1871,10 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
 
     """
     os.chdir(str(tmpdir))
+
+    sh = pytest.importorskip("sh")
+    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
+        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
 
     lx = 50
     ly = 5

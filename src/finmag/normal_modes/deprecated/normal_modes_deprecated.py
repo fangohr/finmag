@@ -7,7 +7,6 @@ import scipy.sparse.linalg
 from time import time
 from finmag.util import helpers
 from finmag.util.meshes import embed3d
-from itertools import izip
 from math import pi
 from finmag.field import Field
 logger = logging.getLogger('finmag')
@@ -27,9 +26,9 @@ def _mult_one(a, b):
     # of the resulting array by adding two elements of the argument arrays
     res = np.zeros(
         (a.shape[0], b.shape[1], a.shape[2]), dtype=type(a[0, 0, 0] + b[0, 0, 0]))
-    for i in xrange(res.shape[0]):
-        for j in xrange(res.shape[1]):
-            for k in xrange(a.shape[1]):
+    for i in range(res.shape[0]):
+        for j in range(res.shape[1]):
+            for k in range(a.shape[1]):
                 res[i, j, :] += a[i, k, :] * b[k, j, :]
 
     return res
@@ -41,7 +40,7 @@ def mf_mult(*args):
         raise Exception("mult requires at least 2 arguments")
 
     res = args[0]
-    for i in xrange(1, len(args)):
+    for i in range(1, len(args)):
         res = _mult_one(res, args[i])
 
     return res
@@ -388,7 +387,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
     # Compute A
     w = np.zeros(2 * n)
-    for i in xrange(2 * n):
+    for i in range(2 * n):
         if i % 50 == 0:
             logger.debug(
                 "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, df.toc()))
@@ -483,7 +482,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     TOL = 1e-3
     positive_freqs = filter(lambda x: x > 0, omega)
     negative_freqs = filter(lambda x: x < 0, omega)
-    freq_pairs = izip(positive_freqs, negative_freqs)
+    freq_pairs = zip(positive_freqs, negative_freqs)
     if (n_values % 2 == 0 and len(positive_freqs) != len(negative_freqs)) or \
             (n_values % 2 == 0 and len(positive_freqs) - len(negative_freqs) not in [0, 1]) or \
             any([abs(x + y) > TOL for (x, y) in freq_pairs]):
@@ -616,7 +615,7 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
 
 def get_colormap_from_name(cmap_name):
     from matplotlib import cm
-    import custom_colormaps
+    from . import custom_colormaps
 
     colormaps = {'coolwarm': cm.coolwarm,
                  'cool': cm.cool,

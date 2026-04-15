@@ -1,5 +1,7 @@
 import numpy as np
 import finmag
+import pytest
+import shutil
 from finmag.sim.magnetisation_patterns import *
 from finmag.util.meshes import cylinder
 
@@ -9,6 +11,9 @@ def test_vortex_functions():
     Testing for correct polarity and 'handiness' of the two vortex functions,
     vortex_simple() and vortex_feldtkeller()
     """
+
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
 
     mesh = cylinder(10, 1, 3)
     coords = mesh.coordinates()

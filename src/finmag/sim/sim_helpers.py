@@ -106,7 +106,21 @@ def load_restart_data(filename_or_simulation):
     else:
         ValueError("Can only deal with simulations or filenames, "
                    "but not '%s'" % type(filename_or_simulation))
-    data = np.load(filename)
+    data = np.load(filename, allow_pickle=True, encoding='bytes')
+
+    def _decode_legacy_bytes(value):
+        if isinstance(value, bytes):
+            return value.decode("utf-8")
+        if isinstance(value, dict):
+            return {
+                _decode_legacy_bytes(key): _decode_legacy_bytes(val)
+                for key, val in value.items()
+            }
+        if isinstance(value, list):
+            return [_decode_legacy_bytes(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(_decode_legacy_bytes(item) for item in value)
+        return value
 
     # strip of arrays where we do not want them:
     data2 = {}
@@ -114,7 +128,7 @@ def load_restart_data(filename_or_simulation):
         # the 'tolist()' command returns dictionary and datetime objects
         # when wrapped up in numpy array
         if key in ['stats', 'datetime', 'simtime', 'simname', 'driver']:
-            data2[key] = data[key].tolist()
+            data2[key] = _decode_legacy_bytes(data[key].tolist())
         else:
             data2[key] = data[key]
     return data2

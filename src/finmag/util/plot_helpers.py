@@ -291,7 +291,7 @@ def plot_hysteresis_loop(H_vals, m_vals,
                    can also be a list of files
 
     """
-    if not all([isinstance(x, (types.IntType, types.FloatType)) for x in m_vals]):
+    if not all([isinstance(x, (int, float)) for x in m_vals]):
         raise ValueError(
             "m_vals must be a list of scalar values, got: {}".format(m_vals))
 
@@ -307,14 +307,14 @@ def plot_hysteresis_loop(H_vals, m_vals,
     ax.set_ylim((-1.2, 1.2))
 
     if point_labels is None:
-        point_labels = xrange(len(H_vals))
+        point_labels = range(len(H_vals))
     # Convert point_labels into a dictionary where the keys are the point indices
     # and the values are the respective labels to be used.
     point_labels = dict(
         map(lambda i: i if isinstance(i, tuple) else (i, str(i)), point_labels))
     if add_point_labels:
-        for i in xrange(len(H_vals)):
-            if point_labels.has_key(i):
+        for i in range(len(H_vals)):
+            if i in point_labels:
                 x = H_vals[i]
                 y = m_vals[i]
                 ax.annotate(point_labels[i], xy=(
@@ -324,7 +324,7 @@ def plot_hysteresis_loop(H_vals, m_vals,
     if infobox != []:
         box_text = ""
         for elt in infobox:
-            if isinstance(elt, types.StringType):
+            if isinstance(elt, str):
                 box_text += elt + '\n'
             else:
                 try:
@@ -355,7 +355,7 @@ def plot_hysteresis_loop(H_vals, m_vals,
 
     if filename:
         filenames = [filename] if isinstance(
-            filename, basestring) else filename
+            filename, str) else filename
 
         for name in filenames:
             create_missing_directory_components(name)
@@ -376,13 +376,13 @@ if __name__ == "__main__":
         my[t][:] = t * np.sin(
             2 * np.pi * 3 * xs / abs(np.min(xs) - np.max(xs))) / 100
 
-    print "# values on x-axis: {}, # values on y-axis (time): {}.".format(
-        len(xs), len(ts))
-    print "Shape of the plotted array: {}.".format(my.shape)
-    print "Minimum: {}, Maximum: {}.".format(np.min(my), np.max(my))
+    print("# values on x-axis: {}, # values on y-axis (time): {}.".format(
+        len(xs), len(ts)))
+    print("Shape of the plotted array: {}.".format(my.shape))
+    print("Minimum: {}, Maximum: {}.".format(np.min(my), np.max(my)))
 
     labels = ("x (nm)", "time (ps)", "m_y")
     surface_2d(xs, ts, my, labels, "2D surface", path="surface_2d.png")
     surface_3d(xs, ts, my, labels, "3D surface", path="surface_3d.png")
 
-    print "Saved plots in 'surface_2d.png' and 'surface_3d.png'."
+    print("Saved plots in 'surface_2d.png' and 'surface_3d.png'.")

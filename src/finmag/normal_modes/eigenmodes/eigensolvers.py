@@ -5,8 +5,7 @@ import scipy.linalg
 import scipy.sparse.linalg
 import logging
 from finmag.util.helpers import format_time
-from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
-from types import NoneType
+from .helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 
 logger = logging.getLogger("finmag")
 
@@ -95,7 +94,7 @@ class AbstractEigensolver(object):
                 "Converting sparse matrix A to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if A is big!.")
             A = as_dense_array(A)
-        if not isinstance(M, (np.ndarray, NoneType)):
+        if M is not None and not isinstance(M, np.ndarray):
             logger.warning(
                 "Converting sparse matrix M to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if M is big!.")
@@ -437,7 +436,7 @@ class SLEPcEigensolver(AbstractEigensolver):
 
         omegas = []
         ws = []
-        for i in xrange(nconv):
+        for i in range(nconv):
             omega = E.getEigenpair(i, vr, vi)
             vr_arr = vr.getValues(range(size))
             vi_arr = vi.getValues(range(size))

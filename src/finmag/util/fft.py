@@ -721,7 +721,7 @@ def export_normal_mode_animation_from_ringdown(npy_files, outfilename, mesh, t_s
     aaa = np.empty(3 * num_nodes)
     # for i in xrange(len(ts)):
     # for i in xrange(20):
-    for i in xrange(num_frames):
+    for i in range(num_frames):
         # if i % 20 == 0:
         #    print "i={} ".format(i),
         #    import sys

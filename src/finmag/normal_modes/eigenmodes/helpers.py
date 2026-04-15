@@ -7,8 +7,7 @@ from finmag.util.helpers import make_human_readable
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import csr_matrix
 from scipy.optimize import minimize_scalar
-from custom_exceptions import EigenproblemVerifyError
-from types import NoneType
+from .custom_exceptions import EigenproblemVerifyError
 
 logger = logging.getLogger("finmag")
 
@@ -55,7 +54,7 @@ def print_eigenproblem_memory_usage(mesh, generalised=False):
 
 
 def compute_relative_error(A, M, omega, w):
-    if not isinstance(A, np.ndarray) or not isinstance(M, (np.ndarray, NoneType)):
+    if not isinstance(A, np.ndarray) or (M is not None and not isinstance(M, np.ndarray)):
         logger.warning(
             "Converting sparse matrix to numpy.array as this is the only "
             "supported matrix type at the moment for computing relative errors.")
@@ -133,7 +132,7 @@ def is_matching_eigenpair(pair1, pair2, tol_eigenval=1e-8, tol_eigenvec=1e-6):
     return eigenvals_coincide and eigenvecs_coincide
 
 
-def find_matching_eigenpair((omega, w), ref_eigenpairs,
+def find_matching_eigenpair(eigenpair, ref_eigenpairs,
                             tol_eigenval=1e-8, tol_eigenvec=1e-6):
     """
     Given a pair `(omega, w)` consisting of a computed eigenvalue and
@@ -143,6 +142,7 @@ def find_matching_eigenpair((omega, w), ref_eigenpairs,
     linearly dependent (up to `tolerance_eigenvec`).
 
     """
+    omega, w = eigenpair
     matching_indices = \
         [i
          for (i, pair_ref) in enumerate(ref_eigenpairs)
@@ -329,7 +329,7 @@ def as_petsc_matrix(A):
     A_petsc.setType('aij')  # sparse
     A_petsc.setUp()
 
-    for j in xrange(0, n):
+    for j in range(0, n):
         col = get_jth_column(j)
         if col.dtype == complex:
             if np.allclose(col.imag, 0.0):
@@ -338,7 +338,7 @@ def as_petsc_matrix(A):
                 raise TypeError("Array with complex entries cannot be converted "
                                 "to a PETSc matrix.")
 
-        for i in xrange(0, m):
+        for i in range(0, m):
             # We try to keep A_petsc as sparse as possible by only
             # setting nonzero entries.
             if col[i] != 0.0:
@@ -374,7 +374,7 @@ def irregular_interval_mesh(xmin, xmax, n):
     for (i, x) in enumerate(coords):
         editor.add_vertex(i, np.array([x], dtype=float))
     editor.add_vertex(n - 1, np.array([xmax], dtype=float))
-    for i in xrange(n - 1):
+    for i in range(n - 1):
         editor.add_cell(i, np.array([i, i + 1], dtype='uintp'))
 
     editor.close()
