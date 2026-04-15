@@ -36,8 +36,9 @@ jobs:
                       src/finmag/util/length_scales_test.py \
                       src/finmag/util/meshes_test.py \
                       src/finmag/util/mesh_templates_test.py \
-                      src/finmag/util/pbc_test.py \
-                      src/finmag/util/plot_helpers_test.py \
+              src/finmag/util/pbc_test.py \
+              src/finmag/util/fft_test.py \
+              src/finmag/util/plot_helpers_test.py \
                       src/finmag/util/vtk_saver_test.py \
                       src/finmag/util/dmi_helper_test.py \
                       src/finmag/util/test_set_function_values.py \
@@ -46,9 +47,21 @@ jobs:
                       src/finmag/scheduler/scheduler_test.py \
                       src/finmag/tests/test_restart_simulation.py \
                       src/finmag/tests/test_sim_ode.py \
-                      src/finmag/tests/test_applied_field.py \
-                      src/finmag/energies/exchange_test.py \
+              src/finmag/tests/test_applied_field.py \
+              src/finmag/tests/test_anis.py \
+              src/finmag/tests/test_dmi.py \
+              src/finmag/tests/test_energy_creation_with_variable_Ms.py \
+              src/finmag/tests/test_interactions_scale_linearly_with_m.py \
+              src/finmag/tests/test_heun.py \
+              src/finmag/tests/test_spatially_varying_alpha.py \
+              src/finmag/tests/test_spatially_varying_anisotropy.py \
+              src/finmag/tests/test_unit_length.py \
+              src/finmag/energies/exchange_test.py \
                       src/finmag/energies/anisotropy_test.py \
+                      src/finmag/energies/cubic_anisotropy_test.py \
+                      src/finmag/energies/test_energies_in_regions.py \
+                      src/finmag/energies/magnetostatic_field_test.py \
+                      src/finmag/energies/thin_film_demag_test.py \
                       src/finmag/energies/zeeman_test.py \
                       src/finmag/energies/dmi_test.py \
                       src/finmag/tests/test_exchange_static.py \
@@ -57,6 +70,9 @@ jobs:
                       src/finmag/drivers/tests/test_relaxation.py \
                       src/finmag/drivers/tests/test_relax_two_times.py \
                       src/finmag/tests/test_cyclic_references_in_sim.py \
+                      src/finmag/physics/tests/test_effective_field.py \
+                      src/finmag/physics/tests/test_equation.py \
+                      src/finmag/physics/tests/test_terms.py \
                       src/finmag/tests/bugs/test_bug_ndt_file_writing.py \
                       src/finmag/tests/test_time.py \
                       src/finmag/sim/hysteresis_test.py \

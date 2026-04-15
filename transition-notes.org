@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =253 passed, 39 skipped, 7 xfailed, 4 warnings=
+- =295 passed, 40 skipped, 9 xfailed, 4 warnings in 973.04s=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -358,6 +358,22 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/energies/exchange_test.py=
 - =src/finmag/energies/anisotropy_test.py=
 - =src/finmag/energies/zeeman_test.py=
+- =src/finmag/physics/tests/test_effective_field.py=
+- =src/finmag/physics/tests/test_equation.py=
+- =src/finmag/physics/tests/test_terms.py=
+- =src/finmag/energies/cubic_anisotropy_test.py=
+- =src/finmag/energies/test_energies_in_regions.py=
+- =src/finmag/energies/magnetostatic_field_test.py=
+- =src/finmag/energies/thin_film_demag_test.py=
+- =src/finmag/tests/test_energy_creation_with_variable_Ms.py=
+- =src/finmag/tests/test_interactions_scale_linearly_with_m.py=
+- =src/finmag/tests/test_heun.py=
+- =src/finmag/tests/test_spatially_varying_alpha.py=
+- =src/finmag/tests/test_spatially_varying_anisotropy.py=
+- =src/finmag/tests/test_unit_length.py=
+- =src/finmag/tests/test_anis.py=
+- =src/finmag/tests/test_dmi.py=
+- =src/finmag/util/fft_test.py=
 - =src/finmag/energies/dmi_test.py=
 - =src/finmag/util/fileio_test.py=
 - =src/finmag/util/helpers_test.py=

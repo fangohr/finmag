@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =253 passed, 39 skipped, 7 xfailed, 4 warnings=
+  - =295 passed, 40 skipped, 9 xfailed, 4 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -249,6 +249,22 @@ Second meaningful milestone:
     - =util/dmi_helper_test.py=
     - =util/test_set_function_values.py=
     - =util/test_dmi_from_helix.py=
+    - =physics/tests/test_effective_field.py=
+    - =physics/tests/test_equation.py=
+    - =physics/tests/test_terms.py=
+    - =energies/cubic_anisotropy_test.py=
+    - =energies/test_energies_in_regions.py=
+    - =energies/magnetostatic_field_test.py=
+    - =energies/thin_film_demag_test.py=
+    - =tests/test_energy_creation_with_variable_Ms.py=
+    - =tests/test_interactions_scale_linearly_with_m.py=
+    - =tests/test_heun.py=
+    - =tests/test_spatially_varying_alpha.py=
+    - =tests/test_spatially_varying_anisotropy.py=
+    - =tests/test_unit_length.py=
+    - =tests/test_anis.py=
+    - =tests/test_dmi.py=
+    - =util/fft_test.py=
     - relaxation tests
     - cyclic-reference regression tests
     - bug/regression tests for =.ndt= writing
@@ -268,6 +284,7 @@ Second meaningful milestone:
     - one existing =xfail= for =test_get_submesh=
     - additional existing =xfail= cases inside =sim_test.py=
     - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
+    - existing =xfail= in =energies/test_energies_in_regions.py=
     - clean skips for =netgen=-dependent tests when =netgen= is not installed
       in the transition image
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools

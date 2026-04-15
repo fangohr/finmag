@@ -42,7 +42,7 @@ def same(v, w, TOL=1e-14):
     """
     diff = v - w
     diff.abs()
-    print "v = {}\nw = {}\ndiff = {}".format(v.array(), w.array(), diff.array())
+    print("v = {}\nw = {}\ndiff = {}".format(v.array(), w.array(), diff.array()))
     return diff.sum() < TOL
 
 
@@ -55,7 +55,7 @@ def test_new_equation_wrong_size(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     W = df.VectorFunctionSpace(mesh, "CG", 2, dim=3)  # W like Wrong
     H_W = df.Function(W)
-    with pytest.raises(StandardError):
+    with pytest.raises(Exception):
         equation = Equation(m.vector(), H_W.vector(), dmdt.vector())
 
 

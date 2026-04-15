@@ -3,6 +3,7 @@ import numpy as np
 import dolfin as df
 import pytest
 import os
+import shutil
 import finmag
 from finmag.field import Field
 #from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
@@ -87,6 +88,8 @@ def test_energies_in_separated_subdomains(tmpdir):
 
     """
     os.chdir(str(tmpdir))
+    if shutil.which("netgen") is None:
+        pytest.skip("netgen is not available in the Python 3 transition container")
 
     # Create a mesh consisting of two disks (with different heights)
     d = 30.0

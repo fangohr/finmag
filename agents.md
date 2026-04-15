@@ -259,10 +259,10 @@ The current Python 3 progress is now stronger than plain import:
   - `21 passed`
   - `python3-scipy` and `python3-matplotlib` are installed in the transition
   image
-  - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
-    plotting is optional and only used for `do_plot=True`
+- `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
+  plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `253 passed, 39 skipped, 7 xfailed, 4 warnings`
+  - `295 passed, 40 skipped, 9 xfailed, 4 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
@@ -276,7 +276,37 @@ The current Python 3 progress is now stronger than plain import:
     `drivers/tests/test_integrators.py`,
     `tests/jacobean/test_jacobean_computation.py`,
     `tests/jacobean/test_jacobean_integration.py`, and
-    `tests/jacobean/test_native_llg.py`
+    `tests/jacobean/test_native_llg.py`,
+    `physics/tests/test_effective_field.py`,
+    `physics/tests/test_equation.py`,
+    `physics/tests/test_terms.py`,
+    `energies/cubic_anisotropy_test.py`,
+    `energies/test_energies_in_regions.py`,
+    `energies/magnetostatic_field_test.py`, and
+    `energies/thin_film_demag_test.py`,
+    `tests/test_energy_creation_with_variable_Ms.py`,
+    `tests/test_interactions_scale_linearly_with_m.py`,
+    `tests/test_heun.py`,
+    `tests/test_spatially_varying_alpha.py`,
+    `tests/test_spatially_varying_anisotropy.py`, and
+    `tests/test_unit_length.py`,
+    `tests/test_anis.py`,
+    `tests/test_dmi.py`, and
+    `util/fft_test.py`
+
+The current Python 3 transition gate is:
+
+- `.github/workflows/python3-core-suite.yml`
+- `dev/bin/verify-python3-core-suite`
+
+Intentional skips and xfails are explicit:
+
+- `netgen`, `gmsh`, `dolfin-convert`, and `dolfinh5tools` dependent tests skip
+  cleanly when those tools are absent
+- `sllg`-dependent tests skip when that subsystem is unavailable on the current
+  Python 3 path
+- a small number of historical failures remain marked `xfail`, including known
+  weak-tolerance demag linearity checks and `test_get_submesh`
 
 ## Import Frontier Reached So Far
 
