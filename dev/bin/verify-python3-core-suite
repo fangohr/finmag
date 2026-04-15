@@ -38,6 +38,7 @@ docker run --rm \
               src/finmag/tests/test_applied_field.py \
               src/finmag/tests/test_anis.py \
               src/finmag/tests/test_dmi.py \
+              src/finmag/tests/test_dmi_terms.py \
               src/finmag/tests/test_energy_creation_with_variable_Ms.py \
               src/finmag/tests/test_interactions_scale_linearly_with_m.py \
               src/finmag/tests/test_heun.py \
@@ -47,6 +48,9 @@ docker run --rm \
               src/finmag/energies/exchange_test.py \
               src/finmag/energies/anisotropy_test.py \
               src/finmag/energies/cubic_anisotropy_test.py \
+              src/finmag/energies/demag/demag_pbc_test.py \
+              src/finmag/energies/demag/fk_demag_test.py \
+              src/finmag/energies/demag/fk_demag_2d_test.py \
               src/finmag/energies/test_energies_in_regions.py \
               src/finmag/energies/magnetostatic_field_test.py \
               src/finmag/energies/thin_film_demag_test.py \

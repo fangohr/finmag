@@ -262,7 +262,7 @@ The current Python 3 progress is now stronger than plain import:
 - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
   plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `295 passed, 40 skipped, 9 xfailed, 4 warnings`
+  - `299 passed, 50 skipped, 10 xfailed, 4 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
@@ -292,7 +292,11 @@ The current Python 3 progress is now stronger than plain import:
     `tests/test_unit_length.py`,
     `tests/test_anis.py`,
     `tests/test_dmi.py`, and
-    `util/fft_test.py`
+    `tests/test_dmi_terms.py`,
+    `util/fft_test.py`,
+    `energies/demag/demag_pbc_test.py`,
+    `energies/demag/fk_demag_test.py`, and
+    `energies/demag/fk_demag_2d_test.py`
 
 The current Python 3 transition gate is:
 

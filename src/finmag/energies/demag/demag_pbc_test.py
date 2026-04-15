@@ -42,14 +42,14 @@ def test_field_1d():
     f1 = compute_field(mesh_1, nx=3, m0=m0)
     f2 = compute_field(mesh_3, nx=1, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.012
 
     m0 = (0, 0, 1)
     f1 = compute_field(mesh_1, nx=3, m0=m0)
     f2 = compute_field(mesh_3, nx=1, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.02
 
 
@@ -59,14 +59,14 @@ def test_field_2d():
     f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
     f2 = compute_field(mesh_9, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.01
 
     m0 = (0, 0, 1)
     f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
     f2 = compute_field(mesh_9, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.004
 
 if __name__ == '__main__':

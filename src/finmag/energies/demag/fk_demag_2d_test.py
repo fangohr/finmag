@@ -38,21 +38,21 @@ def test_demag_2d(plot=False):
     demag = Demag2D(thickness=h)
 
     demag.setup(m, Ms)
-    print demag.compute_field()
+    print(demag.compute_field())
 
     f0 = demag.compute_field()
     m.set_with_numpy_array_debug(f0)
 
-    print demag.m.probe(0., 0., 0)
-    print demag.m.probe(1., 0., 0)
-    print demag.m.probe(0., 1., 0)
-    print demag.m.probe(1., 1., 0)
-    print '=' * 50
+    print(demag.m.probe(0., 0., 0))
+    print(demag.m.probe(1., 0., 0))
+    print(demag.m.probe(0., 1., 0))
+    print(demag.m.probe(1., 1., 0))
+    print('=' * 50)
 
-    print demag.m.probe(0., 0., h)
-    print demag.m.probe(1., 0., h)
-    print demag.m.probe(0., 1., h)
-    print demag.m.probe(1., 1., h)
+    print(demag.m.probe(0., 0., h))
+    print(demag.m.probe(1., 0., h))
+    print(demag.m.probe(0., 1., h))
+    print(demag.m.probe(1., 1., h))
 
     if plot:
         df.plot(m.f)
