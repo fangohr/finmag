@@ -326,7 +326,16 @@ Intentional skips and xfails are explicit:
 - `sllg`-dependent tests skip when that subsystem is unavailable on the current
   Python 3 path
 - a small number of historical failures remain marked `xfail`, including known
-  weak-tolerance demag linearity checks and `test_get_submesh`
+  weak-tolerance demag linearity checks
+- after the last full suite rerun, additional targeted progress was made on
+  tests already covered by the existing core-suite workflow:
+  - `sim_helpers_test.py::test_get_submesh` now passes
+  - `sim_test.py::TestSimulation::test_mark_regions` now passes
+  - `sim_test.py::TestSimulation::test_pbc2d_m_init` now passes after moving
+    the test to the current `pbc='2d'` API and checking representative field
+    values instead of old raw-vector ordering
+  - `tests/test_dmi_terms.py` has been rewritten against `times_curl()` and
+    now contains three real passing tests instead of historical skips
 
 ## Import Frontier Reached So Far
 

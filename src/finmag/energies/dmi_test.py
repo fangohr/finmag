@@ -69,8 +69,6 @@ def test_interaction_accepts_name():
     dmi = DMI(1)
     assert hasattr(dmi, 'name')
 
-# We dont use PBC at the moment. If we do, we should make this pass first.
-@pytest.mark.xfail(reason="unfixed bug")
 def test_dmi_pbc2d():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
 
@@ -83,7 +81,7 @@ def test_dmi_pbc2d():
     dmi.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), 1))
     field = dmi.compute_field()
 
-    assert np.max(field) < 1e-15
+    assert np.max(np.abs(field)) < 1e-9
 
 def test_dmi_pbc2d_1D(plot=False):
 

@@ -599,11 +599,12 @@ class TestSimulation(object):
         with pytest.raises(ValueError):
             sim.set_m(m_init_nan)
 
-    @pytest.mark.skipif("not LooseVersion(df.__version__) < LooseVersion('1.2.0')")
     def test_pbc2d_m_init(self):
 
         def m_init_fun(pos):
-            if pos[0] == 0 or pos[1] == 0:
+            # Use a periodic-compatible initialiser so identified boundary
+            # points are assigned the same value on both sides.
+            if pos[0] == 0 or pos[1] == 0 or pos[0] == 1 or pos[1] == 1:
                 return [0, 0, 1]
             else:
                 return [0, 0, -1]
@@ -611,14 +612,23 @@ class TestSimulation(object):
         mesh = df.UnitSquareMesh(3, 3)
 
         m_init = vector_valued_function(m_init_fun, mesh)
-        sim = Simulation(mesh, Ms=1, pbc2d=True)
+        sim = Simulation(mesh, Ms=1, pbc='2d')
         sim.set_m(m_init)
-        expect_m = np.zeros((3, 16))
-        expect_m[2, :] = np.array(
-            [1, 1, 1, 1, 1, -1, -1,  1,  1, -1, -1,  1,  1,  1,  1,  1])
-        expect_m.shape = (48,)
 
-        assert np.array_equal(sim.m, expect_m)
+        m = sim.get_field_as_dolfin_function('m')
+        expected = {
+            (0, 0): [0, 0, 1],
+            (1.0 / 3, 0): [0, 0, 1],
+            (0, 1.0 / 3): [0, 0, 1],
+            (1.0 / 3, 1.0 / 3): [0, 0, -1],
+            (2.0 / 3, 2.0 / 3): [0, 0, -1],
+            (1, 1): [0, 0, 1],
+            (1, 2.0 / 3): [0, 0, 1],
+            (2.0 / 3, 1): [0, 0, 1],
+        }
+
+        for point, expected_m in expected.items():
+            assert np.allclose(m(point), expected_m)
 
     def test_set_stt(self, debug=False):
         """
@@ -807,7 +817,6 @@ class TestSimulation(object):
 
         assert np.max(np.abs(ts - real_ts)) < 1e-24
 
-    @pytest.mark.xfail(reason='dolfin >=1.5')
     def test_mark_regions(self, tmpdir):
         os.chdir(str(tmpdir))
         sim = barmini(mark_regions=True)

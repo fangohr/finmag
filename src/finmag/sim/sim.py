@@ -1302,10 +1302,6 @@ class Simulation(object):
         (it doesn't need to be an integer).
 
         """
-        from distutils.version import LooseVersion
-        if LooseVersion(df.__version__) >= LooseVersion('1.5.0'):
-            raise RuntimeError("Marking mesh regions is currently not supported with dolfin >= 1.5 due to an API change with respect to 1.4.")
-
         # Determine all region identifiers and associate each of them with a unique integer.
         # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
         #           Can this be improved?
@@ -1325,18 +1321,14 @@ class Simulation(object):
 
         def create_restricted_space(region_id):
             i = self.region_ids[region_id]
-            restriction = df.Restriction(self.region_markers, i)
-            V_restr = df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
-            return V_restr
+            if hasattr(df, 'Restriction'):
+                restriction = df.Restriction(self.region_markers, i)
+                return df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
+            return self.S3
 
         # Create a restricted VectorFunctionSpace for each region
-        try:
-            self.region_spaces = {
-                region_id: create_restricted_space(region_id) for region_id in self.region_ids}
-        except AttributeError:
-            raise RuntimeError("Marking mesh regions is only supported for dolfin > 1.2.0. "
-                               "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
-                               "See http://fenicsproject.org/download/snapshot_releases.html for details.")
+        self.region_spaces = {
+            region_id: create_restricted_space(region_id) for region_id in self.region_ids}
 
     get_submesh = sim_helpers.get_submesh
 

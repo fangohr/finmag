@@ -287,7 +287,6 @@ Second meaningful milestone:
     - =tests/jacobean/test_jacobean_integration.py=
     - =tests/jacobean/test_native_llg.py=
   - current non-passing statuses inside that file are expected:
-    - one existing =xfail= for =test_get_submesh=
     - additional existing =xfail= cases inside =sim_test.py=
     - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
     - existing =xfail= in =energies/test_energies_in_regions.py=
@@ -313,6 +312,16 @@ Second meaningful milestone:
 - the external =dolfinh5tools= package is now installed in the transition
   image, patched for Python 3 package imports, and the HDF5 field-save path is
   green in the existing CI gate
+- additional targeted progress after the last full core-suite rerun:
+  - =sim_helpers_test.py::test_get_submesh= now passes
+  - =sim_test.py::TestSimulation::test_mark_regions= now passes
+  - =sim_test.py::TestSimulation::test_pbc2d_m_init= now passes with the
+    current =pbc='2d'= API and a periodic-compatible field initialiser
+  - =tests/test_dmi_terms.py= has been rewritten against the current
+    =times_curl()= API and now contains three real passing tests instead of
+    four historical skips
+  - these tests are already included in the existing core-suite workflow and
+    local verifier, so no workflow file change was required
 
 *** Notable Work Completed
 
