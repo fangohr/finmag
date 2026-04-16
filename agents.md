@@ -262,7 +262,7 @@ The current Python 3 progress is now stronger than plain import:
 - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
   plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `347 passed, 22 skipped, 10 xfailed, 13 warnings`
+  - `348 passed, 21 skipped, 10 xfailed, 13 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
@@ -308,8 +308,8 @@ The current Python 3 transition gate is:
 
 Intentional skips and xfails are explicit:
 
-- `netgen`, `gmsh`, `dolfin-convert`, and `dolfinh5tools` dependent tests skip
-  cleanly when those tools are absent
+- `gmsh` and `dolfin-convert` dependent tests skip cleanly when those tools
+  are absent
 - the transition image now contains `netgen`, `tix`, `xauth`, and `xvfb`, but
   the historical `netgen 4.9.13` still aborts after some mesh-generation runs;
   tests therefore use a `netgen_is_usable()` probe instead of checking only
@@ -318,6 +318,11 @@ Intentional skips and xfails are explicit:
   image: Finmag now accepts post-export `netgen` aborts when the mesh file is
   already present, and falls back to the Python meshconvert module when the
   `dolfin-convert` script is missing
+- `dolfinh5tools` is an external package historically installed alongside
+  Finmag, and it backs `Field.save_hdf5(...)`
+- the Python 3 transition image now installs `dolfinh5tools` from GitHub and
+  patches its Python-2-style package import so `Field.save_hdf5(...)` is green
+  in the active core suite
 - `sllg`-dependent tests skip when that subsystem is unavailable on the current
   Python 3 path
 - a small number of historical failures remain marked `xfail`, including known

@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =347 passed, 22 skipped, 10 xfailed, 13 warnings=
+  - =348 passed, 21 skipped, 10 xfailed, 13 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -292,11 +292,10 @@ Second meaningful milestone:
     - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
     - existing =xfail= in =energies/test_energies_in_regions.py=
     - the remaining skips are for optional/external features such as
-      =gmsh=/=dolfin-convert= mesh tools, =dolfinh5tools= support, selected
-      animation/export paths, and the unported =sllg= kernel
+      =gmsh=/=dolfin-convert= mesh tools, selected animation/export paths,
+      and the unported =sllg= kernel
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
       are not installed
-    - clean skips when optional =dolfinh5tools= support is unavailable
     - clean skips for the =sllg= kernel tests while that kernel remains
       unported in Python 3
 - the import path now tolerates missing optional dependencies and unfinished
@@ -311,6 +310,9 @@ Second meaningful milestone:
   again in the transition image by accepting post-export =netgen= aborts when
   the mesh file was already written and by falling back to the Python module
   form of =dolfin-convert=
+- the external =dolfinh5tools= package is now installed in the transition
+  image, patched for Python 3 package imports, and the HDF5 field-save path is
+  green in the existing CI gate
 
 *** Notable Work Completed
 

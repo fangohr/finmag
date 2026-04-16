@@ -38,6 +38,7 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     cython3 \
     libboost-python-dev \
     libboost-test-dev \
+    git \
     libfreetype6-dev \
     libgdal-dev \
     libhdf5-openmpi-dev \
@@ -77,7 +78,14 @@ RUN ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/share/tcltk/tcl8.5/Tix8.4 && \
     ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/share/tcltk/Tix8.4 && \
     ln -s /usr/share/tcltk/tcl8.6/Tix8.4 /usr/lib/Tix8.4
 
-RUN pip3 install --no-cache-dir pytest==3.2.1
+RUN pip3 install --no-cache-dir \
+    pytest==3.2.1 \
+    git+https://github.com/fangohr/dolfinh5tools.git
+
+RUN sed -i "s/from lib import/from .lib import/" \
+        /usr/local/lib/python3.5/dist-packages/dolfinh5tools/__init__.py && \
+    sed -i "s/print df.__version__/print(df.__version__)/" \
+        /usr/local/lib/python3.5/dist-packages/dolfinh5tools/lib.py
 
 RUN OMPI_MCA_plm=isolated python3 - <<'PY'
 import dolfin

@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =347 passed, 22 skipped, 10 xfailed, 13 warnings in 1269.34s=
+- =348 passed, 21 skipped, 10 xfailed, 13 warnings in 1288.78s=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -446,6 +446,37 @@ Verified mesh-test result:
 
 - =src/finmag/tests/test_meshes.py src/finmag/util/meshes_test.py=
 - =12 passed, 3 skipped in 66.96s=
+
+** External Package Brought Across: dolfinh5tools
+
+From the repo structure and install scripts, =dolfinh5tools= is an external
+package, not part of Finmag itself.
+
+Evidence in-tree:
+
+- install scripts and Docker recipes fetch it from
+  =git+https://github.com/fangohr/dolfinh5tools.git=
+- =src/finmag/field.py= imports it optionally and uses it for
+  =Field.save_hdf5(...)=
+- =src/finmag/field_test.py= currently uses =pytest.importorskip("dolfinh5tools")=
+  for the HDF5 save test
+
+Current Python 3 transition status:
+
+- the transition image now installs =dolfinh5tools= directly from its GitHub
+  repository during the Docker build
+- the image applies a small Python 3 compatibility patch to the installed
+  package:
+  - explicit relative import in =dolfinh5tools/__init__.py=
+  - Python 3 print syntax in =dolfinh5tools/lib.py=
+- direct import now works under
+  =docker run --rm -e OMPI_MCA_plm=isolated finmag-py3-dolfin2017 ...=
+- =src/finmag/field_test.py::TestField::test_save_hdf5= now passes under
+  Python 3
+- because =src/finmag/field_test.py= was already part of
+  =dev/bin/verify-python3-core-suite= and
+  =.github/workflows/python3-core-suite.yml=, this progress is already
+  reflected in CI without adding a new test file
 
 One real runtime bug was fixed while bringing this suite across:
 
