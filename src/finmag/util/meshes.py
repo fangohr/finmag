@@ -15,6 +15,7 @@ import re
 import sys
 import copy
 import math
+import shlex
 import shutil
 import subprocess
 import logging
@@ -194,16 +195,13 @@ def run_netgen(geofile):
 
     logger.debug(
         "Using netgen to convert {} to DIFFPACK format.".format(geofile))
-    netgen_cmd = _netgen_command(geofile, diffpackfile)
-
-    proc = subprocess.Popen(
-        netgen_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output, _ = proc.communicate()
-    if not isinstance(output, str):
-        output = output.decode('utf-8', 'replace')
-    status = proc.returncode
+    status, output = _run_netgen(geofile, diffpackfile)
     if status == 34304:
         logger.warning("Warning: Ignoring netgen's output status of 34304.")
+    elif _netgen_output_is_usable(status, output, diffpackfile):
+        logger.warning(
+            "Netgen exited with status %s after writing '%s'; proceeding with the generated mesh.",
+            status, diffpackfile)
     elif status != 0:
         print(output)
         print("netgen failed with exit code", status)
@@ -220,13 +218,42 @@ def run_netgen(geofile):
 
 
 def _netgen_command(geofile, diffpackfile):
-    netgen_inner_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
-        geofile, diffpackfile)
+    netgen_inner_cmd = (
+        "env "
+        "NETGENDIR=/usr/share/netgen "
+        "TIX_LIBRARY=/usr/share/tcltk/tcl8.5/Tix8.4 "
+        "TCLLIBPATH=/usr/share/tcltk/tcl8.5 "
+        "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode"
+    ).format(shlex.quote(geofile), shlex.quote(diffpackfile))
     if os.environ.get("DISPLAY") or shutil.which("xvfb-run") is None:
         return netgen_inner_cmd
     # Netgen's batch mode still touches Tk/OpenGL startup paths, so run it
     # under a virtual X server when no display is available.
     return "xvfb-run -a {}".format(netgen_inner_cmd)
+
+
+def _run_netgen(geofile, diffpackfile):
+    proc = subprocess.Popen(
+        _netgen_command(geofile, diffpackfile),
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    return proc.returncode, output
+
+
+def _netgen_output_is_usable(status, output, diffpackfile):
+    if status == 0:
+        return True
+    if not (os.path.isfile(diffpackfile) and os.path.getsize(diffpackfile) > 0):
+        return False
+    output_lower = output.lower()
+    return (
+        "export mesh to file .... done!" in output_lower or
+        "save mesh to file .... done!" in output_lower
+    )
 
 
 @functools.lru_cache(maxsize=1)
@@ -249,16 +276,9 @@ def netgen_is_usable():
     try:
         with open(geofile, "w") as f:
             f.write(csg)
-        proc = subprocess.Popen(
-            _netgen_command(geofile, diffpackfile),
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
-        output, _ = proc.communicate()
-        if not isinstance(output, str):
-            output = output.decode('utf-8', 'replace')
-        if proc.returncode != 0:
-            logger.debug("Netgen usability probe failed with exit code %s.", proc.returncode)
+        status, output = _run_netgen(geofile, diffpackfile)
+        if not _netgen_output_is_usable(status, output, diffpackfile):
+            logger.debug("Netgen usability probe failed with exit code %s.", status)
             logger.debug("Netgen usability probe output:\n%s", output)
             return False
         return os.path.isfile(diffpackfile)
@@ -278,7 +298,7 @@ def convert_diffpack_to_xml(diffpackfile):
 
     basename = os.path.splitext(diffpackfile)[0]
     xmlfile = basename + ".xml"
-    dolfin_conv_cmd = 'dolfin-convert {0} {1}'.format(diffpackfile, xmlfile)
+    dolfin_conv_cmd = _dolfin_convert_command(diffpackfile, xmlfile)
     proc = subprocess.Popen(
         dolfin_conv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, _ = proc.communicate()
@@ -298,6 +318,20 @@ def convert_diffpack_to_xml(diffpackfile):
             os.remove(f)
 
     return xmlfile
+
+
+def _dolfin_convert_command(infile, outfile):
+    if shutil.which("dolfin-convert") is not None:
+        return "dolfin-convert {} {}".format(
+            shlex.quote(infile), shlex.quote(outfile))
+    return (
+        "{python} -c "
+        "\"from dolfin_utils.meshconvert.meshconvert import convert2xml; "
+        "convert2xml({infile}, {outfile})\""
+    ).format(
+        python=shlex.quote(sys.executable),
+        infile=repr(infile),
+        outfile=repr(outfile))
 
 
 def change_xml_marker_starts_with_zero(xmlfile):

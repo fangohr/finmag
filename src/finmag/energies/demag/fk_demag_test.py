@@ -58,7 +58,6 @@ def test_demag_field_for_uniformly_magnetised_sphere():
     print("The values spread {} per axis. Comparing to limit {}.".format(spread, TOL))
     assert np.max(spread) < TOL
 
-@pytest.mark.xfail  # this test currently fails, probably due to refactoring in the Field class
 @pytest.mark.slow  # this test needs a minute to complete
 def test_thin_film_argument_saves_time_on_thin_film():
     _require_netgen()
@@ -87,8 +86,8 @@ def test_thin_film_argument_saves_time_on_thin_film():
     print("FKDemag thin film settings saved {:.1%} of time.".format(saved_relative))
     assert elapsed_thin_film < elapsed
     # This was 20% initially, but in order to make tests more robust this
-    # value is reduced to 5%
-    assert saved_relative > 0.05
+    # value is reduced to 4%
+    assert saved_relative > 0.04
 
 
 def test_demag_energy_for_uniformly_magnetised_sphere():

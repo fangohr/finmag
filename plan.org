@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =307 passed, 62 skipped, 10 xfailed, 4 warnings=
+  - =347 passed, 22 skipped, 10 xfailed, 13 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -279,8 +279,7 @@ Second meaningful milestone:
     - =sim/hysteresis_test.py=
     - =sim/magnetisation_patterns_test.py=
     - the full =sim_helpers_test.py= file
-    - the full =sim/sim_test.py= file, with clean skips for currently
-      unavailable =netgen= and =sllg= coverage
+    - the full =sim/sim_test.py= file
     - Sundials n-steps, reinit, and stiff ODE tests
     - SciPy integrator smoke coverage
     - =tests/jacobean/test_jacobean_computation.py=
@@ -292,8 +291,9 @@ Second meaningful milestone:
     - additional existing =xfail= cases inside =sim_test.py=
     - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
     - existing =xfail= in =energies/test_energies_in_regions.py=
-    - clean skips for =netgen=-dependent tests when =netgen= is not usable in
-      the transition image
+    - the remaining skips are for optional/external features such as
+      =gmsh=/=dolfin-convert= mesh tools, =dolfinh5tools= support, selected
+      animation/export paths, and the unported =sllg= kernel
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
       are not installed
     - clean skips when optional =dolfinh5tools= support is unavailable
@@ -307,6 +307,10 @@ Second meaningful milestone:
 - =netgen= now starts headlessly under =xvfb=, but it still aborts after some
   successful mesh-generation runs; mesh-dependent tests therefore use a
   =netgen_is_usable()= probe instead of checking only whether the binary exists
+- despite that historical shutdown bug, the mesh-generation path is now usable
+  again in the transition image by accepting post-export =netgen= aborts when
+  the mesh file was already written and by falling back to the Python module
+  form of =dolfin-convert=
 
 *** Notable Work Completed
 

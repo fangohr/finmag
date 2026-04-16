@@ -262,7 +262,7 @@ The current Python 3 progress is now stronger than plain import:
 - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
   plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `307 passed, 62 skipped, 10 xfailed, 4 warnings`
+  - `347 passed, 22 skipped, 10 xfailed, 13 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
@@ -314,6 +314,10 @@ Intentional skips and xfails are explicit:
   the historical `netgen 4.9.13` still aborts after some mesh-generation runs;
   tests therefore use a `netgen_is_usable()` probe instead of checking only
   whether the binary is installed
+- the mesh-generation path is nevertheless usable again in the transition
+  image: Finmag now accepts post-export `netgen` aborts when the mesh file is
+  already present, and falls back to the Python meshconvert module when the
+  `dolfin-convert` script is missing
 - `sllg`-dependent tests skip when that subsystem is unavailable on the current
   Python 3 path
 - a small number of historical failures remain marked `xfail`, including known

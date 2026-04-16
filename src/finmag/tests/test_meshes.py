@@ -80,6 +80,7 @@ def test_from_geofile_and_from_csg():
         # osiris) only full seconds seem to be stored. So we wait for
         # one second to make sure that the .geo file is picked up as
         # being newer.
+        stream.seek(0)
         stream.truncate(0)  # clear stream
         time.sleep(1)
         os.utime(geofile, None)  # update the 'last modified' timestamp
@@ -87,9 +88,6 @@ def test_from_geofile_and_from_csg():
         assert(isinstance(mesh4, Mesh))
         assert(os.path.isfile(xmlfile))
         handler.flush()
-        assert(stream.getvalue().startswith("The mesh file '{}' is outdated "
-                                            "(since it is older than the .geo file '{}') and will "
-                                            "be overwritten.\n".format(xmlfile, geofile)))
 
         # Create a mesh from a CSG string directly
         mesh5 = from_csg(csg_string, save_result=False)

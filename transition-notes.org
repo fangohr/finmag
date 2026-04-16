@@ -339,7 +339,7 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =307 passed, 62 skipped, 10 xfailed, 4 warnings in 993.55s=
+- =347 passed, 22 skipped, 10 xfailed, 13 warnings in 1269.34s=
 
 This broader suite adds the following green areas on top of the minimal suite:
 
@@ -436,13 +436,16 @@ Operational consequence:
 
 - tests should not treat =shutil.which("netgen")= as sufficient
 - mesh-generation tests now use =finmag.util.meshes.netgen_is_usable()=
-- in the transition image, affected mesh-generation tests skip cleanly instead
-  of hard-failing
+- =run_netgen()= now accepts the historical post-export abort when the target
+  =.grid= file was written successfully
+- mesh conversion now falls back to the Python module
+  =dolfin_utils.meshconvert.meshconvert.convert2xml= when the
+  =dolfin-convert= script is absent from =PATH=
 
 Verified mesh-test result:
 
 - =src/finmag/tests/test_meshes.py src/finmag/util/meshes_test.py=
-- =3 passed, 12 skipped in 46.85s=
+- =12 passed, 3 skipped in 66.96s=
 
 One real runtime bug was fixed while bringing this suite across:
 

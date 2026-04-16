@@ -271,7 +271,7 @@ def as_dense_array(A, dtype=None):
     #           petsc4py.  -- Max, 20.3.2014
     from petsc4py import PETSc
 
-    if A == None:
+    if A is None:
         return None
 
     if isinstance(A, np.ndarray):
