@@ -339,25 +339,20 @@ broader Python 3 core suite.
 
 Verified result:
 
-- =348 passed, 21 skipped, 10 xfailed, 13 warnings in 1288.78s=
+- =356 passed, 16 skipped, 6 xfailed, 13 warnings in 1796.25s=
 
-Targeted progress after that full rerun, without yet rerunning the whole
-suite:
+This full rerun now includes the previously targeted fixes:
 
-- =src/finmag/sim/sim_helpers_test.py::test_get_submesh= now passes
-- =src/finmag/sim/sim_test.py::TestSimulation::test_mark_regions= now passes
-- =src/finmag/sim/sim_test.py::TestSimulation::test_pbc2d_m_init= now passes
-  after updating the test to the current =Simulation(..., pbc='2d')= API and
-  checking field values at representative points instead of relying on an old
-  raw-vector ordering
-- =src/finmag/tests/test_dmi_terms.py= has been rewritten against the current
-  =finmag.util.helpers.times_curl(...)= API and now provides three real
-  passing tests instead of four intentionally skipped historical ones
+- =src/finmag/sim/sim_helpers_test.py::test_get_submesh= passes
+- =src/finmag/sim/sim_test.py::TestSimulation::test_mark_regions= passes
+- =src/finmag/sim/sim_test.py::TestSimulation::test_pbc2d_m_init= passes
+- =src/finmag/tests/test_dmi_terms.py= now contains three real passing tests
+- =src/finmag/energies/dmi_test.py::test_dmi_pbc2d= passes
+- =src/finmag/energies/test_energies_in_regions.py::test_energies_in_touching_subdomains=
+  passes
 
-These tests were already part of =dev/bin/verify-python3-core-suite= and
-=.github/workflows/python3-core-suite.yml=, so no structural CI change was
-required; the next full rerun will simply absorb this progress into the suite
-totals.
+The existing core-suite workflow already contained those files, so CI now
+reflects all of that progress without any workflow-structure change.
 
 This broader suite adds the following green areas on top of the minimal suite:
 

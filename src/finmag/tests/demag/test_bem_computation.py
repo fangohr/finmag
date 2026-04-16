@@ -14,6 +14,7 @@ from finmag.energies.demag import belement_magpar
 from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
 from finmag.energies import Demag
+from finmag.energies.demag import KNOWN_SOLVERS
 
 compute_belement = belement_magpar.return_bele_magpar()
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -210,8 +211,9 @@ class BemComputationTests(unittest.TestCase):
                                             compute_scalar_potential_native_fk,
                                             "native, FK", k=k)
 
-    @pytest.mark.skipif("get_version_dolfin()[:3] != '1.0'")
     def test_compute_scalar_potential_gcr(self):
+        if "GCR" not in KNOWN_SOLVERS:
+            pytest.skip("GCR demag solver is not implemented on the Python 3 transition path")
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)
         tol = 1e-1

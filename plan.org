@@ -229,7 +229,7 @@ Second meaningful milestone:
   - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
     optional during normal test collection
 - the broader Python 3 core transition suite now also passes:
-  - =348 passed, 21 skipped, 10 xfailed, 13 warnings=
+  - =356 passed, 16 skipped, 6 xfailed, 13 warnings=
   - this adds:
     - =field_test.py=
     - =field_setters_test.py=
@@ -287,14 +287,14 @@ Second meaningful milestone:
     - =tests/jacobean/test_jacobean_integration.py=
     - =tests/jacobean/test_native_llg.py=
   - current non-passing statuses inside that file are expected:
-    - additional existing =xfail= cases inside =sim_test.py=
-    - existing =xfail= cases in =zeeman_test.py= and =dmi_test.py=
-    - existing =xfail= in =energies/test_energies_in_regions.py=
+    - remaining =xfail= cases inside =sim_test.py=
+    - existing =xfail= case in =zeeman_test.py=
     - the remaining skips are for optional/external features such as
       =gmsh=/=dolfin-convert= mesh tools, selected animation/export paths,
       and the unported =sllg= kernel
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
       are not installed
+    - clean capability skip for the unimplemented =GCR= demag solver
     - clean skips for the =sllg= kernel tests while that kernel remains
       unported in Python 3
 - the import path now tolerates missing optional dependencies and unfinished
@@ -312,16 +312,8 @@ Second meaningful milestone:
 - the external =dolfinh5tools= package is now installed in the transition
   image, patched for Python 3 package imports, and the HDF5 field-save path is
   green in the existing CI gate
-- additional targeted progress after the last full core-suite rerun:
-  - =sim_helpers_test.py::test_get_submesh= now passes
-  - =sim_test.py::TestSimulation::test_mark_regions= now passes
-  - =sim_test.py::TestSimulation::test_pbc2d_m_init= now passes with the
-    current =pbc='2d'= API and a periodic-compatible field initialiser
-  - =tests/test_dmi_terms.py= has been rewritten against the current
-    =times_curl()= API and now contains three real passing tests instead of
-    four historical skips
-  - these tests are already included in the existing core-suite workflow and
-    local verifier, so no workflow file change was required
+- the existing core-suite workflow and local verifier already cover the
+  newly green tests, so no workflow file change was required for these gains
 
 *** Notable Work Completed
 

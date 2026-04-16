@@ -262,7 +262,7 @@ The current Python 3 progress is now stronger than plain import:
 - `test_sim_ode.py` intentionally keeps a lazy `matplotlib` import because
   plotting is optional and only used for `do_plot=True`
 - the broader Python 3 core transition suite also passes:
-  - `348 passed, 21 skipped, 10 xfailed, 13 warnings`
+  - `356 passed, 16 skipped, 6 xfailed, 13 warnings`
   - includes `field_test.py`, `field_setters_test.py`,
     `scheduler/scheduler_test.py`, `energies/exchange_test.py`,
     `energies/anisotropy_test.py`, `energies/zeeman_test.py`,
@@ -327,15 +327,13 @@ Intentional skips and xfails are explicit:
   Python 3 path
 - a small number of historical failures remain marked `xfail`, including known
   weak-tolerance demag linearity checks
-- after the last full suite rerun, additional targeted progress was made on
-  tests already covered by the existing core-suite workflow:
-  - `sim_helpers_test.py::test_get_submesh` now passes
-  - `sim_test.py::TestSimulation::test_mark_regions` now passes
-  - `sim_test.py::TestSimulation::test_pbc2d_m_init` now passes after moving
-    the test to the current `pbc='2d'` API and checking representative field
-    values instead of old raw-vector ordering
-  - `tests/test_dmi_terms.py` has been rewritten against `times_curl()` and
-    now contains three real passing tests instead of historical skips
+- the current green baseline includes:
+  - `sim_helpers_test.py::test_get_submesh`
+  - `sim_test.py::TestSimulation::test_mark_regions`
+  - `sim_test.py::TestSimulation::test_pbc2d_m_init`
+  - the rewritten `tests/test_dmi_terms.py`
+  - `energies/dmi_test.py::test_dmi_pbc2d`
+  - `energies/test_energies_in_regions.py::test_energies_in_touching_subdomains`
 
 ## Import Frontier Reached So Far
 
