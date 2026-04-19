@@ -319,6 +319,10 @@ The current Python 3 progress is now stronger than plain import:
   - `sim_test.py::test_regression_schedule_switch_off_field` now passes after
     fixing a typo in `Simulation.remove_interaction()` that left stale
     `Tablewriter` callbacks behind after removing the Zeeman interaction
+  - `test_energies_in_regions.py::test_energies_in_separated_subdomains`
+    now passes; its old self-skip was stale
+  - `helpers_test.py::test_apply_vertexwise` now passes after updating
+    `helpers.apply_vertexwise()` for the current DOLFIN API
   - targeted verification for this batch:
     `6 passed in 91.45s`
   - `tests/test_jacobian.py` has been added to the active Python 3 core-suite
@@ -331,6 +335,12 @@ The current Python 3 progress is now stronger than plain import:
     `1 passed in 57.38s`
   - follow-up regression verification:
     `1 passed in 56.12s`
+  - further non-GUI targeted verification:
+    `1 passed in 64.48s` for
+    `energies/test_energies_in_regions.py::test_energies_in_separated_subdomains`
+  - further non-GUI targeted verification:
+    `1 passed in 79.23s` for
+    `util/helpers_test.py::test_apply_vertexwise`
 
 The current Python 3 transition gate is:
 

@@ -1570,7 +1570,7 @@ def apply_vertexwise(f, *args):
     # deal with functions defined on different function spaces?!?
 
     # Reshape each array according to the dimension of the VectorFunctionSpace
-    dims = [u.domain().geometric_dimension() for u in args]
+    dims = [u.function_space().mesh().geometry().dim() for u in args]
     aa_reshaped = [
         a.reshape(dim, -1).T for (a, dim) in izip(aa, dims)]
 

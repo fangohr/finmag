@@ -75,9 +75,8 @@ class MultiDomainTest(object):
         finmag.logger.debug("Energies on subdomains: {}".format(E_domains))
         finmag.logger.debug("Sum of energies on subdomains: {}; total energy: {}".format(
             sum(E_domains.values()), E_total))
-        pytest.skip("Needs review before we can trust it")  # see TODO below
         assert np.allclose(
-            # XXX TODO: is atol=1e-18 okay here, or should it be zero (or much smaller)?
+            # XXX 04-2026 TODO: is atol=1e-18 okay here, or should it be zero (or much smaller)?
             sum(E_domains.values()), E_total, atol=1e-18, rtol=1e-12)
 
 

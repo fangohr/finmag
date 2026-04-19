@@ -293,6 +293,13 @@ Second meaningful milestone:
     the underlying bug was a typo in =Simulation.remove_interaction()= which
     deleted =E_<interaction>= twice and left the =H_<interaction>= tablewriter
     callback behind
+  - =energies/test_energies_in_regions.py::test_energies_in_separated_subdomains=
+    now passes; the previous self-skip in the energy-consistency check was
+    removed after verifying the subdomain-energy sum matches the total energy
+    on the current Python 3 stack
+  - =util/helpers_test.py::test_apply_vertexwise= now passes after fixing
+    =helpers.apply_vertexwise()= to use the function-space mesh geometry
+    dimension instead of the removed =Function.domain()= API
   - these targeted tests have been added to the active core-suite CI inputs
     where needed, but the full suite has not yet been rerun after this batch
     - relaxation tests

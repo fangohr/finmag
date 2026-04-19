@@ -408,6 +408,16 @@ Additional targeted progress since that last full rerun:
     tablewriter callback instead of deleting =E_<interaction>= twice
   - this restores the runtime path where a scheduled field switch-off removes
     the Zeeman interaction and later =save_ndt= calls continue to work
+- =src/finmag/energies/test_energies_in_regions.py=
+  - removed the self-skip in the subdomain-energy consistency check after
+    verifying that the sum of subdomain energies matches the total energy
+    within the existing tolerance
+- =src/finmag/util/helpers.py=
+  - fixed =apply_vertexwise()= for the current DOLFIN API by deriving the
+    geometric dimension from =u.function_space().mesh().geometry().dim()=
+    instead of the removed =u.domain()=
+- =src/finmag/util/helpers_test.py=
+  - =test_apply_vertexwise= is no longer skipped
 
 Additional targeted verification for this follow-up batch:
 
@@ -424,6 +434,13 @@ Additional targeted verification for the old switch-off regression reminder:
 
 - =1 passed in 56.12s=
   - =src/finmag/sim/sim_test.py::test_regression_schedule_switch_off_field=
+
+Additional targeted verification for follow-up non-GUI cleanups:
+
+- =1 passed in 64.48s=
+  - =src/finmag/energies/test_energies_in_regions.py::test_energies_in_separated_subdomains=
+- =1 passed in 79.23s=
+  - =src/finmag/util/helpers_test.py::test_apply_vertexwise=
 
 Combined targeted verification for this batch:
 
