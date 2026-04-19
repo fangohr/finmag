@@ -320,13 +320,10 @@ Second meaningful milestone:
     - remaining =xfail= cases inside =sim_test.py= are now the intentionally
       unresolved non-core paths only
     - the remaining skips are for optional/external features such as
-      =gmsh=/=dolfin-convert= mesh tools, selected animation/export paths,
-      and the unported =sllg= kernel
+      =gmsh=/=dolfin-convert= mesh tools and selected animation/export paths
     - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
       are not installed
     - clean capability skip for the unimplemented =GCR= demag solver
-    - clean skips for the =sllg= kernel tests while that kernel remains
-      unported in Python 3
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
 - the transition image now includes =netgen=, =tix=, =xauth=, and =xvfb= plus
@@ -429,7 +426,8 @@ features are still intentionally not part of the guaranteed working surface:
 
 - SciPy-backed functionality is unavailable unless SciPy is installed
 - normal-mode support is unavailable unless its SciPy-based stack is present
-- the =sllg= kernel is still blocked by its own Python 2 era code path
+- the =sllg= kernel now imports and runs again under Python 3 on the
+  =dolfin 2017.1.0= transition path
 
 *** Immediate Next Step
 
@@ -443,3 +441,17 @@ to:
 - a first Python 3 execution of the agreed minimal acceptance suite, probably
   starting with the =barmini=-based subset
 - then broadening to the full agreed suite
+
+*** SLLG Transition Milestone
+
+The =sllg= path is now working again on the Python 3 transition stack.
+
+- =src/finmag/physics/llb/sllg.py= was ported far enough for import and
+  runtime use under Python 3
+- =Simulation(..., kernel='sllg')= now works again in the transition image
+- targeted verification succeeded for:
+  - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg=
+  - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg_time=
+  - =src/finmag/tests/zhangli/zhang_li_test.py=
+- the active Python 3 core-suite gate now includes
+  =src/finmag/tests/zhangli/zhang_li_test.py=

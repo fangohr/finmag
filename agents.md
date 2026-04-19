@@ -364,8 +364,6 @@ Intentional skips and xfails are explicit:
 - the Python 3 transition image now installs `dolfinh5tools` from GitHub and
   patches its Python-2-style package import so `Field.save_hdf5(...)` is green
   in the active core suite
-- `sllg`-dependent tests skip when that subsystem is unavailable on the current
-  Python 3 path
 - a small number of historical failures remain marked `xfail`, including known
   weak-tolerance demag linearity checks
 - the current green baseline includes:
@@ -375,6 +373,9 @@ Intentional skips and xfails are explicit:
   - the rewritten `tests/test_dmi_terms.py`
   - `energies/dmi_test.py::test_dmi_pbc2d`
   - `energies/test_energies_in_regions.py::test_energies_in_touching_subdomains`
+  - `sim_test.py::TestSimulation::test_sim_sllg`
+  - `sim_test.py::TestSimulation::test_sim_sllg_time`
+  - `tests/zhangli/zhang_li_test.py`
 
 ## Import Frontier Reached So Far
 
@@ -414,6 +415,20 @@ subsystems are now optional at import time:
 
 This keeps the base package importable while preserving a clear failure mode for
 unfinished or missing optional dependencies.
+
+## SLLG Status
+
+The `sllg` kernel is no longer just an optional-import placeholder on the
+Python 3 transition path.
+
+- `src/finmag/physics/llb/sllg.py` now imports under Python 3
+- the native stochastic integrator binding accepts the Python 3 seed path
+  again after coercing the seed to a plain Python `int`
+- `Simulation(..., kernel="sllg")` works in the transition image
+- `src/finmag/tests/zhangli/zhang_li_test.py` now collects and passes under
+  Python 3
+- the active Python 3 core-suite gate includes the Zhang-Li file in addition
+  to the already-covered `sim_test.py` SLLG cases
 
 ## Native Build Findings
 

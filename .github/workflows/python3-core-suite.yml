@@ -82,6 +82,7 @@ jobs:
                       src/finmag/tests/test_time.py \
                       src/finmag/tests/demag/test_bem_computation.py \
                       src/finmag/tests/demag/test_demag_sphere.py \
+                      src/finmag/tests/zhangli/zhang_li_test.py \
                       src/finmag/tests/test_jacobian.py \
                       src/finmag/sim/hysteresis_test.py \
                       src/finmag/sim/magnetisation_patterns_test.py \

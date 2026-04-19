@@ -833,7 +833,36 @@ port, a few non-core features are now optional at import time:
 - normal-mode support is deferred unless explicitly selected
 
 These are intentional scope boundaries for the current phase, not final
-feature-complete Python 3 support.
+feature-complete Python 3 support. `SLLG` is no longer blocked, but keeping it
+lazy at import time still avoids widening the base import surface unnecessarily.
+
+** SLLG Path Recovered
+
+The Python 3 transition now includes a working `sllg` execution path.
+
+Changes made:
+
+- `src/finmag/physics/llb/sllg.py`
+  - integer division fix for `nxyz`
+  - Python 3 exception syntax
+  - Python 3 print cleanup in the module self-test block
+  - native seed handling now passes a plain Python `int` instead of
+    `numpy.int64` into the Boost.Python binding
+- `src/finmag/tests/zhangli/zhang_li_test.py`
+  - Python 3 print cleanup so the file collects again
+- `src/finmag/physics/llb/sllg_test.py`
+  - Python 3 parse cleanup for the auxiliary/random-number helper module
+
+Targeted verification succeeded for:
+
+- `src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg`
+- `src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg_time`
+- `src/finmag/tests/zhangli/zhang_li_test.py`
+  - result: `2 passed` for the file-level Zhang-Li tests under Python 3
+
+The active Python 3 gate now includes:
+
+- `src/finmag/tests/zhangli/zhang_li_test.py`
 
 ** Next Transition Step
 

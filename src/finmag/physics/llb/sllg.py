@@ -29,7 +29,7 @@ class SLLG(object):
         self.time_scale = 1e-9
 
         self._m_field = Field(self.S3, name='m')
-        self.nxyz = self._m_field.f.vector().size() / 3
+        self.nxyz = self._m_field.f.vector().size() // 3
 
         self._T = np.zeros(self.nxyz)
         self._alpha = np.zeros(self.nxyz)
@@ -75,7 +75,7 @@ class SLLG(object):
 
         self.alpha = 0.1
         self._gamma = consts.gamma
-        self._seed = np.random.random_integers(4294967295)
+        self._seed = int(np.random.randint(0, 4294967296))
         self.dt = 1e-13
         self.T = 0
 
@@ -101,7 +101,7 @@ class SLLG(object):
 
     @seed.setter
     def seed(self, value):
-        self._seed = value
+        self._seed = int(value)
         self.setup_parameters()
 
     @gamma.setter
@@ -117,7 +117,7 @@ class SLLG(object):
     def setup_parameters(self):
         # print 'seed:', self.seed
         self.integrator.set_parameters(
-            self.dt, self.gamma, self.seed, self.checking_length)
+            self.dt, self.gamma, int(self.seed), self.checking_length)
         log.info("seed=%d." % self.seed)
         log.info("dt=%g." % self.dt)
         log.info("gamma=%g." % self.gamma)
@@ -145,7 +145,7 @@ class SLLG(object):
 
                 self._t += self._dt
 
-        except Exception, error:
+        except Exception as error:
             log.info(error)
             raise Exception(error)
 
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
     ts = np.linspace(0, 1e-9, 11)
-    print sim.Ms
+    print(sim.Ms)
     sim.T = 2000
     sim.dt = 1e-14
 
@@ -309,8 +309,8 @@ if __name__ == "__main__":
     demag = Demag(solver='FK')
     sim.add(demag)
 
-    print exchange.Ms.vector().array()
+    print(exchange.Ms.vector().array())
 
     for t in ts:
         sim.run_until(t)
-        print sim.m_average
+        print(sim.m_average)
