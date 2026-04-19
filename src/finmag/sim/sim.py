@@ -568,7 +568,7 @@ class Simulation(object):
 
         # remove this interaction from TableWriter entities
         E_name = "E_{}".format(interaction_type)
-        H_name = "E_{}".format(interaction_type)
+        H_name = "H_{}".format(interaction_type)
         self.tablewriter.delete_entity_get_method(E_name)
         self.tablewriter.delete_entity_get_method(H_name)
 

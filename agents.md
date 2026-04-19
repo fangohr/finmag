@@ -316,6 +316,9 @@ The current Python 3 progress is now stronger than plain import:
     is now a real initialisation test that probes the region-dependent fields
     directly, rather than a Paraview-dependent placeholder ending in
     `NotImplementedError`
+  - `sim_test.py::test_regression_schedule_switch_off_field` now passes after
+    fixing a typo in `Simulation.remove_interaction()` that left stale
+    `Tablewriter` callbacks behind after removing the Zeeman interaction
   - targeted verification for this batch:
     `6 passed in 91.45s`
   - `tests/test_jacobian.py` has been added to the active Python 3 core-suite
@@ -326,6 +329,8 @@ The current Python 3 progress is now stronger than plain import:
     and `sim_test.py::test_profile`
   - final substantive `sim_test.py` xfail targeted verification:
     `1 passed in 57.38s`
+  - follow-up regression verification:
+    `1 passed in 56.12s`
 
 The current Python 3 transition gate is:
 

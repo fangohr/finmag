@@ -1741,20 +1741,24 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
 
 
-@pytest.mark.skipif("True")
 def test_regression_schedule_switch_off_field(tmpdir):
     """
-    This is a test to remind myself to attempt a bugfix for this issue.
-
-    Due to the way the Tablewriter works at the moment, there is an
-    error if an interaction (e.g. the Zeeman interaction) is removed
-    from the simulation after some of its data has been written to a
-    file.
-
-    Once this works, the default value for the keyword argument
-    'remove_interaction' in the function 'sim.switch_off_H_ext()'
-    should perhaps be set to True again (because it is more
-    efficient).
+    Test removing interaction via schedule. Used to be a bug, now
+    a regression test.
+    
+        old docstring: (before 4/2026)
+        
+        This is a test to remind myself to attempt a bugfix for this issue.
+    
+        Due to the way the Tablewriter works at the moment, there is an
+        error if an interaction (e.g. the Zeeman interaction) is removed
+        from the simulation after some of its data has been written to a
+        file.
+    
+        Once this works, the default value for the keyword argument
+        'remove_interaction' in the function 'sim.switch_off_H_ext()'
+        should perhaps be set to True again (because it is more
+        efficient).
 
     """
     sim = macrospin()

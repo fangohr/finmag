@@ -401,6 +401,13 @@ Additional targeted progress since that last full rerun:
     representative points in the nanodisk and spherical-particle regions,
     instead of depending on optional Paraview tooling and ending in an
     explicit =NotImplementedError=
+  - =test_regression_schedule_switch_off_field= is no longer a stale
+    =skipif("True")= reminder
+- =src/finmag/sim/sim.py=
+  - fixed =remove_interaction()= to delete the correct =H_<interaction>=
+    tablewriter callback instead of deleting =E_<interaction>= twice
+  - this restores the runtime path where a scheduled field switch-off removes
+    the Zeeman interaction and later =save_ndt= calls continue to work
 
 Additional targeted verification for this follow-up batch:
 
@@ -412,6 +419,11 @@ Additional targeted verification for the final substantive =sim_test.py= xfail:
 
 - =1 passed in 57.38s=
   - =src/finmag/sim/sim_test.py::test_setting_different_material_parameters_in_different_regions=
+
+Additional targeted verification for the old switch-off regression reminder:
+
+- =1 passed in 56.12s=
+  - =src/finmag/sim/sim_test.py::test_regression_schedule_switch_off_field=
 
 Combined targeted verification for this batch:
 

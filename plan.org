@@ -289,6 +289,10 @@ Second meaningful milestone:
     now checks the initialized region-dependent fields directly at
     representative points instead of relying on Paraview output and an
     unfinished =NotImplementedError= placeholder
+  - =sim/sim_test.py::test_regression_schedule_switch_off_field= now passes;
+    the underlying bug was a typo in =Simulation.remove_interaction()= which
+    deleted =E_<interaction>= twice and left the =H_<interaction>= tablewriter
+    callback behind
   - these targeted tests have been added to the active core-suite CI inputs
     where needed, but the full suite has not yet been rerun after this batch
     - relaxation tests
