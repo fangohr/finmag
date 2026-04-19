@@ -312,6 +312,10 @@ The current Python 3 progress is now stronger than plain import:
     path on this DOLFIN/Python 3 stack
   - `Simulation.profile()` now works under pytest because profiling uses
     `Profile.runctx(...)` with an explicit `sim` binding
+  - `sim_test.py::test_setting_different_material_parameters_in_different_regions`
+    is now a real initialisation test that probes the region-dependent fields
+    directly, rather than a Paraview-dependent placeholder ending in
+    `NotImplementedError`
   - targeted verification for this batch:
     `6 passed in 91.45s`
   - `tests/test_jacobian.py` has been added to the active Python 3 core-suite
@@ -320,6 +324,8 @@ The current Python 3 progress is now stronger than plain import:
     `2 passed in 62.50s`
     for `sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region`
     and `sim_test.py::test_profile`
+  - final substantive `sim_test.py` xfail targeted verification:
+    `1 passed in 57.38s`
 
 The current Python 3 transition gate is:
 

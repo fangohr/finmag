@@ -285,6 +285,10 @@ Second meaningful milestone:
   - =sim/sim_test.py::test_profile= now passes after =Simulation.profile()=
     switched from =cProfile.run(...)= to =Profile.runctx(...)= with an explicit
     =sim= binding
+  - =sim/sim_test.py::test_setting_different_material_parameters_in_different_regions=
+    now checks the initialized region-dependent fields directly at
+    representative points instead of relying on Paraview output and an
+    unfinished =NotImplementedError= placeholder
   - these targeted tests have been added to the active core-suite CI inputs
     where needed, but the full suite has not yet been rerun after this batch
     - relaxation tests
@@ -302,8 +306,8 @@ Second meaningful milestone:
     - =tests/jacobean/test_jacobean_integration.py=
     - =tests/jacobean/test_native_llg.py=
   - current non-passing statuses inside that file are expected:
-    - remaining =xfail= cases inside =sim_test.py=
-    - existing =xfail= case in =zeeman_test.py=
+    - remaining =xfail= cases inside =sim_test.py= are now the intentionally
+      unresolved non-core paths only
     - the remaining skips are for optional/external features such as
       =gmsh=/=dolfin-convert= mesh tools, selected animation/export paths,
       and the unported =sllg= kernel

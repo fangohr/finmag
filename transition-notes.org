@@ -395,12 +395,23 @@ Additional targeted progress since that last full rerun:
   - =test_compute_and_plot_power_spectral_density_in_mesh_region= is no longer
     a stale =xfail=
   - =test_profile= is no longer a stale =xfail=
+  - =test_setting_different_material_parameters_in_different_regions= is no
+    longer a stale =xfail=
+  - that test now checks region-dependent initialisation directly at
+    representative points in the nanodisk and spherical-particle regions,
+    instead of depending on optional Paraview tooling and ending in an
+    explicit =NotImplementedError=
 
 Additional targeted verification for this follow-up batch:
 
 - =2 passed in 62.50s=
   - =src/finmag/sim/sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region=
   - =src/finmag/sim/sim_test.py::test_profile=
+
+Additional targeted verification for the final substantive =sim_test.py= xfail:
+
+- =1 passed in 57.38s=
+  - =src/finmag/sim/sim_test.py::test_setting_different_material_parameters_in_different_regions=
 
 Combined targeted verification for this batch:
 

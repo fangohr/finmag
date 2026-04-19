@@ -1515,29 +1515,17 @@ def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
         sim.export_normal_mode_animation(0, filename='animation/mode_0.quux')
 
 
-@pytest.mark.xfail
 def test_setting_different_material_parameters_in_different_regions(tmpdir):
     """
     In this test we create a simulation with two different regions where the
-    material parameters and initial magnetistaion are different for each of the
+    material parameters and initial magnetisation are different for each of the
     regions.
 
-    The goal is to check whether the initialisation of sucha  simulation works.
-    However, currently we construct the dolfin Functions representing the material
-    parameters by hand. Ideally, there would be a simpler way, e.g. by simply
-    saying:
-
-        sim.set_field('Ms', 8.6e5, region='nanodisk')
-
-    This will (hopefully) eventually be implemented, but in order to do this
-    lot of refactoring needs to be done so that fields can be treated in a unified
-    way even though some of them may be defined within the mesh cells (such as
-    Ms, A, etc.) and some of them on the nodes. Once this goal has been reached,
-    this test will be a proper test of that functionality, too. For now, it
-    mainly documents how to set varying parameters in different regions.
-
+    The goal is to check whether the initialisation of such a simulation works.
     """
     os.chdir(str(tmpdir))
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
     # Create a mesh consisting of a nanodisk with a spherical article on top.
     d1_disk = 50
@@ -1601,48 +1589,23 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     sim = sim_with(mesh, Ms=Ms, m_init=m_init, alpha=alpha, unit_length=1e-9,
                    A=A, K1=K1, K1_axis=K1_axis, D=D, name='nanodisk_with_particle')
 
-    # Construct a CellFunction representing the subdomains. Unfortunately,
-    # dolfin doesn't seem to provide an easy way of getting this from
-    # mesh.domains() directly, so we construct it manually.
-    # 3 represents the dimension of the mesh cells
-    cell_markers = mesh.domains().markers(3)
-    fun_subdomains = df.CellFunction('size_t', mesh)
-    for (cell_no, marker) in cell_markers.items():
-        fun_subdomains[cell_no] = marker
+    def assert_scalar_close(value, expected):
+        assert np.allclose(value, expected, atol=0, rtol=1e-12)
 
-    submesh_nanodisk = df.SubMesh(mesh, fun_subdomains, 0)
-    submesh_sphere = df.SubMesh(mesh, fun_subdomains, 1)
-    plot_mesh_with_paraview(
-        submesh_nanodisk, camera_position=[0, -200, 100], outfile='submesh_nanodisk.png')
-    plot_mesh_with_paraview(
-        submesh_sphere, camera_position=[0, -200, 100], outfile='submesh_sphere.png')
-
-    f = df.File("m.pvd")
-    f << sim._m
-
-    f = df.File("alpha.pvd")
-    f << sim.alpha
-
-    f = df.File("A.pvd")
-    f << sim.get_interaction('Exchange').A
-
-    f = df.File("Ms.pvd")
-    f << sim.llg.Ms
-
-    f = df.File("K1.pvd")
-    f << sim.get_interaction('Anisotropy').K1
-
-    f = df.File("K1_axis.pvd")
-    f << sim.get_interaction('Anisotropy').axis
-
-    f = df.File("D.pvd")
-    f << sim.get_interaction('DMI').D_on_mesh
-
-    # TODO: Extract all the values of m_init, Ms, ... on each of the submeshes.
-    # This should give numpy arrays of dolfin.Function vectors which are constant
-    # and whose length matches the number of nodes in the submesh. Both of these
-    # properties should be checked for each field.
-    raise NotImplementedError
+    for pt, m_expected, alpha_expected, A_expected, Ms_expected, \
+            K1_expected, axis_expected, D_expected in [
+                ((0, 0, 1), m_init_nanodisk, alpha_nanodisk, A_nanodisk,
+                 Ms_nanodisk, K1_nanodisk, K1_axis_nanodisk, D_nanodisk),
+                ((0, 0, 20), m_init_sphere, alpha_sphere, A_sphere,
+                 Ms_sphere, K1_sphere, K1_axis_sphere, D_sphere)]:
+        assert np.allclose(sim.m_field.probe(pt), m_expected, atol=0, rtol=1e-12)
+        assert_scalar_close(sim.alpha(pt), alpha_expected)
+        assert_scalar_close(sim.get_interaction('Exchange').A.probe(pt), A_expected)
+        assert_scalar_close(sim.llg.Ms.probe(pt), Ms_expected)
+        assert_scalar_close(sim.get_interaction('Anisotropy').K1.probe(pt), K1_expected)
+        assert np.allclose(sim.get_interaction('Anisotropy').axis.probe(pt),
+                           axis_expected, atol=0, rtol=1e-12)
+        assert_scalar_close(sim.get_interaction('DMI').D.probe(pt), D_expected)
 
 
 def test_compute_energies_with_non_normalised_m(tmpdir):
