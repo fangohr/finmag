@@ -380,6 +380,27 @@ Additional targeted progress since that last full rerun:
   - it has been added to =dev/bin/verify-python3-core-suite= and
     =.github/workflows/python3-core-suite.yml=
   - targeted verification: =3 passed=
+- =src/finmag/sim/normal_mode_sim.py=
+  - fixed mesh-region PSD extraction for this DOLFIN version by preferring
+    =submesh.data().array('parent_vertex_indices', 0)= and falling back to the
+    old =mesh_function(...)= API only when needed
+- =src/finmag/util/fft.py=
+  - fixed NumPy truth-value bugs by replacing comparisons such as
+    =vertex_indices != None= with =is not None=
+- =src/finmag/sim/sim.py=
+  - =Simulation.profile()= now uses =cProfile.Profile().runctx(...)= with an
+    explicit =sim= binding so profiling works under pytest as well as in
+    normal interactive use
+- =src/finmag/sim/sim_test.py=
+  - =test_compute_and_plot_power_spectral_density_in_mesh_region= is no longer
+    a stale =xfail=
+  - =test_profile= is no longer a stale =xfail=
+
+Additional targeted verification for this follow-up batch:
+
+- =2 passed in 62.50s=
+  - =src/finmag/sim/sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region=
+  - =src/finmag/sim/sim_test.py::test_profile=
 
 Combined targeted verification for this batch:
 

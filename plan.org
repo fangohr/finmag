@@ -279,6 +279,12 @@ Second meaningful milestone:
     now passes once regional interpolation enables extrapolation on the source
     field
   - =tests/test_jacobian.py= now collects and passes under Python 3
+  - =sim/sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region=
+    now passes after updating the region-to-submesh vertex mapping path in
+    =normal_mode_sim.py= and fixing NumPy truth-value handling in =util/fft.py=
+  - =sim/sim_test.py::test_profile= now passes after =Simulation.profile()=
+    switched from =cProfile.run(...)= to =Profile.runctx(...)= with an explicit
+    =sim= binding
   - these targeted tests have been added to the active core-suite CI inputs
     where needed, but the full suite has not yet been rerun after this batch
     - relaxation tests

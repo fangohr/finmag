@@ -226,16 +226,14 @@ class NormalModeSimulation(Simulation):
             # spectrum to the corresponding mesh vertices.
             submesh = self.get_submesh(mesh_region)
             try:
-                # Legacy syntax (for dolfin <= 1.2 or so).
-                # TODO: This should be removed in the future once dolfin 1.3 is
-                # released!
-                parent_vertex_indices = submesh.data().mesh_function(
-                    'parent_vertex_indices').array()
-            except RuntimeError:
                 # This is the correct syntax now, see:
                 # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
                 parent_vertex_indices = submesh.data().array(
                     'parent_vertex_indices', 0)
+            except (RuntimeError, AttributeError):
+                # Legacy syntax kept for older DOLFIN variants.
+                parent_vertex_indices = submesh.data().mesh_function(
+                    'parent_vertex_indices').array()
             kwargs['restrict_to_vertices'] = parent_vertex_indices
 
         psd_freqs, psd_mx, psd_my, psd_mz = \

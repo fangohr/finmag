@@ -1372,7 +1372,9 @@ class Simulation(object):
         if filename is None:
             filename = self.name + '.prof'
 
-        cProfile.run('sim.' + statement, filename=filename, sort=sort)
+        profiler = cProfile.Profile()
+        profiler.runctx('sim.' + statement, globals(), {'sim': self})
+        profiler.dump_stats(filename)
         p = pstats.Stats(filename)
         p.sort_stats(sort).print_stats(N)
 

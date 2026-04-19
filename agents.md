@@ -308,10 +308,18 @@ The current Python 3 progress is now stronger than plain import:
     `energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field`
   - `tests/test_jacobian.py` now collects and passes under Python 3 after a
     Python 2 syntax cleanup
+  - `sim/normal_mode_sim.py` and `util/fft.py` now support the mesh-region PSD
+    path on this DOLFIN/Python 3 stack
+  - `Simulation.profile()` now works under pytest because profiling uses
+    `Profile.runctx(...)` with an explicit `sim` binding
   - targeted verification for this batch:
     `6 passed in 91.45s`
   - `tests/test_jacobian.py` has been added to the active Python 3 core-suite
     verifier and CI workflow
+  - follow-up targeted verification:
+    `2 passed in 62.50s`
+    for `sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region`
+    and `sim_test.py::test_profile`
 
 The current Python 3 transition gate is:
 

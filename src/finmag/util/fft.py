@@ -29,7 +29,7 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
         my = data['m_y']
         mz = data['m_z']
     elif filename.endswith('.npy'):
-        if t_ini == None or t_end == None or t_step == None:
+        if t_ini is None or t_end is None or t_step is None:
             raise ValueError(
                 "If 'filename' represents a series of .npy files then t_ini, t_end and t_step must be given explicitly.")
         num_steps = int(np.round((t_end - t_ini) / t_step)) + 1
@@ -41,7 +41,7 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
                 "Number of timesteps (= {}) does not match number of .npy files found ({}). Aborting.".format(len(ts), N))
         logger.debug("Found {} .npy files.".format(N))
 
-        if vertex_indices != None:
+        if vertex_indices is not None:
             num_vertices = len(vertex_indices)
         else:
             num_vertices = len(np.load(npy_files[0])) // 3
@@ -70,7 +70,7 @@ def _aux_fft_m(filename, t_step=None, t_ini=None, t_end=None, subtract_values='f
         mx -= mx.mean(axis=0)
         my -= my.mean(axis=0)
         mz -= mz.mean(axis=0)
-    elif subtract_values != None:
+    elif subtract_values is not None:
         try:
             (sx, sy, sz) = subtract_values
             mx -= sx
@@ -267,7 +267,7 @@ def compute_power_spectral_density(filename, t_step=None, t_ini=None, t_end=None
     of the magnetisation and freqs are the corresponding frequencies.
 
     """
-    if not filename.endswith('.npy') and restrict_to_vertices != None:
+    if not filename.endswith('.npy') and restrict_to_vertices is not None:
         logger.warning("Ignoring argument 'restrict_to_vertices' because it "
                        "can only be used when reading the spatially resolved "
                        "magnetisation from a list of .npy files.")
@@ -570,7 +570,7 @@ def plot_spatially_resolved_normal_modes(m_vals_on_grid, idx_fourier_coeff,
             fft_vals[idx_fourier_coeff, :, :, 0, k], deg=True), origin='lower', cmap=cmap)
         if show_colorbars:
             fig.colorbar(im)
-    if t_step != None:
+    if t_step is not None:
         # XXX TODO: Which value of nn is the correct one?
         #nn = n
         nn = len(m_vals_on_grid)
