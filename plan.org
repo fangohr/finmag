@@ -319,10 +319,8 @@ Second meaningful milestone:
   - current non-passing statuses inside that file are expected:
     - remaining =xfail= cases inside =sim_test.py= are now the intentionally
       unresolved non-core paths only
-    - the remaining skips are for optional/external features such as
-      =gmsh=/=dolfin-convert= mesh tools and selected animation/export paths
-    - clean skips for =gmsh=/=dolfin-convert=-dependent tests when those tools
-      are not installed
+    - the remaining skips are for optional/external features such as selected
+      animation/export paths and a few remaining mesh/helper tool gaps
     - clean capability skip for the unimplemented =GCR= demag solver
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
@@ -339,6 +337,12 @@ Second meaningful milestone:
 - the external =dolfinh5tools= package is now installed in the transition
   image, patched for Python 3 package imports, and the HDF5 field-save path is
   green in the existing CI gate
+- the transition image now also includes =gmsh=, and the legacy polygon mesh
+  helpers no longer hard-require the =dolfin-convert= script because they use
+  the existing Python meshconvert fallback
+- targeted verification succeeded for:
+  - =src/finmag/util/meshes_test.py::test_regular_polygon=
+  - =src/finmag/util/meshes_test.py::test_regular_polygon_extruded=
 - the existing core-suite workflow and local verifier already cover the
   newly green tests, so no workflow file change was required for these gains
 

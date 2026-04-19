@@ -39,6 +39,7 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     libboost-python-dev \
     libboost-test-dev \
     git \
+    gmsh \
     libfreetype6-dev \
     libgdal-dev \
     libhdf5-openmpi-dev \

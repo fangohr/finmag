@@ -864,6 +864,33 @@ The active Python 3 gate now includes:
 
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 
+** Gmsh Polygon Helpers Recovered
+
+The Python 3 transition image now includes `gmsh`, and the two
+`util/meshes_test.py` polygon helper tests no longer depend on the
+`dolfin-convert` script being installed as a standalone executable.
+
+Changes made:
+
+- `install/docker/python3-dolfin2017-snapshot/Dockerfile`
+  - now installs `gmsh`
+- `src/finmag/util/meshes.py`
+  - added a small shared `gmsh -> meshconvert -> df.Mesh(...)` helper
+  - switched `regular_polygon(...)` and `regular_polygon_extruded(...)` to use
+    the existing Python meshconvert fallback instead of shelling out to
+    `dolfin-convert` directly
+  - fixed the legacy `.geo` syntax from `Physical Surface = {1};` to
+    `Physical Surface(1) = {1};` for `gmsh 2.15`
+- `src/finmag/util/meshes_test.py`
+  - the tests now require only `gmsh`, not `gmsh` plus a separate
+    `dolfin-convert` executable
+
+Targeted verification succeeded for:
+
+- `src/finmag/util/meshes_test.py::test_regular_polygon`
+- `src/finmag/util/meshes_test.py::test_regular_polygon_extruded`
+  - result: `2 passed`
+
 ** Next Transition Step
 
 The next concrete validation target is:

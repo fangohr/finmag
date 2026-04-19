@@ -349,8 +349,6 @@ The current Python 3 transition gate is:
 
 Intentional skips and xfails are explicit:
 
-- `gmsh` and `dolfin-convert` dependent tests skip cleanly when those tools
-  are absent
 - the transition image now contains `netgen`, `tix`, `xauth`, and `xvfb`, but
   the historical `netgen 4.9.13` still aborts after some mesh-generation runs;
   tests therefore use a `netgen_is_usable()` probe instead of checking only
@@ -364,6 +362,10 @@ Intentional skips and xfails are explicit:
 - the Python 3 transition image now installs `dolfinh5tools` from GitHub and
   patches its Python-2-style package import so `Field.save_hdf5(...)` is green
   in the active core suite
+- the Python 3 transition image now also installs `gmsh`
+- `regular_polygon(...)` and `regular_polygon_extruded(...)` no longer require
+  the standalone `dolfin-convert` script; they use the existing Python
+  meshconvert fallback
 - a small number of historical failures remain marked `xfail`, including known
   weak-tolerance demag linearity checks
 - the current green baseline includes:
@@ -376,6 +378,8 @@ Intentional skips and xfails are explicit:
   - `sim_test.py::TestSimulation::test_sim_sllg`
   - `sim_test.py::TestSimulation::test_sim_sllg_time`
   - `tests/zhangli/zhang_li_test.py`
+  - `util/meshes_test.py::test_regular_polygon`
+  - `util/meshes_test.py::test_regular_polygon_extruded`
 
 ## Import Frontier Reached So Far
 

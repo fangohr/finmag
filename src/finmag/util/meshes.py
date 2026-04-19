@@ -334,6 +334,40 @@ def _dolfin_convert_command(infile, outfile):
         outfile=repr(outfile))
 
 
+def _run_shell_command(cmd, failure_message):
+    proc = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    if proc.returncode != 0:
+        print(output)
+        raise RuntimeError("{} (exit code {}).".format(
+            failure_message, proc.returncode))
+    return output
+
+
+def _gmsh_to_dolfin_mesh(filename, dim):
+    mshfile = filename + ".msh"
+    xmlfile = filename + ".xml"
+    gmsh_cmd = "gmsh {geo} -{dim} -o {msh}".format(
+        geo=shlex.quote(filename + ".geo"),
+        dim=int(dim),
+        msh=shlex.quote(mshfile))
+    _run_shell_command(gmsh_cmd, "gmsh failed to generate '{}'".format(mshfile))
+    _run_shell_command(
+        _dolfin_convert_command(mshfile, xmlfile),
+        "dolfin mesh conversion failed for '{}'".format(mshfile))
+    try:
+        return df.Mesh(xmlfile)
+    finally:
+        for path in (xmlfile, filename + ".geo", mshfile,
+                     filename + ".xml.bak", filename + "_physical_region.xml",
+                     filename + "_facet_region.xml"):
+            if os.path.exists(path):
+                os.remove(path)
+
+
 def change_xml_marker_starts_with_zero(xmlfile):
     """
     the xml file also contains mesh_value_collection in dolfin 1.1 (not in dolfin 1.0) and
@@ -1648,19 +1682,12 @@ def regular_polygon(n, r, f):
         csg = csg + "{}".format(i)
         if (i!=n):
             csg += ","
-    csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+    csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface(1) = {1};"
     filename = filename="polygon_{}_{}_{}".format(n,r,f)
     csg_saved=open(filename+".geo",'w')
     csg_saved.write(csg)
     csg_saved.close()
-    cmd="gmsh " + filename + ".geo -2 -o "+filename+".msh"
-    os.system(cmd)
-    cmd="dolfin-convert "+filename+".msh "+filename+".xml"
-    os.system(cmd)
-    mesh = df.Mesh(filename+".xml")
-    cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
-    os.system(cmd)
-    return mesh
+    return _gmsh_to_dolfin_mesh(filename, dim=2)
 
 
 
@@ -1692,7 +1719,7 @@ def regular_polygon_extruded(n,r,t,f):
         csg=csg+"{}".format(i)
         if (i!=n):
             csg += ","
-    csg += "};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+    csg += "};\n\nPlane Surface(1) = {1};\n\nPhysical Surface(1) = {1};"
     if (t!=0):
         n_layers = math.ceil(t/f)
         csg += "\n\nExtrude {{0,0,{}}} {{\nSurface{{1}}; \nLayers{{{}}};\n}}".format(t,n_layers)
@@ -1702,17 +1729,7 @@ def regular_polygon_extruded(n,r,t,f):
     csg_saved=open(filename+".geo",'w')
     csg_saved.write(csg)
     csg_saved.close()
-    if (t==0):
-        cmd = "gmsh " + filename + ".geo -2 -o " + filename + ".msh"
-    else:
-        cmd = "gmsh " + filename + ".geo -3 -o " + filename + ".msh"
-    os.system(cmd)
-    cmd = "dolfin-convert "+filename+".msh "+filename+".xml"
-    os.system(cmd)
-    mesh = df.Mesh(filename+".xml")
-    cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
-    os.system(cmd)
-    return mesh
+    return _gmsh_to_dolfin_mesh(filename, dim=2 if t == 0 else 3)
 
 
 

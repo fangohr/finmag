@@ -224,15 +224,15 @@ def test_mesh_is_periodic(tmpdir):
     assert mesh_is_periodic(mesh_box, 'xy')
 
 def test_regular_polygon():
-    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
-        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
+    if shutil.which("gmsh") is None:
+        pytest.skip("gmsh is required for this mesh-generation test")
     testmesh = regular_polygon(6,50,5)
     testmesh = regular_polygon(6,50,5)
     assert np.max(testmesh.coordinates()) == 50
     assert np.min(testmesh.coordinates()) == -50
 
 def test_regular_polygon_extruded():
-    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
-        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
+    if shutil.which("gmsh") is None:
+        pytest.skip("gmsh is required for this mesh-generation test")
     testmesh = regular_polygon_extruded(5,50,30,10)
     assert np.amax(testmesh.coordinates(),axis=0)[0] == 50
