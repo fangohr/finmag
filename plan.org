@@ -272,6 +272,15 @@ Second meaningful milestone:
     - =energies/demag/fk_demag_2d_test.py=
     - =tests/demag/test_bem_computation.py=
     - =tests/demag/test_demag_sphere.py=
+- additional targeted Python 3 progress since that last full verifier run:
+  - =energies/demag/fk_demag_2d_test.py= now contains a real passing demag
+    regression test instead of a stale =xfail=
+  - =energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field=
+    now passes once regional interpolation enables extrapolation on the source
+    field
+  - =tests/test_jacobian.py= now collects and passes under Python 3
+  - these targeted tests have been added to the active core-suite CI inputs
+    where needed, but the full suite has not yet been rerun after this batch
     - relaxation tests
     - cyclic-reference regression tests
     - bug/regression tests for =.ndt= writing

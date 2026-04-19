@@ -661,6 +661,10 @@ class Simulation(object):
                 raise NotImplementedError(
                     "This functioality is currently only implemented for 3-vector fields.")
             V_submesh = df.VectorFunctionSpace(submesh, 'CG', 1, dim=3)
+            # Submesh interpolation can hit points that lie numerically on the
+            # boundary of the parent mesh region. Allow extrapolation here so
+            # these near-boundary evaluations do not fail.
+            field.set_allow_extrapolation(True)
             f_submesh = df.interpolate(field, V_submesh)
             res = f_submesh
 

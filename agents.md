@@ -300,6 +300,18 @@ The current Python 3 progress is now stronger than plain import:
     `energies/demag/fk_demag_2d_test.py`,
     `tests/demag/test_bem_computation.py`, and
     `tests/demag/test_demag_sphere.py`
+- additional targeted progress after that last full rerun:
+  - `energies/demag/fk_demag_2d.py` had a real 2d->3d lifting bug fixed; the
+    corresponding `fk_demag_2d_test.py` is now a real passing regression test
+  - `sim/sim.py` now enables extrapolation when interpolating fields onto
+    regional submeshes, which unblocks
+    `energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field`
+  - `tests/test_jacobian.py` now collects and passes under Python 3 after a
+    Python 2 syntax cleanup
+  - targeted verification for this batch:
+    `6 passed in 91.45s`
+  - `tests/test_jacobian.py` has been added to the active Python 3 core-suite
+    verifier and CI workflow
 
 The current Python 3 transition gate is:
 

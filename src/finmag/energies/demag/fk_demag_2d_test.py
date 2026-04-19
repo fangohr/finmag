@@ -1,4 +1,5 @@
 import dolfin as df
+import numpy as np
 import pytest
 from finmag.field import Field
 from finmag.energies.demag.fk_demag_2d import Demag2D
@@ -23,7 +24,6 @@ def test_create_mesh():
         assert abs(coord1[i][1] - coord2[i + nv][1]) < eps
 
 
-@pytest.mark.xfail
 def test_demag_2d(plot=False):
     mesh = df.UnitSquareMesh(4, 4)
 
@@ -38,21 +38,16 @@ def test_demag_2d(plot=False):
     demag = Demag2D(thickness=h)
 
     demag.setup(m, Ms)
-    print(demag.compute_field())
+    field = demag.compute_field()
+    nv = mesh.num_vertices()
+    hx, hy, hz = field[:nv], field[nv:2 * nv], field[2 * nv:]
 
-    f0 = demag.compute_field()
-    m.set_with_numpy_array_debug(f0)
-
-    print(demag.m.probe(0., 0., 0))
-    print(demag.m.probe(1., 0., 0))
-    print(demag.m.probe(0., 1., 0))
-    print(demag.m.probe(1., 1., 0))
-    print('=' * 50)
-
-    print(demag.m.probe(0., 0., h))
-    print(demag.m.probe(1., 0., h))
-    print(demag.m.probe(0., 1., h))
-    print(demag.m.probe(1., 1., h))
+    # For a uniformly magnetised thin film, the demag field should point
+    # predominantly opposite to the out-of-plane magnetisation.
+    assert np.max(np.abs(hx)) < 1e-3
+    assert np.max(np.abs(hy)) < 1e-3
+    assert np.mean(hz) < -0.5  # XXX check if this value can be smaller 04-2026
+    assert np.max(hz) < -0.3  # XXX check this one as well 04-2026
 
     if plot:
         df.plot(m.f)

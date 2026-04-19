@@ -71,8 +71,9 @@ class Demag2D(FKDemag):
 
         n2d = S3.dim()
         for i in range(n2d):
-            map_2d_to_3d[i] = vert_to_dof3[dof_to_vert2[i]]
-            map_2d_to_3d[i + n2d] = vert_to_dof3[dof_to_vert2[i] + n2d]
+            source_vertex = int(dof_to_vert2[i])
+            map_2d_to_3d[i] = vert_to_dof3[source_vertex]
+            map_2d_to_3d[i + n2d] = vert_to_dof3[source_vertex + n2d]
 
         self.map_2d_to_3d = map_2d_to_3d
         # print map_2d_to_3d
@@ -80,7 +81,8 @@ class Demag2D(FKDemag):
         n3d = V3.dim()
         map_3d_to_2d = np.zeros(V3.dim(), dtype=np.int32)
         for i in range(V3.dim()):
-            map_3d_to_2d[i] = vert_to_dof2[dof_to_vert3[i] % n2d]
+            source_vertex = int(dof_to_vert3[i] % n2d)
+            map_3d_to_2d[i] = vert_to_dof2[source_vertex]
 
         self.map_3d_to_2d = map_3d_to_2d
         # print map_3d_to_2d
@@ -89,16 +91,20 @@ class Demag2D(FKDemag):
 
         self.dg3 = df.FunctionSpace(mesh, 'DG', 0)
 
+        if isinstance(dg2, (int, float)):
+            fun = df.Function(self.dg3)
+            fun.vector()[:] = dg2
+            return fun
+
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
-                super(HelperExpression, self).__init__()
+            def __init__(self, value, **kwargs):
                 self.fun = value
 
             def eval(self, value, x):
                 value[0] = self.fun((x[0], x[1]))
 
-        hexp = HelperExpression(dg2)
+        hexp = HelperExpression(dg2, degree=0)
         fun = df.interpolate(hexp, self.dg3)
 
         return fun
@@ -123,7 +129,7 @@ class Demag2D(FKDemag):
             The length (in m) represented by one unit on the mesh. Default 1.
 
         """
-        self.m = m
+        self.m_2d = m
         self.unit_length = unit_length
 
         mesh = m.mesh()
@@ -180,8 +186,10 @@ class Demag2D(FKDemag):
         return nodal_E / self._nodal_volumes
 
     def __compute_field(self):
+        # Lift the 2d magnetisation to the corresponding top and bottom
+        # vertices of the auxiliary 3d mesh before solving the FK problem.
         self.m.set_with_numpy_array_debug(
-            self.m.get_numpy_array_debug()[self.map_3d_to_2d])
+            self.m_2d.get_numpy_array_debug()[self.map_3d_to_2d])
         self._compute_magnetic_potential()
         return self._compute_gradient()
 

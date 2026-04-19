@@ -404,7 +404,6 @@ def compute_field_diffs(sim):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     """
     Check that the stray field of a sphere in an 'airbox'
@@ -413,6 +412,8 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
 
     """
     os.chdir(str(tmpdir))
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
     # Create a mesh of a sphere enclosed in an "airbox"
     m_init = [7, -4, 3]  # some random magnetisation direction

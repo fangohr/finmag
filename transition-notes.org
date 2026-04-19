@@ -354,6 +354,40 @@ This full rerun now includes the previously targeted fixes:
 The existing core-suite workflow already contained those files, so CI now
 reflects all of that progress without any workflow-structure change.
 
+Additional targeted progress since that last full rerun:
+
+- =src/finmag/energies/demag/fk_demag_2d.py=
+  - fixed Python 3 NumPy index handling in =build_mapping()=
+  - fixed lifting of the 2d magnetisation into the auxiliary 3d mesh
+  - fixed the helper =Expression= construction in =create_dg3_from_dg2()=
+- =src/finmag/energies/demag/fk_demag_2d_test.py=
+  - the old content-free =xfail= was replaced by a real passing thin-film
+    demag regression test
+  - targeted verification: =2 passed=
+- =src/finmag/sim/sim.py=
+  - submesh interpolation in =get_field_as_dolfin_function(..., region=...)=
+    now enables extrapolation on the source field so DOLFIN does not fail on
+    numerically boundary-adjacent points
+- =src/finmag/energies/zeeman_test.py=
+  - =test_compare_stray_field_of_sphere_with_dipolar_field= is no longer
+    marked =xfail=
+  - it now uses an explicit =netgen_is_usable()= skip if the mesh-generation
+    environment is not available
+  - targeted verification: =1 passed=
+- =src/finmag/tests/test_jacobian.py=
+  - fixed Python 2 print syntax so the file collects under Python 3
+  - the file now passes under Python 3
+  - it has been added to =dev/bin/verify-python3-core-suite= and
+    =.github/workflows/python3-core-suite.yml=
+  - targeted verification: =3 passed=
+
+Combined targeted verification for this batch:
+
+- =6 passed in 91.45s=
+  - =src/finmag/energies/demag/fk_demag_2d_test.py=
+  - =src/finmag/energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field=
+  - =src/finmag/tests/test_jacobian.py=
+
 This broader suite adds the following green areas on top of the minimal suite:
 
 - =src/finmag/drivers/tests/test_relaxation.py=
