@@ -321,7 +321,6 @@ Second meaningful milestone:
       unresolved non-core paths only
     - the remaining skips are for optional/external features such as selected
       animation/export paths and a few remaining mesh/helper tool gaps
-    - clean capability skip for the unimplemented =GCR= demag solver
 - the import path now tolerates missing optional dependencies and unfinished
   subsystems where necessary
 - the transition image now includes =netgen=, =tix=, =xauth=, and =xvfb= plus
@@ -343,6 +342,12 @@ Second meaningful milestone:
 - targeted verification succeeded for:
   - =src/finmag/util/meshes_test.py::test_regular_polygon=
   - =src/finmag/util/meshes_test.py::test_regular_polygon_extruded=
+- the historical =GCR= demag solver remains intentionally unported on the
+  Python 3 path
+- the old solver name is kept only as a historical placeholder in the source
+  tree; it is not exposed through =KNOWN_SOLVERS=
+- =src/finmag/tests/demag/test_bem_computation.py::BemComputationTests::test_compute_scalar_potential_gcr=
+  is therefore an explicit skip again
 - the existing core-suite workflow and local verifier already cover the
   newly green tests, so no workflow file change was required for these gains
 

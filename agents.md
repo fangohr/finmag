@@ -366,6 +366,10 @@ Intentional skips and xfails are explicit:
 - `regular_polygon(...)` and `regular_polygon_extruded(...)` no longer require
   the standalone `dolfin-convert` script; they use the existing Python
   meshconvert fallback
+- the historical `GCR` demag solver is intentionally left unported on the
+  Python 3 path
+- `src/finmag/energies/demag/gcr_demag.py` remains only as a placeholder and
+  is not registered in `KNOWN_SOLVERS`
 - a small number of historical failures remain marked `xfail`, including known
   weak-tolerance demag linearity checks
 - the current green baseline includes:

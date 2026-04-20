@@ -891,6 +891,32 @@ Targeted verification succeeded for:
 - `src/finmag/util/meshes_test.py::test_regular_polygon_extruded`
   - result: `2 passed`
 
+** GCR Demag Remains Unported
+
+The historical `GCR` demag solver is intentionally not counted as ported on
+the Python 3 path.
+
+What changed:
+
+- `src/finmag/energies/demag/gcr_demag.py`
+  - now serves only as a historical placeholder
+  - instantiating `GCRDemag` raises `NotImplementedError`
+- `src/finmag/energies/demag/__init__.py`
+  - `"GCR"` was removed from `KNOWN_SOLVERS`
+
+Why:
+
+- the repo still contains the native `compute_bem_gcr(...)` symbol
+- but the surviving Python-side demag code does not retain a complete and
+  clearly correct GCR formulation
+- mapping `Demag("GCR")` to FK made the tests pass but was scientifically
+  misleading, since it did not restore a distinct GCR solve
+
+Current status:
+
+- `test_compute_scalar_potential_gcr` is an explicit skip again
+- the Python 3 transition focuses on genuinely ported functionality only
+
 ** Next Transition Step
 
 The next concrete validation target is:
