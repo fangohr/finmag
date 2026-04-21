@@ -7,6 +7,7 @@ import logging
 import pytest
 import os
 import shutil
+import subprocess
 import matplotlib.pyplot as plt
 from glob import glob
 from distutils.version import LooseVersion
@@ -15,7 +16,7 @@ from finmag.normal_modes.eigenmodes import eigensolvers
 from finmag.example import barmini
 from math import sqrt, cos, sin, pi
 from finmag.util.helpers import assert_number_of_files, vector_valued_function, logging_status_str, fnormalise
-from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg, netgen_is_usable
+from finmag.util.meshes import nanodisk, plot_mesh_with_paraview, mesh_volume, from_csg, netgen_is_usable, _dolfin_convert_command
 from finmag.util.mesh_templates import EllipticalNanodisk, Sphere
 from finmag.sim import sim_helpers
 from finmag.energies import Zeeman, TimeZeeman, Exchange, UniaxialAnisotropy, DMI
@@ -1846,9 +1847,8 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     """
     os.chdir(str(tmpdir))
 
-    sh = pytest.importorskip("sh")
-    if shutil.which("gmsh") is None or shutil.which("dolfin-convert") is None:
-        pytest.skip("gmsh and dolfin-convert are required for this mesh-generation test")
+    if shutil.which("gmsh") is None:
+        pytest.skip("gmsh is required for this mesh-generation test")
 
     lx = 50
     ly = 5
@@ -1887,10 +1887,14 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     with open('nanostrip.geo', 'w') as f:
         f.write(geofile_string)
 
-    # Call gmsh and dolfin-convert to bring the mesh defined above
-    # into a form that's readable by dolfin.
-    sh.gmsh('-3', '-optimize', '-optimize_netgen', '-o', 'nanostrip.msh', 'nanostrip.geo')
-    sh.dolfin_convert('nanostrip.msh', 'nanostrip.xml')
+    # Call gmsh and convert the result into a form readable by dolfin. The
+    # transition image uses the Python meshconvert fallback when the old
+    # dolfin-convert script is not installed.
+    subprocess.check_call([
+        'gmsh', '-3', '-optimize', '-optimize_netgen',
+        '-o', 'nanostrip.msh', 'nanostrip.geo'])
+    subprocess.check_call(
+        _dolfin_convert_command('nanostrip.msh', 'nanostrip.xml'), shell=True)
 
     mesh = df.Mesh('nanostrip.xml')
 

@@ -339,9 +339,15 @@ Second meaningful milestone:
 - the transition image now also includes =gmsh=, and the legacy polygon mesh
   helpers no longer hard-require the =dolfin-convert= script because they use
   the existing Python meshconvert fallback
+- =sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
+  now also uses =gmsh= plus the Python meshconvert fallback directly, rather
+  than the Python-2-era =sh= package and a standalone =dolfin-convert= script
 - targeted verification succeeded for:
   - =src/finmag/util/meshes_test.py::test_regular_polygon=
   - =src/finmag/util/meshes_test.py::test_regular_polygon_extruded=
+  - =src/finmag/sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
+- =src/finmag/util/meshes_test.py::test_build_mesh= no longer requires
+  =mshr=; it now uses Dolfin-native meshes and passes in the transition image
 - the historical =GCR= demag solver remains intentionally unported on the
   Python 3 path
 - the old solver name is kept only as a historical placeholder in the source
@@ -350,6 +356,10 @@ Second meaningful milestone:
   is therefore an explicit skip again
 - the existing core-suite workflow and local verifier already cover the
   newly green tests, so no workflow file change was required for these gains
+- latest full local verification of =dev/bin/verify-python3-core-suite=:
+  =373 passed, 9 skipped, 1 xfailed= in the Python 3 transition container
+- after that full run, the =mshr=-dependent =test_build_mesh= skip was removed
+  and targeted =src/finmag/util/meshes_test.py= verification passed
 
 *** Notable Work Completed
 

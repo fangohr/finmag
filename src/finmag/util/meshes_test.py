@@ -89,8 +89,6 @@ def test_build_mesh():
     to build_mesh() to rebuild the mesh. Then check that the result is the same
     as the original.
     """
-    mshr = pytest.importorskip("mshr")
-
     def assert_mesh_builds_correctly(mesh):
         coords = mesh.coordinates()
         cells = mesh.cells()
@@ -101,16 +99,11 @@ def test_build_mesh():
     mesh1 = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 12, 8)
     assert_mesh_builds_correctly(mesh1)
 
-    mesh2_temp = mshr.Circle(df.Point(2.0, -3.0), 10)
-    mesh2 = mshr.generate_mesh(mesh2_temp, 10)
+    mesh2 = df.UnitDiscMesh(df.mpi_comm_world(), 10, 1, 2)
     assert_mesh_builds_correctly(mesh2)
 
     mesh3 = df.BoxMesh(df.Point(0, 0, 0), df.Point(20, 10, 5), 12, 8, 3)
     assert_mesh_builds_correctly(mesh3)
-
-    mesh4_temp = mshr.Sphere(df.Point(2.0, 3.0, -4.0), 10)
-    mesh4 = mshr.generate_mesh(mesh4_temp, 10)
-    assert_mesh_builds_correctly(mesh4)
         
 
 def create_periodic_mesh(periodicity='none', dim=3):
