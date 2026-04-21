@@ -32,6 +32,7 @@ docker run --rm \
               src/finmag/normal_modes/eigenmodes/helpers_test.py \
               src/finmag/normal_modes/eigenmodes/eigenproblems_test.py \
               src/finmag/normal_modes/eigenmodes/eigensolvers_test.py \
+              src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py \
               src/finmag/util/test_set_function_values.py \
               src/finmag/util/test_dmi_from_helix.py \
               src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
@@ -74,7 +75,11 @@ docker run --rm \
               src/finmag/tests/demag/test_bem_computation.py \
               src/finmag/tests/demag/test_demag_sphere.py \
               src/finmag/tests/zhangli/zhang_li_test.py \
+              src/finmag/physics/llb/sllg_test.py \
+              src/finmag/physics/llb/llb_test.py \
               src/finmag/tests/test_jacobian.py \
+              src/finmag/tests/test_solid_angle.py \
+              src/finmag/tests/test_solid_angle_invariance.py \
               src/finmag/sim/hysteresis_test.py \
               src/finmag/sim/magnetisation_patterns_test.py \
               src/finmag/sim/sim_helpers_test.py \

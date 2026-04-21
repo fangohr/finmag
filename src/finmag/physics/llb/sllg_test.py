@@ -41,6 +41,20 @@ def plot_random_number_np():
         plt.savefig(os.path.join(MODULE_DIR, "test_np_%d.png" % i))
 
 
+def test_random_mt19937_gaussian_smoke():
+    from finmag.native.llb import RandomMT19937
+
+    mt = RandomMT19937()
+    mt.initial_random(422353390)
+
+    x = np.zeros(16, dtype=float)
+    mt.gaussian_random_np(x)
+
+    assert x.shape == (16,)
+    assert np.isfinite(x).all()
+    assert not np.allclose(x, 0.0)
+
+
 if __name__ == "__main__":
 
     plot_random_number()

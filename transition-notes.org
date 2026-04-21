@@ -852,6 +852,20 @@ Changes made:
   - Python 3 print cleanup so the file collects again
 - `src/finmag/physics/llb/sllg_test.py`
   - Python 3 parse cleanup for the auxiliary/random-number helper module
+  - now contains a small pytest smoke test for the native
+    `RandomMT19937.gaussian_random_np` path
+- `src/finmag/physics/llb/llb.py`
+  - Python 3 exception and manual-print cleanup so the module imports
+- `src/finmag/physics/llb/exchange.py`
+  - Python 3 print cleanup in example/manual code paths
+- `src/finmag/physics/llb/material.py`
+  - Python 3 print cleanup in the module self-test block
+- `src/finmag/physics/llb/llb_test.py`
+  - Python 3 print cleanup so the file collects
+- `src/finmag/tests/test_solid_angle.py`
+  - Python 3 print cleanup in the manual runner
+- `src/finmag/tests/test_solid_angle_invariance.py`
+  - `xrange` to `range` cleanup
 
 Targeted verification succeeded for:
 
@@ -859,10 +873,21 @@ Targeted verification succeeded for:
 - `src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg_time`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
   - result: `2 passed` for the file-level Zhang-Li tests under Python 3
+- `src/finmag/physics/llb/sllg_test.py`
+  - result: `1 passed` under Python 3
+- `src/finmag/physics/llb/llb_test.py`
+  - result: exits cleanly with the file's two existing expected xfails
+- `src/finmag/tests/test_solid_angle.py`
+- `src/finmag/tests/test_solid_angle_invariance.py`
+  - result: `6 passed` for the two-file solid-angle subset under Python 3
 
 The active Python 3 gate now includes:
 
 - `src/finmag/tests/zhangli/zhang_li_test.py`
+- `src/finmag/physics/llb/sllg_test.py`
+- `src/finmag/physics/llb/llb_test.py`
+- `src/finmag/tests/test_solid_angle.py`
+- `src/finmag/tests/test_solid_angle_invariance.py`
 
 ** Gmsh Polygon Helpers Recovered
 
@@ -894,10 +919,12 @@ Changes made:
 - `src/finmag/normal_modes/eigenmodes/helpers_test.py`
 - `src/finmag/normal_modes/eigenmodes/eigenproblems_test.py`
 - `src/finmag/normal_modes/eigenmodes/eigensolvers_test.py`
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py`
   - updated Python 2 print/range idioms
   - changed local imports to package-relative imports
   - fixed the dense eigensolver `num=None` path, which Python 3 rejected
   - removed unconditional SLEPc object/debug dumps from the solver loop
+  - fixed Python 3 iterator semantics in `compute_normal_modes_generalised`
   - added the files to the local verifier and GitHub Actions core-suite gate
 
 Targeted verification succeeded for:
@@ -910,15 +937,16 @@ Targeted verification succeeded for:
 - `src/finmag/normal_modes/eigenmodes/helpers_test.py`
 - `src/finmag/normal_modes/eigenmodes/eigenproblems_test.py`
 - `src/finmag/normal_modes/eigenmodes/eigensolvers_test.py`
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py`
   - result: targeted tests passed
 
 Full CI-equivalent local verification also succeeded with:
 
 - `dev/bin/verify-python3-core-suite`
 - result: `397 passed, 8 skipped, 1 xfailed`
-- note: this full-suite result predates adding `eigenproblems_test.py` and
-  `eigensolvers_test.py`; the expanded normal-modes subset has been verified
-  separately with its existing expected xfails/skips
+- note: this full-suite result predates the latest normal-modes gate expansion;
+  the expanded normal-modes subset has been verified separately with its
+  existing expected xfails/skips
 
 ** GCR Demag Remains Unported
 

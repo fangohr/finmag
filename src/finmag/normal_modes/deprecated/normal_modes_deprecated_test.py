@@ -5,6 +5,7 @@ from finmag import example
 from finmag import sim_with, normal_mode_simulation
 from math import pi
 import logging
+import os
 import pytest
 import matplotlib.pyplot as plt
 
@@ -29,8 +30,8 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
 
     sphere = Sphere(r=11)
     mesh = sphere.create_mesh(maxh=2.0)
-    print "[DDD] mesh: {}".format(mesh)
-    print mesh_info(mesh)
+    print("[DDD] mesh: {}".format(mesh))
+    print(mesh_info(mesh))
     if debug:
         plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')
 
@@ -81,7 +82,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
                        sorted(omega)))
 
     # Export normal mode animations for debugging
-    for i in xrange(n_values_export):
+    for i in range(n_values_export):
         freq = omega_positive[i]
         export_normal_mode_animation(
             sim, freq, w[i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
@@ -158,7 +159,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     omega, eigenvecs, rel_errors = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(
         len(omega), len(eigenvecs[0])))
-    for i in xrange(N):
+    for i in range(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
         w = eigenvecs[i]
 

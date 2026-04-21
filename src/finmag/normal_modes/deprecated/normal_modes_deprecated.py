@@ -480,9 +480,9 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     # Sanity check: the eigenfrequencies should occur in +/- pairs.
     TOL = 1e-3
-    positive_freqs = filter(lambda x: x > 0, omega)
-    negative_freqs = filter(lambda x: x < 0, omega)
-    freq_pairs = zip(positive_freqs, negative_freqs)
+    positive_freqs = list(filter(lambda x: x > 0, omega))
+    negative_freqs = list(filter(lambda x: x < 0, omega))
+    freq_pairs = list(zip(positive_freqs, negative_freqs))
     if (n_values % 2 == 0 and len(positive_freqs) != len(negative_freqs)) or \
             (n_values % 2 == 0 and len(positive_freqs) - len(negative_freqs) not in [0, 1]) or \
             any([abs(x + y) > TOL for (x, y) in freq_pairs]):
@@ -497,7 +497,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     if discard_negative_frequencies:
         # Discard indices corresponding to negative frequencies
-        sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
+        sorted_indices = list(filter(lambda i: omega[i] >= 0.0, sorted_indices))
 
     omega = omega[sorted_indices]
     # XXX TODO: can we somehow avoid copying the columns to save memory?!?

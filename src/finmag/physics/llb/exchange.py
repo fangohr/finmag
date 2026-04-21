@@ -55,7 +55,7 @@ class ExchangeStd(EnergyBase):
             exchange.setup(S3, M)
 
             # Print energy
-            print exchange.compute_energy()
+            print(exchange.compute_energy())
 
             # Exchange field
             H_exch = exchange.compute_field()
@@ -170,6 +170,6 @@ if __name__ == "__main__":
 
     # print max(exch2.compute_field()-exch.compute_field())
 
-    print exch.compute_field()
+    print(exch.compute_field())
 
     # print timings.report()

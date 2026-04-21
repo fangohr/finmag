@@ -292,7 +292,7 @@ class LLB(object):
                 if self.pbc2d:
                     self.pbc2d.modify_m(self._m.vector())
                 self._t += self._dt
-        except Exception, error:
+        except Exception as error:
             log.info(error)
             raise Exception(error)
 
@@ -434,7 +434,7 @@ if __name__ == '__main__':
     mlist = []
     Ms_average = []
     for t in ts:
-        print t
+        print(t)
         sim.run_until(t)
         mlist.append(sim.m)
         df.plot(sim._m)

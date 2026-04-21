@@ -351,6 +351,9 @@ Second meaningful milestone:
 - the normal-modes eigenmode helper/problem/solver tests now collect and pass
   under Python 3 after print/range cleanup, relative package import fixes, and
   a dense-solver =num=None= compatibility fix
+- the deprecated normal-modes test file now also collects and passes under
+  Python 3 after print/range cleanup and Python 3 iterator fixes in
+  =compute_normal_modes_generalised=
 - the historical =GCR= demag solver remains intentionally unported on the
   Python 3 path
 - the old solver name is kept only as a historical placeholder in the source
@@ -361,11 +364,13 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/helpers_test.py=
   - =src/finmag/normal_modes/eigenmodes/eigenproblems_test.py=
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
+  - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
   =397 passed, 8 skipped, 1 xfailed= in the Python 3 transition container
-- note: that full-suite count predates adding =eigenproblems_test.py= and
-  =eigensolvers_test.py= to the gate; the normal-modes subset now passes with
-  the file's existing expected xfails/skips
+- note: that full-suite count predates the latest normal-modes and
+  =sllg_test.py=, =llb_test.py=, and solid-angle gate expansion; those
+  targeted subsets now pass with the files' existing expected xfails/skips
+  where applicable
 
 *** Notable Work Completed
 
@@ -478,5 +483,15 @@ The =sllg= path is now working again on the Python 3 transition stack.
   - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg=
   - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg_time=
   - =src/finmag/tests/zhangli/zhang_li_test.py=
+  - =src/finmag/physics/llb/sllg_test.py=
 - the active Python 3 core-suite gate now includes
   =src/finmag/tests/zhangli/zhang_li_test.py=
+- the active Python 3 core-suite gate now also includes
+  =src/finmag/physics/llb/sllg_test.py=, which provides a small native
+  =RandomMT19937.gaussian_random_np= smoke test without enabling the large
+  manual plotting helpers
+- =src/finmag/physics/llb/llb_test.py= now collects under Python 3 and is in
+  the active gate with its two existing expected xfails
+- =src/finmag/tests/test_solid_angle.py= and
+  =src/finmag/tests/test_solid_angle_invariance.py= now pass under Python 3
+  and are included in the active gate

@@ -72,8 +72,8 @@ class SolidAngleInvarianceTests(unittest.TestCase):
 
         def p_values():
             for a in random_3d_rotation_matrix(10):
-                for i in xrange(3):
-                    for j in xrange(3):
+                for i in range(3):
+                    for j in range(3):
                         yield scipy.stats.ks_2samp(m1[:, i, j], np.dot(m2, a)[:, i, j])[1]
         p = list(p_values())
         assert np.min(p) > 0.0001
@@ -83,7 +83,7 @@ class SolidAngleInvarianceTests(unittest.TestCase):
     # (O(3) transformations not in SO(3))
     def test_solid_angle(self):
         np.random.seed(1)
-        for i in xrange(1000):
+        for i in range(1000):
             r = np.random.randn(3)
             T = np.random.randn(3, 3)
             q = random_3d_rotation_matrix(1)[0]

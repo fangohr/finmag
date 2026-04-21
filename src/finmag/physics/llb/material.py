@@ -179,6 +179,6 @@ if __name__ == "__main__":
     mat = Material(mesh, name='Nickel')
     mat.set_m((1, 0, 0))
     mat.T = 3
-    print mat.T
-    print mat.inv_chi_par
-    print mat.compute_field()
+    print(mat.T)
+    print(mat.inv_chi_par)
+    print(mat.compute_field())

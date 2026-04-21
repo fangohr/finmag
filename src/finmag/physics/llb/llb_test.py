@@ -52,7 +52,7 @@ def test_llb_sundials(do_plot=False):
 
     mz = np.array(mz)
 
-    print np.sum(mxyz ** 2, axis=1) - 1
+    print(np.sum(mxyz ** 2, axis=1) - 1)
 
     if do_plot:
         ts_ns = np.array(real_ts) * 1e9
@@ -77,9 +77,9 @@ def sim_llb_100(do_plot=False):
     mat.T = 100
     mat.alpha = 0.1
 
-    print mat.Ms0
-    print mat.volumes
-    print mat.mat.chi_par(100)
+    print(mat.Ms0)
+    print(mat.volumes)
+    print(mat.mat.chi_par(100))
     sim = LLB(mat)
     sim.set_up_stochastic_solver(using_type_II=True)
 
@@ -102,7 +102,7 @@ def sim_llb_100(do_plot=False):
         mz.append(sim.m_average)
 
     mz = np.array(mz)
-    print mz
+    print(mz)
 
     if do_plot:
         ts_ns = np.array(real_ts) * 1e9
@@ -162,7 +162,7 @@ def test_llb_save_data():
     sim.schedule('save_ndt', every=1e-12)
 
     for t in ts:
-        print 't===', t
+        print('t===', t)
         sim.run_until(t)
 
 

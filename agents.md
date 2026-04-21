@@ -376,13 +376,16 @@ Intentional skips and xfails are explicit:
   `normal_modes/eigenmodes/eigenproblems_test.py`, and
   `normal_modes/eigenmodes/eigensolvers_test.py` now pass under Python 3 and
   are included in both the local verifier and GitHub Actions core-suite gate
+- `normal_modes/deprecated/normal_modes_deprecated_test.py` also passes under
+  Python 3 and is included in both gates
 - `normal_modes/eigenmodes/eigensolvers.py` no longer treats `num=None` as an
   operand to `min(...)`, and the unconditional SLEPc debug dumps were removed
+- `normal_modes/deprecated/normal_modes_deprecated.py` materializes
+  `filter(...)` results before using `len(...)` or NumPy indexing
 - latest full local run of `dev/bin/verify-python3-core-suite` succeeded:
   `397 passed, 8 skipped, 1 xfailed`
-- that full run predates the later `eigenproblems_test.py` and
-  `eigensolvers_test.py` gate expansion; the normal-modes subset was verified
-  separately
+- that full run predates the latest normal-modes gate expansion; the
+  normal-modes subset was verified separately
 - the historical `GCR` demag solver is intentionally left unported on the
   Python 3 path
 - `src/finmag/energies/demag/gcr_demag.py` remains only as a placeholder and
@@ -452,8 +455,17 @@ Python 3 transition path.
 - `Simulation(..., kernel="sllg")` works in the transition image
 - `src/finmag/tests/zhangli/zhang_li_test.py` now collects and passes under
   Python 3
+- `src/finmag/physics/llb/sllg_test.py` now contains a collected pytest smoke
+  test for the native `RandomMT19937.gaussian_random_np` binding
+- `src/finmag/physics/llb/llb_test.py` now collects under Python 3 and exits
+  cleanly with its two existing expected xfails
+- `src/finmag/tests/test_solid_angle.py` and
+  `src/finmag/tests/test_solid_angle_invariance.py` now pass under Python 3
 - the active Python 3 core-suite gate includes the Zhang-Li file in addition
   to the already-covered `sim_test.py` SLLG cases
+- the active Python 3 core-suite gate also includes `sllg_test.py` and
+  `llb_test.py`
+- the active Python 3 core-suite gate also includes the two solid-angle files
 
 ## Native Build Findings
 
