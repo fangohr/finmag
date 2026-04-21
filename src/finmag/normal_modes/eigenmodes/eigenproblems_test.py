@@ -2,9 +2,9 @@ from __future__ import division
 import pytest
 import logging
 import os
-from eigenproblems import *
-from eigensolvers import *
-from helpers import is_diagonal_matrix
+from .eigenproblems import *
+from .eigensolvers import *
+from .helpers import is_diagonal_matrix
 
 
 def test_assert_eigenproblems_were_defined():
@@ -128,7 +128,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             self.eigenproblem.print_analytical_eigenvalues(10, 'Hz')
 
     def test_get_kth_analytical_eigenvalue(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             omega = self.eigenproblem.get_kth_analytical_eigenvalue(k=k)
             omega_ref = self.omega_ref[k]
             assert(np.allclose(omega, omega_ref))
@@ -138,7 +138,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(np.allclose(omega, self.omega_ref))
 
     def test_get_kth_analytical_eigenvector(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             w = self.eigenproblem.get_kth_analytical_eigenvector(
                 k=k, size=self.size)
             w_ref = self.w_ref[k]
@@ -150,7 +150,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(np.allclose(w, self.w_ref))
 
     def test_get_kth_analytical_eigenpair(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             omega, w = self.eigenproblem.get_kth_analytical_eigenpair(
                 k=k, size=self.size)
             omega_ref = self.omega_ref[k]
@@ -225,7 +225,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
         """
         # Check all correct eigenpairs (should succeed)
-        for k in xrange(self.num):
+        for k in range(self.num):
             a = self.omega_ref[k]
             v = self.w_ref[k]
             res = self.eigenproblem.verify_eigenpair_numerically(a, v)
@@ -257,7 +257,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
         """
         # Check all correct eigenpairs (should succeed)
-        for k in xrange(self.num):
+        for k in range(self.num):
             a = self.omega_ref[k]
             v = self.w_ref[k]
             res = self.eigenproblem.verify_eigenpair_analytically(a, v)

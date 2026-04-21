@@ -2,9 +2,9 @@ from __future__ import division
 import pytest
 import numpy as np
 import itertools
-from eigensolvers import *
-from eigenproblems import *
-from helpers import normalise_rows
+from .eigensolvers import *
+from .eigenproblems import *
+from .helpers import normalise_rows
 np.set_printoptions(precision=3)
 
 
@@ -243,7 +243,7 @@ def test_eigensolvers(solver, eigenproblem):
                 continue
 
             omega, w, _ = eigenproblem.solve(solver, N, dtype=dtype, num=40)
-            print "[DDD] len(omega): {}".format(len(omega))
+            print("[DDD] len(omega): {}".format(len(omega)))
             try:
                 if isinstance(eigenproblem, Nanostrip1dEigenproblemFinmag):
                     # The Nanostrip1d seems to be quite ill-behaved

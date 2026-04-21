@@ -348,18 +348,24 @@ Second meaningful milestone:
   - =src/finmag/sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
 - =src/finmag/util/meshes_test.py::test_build_mesh= no longer requires
   =mshr=; it now uses Dolfin-native meshes and passes in the transition image
-- =src/finmag/normal_modes/eigenmodes/helpers_test.py= now collects and passes
-  under Python 3 after print/range cleanup and a relative package import fix
+- the normal-modes eigenmode helper/problem/solver tests now collect and pass
+  under Python 3 after print/range cleanup, relative package import fixes, and
+  a dense-solver =num=None= compatibility fix
 - the historical =GCR= demag solver remains intentionally unported on the
   Python 3 path
 - the old solver name is kept only as a historical placeholder in the source
   tree; it is not exposed through =KNOWN_SOLVERS=
 - =src/finmag/tests/demag/test_bem_computation.py::BemComputationTests::test_compute_scalar_potential_gcr=
   is therefore an explicit skip again
-- the core-suite workflow and local verifier now include the normal-modes
-  helper tests
+- the core-suite workflow and local verifier now include:
+  - =src/finmag/normal_modes/eigenmodes/helpers_test.py=
+  - =src/finmag/normal_modes/eigenmodes/eigenproblems_test.py=
+  - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
   =397 passed, 8 skipped, 1 xfailed= in the Python 3 transition container
+- note: that full-suite count predates adding =eigenproblems_test.py= and
+  =eigensolvers_test.py= to the gate; the normal-modes subset now passes with
+  the file's existing expected xfails/skips
 
 *** Notable Work Completed
 

@@ -125,8 +125,8 @@ class ScipyDenseSolver(AbstractEigensolver):
         # Return only the number of requested eigenvalues
         N, _ = A.shape
         num = num or self.num
-        num = min(num, N - 1)
-        if num != None:
+        if num is not None:
+            num = min(num, N - 1)
             omega = omega[:num]
             w = w[:num]
 
@@ -423,8 +423,6 @@ class SLEPcEigensolver(AbstractEigensolver):
                 print("----------------- ------------------")
             for i in range(nconv):
                 k = E.getEigenpair(i, vr, vi)
-                print(type(E))
-                print(dir(E))
                 error = E.computeError(i, etype=1)
                 if self.verbose:
                     if k.imag != 0.0:

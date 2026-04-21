@@ -372,10 +372,17 @@ Intentional skips and xfails are explicit:
 - `sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization`
   now uses `gmsh` and the shared Python meshconvert fallback directly, so it no
   longer needs the `sh` Python package or a standalone `dolfin-convert`
-- `normal_modes/eigenmodes/helpers_test.py` now passes under Python 3 and is
-  included in both the local verifier and GitHub Actions core-suite gate
+- `normal_modes/eigenmodes/helpers_test.py`,
+  `normal_modes/eigenmodes/eigenproblems_test.py`, and
+  `normal_modes/eigenmodes/eigensolvers_test.py` now pass under Python 3 and
+  are included in both the local verifier and GitHub Actions core-suite gate
+- `normal_modes/eigenmodes/eigensolvers.py` no longer treats `num=None` as an
+  operand to `min(...)`, and the unconditional SLEPc debug dumps were removed
 - latest full local run of `dev/bin/verify-python3-core-suite` succeeded:
   `397 passed, 8 skipped, 1 xfailed`
+- that full run predates the later `eigenproblems_test.py` and
+  `eigensolvers_test.py` gate expansion; the normal-modes subset was verified
+  separately
 - the historical `GCR` demag solver is intentionally left unported on the
   Python 3 path
 - `src/finmag/energies/demag/gcr_demag.py` remains only as a placeholder and
