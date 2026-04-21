@@ -348,18 +348,18 @@ Second meaningful milestone:
   - =src/finmag/sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
 - =src/finmag/util/meshes_test.py::test_build_mesh= no longer requires
   =mshr=; it now uses Dolfin-native meshes and passes in the transition image
+- =src/finmag/normal_modes/eigenmodes/helpers_test.py= now collects and passes
+  under Python 3 after print/range cleanup and a relative package import fix
 - the historical =GCR= demag solver remains intentionally unported on the
   Python 3 path
 - the old solver name is kept only as a historical placeholder in the source
   tree; it is not exposed through =KNOWN_SOLVERS=
 - =src/finmag/tests/demag/test_bem_computation.py::BemComputationTests::test_compute_scalar_potential_gcr=
   is therefore an explicit skip again
-- the existing core-suite workflow and local verifier already cover the
-  newly green tests, so no workflow file change was required for these gains
+- the core-suite workflow and local verifier now include the normal-modes
+  helper tests
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =373 passed, 9 skipped, 1 xfailed= in the Python 3 transition container
-- after that full run, the =mshr=-dependent =test_build_mesh= skip was removed
-  and targeted =src/finmag/util/meshes_test.py= verification passed
+  =397 passed, 8 skipped, 1 xfailed= in the Python 3 transition container
 
 *** Notable Work Completed
 

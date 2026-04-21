@@ -29,6 +29,7 @@ docker run --rm \
               src/finmag/util/plot_helpers_test.py \
               src/finmag/util/vtk_saver_test.py \
               src/finmag/util/dmi_helper_test.py \
+              src/finmag/normal_modes/eigenmodes/helpers_test.py \
               src/finmag/util/test_set_function_values.py \
               src/finmag/util/test_dmi_from_helix.py \
               src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \

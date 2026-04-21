@@ -891,6 +891,10 @@ Changes made:
     `subprocess` with `gmsh` and the shared Python meshconvert fallback
   - this removes the Python-2-era `sh` dependency and avoids requiring a
     standalone `dolfin-convert` executable
+- `src/finmag/normal_modes/eigenmodes/helpers_test.py`
+  - updated Python 2 print/range idioms
+  - changed the local helper import to a package-relative import
+  - added the file to the local verifier and GitHub Actions core-suite gate
 
 Targeted verification succeeded for:
 
@@ -899,14 +903,13 @@ Targeted verification succeeded for:
 - `src/finmag/util/meshes_test.py::test_build_mesh`
 - `src/finmag/util/meshes_test.py`
 - `src/finmag/sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization`
+- `src/finmag/normal_modes/eigenmodes/helpers_test.py`
   - result: targeted tests passed
 
 Full CI-equivalent local verification also succeeded with:
 
 - `dev/bin/verify-python3-core-suite`
-- result: `373 passed, 9 skipped, 1 xfailed`
-- note: this full run was before the subsequent `test_build_mesh` skip removal;
-  the next full run should reduce the skip count by one if no other tests move
+- result: `397 passed, 8 skipped, 1 xfailed`
 
 ** GCR Demag Remains Unported
 
