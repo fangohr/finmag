@@ -11,7 +11,7 @@ import re
 import hashlib
 import tempfile
 import numpy as np
-import cStringIO
+import io
 import sys
 import subprocess
 import shutil
@@ -26,7 +26,7 @@ TEST_COMPARISON_RESULTS = os.path.join(FINMAG_PKG_DIR, 'tests', 'oommf_results')
 CACHE_DIR = os.environ['HOME'] + "/.oommf_calculator"
 RUN_DIR = tempfile.mkdtemp(suffix='_oommf_calculator')
 
-if os.environ.has_key('OOMMF_COMMAND'):
+if 'OOMMF_COMMAND' in os.environ:
     OOMMF_COMMAND = os.environ['OOMMF_COMMAND']
 else:
     OOMMF_COMMAND = 'oommf'
@@ -65,10 +65,10 @@ def run_oommf(dir, args, **kwargs):
         cmd = [OOMMF_COMMAND]
         cmd.extend(args)
         check_output(cmd, cwd=dir, stderr=subprocess.STDOUT, **kwargs)
-    except CalledProcessError, ex:
+    except CalledProcessError as ex:
         sys.stderr.write(ex.output)
         raise Exception("OOMMF invocation failed: " + " ".join(cmd))
-    except OSError, ex:
+    except OSError as ex:
         sys.stderr.write(ex.strerror + ".\n")
         raise Exception(
             "Command '{0}' failed. Parameters: '{1}'.".format(cmd[0],  " ".join(cmd[1:])))
@@ -98,7 +98,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
     m.update("%25.19e%s" % (gamma_G, delim))
     m.update("%s%s" % (",".join(fields), delim))
     m.update(spec + delim)
-    s = cStringIO.StringIO()
+    s = io.BytesIO()
     np.save(s, s0.flat)
     m.update(s.getvalue())
     checksum = m.hexdigest()
@@ -128,7 +128,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
 
     if not os.path.exists(cachedir):
         # Run the simulation
-        print "Running OOMMF simulation %s..." % basename,
+        print("Running OOMMF simulation %s..." % basename, end=" ")
         sys.stdout.flush()
         dir = os.path.join(RUN_DIR, basename)
         with ignored(OSError):
@@ -150,7 +150,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         run_oommf(dir, ["boxsi", mif_file_name])
         # Move the results to the cache directory
         shutil.move(dir, cachedir)
-        print "success"
+        print("success")
 
     # Read the results
     fields = {}

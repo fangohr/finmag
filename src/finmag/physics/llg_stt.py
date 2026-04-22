@@ -35,7 +35,7 @@ class LLG_STT(object):
         self._delta_m = df.Function(self.S3)
 
         self.nxyz = len(self.m)
-        self._alpha = np.zeros(self.nxyz / 3)
+        self._alpha = np.zeros(self.nxyz // 3)
         self.delta_m = np.zeros(self.nxyz)
         self.H_eff = np.zeros(self.nxyz)
         self.dy_m = np.zeros(2 * self.nxyz)  # magnetisation and delta_m
@@ -97,7 +97,7 @@ class LLG_STT(object):
 
         """
         if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) / 3
+            nb_nodes_mesh = len(self._m_field.get_numpy_array_debug()) // 3
             if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
                 self._pins = np.array(nodes, dtype="int")
             else:

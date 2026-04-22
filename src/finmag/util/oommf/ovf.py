@@ -110,7 +110,7 @@ __all__ = ["OVF10", "OVF20", "OVFFile", "OVFValueUnits", "OVFValueLabels"]
 import struct
 from numpy import array, ndarray
 
-from lattice import FieldLattice
+from .lattice import FieldLattice
 
 # Abbreviations for OVF versions
 OVF10 = (1, 0)
@@ -227,7 +227,7 @@ class OVFSectionNode(OVFNode):
         missing_value = []
         if self.required != None:
             for required_value in self.required:
-                if not self.received.has_key(required_value):
+                if required_value not in self.received:
                     missing_value.append(required_value)
 
         if missing_value:
@@ -568,12 +568,12 @@ def version_node(ver_str):
 
 def known_value_node(name, value):
     lname = name_normalise(name)
-    if known_values.has_key(lname):
+    if lname in known_values:
         val_type = known_values[lname][1]
         value = val_type(value)
 
     else:
-        print "Unknown value '%s' while reading OVF file." % name
+        print("Unknown value '%s' while reading OVF file." % name)
 
     return OVFValueNode(data=(name, value))
 
@@ -589,7 +589,7 @@ def known_section_node(action, name):
     elif lname.startswith("data"):
         cls = OVFDataSectionNode
     else:
-        print "Unknown section '%s' while reading OVF file." % name
+        print("Unknown section '%s' while reading OVF file." % name)
         cls = OVFSectionNode
 
     return cls(data=(name, action))
@@ -775,7 +775,7 @@ class OVFFile:
         available_data_types = {"text": "Data Text",
                                 "binary4": "Data Binary 4",
                                 "binary8": "Data Binary 8"}
-        if available_data_types.has_key(data_type):
+        if data_type in available_data_types:
             data_type = available_data_types[data_type]
 
         else:
@@ -899,12 +899,12 @@ class OVFFile:
 
 if __name__ == "__main__no":
     import sys
-    print "Reading"
+    print("Reading")
     ovf = OVFFile(sys.argv[1])
-    print "Writing"
+    print("Writing")
     #ovf.content.a_segment.a_databinary8.name = "Data Binary 4"
     ovf.write(sys.argv[2])
-    print "Done"
+    print("Done")
 
 elif __name__ == "__main__":
     # Here is how to create an OVF file from a FieldLattice object
