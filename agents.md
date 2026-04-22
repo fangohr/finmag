@@ -479,7 +479,8 @@ Python 3 transition path.
 - `src/finmag/tests/test_sim_parallel.py` now collects under Python 3 and
   skips explicitly in serial runs with fewer than two MPI ranks
 - `src/finmag/tests/comparison/test_dmdt.py` now collects under Python 3 and
-  skips explicitly when the external `oommf` executable is absent
+  passes in the transition image now that the external `oommf` executable is
+  installed
 - `src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py` passes under
   Python 3 against checked-in reference data
 - `src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py` passes
@@ -489,8 +490,8 @@ Python 3 transition path.
 - `src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py` passes under
   Python 3 against checked-in reference data
 - `src/finmag/tests/oommf/test_anisotropy.py` and
-  `src/finmag/tests/oommf/test_exchange.py` collect under Python 3 and skip
-  explicitly when the external `oommf` executable is absent
+  `src/finmag/tests/oommf/test_exchange.py` collect and pass under Python 3 in
+  the transition image now that the external `oommf` executable is installed
 - `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
   passes under Python 3, but is comparatively slow because it runs a 10 ns
   validation simulation
@@ -511,13 +512,28 @@ Python 3 transition path.
 - the active Python 3 core-suite gate also includes the Zhang-Li nonlocal STT
   test
 - the active Python 3 core-suite gate also includes the pure OOMMF mesh helper
-  tests; external OOMMF comparison tests are still outside the reliable gate
+  tests
+- the transition image now installs the Southampton/Fangohr OOMMF fork from
+  `https://github.com/fangohr/oommf`
+- OOMMF refuses to run as root, so the transition image builds and runs it as
+  the `oommfbuild` user and uses that account as the default container user
+- OOMMF reports `OOMMF 2.1a0` in the current image
+- the OOMMF binary comparison/regression tests now run under Python 3 rather
+  than skipping for a missing executable
+- the OOMMF Python support path needed two Python 3 fixes:
+  `src/finmag/util/oommf/ovf.py` reads mixed ASCII/binary OVF files in binary
+  mode and decodes only header lines, and
+  `src/finmag/util/oommf/lattice.py` avoids NumPy array truth-value checks
+- targeted OOMMF verification passed for `test_dmdt.py`,
+  `test_anis_oommf.py`, `test_cubic_anis_oommf.py`,
+  `test_exchange_field.py`, `tests/oommf/test_anisotropy.py`, and
+  `tests/oommf/test_exchange.py`
 - the active Python 3 core-suite gate also includes visualization helper tests
   that do not require GUI/rendering dependencies
 - the active Python 3 core-suite gate also includes the parallel simulation
   test as a tracked serial-CI skip
 - the active Python 3 core-suite gate also includes the OOMMF dm/dt comparison
-  as a tracked external-tool skip
+  as a real test in the transition image
 - the active Python 3 core-suite gate also includes the Nmag 1D exchange
   reference-data comparison
 - the active Python 3 core-suite gate also includes the Nmag 1D anisotropy
@@ -527,19 +543,20 @@ Python 3 transition path.
 - the active Python 3 core-suite gate also includes the Nmag 3D exchange
   reference-data comparison
 - the active Python 3 core-suite gate also includes the standalone OOMMF
-  anisotropy/exchange comparisons as tracked external-tool skips
+  anisotropy/exchange comparisons as real tests in the transition image
 - the active Python 3 core-suite gate also includes the Slonczewski validation
   test
 - the active Python 3 core-suite gate also includes the Slonczewski oscillator
   validation as a tracked skip
 - the active Python 3 core-suite gate also includes the legacy comparison
-  anisotropy/demag/exchange tests; OOMMF tests are external-tool skips where
-  the executable is absent, and two stale Magpar mesh comparisons are tracked
+  anisotropy/demag/exchange tests; OOMMF tests run in the transition image,
+  and two stale Magpar mesh comparisons are tracked
   expected failures
-- the OOMMF helper stack has been ported far enough for Python 3 to reach the
-  external `oommf` executable boundary: coordinate `zip` iterators are
+- the OOMMF helper stack has been ported far enough for Python 3 to run the
+  external `oommf` comparison tests: coordinate `zip` iterators are
   materialised, MD5 input is encoded, OVF binary output separates bytes from
-  text, and `reduce` comes from `functools`
+  text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
+  `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
   image with `485 passed, 24 skipped, 9 xfailed` in approximately 1523 seconds;
   this is the current broad Python 3 regression baseline

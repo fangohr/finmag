@@ -34,8 +34,10 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     python3-pip \
     python3-scipy \
     python3-setuptools \
+    ca-certificates \
     default-libmysqlclient-dev \
     cython3 \
+    g++ \
     libboost-python-dev \
     libboost-test-dev \
     git \
@@ -58,6 +60,7 @@ RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-d
     tcl-dev \
     tix \
     tk-dev \
+    make \
     xauth \
     xvfb \
     zlib1g=1:1.2.8.dfsg-5 \
@@ -88,6 +91,19 @@ RUN sed -i "s/from lib import/from .lib import/" \
     sed -i "s/print df.__version__/print(df.__version__)/" \
         /usr/local/lib/python3.5/dist-packages/dolfinh5tools/lib.py
 
+RUN useradd --create-home --shell /bin/bash oommfbuild && \
+    git clone --depth 1 https://github.com/fangohr/oommf.git /usr/local/oommf && \
+    chown -R oommfbuild:oommfbuild /usr/local/oommf && \
+    su - oommfbuild -c 'cd /usr/local/oommf && make build' && \
+    printf '#!/bin/sh\nexec tclsh /usr/local/oommf/oommf/oommf.tcl "$@"\n' > /usr/local/bin/oommf && \
+    chmod +x /usr/local/bin/oommf && \
+    chmod -R a+rX /usr/local/oommf
+
+ENV OOMMF_ROOT=/usr/local/oommf/oommf
+ENV OOMMFTCL=/usr/local/oommf/oommf/oommf.tcl
+
+RUN su - oommfbuild -c 'oommf +version'
+
 RUN OMPI_MCA_plm=isolated python3 - <<'PY'
 import dolfin
 import sys
@@ -96,6 +112,9 @@ print(dolfin.__version__)
 print(dolfin.__file__)
 PY
 
+RUN mkdir -p /io && chown oommfbuild:oommfbuild /io
+
+USER oommfbuild
 WORKDIR /io
 
 ENV PYTHONPATH=/io/finmag/src

@@ -339,6 +339,24 @@ Second meaningful milestone:
 - the transition image now also includes =gmsh=, and the legacy polygon mesh
   helpers no longer hard-require the =dolfin-convert= script because they use
   the existing Python meshconvert fallback
+- the transition image now builds and installs the Southampton/Fangohr OOMMF
+  fork from =https://github.com/fangohr/oommf=
+- because OOMMF refuses to run as root, the image builds OOMMF as
+  =oommfbuild=, verifies =oommf +version= as that user, and uses =oommfbuild=
+  as the default runtime user
+- the OOMMF OVF reader path is now Python 3 compatible for binary OVF output:
+  =OVFStream= opens files in binary mode and decodes only ASCII header lines
+- the OOMMF lattice wrapper now avoids NumPy truth-value checks on arrays
+- the OOMMF-dependent regression subset now passes under Python 3:
+  - =src/finmag/tests/comparison/test_dmdt.py=
+  - =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+  - =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+  - =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+  - =src/finmag/tests/oommf/test_anisotropy.py=
+  - =src/finmag/tests/oommf/test_exchange.py=
+- the active GitHub Actions core-suite gate already lists those OOMMF files;
+  with OOMMF installed they now run as real tests instead of external-tool
+  skips
 - =sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
   now also uses =gmsh= plus the Python meshconvert fallback directly, rather
   than the Python-2-era =sh= package and a standalone =dolfin-convert= script
@@ -509,8 +527,8 @@ The =sllg= path is now working again on the Python 3 transition stack.
 - =src/finmag/tests/zhangli/stt_nonlocal_test.py= passes under Python 3 and is
   included in the active gate
 - =src/finmag/util/oommf/test_mesh.py= passes under Python 3 and is included
-  in the active gate; external OOMMF solver comparison tests remain outside
-  the current reliable gate
+  in the active gate; the external OOMMF solver comparison tests are now also
+  in the gate and run when the transition image provides =oommf=
 - =src/finmag/util/visualization_test.py= now runs under Python 3 and is
   included in the active gate; pure flight-path tests pass and GUI/rendering
   tests remain skipped
@@ -518,7 +536,8 @@ The =sllg= path is now working again on the Python 3 transition stack.
   included in the active gate as an explicit skip in serial CI; it still needs
   a future MPI/multi-rank verification path
 - =src/finmag/tests/comparison/test_dmdt.py= now collects under Python 3 and
-  is included in the active gate as an explicit skip when =oommf= is absent
+  is included in the active gate; it now runs in the transition image because
+  =oommf= is installed
 - =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py= passes under
   Python 3 against checked-in reference data and is included in the active gate
 - =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py= passes
@@ -530,7 +549,8 @@ The =sllg= path is now working again on the Python 3 transition stack.
   Python 3 against checked-in reference data and is included in the active gate
 - =src/finmag/tests/oommf/test_anisotropy.py= and
   =src/finmag/tests/oommf/test_exchange.py= now collect under Python 3 and are
-  included in the active gate as explicit skips when =oommf= is absent
+  included in the active gate; they now run in the transition image because
+  =oommf= is installed
 - =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
   passes under Python 3 and is included in the active gate; it is a slower
   validation simulation
@@ -541,15 +561,14 @@ The =sllg= path is now working again on the Python 3 transition stack.
   collect under Python 3 and are included in the active gate:
   =anisotropy/test_anis_magpar.py= is an expected failure because the saved
   Magpar reference mesh does not match the regenerated Netgen mesh
-- the OOMMF anisotropy/cubic-anisotropy comparison tests now reach the
-  external executable boundary under Python 3 and are included as explicit
-  skips when =oommf= is absent
+- the OOMMF anisotropy/cubic-anisotropy comparison tests now pass under
+  Python 3 in the transition image
 - =src/finmag/tests/comparison/demag/test_demag_field.py= now passes its
   analytical demag comparison under Python 3; its saved Magpar mesh comparison
   is tracked as an expected failure
 - =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py= and
   the Nmag part of =comparison/exchange/test_exchange_field.py= pass under
-  Python 3; the OOMMF part is skipped when =oommf= is absent
+  Python 3; the OOMMF part now also runs in the transition image
 
 *** Full Core Gate Milestone
 

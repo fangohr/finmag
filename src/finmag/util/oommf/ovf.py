@@ -719,6 +719,8 @@ class OVFStream(object):
     def __init__(self, filename, mode="r"):
         if type(filename) == str:
             self.filename = filename
+            if "b" not in mode:
+                mode += "b"
             self.f = open(filename, mode)
         else:
             self.filename = None
@@ -740,6 +742,8 @@ class OVFStream(object):
                 if len(l) == 0:
                     return None
                 l = l[:-1]
+                if isinstance(l, bytes):
+                    l = l.decode("ascii")
                 self.lines.append(l)
 
         self.no_line += 1
@@ -752,7 +756,10 @@ class OVFStream(object):
         return l
 
     def read_lines_ahead(self):
-        self.lines += self.f.readlines()
+        self.lines += [
+            l.decode("ascii") if isinstance(l, bytes) else l
+            for l in self.f.readlines()
+        ]
 
     def write(self, data):
         if isinstance(data, str):

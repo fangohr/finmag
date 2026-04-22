@@ -237,12 +237,12 @@ class FieldLattice(object):
             self.lattice = lattice
         else:
             self.lattice = Lattice(lattice, order=order, reduction=reduction)
-        if scale != None:
+        if scale is not None:
             self.lattice.scale(scale)
         self.field_dim = dim
         nodes = self.lattice.nodes
         shape = self.lattice._combine_idx(nodes, [dim])
-        if data != None:
+        if data is not None:
             self.field_data = data
         else:
             self.field_data = \

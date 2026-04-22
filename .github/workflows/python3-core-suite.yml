@@ -13,13 +13,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Build Python 3 DOLFIN 2017 image
+    - name: Build Python 3 DOLFIN 2017 image with OOMMF
       run: |
         docker build \
           -f install/docker/python3-dolfin2017-snapshot/Dockerfile \
           -t finmag-py3-dolfin2017 .
 
-    - name: Verify Python 3 core transition suite
+    - name: Verify Python 3 core transition suite, including OOMMF comparisons
       run: |
         docker run --rm \
           -e OMPI_MCA_plm=isolated \
