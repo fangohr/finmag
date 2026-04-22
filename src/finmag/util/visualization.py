@@ -1,6 +1,9 @@
 from __future__ import division
 import io
-import sh
+try:
+    import sh
+except ImportError:
+    sh = None
 import numpy as np
 import textwrap
 import logging
@@ -10,8 +13,11 @@ import sys
 import os
 import re
 import dolfin as df
-import IPython.core.display
-from visualization_impl import _axes, find_unused_X_display
+try:
+    import IPython.core.display
+except ImportError:
+    IPython = None
+from .visualization_impl import _axes, find_unused_X_display
 from math import sin, cos, pi
 
 logger = logging.getLogger("finmag")
@@ -36,7 +42,7 @@ logger = logging.getLogger("finmag")
 # incompatibilities mentioned above. To avoid code duplication and
 # errors due to not keeping the two in sync, we only define it in
 # visualization_impl.py and import it here.
-from visualization_impl import find_valid_X_display
+from .visualization_impl import find_valid_X_display
 from finmag.util import configuration
 
 
@@ -229,6 +235,8 @@ def render_paraview_scene(
             if use_display == 'None':
                 use_display = None
         if use_display is None and use_xpra.lower() != "false":
+            if sh is None:
+                raise RuntimeError("The optional 'sh' package is required for Paraview rendering.")
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
@@ -251,6 +259,8 @@ def render_paraview_scene(
 
         script_stdout = io.StringIO()
         script_stderr = io.StringIO()
+        if sh is None:
+            raise RuntimeError("The optional 'sh' package is required for Paraview rendering.")
         sh.python('render_scene.py', _out=script_stdout, _err=script_stderr)
     except sh.ErrorReturnCode as ex:
         logger.error("Could not render Paraview scene. Stdout and stderr of the script: "
@@ -277,7 +287,10 @@ def render_paraview_scene(
             os.environ.pop('DISPLAY', None)
 
     try:
-        image = IPython.core.display.Image(filename=outfile)
+        if IPython is None:
+            image = None
+        else:
+            image = IPython.core.display.Image(filename=outfile)
     except IOError:
         # Something went wrong (missing X display?); let's not choke but return
         # None instead.
@@ -322,5 +335,5 @@ def plot_dolfin_function(f, **kwargs):
 # Set the docstring of the wrapped function so that it reflects the
 # actual implementation.
 
-from visualization_impl import render_paraview_scene as render_scene_impl
+from .visualization_impl import render_paraview_scene as render_scene_impl
 render_paraview_scene.__doc__ = render_scene_impl.__doc__

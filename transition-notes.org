@@ -866,6 +866,40 @@ Changes made:
   - Python 3 print cleanup in the manual runner
 - `src/finmag/tests/test_solid_angle_invariance.py`
   - `xrange` to `range` cleanup
+- `src/finmag/tests/energy_density/test_energy_density.py`
+  - replaced Python 2 `commands.getstatusoutput` with
+    `subprocess.getstatusoutput`
+  - Python 3 print cleanup
+- `src/finmag/tests/test_skyrmions.py`
+  - no code changes required; added to the Python 3 gate after verification
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+  - Python 3 print cleanup
+- `src/finmag/tests/cython/test_cython.py`
+  - Python 3 print cleanup
+  - skips cleanly when the `cython` executable is not installed
+- `src/finmag/physics/tests/neb/neb_test.py`
+  - no code changes required; added to the Python 3 gate after verification
+- `src/finmag/physics/llg_stt.py`
+  - integer division fixes for array/node counts
+- `src/finmag/tests/zhangli/stt_nonlocal_test.py`
+  - Python 3 print cleanup
+- `src/finmag/util/oommf/init.py`
+  - relative imports and Python 3 print cleanup
+- `src/finmag/util/oommf/mesh.py`
+  - `xrange` to `range` cleanup
+- `src/finmag/util/oommf/oommf_calculator.py`
+  - Python 3 import/exception/print cleanup sufficient for package import
+- `src/finmag/util/oommf/ovf.py`
+  - relative lattice import and Python 3 dictionary/print cleanup
+- `src/finmag/util/oommf/test_mesh.py`
+  - no test changes required; added after the utility package could import
+- `src/finmag/util/visualization.py`
+  - optional `sh` and `IPython` imports so pure helpers can be used without
+    GUI/rendering dependencies
+  - relative `visualization_impl` imports
+- `src/finmag/util/visualization_impl.py`
+  - optional `sh` and `IPython` imports, `xrange` to `range`, and Python 3
+    print cleanup
 
 Targeted verification succeeded for:
 
@@ -880,6 +914,36 @@ Targeted verification succeeded for:
 - `src/finmag/tests/test_solid_angle.py`
 - `src/finmag/tests/test_solid_angle_invariance.py`
   - result: `6 passed` for the two-file solid-angle subset under Python 3
+- `src/finmag/tests/energy_density/test_energy_density.py`
+  - result: external nmag comparison skipped when `nsim` is absent; remaining
+    energy-density tests passed under Python 3
+- `src/finmag/tests/test_skyrmions.py`
+  - result: `1 passed` under Python 3
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+  - result: `1 passed` under Python 3; one existing runtime warning from the
+    curve-fit path
+- `src/finmag/tests/cython/test_cython.py`
+  - result: skipped in the current transition image because `cython` is absent
+- `src/finmag/physics/tests/neb/neb_test.py`
+  - result: `2 passed` under Python 3
+- `src/finmag/tests/zhangli/stt_nonlocal_test.py`
+  - result: `1 passed` under Python 3
+- `src/finmag/util/oommf/test_mesh.py`
+  - result: `3 passed` under Python 3
+- `src/finmag/util/visualization_test.py`
+  - result: pure flight-path tests passed; GUI/rendering tests remained
+    skipped as before
+- Combined targeted verification for the files added in this pass:
+  - `src/finmag/tests/test_skyrmions.py`
+  - `src/finmag/tests/energy_density/test_energy_density.py`
+  - `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+  - `src/finmag/tests/cython/test_cython.py`
+  - `src/finmag/physics/tests/neb/neb_test.py`
+  - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
+  - `src/finmag/util/oommf/test_mesh.py`
+  - `src/finmag/util/visualization_test.py`
+  - result: command exited successfully under Python 3; expected skips remain
+    for missing/external optional tools
 
 The active Python 3 gate now includes:
 
@@ -888,6 +952,14 @@ The active Python 3 gate now includes:
 - `src/finmag/physics/llb/llb_test.py`
 - `src/finmag/tests/test_solid_angle.py`
 - `src/finmag/tests/test_solid_angle_invariance.py`
+- `src/finmag/tests/energy_density/test_energy_density.py`
+- `src/finmag/tests/test_skyrmions.py`
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+- `src/finmag/tests/cython/test_cython.py`
+- `src/finmag/physics/tests/neb/neb_test.py`
+- `src/finmag/tests/zhangli/stt_nonlocal_test.py`
+- `src/finmag/util/oommf/test_mesh.py`
+- `src/finmag/util/visualization_test.py`
 
 ** Gmsh Polygon Helpers Recovered
 

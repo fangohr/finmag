@@ -461,11 +461,38 @@ Python 3 transition path.
   cleanly with its two existing expected xfails
 - `src/finmag/tests/test_solid_angle.py` and
   `src/finmag/tests/test_solid_angle_invariance.py` now pass under Python 3
+- `src/finmag/tests/energy_density/test_energy_density.py` now passes under
+  Python 3 with the external `nsim` comparison skipped when unavailable
+- `src/finmag/tests/test_skyrmions.py` passes under Python 3
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+  passes under Python 3 after print cleanup
+- `src/finmag/tests/cython/test_cython.py` now collects under Python 3 and
+  skips when the `cython` executable is absent
+- `src/finmag/physics/tests/neb/neb_test.py` passes under Python 3 without
+  code changes
+- `src/finmag/tests/zhangli/stt_nonlocal_test.py` passes under Python 3 after
+  print cleanup and `llg_stt.py` integer-division fixes
+- `src/finmag/util/oommf/test_mesh.py` passes under Python 3 after import and
+  parse cleanup in the OOMMF utility package
+- `src/finmag/util/visualization_test.py` now runs under Python 3; pure
+  flight-path tests pass and GUI/rendering tests remain skipped
 - the active Python 3 core-suite gate includes the Zhang-Li file in addition
   to the already-covered `sim_test.py` SLLG cases
 - the active Python 3 core-suite gate also includes `sllg_test.py` and
   `llb_test.py`
 - the active Python 3 core-suite gate also includes the two solid-angle files
+- the active Python 3 core-suite gate also includes `energy_density` and
+  `test_skyrmions.py`
+- the active Python 3 core-suite gate also includes the 1D domain-wall profile
+  test
+- the active Python 3 core-suite gate also includes the Cython workaround test
+- the active Python 3 core-suite gate also includes the small NEB unit tests
+- the active Python 3 core-suite gate also includes the Zhang-Li nonlocal STT
+  test
+- the active Python 3 core-suite gate also includes the pure OOMMF mesh helper
+  tests; external OOMMF comparison tests are still outside the reliable gate
+- the active Python 3 core-suite gate also includes visualization helper tests
+  that do not require GUI/rendering dependencies
 
 ## Native Build Findings
 

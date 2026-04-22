@@ -7,6 +7,9 @@ HF 1 Feb 2013
 
 import subprocess
 import os
+import shutil
+
+import pytest
 
 
 # Cython complains about this:
@@ -15,8 +18,8 @@ import os
 # try to reproduce with a simple example
 
 def myfunc(callable):
-    print callable((0, 1, 2))
-    print callable((10, 10, 10))
+    print(callable((0, 1, 2)))
+    print(callable((10, 10, 10)))
 
 
 def cython_test_code():
@@ -38,6 +41,7 @@ def cython_test_code():
     myfunc(myf)
 
 
+@pytest.mark.skipif(shutil.which("cython") is None, reason="cython executable is not available")
 def test_cython_compiles_this_file():
 
     cmd = "cython {}".format(os.path.abspath(__file__))

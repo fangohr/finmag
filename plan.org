@@ -495,3 +495,22 @@ The =sllg= path is now working again on the Python 3 transition stack.
 - =src/finmag/tests/test_solid_angle.py= and
   =src/finmag/tests/test_solid_angle_invariance.py= now pass under Python 3
   and are included in the active gate
+- =src/finmag/tests/energy_density/test_energy_density.py= now passes under
+  Python 3 with its external =nsim= comparison skipped when =nsim= is absent
+  and is included in the active gate
+- =src/finmag/tests/test_skyrmions.py= passes under Python 3 and is included
+  in the active gate
+- =src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py=
+  passes under Python 3 and is included in the active gate
+- =src/finmag/tests/cython/test_cython.py= now collects under Python 3 and is
+  included in the active gate; it skips when the =cython= executable is absent
+- =src/finmag/physics/tests/neb/neb_test.py= passes under Python 3 and is
+  included in the active gate
+- =src/finmag/tests/zhangli/stt_nonlocal_test.py= passes under Python 3 and is
+  included in the active gate
+- =src/finmag/util/oommf/test_mesh.py= passes under Python 3 and is included
+  in the active gate; external OOMMF solver comparison tests remain outside
+  the current reliable gate
+- =src/finmag/util/visualization_test.py= now runs under Python 3 and is
+  included in the active gate; pure flight-path tests pass and GUI/rendering
+  tests remain skipped

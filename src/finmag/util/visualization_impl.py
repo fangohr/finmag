@@ -14,18 +14,23 @@
 from __future__ import division
 
 import os
-import sh
+try:
+    import sh
+except ImportError:
+    sh = None
 import sys
 import shutil
 import textwrap
 import tempfile
 import logging
-import IPython.core.display
+try:
+    import IPython.core.display
+except ImportError:
+    IPython = None
 import subprocess as sp
 import numpy as np
 import numbers
 import shlex
-import StringIO
 from threading import Timer
 
 
@@ -55,7 +60,7 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     return proc.returncode, stdout, stderr
 
 
-def find_valid_X_display(displays_to_try=xrange(10, 100)):
+def find_valid_X_display(displays_to_try=range(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first valid display that is found. Returns None
@@ -71,6 +76,8 @@ def find_valid_X_display(displays_to_try=xrange(10, 100)):
     # single subprocess call. However, since usually display :0 will be
     # available the loop below should terminate quite quickly.
     for display in displays_to_try:
+        if sh is None:
+            return None
         try:
             sh.xdpyinfo('-display', ':{}'.format(display))
             # This display is available since the command finished successfully
@@ -83,7 +90,7 @@ def find_valid_X_display(displays_to_try=xrange(10, 100)):
     return None
 
 
-def find_unused_X_display(displays_to_try=xrange(10, 100)):
+def find_unused_X_display(displays_to_try=range(10, 100)):
     """
     Sequentially checks all X displays in the given list (default: 0 through 99)
     and returns the number of the first unused display that is found. Returns None
@@ -95,6 +102,8 @@ def find_unused_X_display(displays_to_try=xrange(10, 100)):
 
     """
     for display in displays_to_try:
+        if sh is None:
+            return None
         try:
             sh.xdpyinfo('-display', ':{}'.format(display))
             # If the command finished successfully, this display is already in
@@ -469,7 +478,7 @@ def render_paraview_scene(
         # workaround for the case that the data range only
         # contains a single value
         cmax += 1e-8
-    for i in xrange(0, len(rgb_points), 4):
+    for i in range(0, len(rgb_points), 4):
         rgb_points[i] = (rgb_points[i] - cmin) / \
             (cmax - cmin) * (dmax - dmin) + dmin
     lut.RGBPoints = rgb_points
@@ -482,7 +491,7 @@ def render_paraview_scene(
         lut.VectorMode = "Magnitude"
         lut.VectorComponent = color_by_axis
     if diffuse_color is not None:
-        print "diffuse_color: {} ({})".format(diffuse_color, type(diffuse_color))
+        print("diffuse_color: {} ({})".format(diffuse_color, type(diffuse_color)))
         repr.DiffuseColor = diffuse_color
     else:
         repr.LookupTable = lut
