@@ -1227,3 +1227,33 @@ PYTHONPATH=/tmp/finmag/src pytest -q \
   src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py \
   src/finmag/tests/comparison/exchange/test_exchange_field.py
 #+end_src
+
+** Full Python 3 Core Gate Result
+
+The current Python 3 core verifier completed successfully in the transition
+image.
+
+Command:
+
+#+begin_src bash
+dev/bin/verify-python3-core-suite
+#+end_src
+
+Result:
+
+- =485 passed=
+- =24 skipped=
+- =9 xfailed=
+- =25 warnings=
+- runtime: approximately =1522.90s=
+
+The skip/xfail count is intentional at this stage:
+
+- external tools such as =oommf=, =nsim=, =paraview= and GUI/rendering paths
+  are skipped when absent from the transition image
+- legacy GCR demag and stale Magpar reference-mesh comparisons are tracked as
+  expected failures/skips rather than silently ignored
+
+The gate now provides broad Python 3 regression coverage across field helpers,
+mesh helpers, comparison data, normal modes, drivers, Sundials, demag/BEM,
+SLLG, Zhang-Li, simulation helpers and the main =Simulation= subsystem.

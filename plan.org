@@ -550,3 +550,27 @@ The =sllg= path is now working again on the Python 3 transition stack.
 - =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py= and
   the Nmag part of =comparison/exchange/test_exchange_field.py= pass under
   Python 3; the OOMMF part is skipped when =oommf= is absent
+
+*** Full Core Gate Milestone
+
+The active Python 3 core-suite verifier has now completed successfully in the
+=finmag-py3-dolfin2017= transition image.
+
+Verified command:
+
+#+begin_src bash
+dev/bin/verify-python3-core-suite
+#+end_src
+
+Observed result:
+
+- =485 passed=
+- =24 skipped=
+- =9 xfailed=
+- =25 warnings=
+- runtime approximately =1523s=
+
+This means the current transition gate is no longer just an import or smoke
+test. It now exercises the broad Finmag test inventory under Python 3, with
+remaining unsupported/external paths tracked explicitly as skips or expected
+failures.

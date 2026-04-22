@@ -540,6 +540,9 @@ Python 3 transition path.
   external `oommf` executable boundary: coordinate `zip` iterators are
   materialised, MD5 input is encoded, OVF binary output separates bytes from
   text, and `reduce` comes from `functools`
+- `dev/bin/verify-python3-core-suite` completed successfully in the transition
+  image with `485 passed, 24 skipped, 9 xfailed` in approximately 1523 seconds;
+  this is the current broad Python 3 regression baseline
 
 ## Native Build Findings
 
