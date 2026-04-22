@@ -933,7 +933,8 @@ Changes made:
   - Python 3 print cleanup
 - `src/finmag/tests/cython/test_cython.py`
   - Python 3 print cleanup
-  - skips cleanly when the `cython` executable is not installed
+  - uses `cython` or Debian's Python 3 executable name `cython3`, whichever is
+    available
 - `src/finmag/physics/tests/neb/neb_test.py`
   - no code changes required; added to the Python 3 gate after verification
 - `src/finmag/physics/llg_stt.py`
@@ -1014,7 +1015,7 @@ Targeted verification succeeded for:
   - result: `1 passed` under Python 3; one existing runtime warning from the
     curve-fit path
 - `src/finmag/tests/cython/test_cython.py`
-  - result: skipped in the current transition image because `cython` is absent
+  - result: `1 passed` under Python 3 using `/usr/bin/cython3`
 - `src/finmag/physics/tests/neb/neb_test.py`
   - result: `2 passed` under Python 3
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`

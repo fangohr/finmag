@@ -466,8 +466,8 @@ Python 3 transition path.
 - `src/finmag/tests/test_skyrmions.py` passes under Python 3
 - `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
   passes under Python 3 after print cleanup
-- `src/finmag/tests/cython/test_cython.py` now collects under Python 3 and
-  skips when the `cython` executable is absent
+- `src/finmag/tests/cython/test_cython.py` now runs under Python 3 using
+  Debian's `cython3` executable
 - `src/finmag/physics/tests/neb/neb_test.py` passes under Python 3 without
   code changes
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py` passes under Python 3 after

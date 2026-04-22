@@ -11,6 +11,7 @@ import shutil
 
 import pytest
 
+CYTHON = shutil.which("cython") or shutil.which("cython3")
 
 # Cython complains about this:
 #  f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
@@ -41,12 +42,12 @@ def cython_test_code():
     myfunc(myf)
 
 
-@pytest.mark.skipif(shutil.which("cython") is None, reason="cython executable is not available")
+@pytest.mark.skipif(CYTHON is None, reason="cython executable is not available")
 def test_cython_compiles_this_file():
 
-    cmd = "cython {}".format(os.path.abspath(__file__))
+    cmd = [CYTHON, os.path.abspath(__file__)]
     print("about to execute {}".format(cmd))
-    subprocess.check_call(cmd, shell=True)
+    subprocess.check_call(cmd)
 
 if __name__ == '__main__':
     test_cython_compiles_this_file()
