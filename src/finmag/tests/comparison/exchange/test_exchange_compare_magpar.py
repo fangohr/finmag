@@ -52,7 +52,7 @@ def three_dimensional_problem():
     ## rather than using our previously saved results.
     # nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
 
-    print magpar_exch
+    print(magpar_exch)
 
     # Because magpar have changed the order of the nodes!!!
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     res = three_dimensional_problem()
 
-    print "finmag:", res["exch"]
-    print "magpar:", res["magpar_exch"]
-    print "rel_diff:", res["rel_diff"]
-    print "max rel_diff", np.max(res["rel_diff"])
+    print("finmag:", res["exch"])
+    print("magpar:", res["magpar_exch"])
+    print("rel_diff:", res["rel_diff"])
+    print("max rel_diff", np.max(res["rel_diff"]))

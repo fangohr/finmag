@@ -91,13 +91,21 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
     # Calculate the checksum corresponding to the parameters
     m = hashlib.new('md5')
     delim = "\n---\n"
-    m.update(SOURCE + delim)
-    m.update(name + delim)
-    m.update("%25.19e%s" % (Ms, delim))
-    m.update("%25.19e%s" % (alpha, delim))
-    m.update("%25.19e%s" % (gamma_G, delim))
-    m.update("%s%s" % (",".join(fields), delim))
-    m.update(spec + delim)
+
+    def update_text(value):
+        if isinstance(value, bytes):
+            m.update(value)
+        else:
+            m.update(value.encode("utf-8"))
+
+    update_text(SOURCE)
+    update_text(delim)
+    update_text(name + delim)
+    update_text("%25.19e%s" % (Ms, delim))
+    update_text("%25.19e%s" % (alpha, delim))
+    update_text("%25.19e%s" % (gamma_G, delim))
+    update_text("%s%s" % (",".join(fields), delim))
+    update_text(spec + delim)
     s = io.BytesIO()
     np.save(s, s0.flat)
     m.update(s.getvalue())

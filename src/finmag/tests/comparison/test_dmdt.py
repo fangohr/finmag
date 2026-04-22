@@ -1,5 +1,7 @@
 import dolfin as df
 import numpy as np
+import shutil
+import pytest
 from finmag.physics.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.oommf import mesh, oommf_dmdt
@@ -18,6 +20,7 @@ S1 = df.FunctionSpace(msh, "Lagrange", 1)
 S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 
 
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_dmdt_computation_with_oommf():
     # set up finmag
     llg = LLG(S1, S3)
@@ -58,8 +61,8 @@ def test_dmdt_computation_with_oommf():
     difference = np.abs(dmdt_finmag_like_oommf.flat - dmdt_oommf)
     relative_difference = difference / np.max(np.sqrt(dmdt_oommf[0] ** 2 +
                                                       dmdt_oommf[1] ** 2 + dmdt_oommf[2] ** 2))
-    print "comparison with oommf, dm/dt, relative difference:"
-    print stats(relative_difference)
+    print("comparison with oommf, dm/dt, relative difference:")
+    print(stats(relative_difference))
     assert np.max(relative_difference) < TOLERANCE
 
     return difference, relative_difference

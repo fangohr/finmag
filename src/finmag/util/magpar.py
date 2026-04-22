@@ -96,7 +96,7 @@ def read_inp(file_name):
     if os.path.isfile(file_name):
         f = open(file_name, 'r')
     elif os.path.isfile(file_name + '.gz'):
-        f = gzip.open(file_name + '.gz', 'r')
+        f = gzip.open(file_name + '.gz', 'rt')
     else:
         raise OSError("No such file: %s" % file_name)
 
@@ -133,7 +133,7 @@ def save_inp_of_inital_m(m, file_name):
     f.write(head)
     xyz = mesh.coordinates()
     if np.max(xyz) < 0.5:
-        print "Converting unit_length from m to nm."
+        print("Converting unit_length from m to nm.")
         xyz = xyz * 1e9
     for i in range(len(xyz)):
         f.write("%d %0.15e %0.15e %0.15e\n"

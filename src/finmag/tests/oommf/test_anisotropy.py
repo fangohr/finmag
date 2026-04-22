@@ -1,17 +1,20 @@
 import dolfin as df
 import numpy as np
+import shutil
+import pytest
 from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_anisotropy
 from finmag.util.helpers import stats
 
 K1 = 45e4  # J/m^31
 Ms = 0.86e6
+pytestmark = pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 
 
 def test_small_problem():
     results = small_problem()
     REL_TOLERANCE = 1e-15
-    print "0d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("0d: rel_diff_max:", np.nanmax(results["rel_diff"]))
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
@@ -19,14 +22,14 @@ def test_one_dimensional_problem():
     results = one_dimensional_problem()
     REL_TOLERANCE = 1e-9  # for 100,000 FE nodes, 6e-4 for 200 nodes
 
-    print "1d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("1d: rel_diff_max:", np.nanmax(results["rel_diff"]))
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
 def test_three_dimensional_problem():
     results = three_dimensional_problem()
     REL_TOLERANCE = 9e-2
-    print "3d: rel_diff_max:", np.nanmax(results["rel_diff"])
+    print("3d: rel_diff_max:", np.nanmax(results["rel_diff"]))
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
 
@@ -67,7 +70,7 @@ def three_dimensional_problem():
     y_n = z_n = 1
 
     dolfin_mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(x_max, y_max, z_max), x_n, y_n, z_n)
-    print dolfin_mesh.num_vertices()
+    print(dolfin_mesh.num_vertices())
     oommf_mesh = mesh.Mesh((x_n, y_n, z_n), size=(x_max, y_max, z_max))
 
     def m_gen(rs):
@@ -79,8 +82,8 @@ def three_dimensional_problem():
 
 if __name__ == '__main__':
     res0 = small_problem()
-    print "0D problem, relative difference:\n", stats(res0["rel_diff"])
+    print("0D problem, relative difference:\n", stats(res0["rel_diff"]))
     res1 = one_dimensional_problem()
-    print "1D problem, relative difference:\n", stats(res1["rel_diff"])
+    print("1D problem, relative difference:\n", stats(res1["rel_diff"]))
     res3 = three_dimensional_problem()
-    print "3D problem, relative difference:\n", stats(res3["rel_diff"])
+    print("3D problem, relative difference:\n", stats(res3["rel_diff"]))

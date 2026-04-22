@@ -476,6 +476,27 @@ Python 3 transition path.
   parse cleanup in the OOMMF utility package
 - `src/finmag/util/visualization_test.py` now runs under Python 3; pure
   flight-path tests pass and GUI/rendering tests remain skipped
+- `src/finmag/tests/test_sim_parallel.py` now collects under Python 3 and
+  skips explicitly in serial runs with fewer than two MPI ranks
+- `src/finmag/tests/comparison/test_dmdt.py` now collects under Python 3 and
+  skips explicitly when the external `oommf` executable is absent
+- `src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py` passes under
+  Python 3 against checked-in reference data
+- `src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py` passes
+  under Python 3 against checked-in reference data
+- `src/finmag/tests/nmag/spinwaves/test_spinwaves.py` passes under Python 3
+  against checked-in reference data
+- `src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py` passes under
+  Python 3 against checked-in reference data
+- `src/finmag/tests/oommf/test_anisotropy.py` and
+  `src/finmag/tests/oommf/test_exchange.py` collect under Python 3 and skip
+  explicitly when the external `oommf` executable is absent
+- `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
+  passes under Python 3, but is comparatively slow because it runs a 10 ns
+  validation simulation
+- `src/finmag/tests/slonczewski/oscillator/test_oscillator.py` now collects
+  under Python 3 and skips explicitly; the expensive mesh setup import is lazy
+  so collection remains cheap
 - the active Python 3 core-suite gate includes the Zhang-Li file in addition
   to the already-covered `sim_test.py` SLLG cases
 - the active Python 3 core-suite gate also includes `sllg_test.py` and
@@ -493,6 +514,32 @@ Python 3 transition path.
   tests; external OOMMF comparison tests are still outside the reliable gate
 - the active Python 3 core-suite gate also includes visualization helper tests
   that do not require GUI/rendering dependencies
+- the active Python 3 core-suite gate also includes the parallel simulation
+  test as a tracked serial-CI skip
+- the active Python 3 core-suite gate also includes the OOMMF dm/dt comparison
+  as a tracked external-tool skip
+- the active Python 3 core-suite gate also includes the Nmag 1D exchange
+  reference-data comparison
+- the active Python 3 core-suite gate also includes the Nmag 1D anisotropy
+  reference-data comparison
+- the active Python 3 core-suite gate also includes the Nmag spinwaves
+  reference-data comparison
+- the active Python 3 core-suite gate also includes the Nmag 3D exchange
+  reference-data comparison
+- the active Python 3 core-suite gate also includes the standalone OOMMF
+  anisotropy/exchange comparisons as tracked external-tool skips
+- the active Python 3 core-suite gate also includes the Slonczewski validation
+  test
+- the active Python 3 core-suite gate also includes the Slonczewski oscillator
+  validation as a tracked skip
+- the active Python 3 core-suite gate also includes the legacy comparison
+  anisotropy/demag/exchange tests; OOMMF tests are external-tool skips where
+  the executable is absent, and two stale Magpar mesh comparisons are tracked
+  expected failures
+- the OOMMF helper stack has been ported far enough for Python 3 to reach the
+  external `oommf` executable boundary: coordinate `zip` iterators are
+  materialised, MD5 input is encoded, OVF binary output separates bytes from
+  text, and `reduce` comes from `functools`
 
 ## Native Build Findings
 

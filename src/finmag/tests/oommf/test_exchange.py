@@ -1,7 +1,9 @@
 import os
+import shutil
 import numpy as np
 import dolfin as df
 import matplotlib.pyplot as plt
+import pytest
 from finmag.util.helpers import stats
 from finmag.util.oommf import mesh
 from finmag.util.oommf.comparison import compare_exchange
@@ -9,6 +11,7 @@ from finmag.util.oommf.comparison import compare_exchange
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 8.6e6
 A = 1.3e-11
+pytestmark = pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 
 
 def test_one_dimensional_problem():
@@ -37,8 +40,8 @@ if __name__ == '__main__':
 
     for n in [10, 1e2, 1e3, 1e4, 1e5]:
         res = one_dimensional_problem(int(n))
-        print "1D problem ({} nodes) relative difference:".format(n)
-        print stats(res["rel_diff"])
+        print("1D problem ({} nodes) relative difference:".format(n))
+        print(stats(res["rel_diff"]))
         vertices.append(int(n))
         mean_diffs.append(np.nanmax(np.mean(res["rel_diff"], axis=1)))
 

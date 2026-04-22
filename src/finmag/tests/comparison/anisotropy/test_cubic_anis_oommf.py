@@ -1,11 +1,16 @@
+import shutil
+
 import numpy as np
+import pytest
 import conftest
 from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_cubic_anisotropy
 from finmag.util.helpers import stats
 
 
-def test_against_oommf(finmag=conftest.setup_cubic()):
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
+def test_against_oommf():
+    finmag = conftest.setup_cubic()
 
     REL_TOLERANCE = 7e-2
 
@@ -18,13 +23,13 @@ def test_against_oommf(finmag=conftest.setup_cubic()):
 
     assert oommf_anis.shape == finmag_anis.shape
     diff = np.abs(oommf_anis - finmag_anis)
-    print 'diff', diff
+    print('diff', diff)
     rel_diff = diff / \
         np.sqrt(
             (np.max(oommf_anis[0] ** 2 + oommf_anis[1] ** 2 + oommf_anis[2] ** 2)))
 
-    print "comparison with oommf, H, relative_difference:"
-    print stats(rel_diff)
+    print("comparison with oommf, H, relative_difference:")
+    print(stats(rel_diff))
 
     finmag["table"] += conftest.table_entry("oommf", REL_TOLERANCE, rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE

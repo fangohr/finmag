@@ -514,3 +514,39 @@ The =sllg= path is now working again on the Python 3 transition stack.
 - =src/finmag/util/visualization_test.py= now runs under Python 3 and is
   included in the active gate; pure flight-path tests pass and GUI/rendering
   tests remain skipped
+- =src/finmag/tests/test_sim_parallel.py= now collects under Python 3 and is
+  included in the active gate as an explicit skip in serial CI; it still needs
+  a future MPI/multi-rank verification path
+- =src/finmag/tests/comparison/test_dmdt.py= now collects under Python 3 and
+  is included in the active gate as an explicit skip when =oommf= is absent
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py= passes under
+  Python 3 against checked-in reference data and is included in the active gate
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py= passes
+  under Python 3 against checked-in reference data and is included in the
+  active gate
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py= passes under Python 3
+  against checked-in reference data and is included in the active gate
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py= passes under
+  Python 3 against checked-in reference data and is included in the active gate
+- =src/finmag/tests/oommf/test_anisotropy.py= and
+  =src/finmag/tests/oommf/test_exchange.py= now collect under Python 3 and are
+  included in the active gate as explicit skips when =oommf= is absent
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+  passes under Python 3 and is included in the active gate; it is a slower
+  validation simulation
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py= now collects
+  under Python 3 and is included in the active gate as an explicit skip for the
+  long oscillator validation
+- the older comparison subtrees under =src/finmag/tests/comparison/= now
+  collect under Python 3 and are included in the active gate:
+  =anisotropy/test_anis_magpar.py= is an expected failure because the saved
+  Magpar reference mesh does not match the regenerated Netgen mesh
+- the OOMMF anisotropy/cubic-anisotropy comparison tests now reach the
+  external executable boundary under Python 3 and are included as explicit
+  skips when =oommf= is absent
+- =src/finmag/tests/comparison/demag/test_demag_field.py= now passes its
+  analytical demag comparison under Python 3; its saved Magpar mesh comparison
+  is tracked as an expected failure
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py= and
+  the Nmag part of =comparison/exchange/test_exchange_field.py= pass under
+  Python 3; the OOMMF part is skipped when =oommf= is absent

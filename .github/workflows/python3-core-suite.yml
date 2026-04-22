@@ -43,6 +43,21 @@ jobs:
                       src/finmag/util/dmi_helper_test.py \
                       src/finmag/util/oommf/test_mesh.py \
                       src/finmag/util/visualization_test.py \
+                      src/finmag/tests/comparison/test_dmdt.py \
+                      src/finmag/tests/comparison/anisotropy/test_anis_magpar.py \
+                      src/finmag/tests/comparison/anisotropy/test_anis_oommf.py \
+                      src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py \
+                      src/finmag/tests/comparison/demag/test_demag_field.py \
+                      src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py \
+                      src/finmag/tests/comparison/exchange/test_exchange_field.py \
+                      src/finmag/tests/oommf/test_anisotropy.py \
+                      src/finmag/tests/oommf/test_exchange.py \
+                      src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py \
+                      src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py \
+                      src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py \
+                      src/finmag/tests/nmag/spinwaves/test_spinwaves.py \
+                      src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py \
+                      src/finmag/tests/slonczewski/oscillator/test_oscillator.py \
                       src/finmag/normal_modes/eigenmodes/helpers_test.py \
                       src/finmag/normal_modes/eigenmodes/eigenproblems_test.py \
                       src/finmag/normal_modes/eigenmodes/eigensolvers_test.py \
@@ -100,6 +115,7 @@ jobs:
                       src/finmag/tests/test_solid_angle_invariance.py \
                       src/finmag/tests/test_skyrmions.py \
                       src/finmag/tests/cython/test_cython.py \
+                      src/finmag/tests/test_sim_parallel.py \
                       src/finmag/sim/hysteresis_test.py \
                       src/finmag/sim/magnetisation_patterns_test.py \
                       src/finmag/sim/sim_helpers_test.py \

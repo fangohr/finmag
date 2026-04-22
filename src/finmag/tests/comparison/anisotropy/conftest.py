@@ -9,10 +9,10 @@ import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def finmag(request):
-    finmag = request.cached_setup(setup=setup,
-                                  teardown=teardown, scope="session")
+    finmag = setup()
+    request.addfinalizer(lambda: teardown(finmag))
     return finmag
 
 Ms = 0.86e6
@@ -36,9 +36,9 @@ def m_gen(r):
 
 
 def setup(K2=K2):
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)
@@ -56,9 +56,9 @@ def setup(K2=K2):
 
 
 def setup_cubic():
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)

@@ -14,9 +14,10 @@ rectangular grids.
 __all__ = ["first_difference", "parse_lattice_spec",
            "Lattice", "FieldLattice"]
 
-import numpy
-
 import collections
+from functools import reduce
+
+import numpy
 
 
 def first_difference(la, lb, reverse=False):

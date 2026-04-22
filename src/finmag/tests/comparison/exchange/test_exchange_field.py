@@ -1,4 +1,5 @@
 import os
+import shutil
 import dolfin as df
 import numpy as np
 from finmag.field import Field
@@ -43,7 +44,7 @@ def start_table():
 
 def setup_finmag():
     mesh = df.IntervalMesh(xn, x0, x1)
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)
@@ -62,10 +63,10 @@ def teardown_finmag(finmag):
     with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def finmag(request):
-    finmag = request.cached_setup(setup=setup_finmag,
-                                  teardown=teardown_finmag, scope="module")
+    finmag = setup_finmag()
+    request.addfinalizer(lambda: teardown_finmag(finmag))
     return finmag
 
 
@@ -90,11 +91,12 @@ def test_against_nmag(finmag):
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with nmag, m x H, relative difference:"
-    print stats(rel_diff)
+    print("comparison with nmag, m x H, relative difference:")
+    print(stats(rel_diff))
     assert np.max(rel_diff) < REL_TOLERANCE
 
 
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf(finmag):
     REL_TOLERANCE = 8e-2
 
@@ -114,8 +116,8 @@ def test_against_oommf(finmag):
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with oommf, H, relative_difference:"
-    print stats(rel_diff)
+    print("comparison with oommf, H, relative_difference:")
+    print(stats(rel_diff))
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == '__main__':

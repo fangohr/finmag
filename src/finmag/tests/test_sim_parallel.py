@@ -1,4 +1,5 @@
 import os
+import pytest
 import dolfin as df
 import numpy as np
 import matplotlib as mpl
@@ -13,7 +14,15 @@ alpha = 0.1
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def t_test_sim_ode_parallel(do_plot=False):
+def _mpi_size():
+    try:
+        return df.MPI.size(df.mpi_comm_world())
+    except AttributeError:
+        return df.MPI.size(df.MPI.comm_world)
+
+
+@pytest.mark.skipif(_mpi_size() < 2, reason="parallel simulation test requires at least two MPI ranks")
+def test_sim_ode_parallel(do_plot=False):
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
     sim = Sim(mesh, 8.6e5, unit_length=1e-9, pbc='2d', parallel=True)
     sim.alpha = alpha
@@ -61,5 +70,5 @@ def t_test_sim_ode_parallel(do_plot=False):
     #assert np.max(length_error) < 1e-9
 
 if __name__ == "__main__":
-    test_sim_ode(do_plot=True)
-    print "Saved plit in test_sim_ode.png."
+    test_sim_ode_parallel(do_plot=True)
+    print("Saved plot in test_sim_ode.png.")

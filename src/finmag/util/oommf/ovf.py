@@ -541,7 +541,7 @@ class OVFDataSectionNode(OVFSectionNode):
         num_floats = self.num_stored_nodes * self.floats_per_node
         fmt = endianness + float_type * num_floats
         flat_array = self.field.ravel('F')
-        out_data += struct.pack(fmt, *flat_array) + "\n"
+        out_data += struct.pack(fmt, *flat_array) + b"\n"
         stream.write(out_data)
 
     def _write_ascii(self, stream, root=None):
@@ -755,10 +755,12 @@ class OVFStream(object):
         self.lines += self.f.readlines()
 
     def write(self, data):
+        if isinstance(data, str):
+            data = data.encode("ascii")
         self.f.write(data)
 
     def write_line(self, line):
-        self.f.write(line + "\n")
+        self.write(line + "\n")
 
 
 class OVFFile:
@@ -894,7 +896,7 @@ class OVFFile:
 
     def write(self, stream):
         if not isinstance(stream, OVFStream):
-            stream = OVFStream(stream, mode="w")
+            stream = OVFStream(stream, mode="wb")
         self.content.write(stream, root=self.content)
 
 if __name__ == "__main__no":
