@@ -1,5 +1,4 @@
 import os
-import pytest
 import dolfin as df
 import numpy as np
 import matplotlib as mpl
@@ -13,7 +12,6 @@ from finmag.physics.llb.material import Material
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.mark.xfail
 def test_llb_sundials(do_plot=False):
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
 
@@ -115,12 +113,11 @@ def sim_llb_100(do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
 
-@pytest.mark.xfail
 def test_llb_save_data():
-    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 2)
 
     def region1(coords):
-        if coords[2] < 0.5:
+        if coords[2] < 2.5:
             return True
         else:
             return False

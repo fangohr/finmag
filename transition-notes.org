@@ -913,12 +913,19 @@ Changes made:
     `RandomMT19937.gaussian_random_np` path
 - `src/finmag/physics/llb/llb.py`
   - Python 3 exception and manual-print cleanup so the module imports
+  - `LLB.add(...)` now dispatches correctly between LLB's own exchange
+    interaction and standard Finmag interactions such as Zeeman/Demag, passing
+    a DG0 `Field` for `Ms` where those interactions expect one
+  - `m_average_fun(...)` now uses the wrapped Dolfin function (`self._m.f`)
+    when building UFL expressions
 - `src/finmag/physics/llb/exchange.py`
   - Python 3 print cleanup in example/manual code paths
 - `src/finmag/physics/llb/material.py`
   - Python 3 print cleanup in the module self-test block
 - `src/finmag/physics/llb/llb_test.py`
   - Python 3 print cleanup so the file collects
+  - removed the two stale expected failures; the save-data test now uses a
+    two-layer z mesh so both saved regions have non-zero volume
 - `src/finmag/tests/test_solid_angle.py`
   - Python 3 print cleanup in the manual runner
 - `src/finmag/tests/test_solid_angle_invariance.py`
@@ -1002,7 +1009,7 @@ Targeted verification succeeded for:
 - `src/finmag/physics/llb/sllg_test.py`
   - result: `1 passed` under Python 3
 - `src/finmag/physics/llb/llb_test.py`
-  - result: exits cleanly with the file's two existing expected xfails
+  - result: `2 passed` under Python 3
 - `src/finmag/tests/test_solid_angle.py`
 - `src/finmag/tests/test_solid_angle_invariance.py`
   - result: `6 passed` for the two-file solid-angle subset under Python 3

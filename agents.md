@@ -457,8 +457,9 @@ Python 3 transition path.
   Python 3
 - `src/finmag/physics/llb/sllg_test.py` now contains a collected pytest smoke
   test for the native `RandomMT19937.gaussian_random_np` binding
-- `src/finmag/physics/llb/llb_test.py` now collects under Python 3 and exits
-  cleanly with its two existing expected xfails
+- `src/finmag/physics/llb/llb_test.py` now passes under Python 3 without
+  expected failures after restoring LLB interaction setup and regional
+  save-data coverage
 - `src/finmag/tests/test_solid_angle.py` and
   `src/finmag/tests/test_solid_angle_invariance.py` now pass under Python 3
 - `src/finmag/tests/energy_density/test_energy_density.py` now passes under

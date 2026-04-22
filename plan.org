@@ -508,8 +508,9 @@ The =sllg= path is now working again on the Python 3 transition stack.
   =src/finmag/physics/llb/sllg_test.py=, which provides a small native
   =RandomMT19937.gaussian_random_np= smoke test without enabling the large
   manual plotting helpers
-- =src/finmag/physics/llb/llb_test.py= now collects under Python 3 and is in
-  the active gate with its two existing expected xfails
+- =src/finmag/physics/llb/llb_test.py= now passes under Python 3 without
+  expected failures after restoring LLB interaction setup and regional
+  save-data coverage
 - =src/finmag/tests/test_solid_angle.py= and
   =src/finmag/tests/test_solid_angle_invariance.py= now pass under Python 3
   and are included in the active gate

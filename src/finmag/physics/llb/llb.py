@@ -8,6 +8,7 @@ from finmag.energies import Zeeman
 from finmag.energies import Demag
 from finmag.physics.llb.exchange import Exchange
 from finmag.physics.llb.material import Material
+from finmag.field import Field
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import Tablewriter
@@ -185,9 +186,17 @@ class LLB(object):
                                        self.using_type_II)
 
     def add(self, interaction):
-        interaction.setup(self.material._m,
-                          self.material.Ms0,
-                          unit_length=self.material.unit_length)
+        if isinstance(interaction, Exchange):
+            interaction.setup(self.S3,
+                              self.material._m,
+                              self.material.Ms0,
+                              unit_length=self.material.unit_length)
+        else:
+            Ms = Field(self.material._Ms_dg.function_space(),
+                       self.material._Ms_dg)
+            interaction.setup(self.material._m,
+                              Ms,
+                              unit_length=self.material.unit_length)
         self.interactions.append(interaction)
 
         if interaction.__class__.__name__ == 'Zeeman':
@@ -308,11 +317,11 @@ class LLB(object):
         """
 
         mx = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([1, 0, 0])) * dx)
         my = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([0, 1, 0])) * dx)
         mz = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([0, 0, 1])) * dx)
         volume = df.assemble(self.material._Ms_dg * dx)
 
         return np.array([mx, my, mz]) / volume
