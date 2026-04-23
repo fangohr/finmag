@@ -1336,16 +1336,17 @@ dev/bin/verify-python3-core-suite
 
 Result:
 
-- =485 passed=
-- =24 skipped=
-- =9 xfailed=
-- =25 warnings=
-- runtime: approximately =1522.90s=
+- =497 passed=
+- =14 skipped=
+- =7 xfailed=
+- =28 warnings=
+- runtime: approximately =1617.16s=
 
 The skip/xfail count is intentional at this stage:
 
-- external tools such as =oommf=, =nsim=, =paraview= and GUI/rendering paths
-  are skipped when absent from the transition image
+- external tools such as =nsim=, =paraview=, GUI/rendering paths, Mercurial,
+  and MPI multi-rank execution are skipped when absent from the transition
+  image
 - legacy GCR demag and stale Magpar reference-mesh comparisons are tracked as
   expected failures/skips rather than silently ignored
 

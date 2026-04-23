@@ -568,8 +568,9 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `485 passed, 24 skipped, 9 xfailed` in approximately 1523 seconds;
-  this is the current broad Python 3 regression baseline
+  image with `497 passed, 14 skipped, 7 xfailed, 28 warnings` in
+  approximately 1617 seconds; this is the current broad Python 3 regression
+  baseline
 
 ## Native Build Findings
 

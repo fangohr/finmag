@@ -388,10 +388,8 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =397 passed, 8 skipped, 1 xfailed= in the Python 3 transition container
-- note: that full-suite count predates the latest normal-modes and
-  =sllg_test.py=, =llb_test.py=, and solid-angle gate expansion; those
-  targeted subsets now pass with the files' existing expected xfails/skips
+  =497 passed, 14 skipped, 7 xfailed, 28 warnings= in the Python 3 transition
+  container
   where applicable
 
 *** Notable Work Completed
@@ -598,11 +596,11 @@ dev/bin/verify-python3-core-suite
 
 Observed result:
 
-- =485 passed=
-- =24 skipped=
-- =9 xfailed=
-- =25 warnings=
-- runtime approximately =1523s=
+- =497 passed=
+- =14 skipped=
+- =7 xfailed=
+- =28 warnings=
+- runtime approximately =1617s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with
