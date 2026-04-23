@@ -184,6 +184,10 @@ They are useful later as validation suites, but they are not efficient first gat
 - Native modules are tightly integrated with runtime behavior.
 - The demag path and compiled extensions are likely to be the most environment-sensitive areas.
 - The container already emits a Python 2 deprecation warning from =msg.message= in =src/finmag/drivers/sundials_integrator.py=; this is harmless in the reference image but should be fixed during the Python 3 port.
+- The Mercurial revision helper =get_hg_revision_info()= is historical
+  pre-Git compatibility code. It is not a Python 3 transition dependency and
+  should be removed in a later cleanup phase after the main transition is
+  stable.
 
 ** Success Criteria
 
@@ -533,6 +537,16 @@ The =sllg= path is now working again on the Python 3 transition stack.
 - =src/finmag/util/visualization_test.py= now runs under Python 3 and is
   included in the active gate; pure flight-path tests pass and GUI/rendering
   tests remain skipped
+- the old unconditional animation/export skips in =sim/sim_test.py= and
+  =util/helpers_test.py= have been replaced by dependency-based checks:
+  Paraview rendering and movie export are skipped only when their external
+  tools are absent
+- =util/helpers_test.py::test_get_hg_revision_info= now skips only when the
+  external =hg= executable is absent, instead of using an unconditional skip;
+  it is explicitly documented as historical/pre-Git coverage
+- =sim/sim_test.py::test_compute_eigenmode_animations= now runs its non-movie
+  VTK eigenmode export path under Python 3; movie-export subcases remain
+  conditional on Paraview plus =mencoder=
 - =src/finmag/tests/test_sim_parallel.py= now collects under Python 3 and is
   included in the active gate as an explicit skip in serial CI; it still needs
   a future MPI/multi-rank verification path

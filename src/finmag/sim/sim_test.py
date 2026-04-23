@@ -35,6 +35,20 @@ def _require_netgen():
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
+def _has_paraview_rendering():
+    if shutil.which("paraview") is None:
+        return False
+    try:
+        import sh  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _has_movie_export():
+    return _has_paraview_rendering() and shutil.which("mencoder") is not None
+
+
 def num_interactions(sim):
     """
     Helper function to determine the number of interactions present in
@@ -978,7 +992,6 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
     assert np.allclose(f['H_TimeZeeman_z'], 0, atol=0, rtol=TOL)
 
 
-#@pytest.mark.skipif("True")
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
     When many simulation objects are created in the same scripts, the
@@ -1042,7 +1055,8 @@ def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdi
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_paraview_rendering(),
+                    reason="Paraview rendering dependencies are not available")
 def test_schedule_render_scene(tmpdir):
     """
     Check that scheduling 'render_scene' will create incremental snapshots.
@@ -1339,13 +1353,13 @@ def test_compute_normal_modes(tmpdir):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif("True")
 def test_compute_eigenmode_animations(tmpdir):
     """
     Compute normal modes of a simple disk system and export a couple
     of those modes to vtk files.
     """
     os.chdir(str(tmpdir))
+    _require_netgen()
 
     d = 100
     h = 10
@@ -1367,6 +1381,9 @@ def test_compute_eigenmode_animations(tmpdir):
     assert(len(glob('animation_01/*')) == 4)
     assert(len(glob('animation_01/*/*.pvd')) == 4)
     assert(len(glob('animation_01/*/*.vtu')) == 40)
+
+    if not _has_movie_export():
+        return
 
     # Export first 3 eigenmodes with movies
     sim.export_eigenmode_animations(3, directory='animation_02', create_movies=True,
@@ -1482,10 +1499,12 @@ def test_plot_spatially_resolved_normal_modes(tmpdir):
     assert(isinstance(fig, plt.Figure))
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_movie_export(),
+                    reason="Paraview rendering and mencoder are not available")
 @pytest.mark.requires_X_display
 def test_output_formats_for_exporting_normal_mode_animations(tmpdir):
     os.chdir(str(tmpdir))
+    _require_netgen()
 
     d = 100
     h = 10

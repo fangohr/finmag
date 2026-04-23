@@ -475,6 +475,24 @@ Additional targeted progress since that last full rerun:
     instead of the removed =u.domain()=
 - =src/finmag/util/helpers_test.py=
   - =test_apply_vertexwise= is no longer skipped
+- =src/finmag/sim/sim_test.py=
+  - replaced stale unconditional animation/export skips with checks for the
+    actual external dependencies
+  - =test_compute_eigenmode_animations= now runs the non-movie VTK eigenmode
+    export path under Python 3 and only omits movie-export subcases when
+    Paraview or =mencoder= are unavailable
+- =src/finmag/util/helpers_test.py=
+  - =test_jpg2avi= and =test_pvd2avi= now skip based on missing Paraview,
+    =sh=, or =mencoder= instead of an unconditional marker
+  - =test_get_hg_revision_info= now skips based on the missing =hg=
+    executable instead of an unconditional marker, and is documented as
+    historical pre-Git coverage
+
+Long-term cleanup todo:
+
+- remove =get_hg_revision_info()= and its Mercurial-specific test once the
+  Python 3 transition is stable and historical repository tooling can be
+  retired
 
 Additional targeted verification for this follow-up batch:
 
@@ -1032,6 +1050,19 @@ Targeted verification succeeded for:
 - `src/finmag/util/visualization_test.py`
   - result: pure flight-path tests passed; GUI/rendering tests remained
     skipped as before
+- `src/finmag/sim/sim_test.py::test_compute_eigenmode_animations`
+  - result: passed the non-movie VTK eigenmode animation export path under
+    Python 3
+- `src/finmag/sim/sim_test.py::test_schedule_render_scene`
+- `src/finmag/sim/sim_test.py::test_output_formats_for_exporting_normal_mode_animations`
+- `src/finmag/util/helpers_test.py::test_jpg2avi`
+- `src/finmag/util/helpers_test.py::test_pvd2avi`
+  - result: skipped explicitly because the transition image does not provide
+    Paraview rendering, `sh`, and/or `mencoder`
+- `src/finmag/util/helpers_test.py::test_get_hg_revision_info`
+  - result: skipped explicitly because the transition image does not provide
+    Mercurial; this is historical pre-Git coverage and not a transition
+    dependency
 - Combined targeted verification for the files added in this pass:
   - `src/finmag/tests/test_skyrmions.py`
   - `src/finmag/tests/energy_density/test_energy_density.py`

@@ -477,6 +477,15 @@ Python 3 transition path.
   parse cleanup in the OOMMF utility package
 - `src/finmag/util/visualization_test.py` now runs under Python 3; pure
   flight-path tests pass and GUI/rendering tests remain skipped
+- stale unconditional animation/export skips in `src/finmag/sim/sim_test.py`
+  and `src/finmag/util/helpers_test.py` have been replaced by explicit
+  Paraview/rendering/movie dependency checks
+- `src/finmag/util/helpers_test.py::test_get_hg_revision_info` now has an
+  explicit historical Mercurial dependency skip instead of an unconditional
+  skip; `get_hg_revision_info()` is pre-Git compatibility code and should be
+  removed in a later cleanup phase, not during the current Python 3 transition
+- `src/finmag/sim/sim_test.py::test_compute_eigenmode_animations` now runs
+  its non-movie VTK eigenmode export path under Python 3
 - `src/finmag/tests/test_sim_parallel.py` now collects under Python 3 and
   skips explicitly in serial runs with fewer than two MPI ranks
 - `src/finmag/tests/comparison/test_dmdt.py` now collects under Python 3 and

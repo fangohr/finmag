@@ -22,6 +22,20 @@ def _require_netgen():
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
+def _has_movie_export():
+    if shutil.which("mencoder") is None:
+        return False
+    try:
+        import sh  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _has_paraview_movie_export():
+    return _has_movie_export() and shutil.which("paraview") is not None
+
+
 def test_logging_handler_str():
     """
     """
@@ -400,8 +414,10 @@ def test_probe():
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
 
-@pytest.mark.skipif(True,reason="test for hg")
+@pytest.mark.skipif(shutil.which("hg") is None,
+                    reason="historical Mercurial helper; hg is not a Python 3 transition dependency")
 def test_get_hg_revision_info(tmpdir):
+    """Historical coverage for the pre-Git Mercurial revision helper."""
     finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
     os.mkdir('invalid_repo')
@@ -546,7 +562,8 @@ def test_run_cmd_with_timeout():
     assert(returncode == -9)
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_paraview_movie_export(),
+                    reason="Paraview rendering and mencoder are not available")
 def test_jpg2avi(tmpdir):
     """
     Test whether we can create an animation from a series of .jpg images.
@@ -571,7 +588,8 @@ def test_jpg2avi(tmpdir):
     assert(os.path.exists('animation.avi'))
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_paraview_movie_export(),
+                    reason="Paraview rendering and mencoder are not available")
 def test_pvd2avi(tmpdir):
     """
     Test whether we can create an animation from the timesteps in a .pvd file.
