@@ -205,7 +205,6 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     os.chdir(str(tmpdir))
     disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
@@ -226,11 +225,11 @@ def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     sim.compute_normal_modes(n_values=3)
 
     sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00.png', use_fenicstools=False)
+        0, outfilename='normal_mode_00.png')
     sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00_disk1.png', region="disk1", use_fenicstools=False)
+        0, outfilename='normal_mode_00_disk1.png', region="disk1")
     sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00_disk2.png', region="disk2", use_fenicstools=False)
+        0, outfilename='normal_mode_00_disk2.png', region="disk2")
 
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_00_disk1.png'))

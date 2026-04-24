@@ -574,6 +574,19 @@ Python 3 transition path.
   image with `497 passed, 14 skipped, 7 xfailed, 28 warnings` in
   approximately 1617 seconds; this is the current broad Python 3 regression
   baseline
+- targeted follow-up after that full run:
+  - restored the historical weak-tolerance demag `xfail` for later manual
+    review, while keeping the new explicit negative regression test
+  - removed a stale deprecated normal-modes `xfail`;
+    `test_plot_spatially_resolved_normal_mode_in_region` now passes after
+    dropping the obsolete `use_fenicstools` keyword
+  - removed the stale SciPy-sparse/Nanostrip normal-modes `xfail` in
+    `eigensolvers_test.py`; only the genuine SLEPc convergence limitations
+    remain expected-failing there
+  - the existing `python3-core-suite` workflow already exercises
+    `normal_modes_deprecated_test.py`, so this improvement is already covered
+    by CI
+  - next expected full baseline after rerun: `5 xfailed`
 
 ## Native Build Findings
 

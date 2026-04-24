@@ -200,11 +200,7 @@ fixtures = itertools.product(sample_eigensolvers, available_eigenproblems)
 #       and document the known failures in the test 'test_document_failures'
 #       below.
 known_failures = \
-    [  # The first case fails on omicron but passes on hathor...
-        (sample_eigensolvers[2],  # ScipySparseLinalgEigs
-         available_eigenproblems[2],  # Nanostrip1d
-         200,
-         float),
+    [
         (sample_eigensolvers[4],  # SLEPc
             available_eigenproblems[1],  # RingGraphLaplace
             101,

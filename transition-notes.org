@@ -1358,3 +1358,23 @@ The skip/xfail count is intentional at this stage:
 The gate now provides broad Python 3 regression coverage across field helpers,
 mesh helpers, comparison data, normal modes, drivers, Sundials, demag/BEM,
 SLLG, Zhang-Li, simulation helpers and the main =Simulation= subsystem.
+
+Follow-up targeted verification after this baseline:
+
+- =src/finmag/tests/test_interactions_scale_linearly_with_m.py= keeps the
+  historical weak-Krylov-demag =xfail= for human review later, but now also
+  has an explicit passing regression test showing that loose Krylov tolerances
+  are detectably non-linear
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py::
+  test_plot_spatially_resolved_normal_mode_in_region= is no longer a stale
+  =xfail=; it passes under Python 3 after removing the obsolete
+  =use_fenicstools= keyword from the test
+- =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py= no longer keeps
+  the stale SciPy-sparse/Nanostrip =xfail= for =N=200, dtype=float=; that
+  case now passes, leaving only the genuine SLEPc convergence limitations as
+  expected failures in this file
+- the GitHub Actions =python3-core-suite= workflow already includes the full
+  deprecated normal-modes test file, so this progress is covered by CI without
+  further workflow changes
+- the next full rerun of =dev/bin/verify-python3-core-suite= should therefore
+  reduce the baseline to =5 xfailed= if no other behaviour changes

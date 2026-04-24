@@ -395,6 +395,14 @@ Second meaningful milestone:
   case is intentionally kept as historical evidence and should be reviewed by
   a human later
   where applicable
+- targeted follow-up also removed a stale deprecated normal-modes =xfail=:
+  =test_plot_spatially_resolved_normal_mode_in_region= now passes under
+  Python 3 after dropping the obsolete =use_fenicstools= keyword; the next
+  full core-suite baseline should therefore fall to =6 xfailed=
+- targeted follow-up in =eigensolvers_test.py= also removed a stale
+  SciPy-sparse/Nanostrip =xfail=; the remaining normal-mode expected failures
+  are now the genuine SLEPc convergence cases, so the next full core-suite
+  baseline should fall further to =5 xfailed=
 
 *** Notable Work Completed
 
