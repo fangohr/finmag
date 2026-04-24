@@ -571,8 +571,8 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `497 passed, 14 skipped, 7 xfailed, 28 warnings` in
-  approximately 1617 seconds; this is the current broad Python 3 regression
+  image with `500 passed, 14 skipped, 5 xfailed, 31 warnings` in
+  approximately 1610 seconds; this is the current broad Python 3 regression
   baseline
 - targeted follow-up after that full run:
   - restored the historical weak-tolerance demag `xfail` for later manual
@@ -586,7 +586,7 @@ Python 3 transition path.
   - the existing `python3-core-suite` workflow already exercises
     `normal_modes_deprecated_test.py`, so this improvement is already covered
     by CI
-  - next expected full baseline after rerun: `5 xfailed`
+  - the latest full rerun confirms the updated baseline above
 
 ## Native Build Findings
 

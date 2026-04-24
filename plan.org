@@ -388,21 +388,19 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =497 passed, 14 skipped, 7 xfailed, 28 warnings= in the Python 3 transition
+  =500 passed, 14 skipped, 5 xfailed, 31 warnings= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
   case is intentionally kept as historical evidence and should be reviewed by
   a human later
   where applicable
-- targeted follow-up also removed a stale deprecated normal-modes =xfail=:
+- targeted follow-up removed a stale deprecated normal-modes =xfail=:
   =test_plot_spatially_resolved_normal_mode_in_region= now passes under
-  Python 3 after dropping the obsolete =use_fenicstools= keyword; the next
-  full core-suite baseline should therefore fall to =6 xfailed=
+  Python 3 after dropping the obsolete =use_fenicstools= keyword
 - targeted follow-up in =eigensolvers_test.py= also removed a stale
   SciPy-sparse/Nanostrip =xfail=; the remaining normal-mode expected failures
-  are now the genuine SLEPc convergence cases, so the next full core-suite
-  baseline should fall further to =5 xfailed=
+  are now the genuine SLEPc convergence cases
 
 *** Notable Work Completed
 

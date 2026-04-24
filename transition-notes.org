@@ -1341,11 +1341,11 @@ dev/bin/verify-python3-core-suite
 
 Result:
 
-- =497 passed=
+- =500 passed=
 - =14 skipped=
-- =7 xfailed=
-- =28 warnings=
-- runtime: approximately =1617.16s=
+- =5 xfailed=
+- =31 warnings=
+- runtime: approximately =1609.82s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1376,5 +1376,5 @@ Follow-up targeted verification after this baseline:
 - the GitHub Actions =python3-core-suite= workflow already includes the full
   deprecated normal-modes test file, so this progress is covered by CI without
   further workflow changes
-- the next full rerun of =dev/bin/verify-python3-core-suite= should therefore
-  reduce the baseline to =5 xfailed= if no other behaviour changes
+- the current full rerun of =dev/bin/verify-python3-core-suite= confirms the
+  post-cleanup baseline above
