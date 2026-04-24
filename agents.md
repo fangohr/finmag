@@ -390,8 +390,11 @@ Intentional skips and xfails are explicit:
   Python 3 path
 - `src/finmag/energies/demag/gcr_demag.py` remains only as a placeholder and
   is not registered in `KNOWN_SOLVERS`
-- a small number of historical failures remain marked `xfail`, including known
-  weak-tolerance demag linearity checks
+- the weak-tolerance demag linearity area now has both:
+  - a positive regression test showing that loose Krylov tolerances are
+    detectably non-linear, and
+  - the original historical `xfail`, kept intentionally so the tolerance
+    expectations can be reviewed by a human later
 - the current green baseline includes:
   - `sim_helpers_test.py::test_get_submesh`
   - `sim_test.py::TestSimulation::test_mark_regions`

@@ -57,7 +57,9 @@ def create_demag_params(atol, rtol, maxiter):
     # Demag with Krylov solver and strict tolerances should be linear in m
     (Demag, {'solver_type': 'Krylov',
              'parameters': create_demag_params(1e-15, 1e-15, 1e4)}, 1.2e-10),
-    # Demag with Krylov solver and weak tolerances is *not* linear in m
+    # Demag with Krylov solver and weak tolerances is *not* linear in m.
+    # Keep this xfail as historical evidence and review the precise tolerance
+    # expectations manually later.
     pytest.mark.xfail(
         (Demag, {'solver_type': 'Krylov', 'parameters': create_demag_params(1e-6, 1e-6, 1e4)}, 1e-8)),
 ])
@@ -85,6 +87,29 @@ def test_interactions_scale_linearly_with_m(EnergyClass, init_args, TOL):
             a, b, c, np.allclose(fld, a * fld_1 + b * fld_2 + c * fld_3, atol=TOL, rtol=TOL)))
         assert np.allclose(
             fld, a * fld_1 + b * fld_2 + c * fld_3, atol=TOL, rtol=TOL)
+
+
+def test_demag_with_weak_krylov_tolerances_is_not_linear_in_m():
+    """
+    The demag field is only numerically linear when the Krylov solves use
+    sufficiently strict tolerances. Preserve the historical weak-tolerance
+    behaviour as an explicit assertion instead of an expected failure.
+    """
+    init_args = {
+        'solver_type': 'Krylov',
+        'parameters': create_demag_params(1e-6, 1e-6, 1e4)
+    }
+    tol = 1e-8
+
+    fld_1 = compute_field_for_linear_combination(Demag, init_args, 1.0, 0.0, 0.0)
+    fld_2 = compute_field_for_linear_combination(Demag, init_args, 0.0, 1.0, 0.0)
+    fld_3 = compute_field_for_linear_combination(Demag, init_args, 0.0, 0.0, 1.0)
+
+    a, b, c = 0.37, 7.47, 0.68
+    fld = compute_field_for_linear_combination(Demag, init_args, a, b, c)
+
+    assert not np.allclose(
+        fld, a * fld_1 + b * fld_2 + c * fld_3, atol=tol, rtol=tol)
 
 
 if __name__ == '__main__':

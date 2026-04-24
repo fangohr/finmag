@@ -550,6 +550,11 @@ This broader suite adds the following green areas on top of the minimal suite:
 - =src/finmag/energies/thin_film_demag_test.py=
 - =src/finmag/tests/test_energy_creation_with_variable_Ms.py=
 - =src/finmag/tests/test_interactions_scale_linearly_with_m.py=
+  - the weak-Krylov-demag case now has both:
+    - a positive regression test documenting that loose demag solver
+      tolerances are detectably non-linear, and
+    - the original historical =xfail= case, kept intentionally so the
+      tolerance expectations can be reviewed by a human later
 - =src/finmag/tests/test_heun.py=
 - =src/finmag/tests/test_spatially_varying_alpha.py=
 - =src/finmag/tests/test_spatially_varying_anisotropy.py=

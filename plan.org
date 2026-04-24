@@ -390,6 +390,10 @@ Second meaningful milestone:
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
   =497 passed, 14 skipped, 7 xfailed, 28 warnings= in the Python 3 transition
   container
+- targeted follow-up after that full run added a positive regression test for
+  weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
+  case is intentionally kept as historical evidence and should be reviewed by
+  a human later
   where applicable
 
 *** Notable Work Completed
