@@ -1378,3 +1378,19 @@ Follow-up targeted verification after this baseline:
   further workflow changes
 - the current full rerun of =dev/bin/verify-python3-core-suite= confirms the
   post-cleanup baseline above
+
+Remaining expected failures in the current baseline:
+
+- =src/finmag/tests/comparison/anisotropy/test_anis_magpar.py::test_against_magpar=
+  fails before tolerance comparison because the regenerated Netgen node array
+  no longer has the same shape as the saved Magpar reference nodes
+- =src/finmag/tests/comparison/demag/test_demag_field.py::test_using_magpar=
+  fails for the same reason: saved Magpar reference nodes do not match the
+  regenerated Netgen mesh, so =compare_field_directly()= aborts on node-array
+  shape mismatch
+- =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py= still has two real
+  SLEPc expected failures where Krylov-Schur returns =0/40= converged
+  eigenpairs in this environment
+- =src/finmag/tests/test_interactions_scale_linearly_with_m.py= intentionally
+  keeps the historical weak-Krylov-demag =xfail= for later human review,
+  alongside the new explicit negative regression test

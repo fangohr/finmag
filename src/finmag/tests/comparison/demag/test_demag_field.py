@@ -121,7 +121,8 @@ def test_using_analytical_solution(finmag):
 #     assert np.max(rel_diff) < REL_TOLERANCE
 
 
-@pytest.mark.xfail(reason="saved Magpar reference mesh does not match the regenerated Netgen mesh")
+@pytest.mark.xfail(
+    reason="saved Magpar reference nodes no longer match the regenerated Netgen mesh; compare_field_directly aborts on node-array shape mismatch")
 def test_using_magpar(finmag):
     REL_TOLERANCE = 10.0
 

@@ -199,21 +199,23 @@ fixtures = itertools.product(sample_eigensolvers, available_eigenproblems)
 #       fail on others. So it might be better to keep this as 'blacklist',
 #       and document the known failures in the test 'test_document_failures'
 #       below.
-known_failures = \
-    [
-        (sample_eigensolvers[4],  # SLEPc
-            available_eigenproblems[1],  # RingGraphLaplace
-            101,
-            float),
-        (sample_eigensolvers[4],  # SLEPc
-            available_eigenproblems[2],  # Nanostrip1d
-            200,
-            float),
-        (sample_eigensolvers[4],  # SLEPc
-            available_eigenproblems[2],  # Nanostrip1d
-            200,
-            complex),
-    ]
+known_failures = {
+    # In the Python 3 transition image these SLEPc runs currently abort with
+    # "Not all requested eigenpairs converged: 0/40." rather than producing a
+    # usable partial spectrum.
+    (sample_eigensolvers[4],  # SLEPc
+     available_eigenproblems[1],  # RingGraphLaplace
+     101,
+     float): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for RingGraphLaplace N=101 float",
+    (sample_eigensolvers[4],  # SLEPc
+     available_eigenproblems[2],  # Nanostrip1d
+     200,
+     float): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for Nanostrip1d N=200 float",
+    (sample_eigensolvers[4],  # SLEPc
+     available_eigenproblems[2],  # Nanostrip1d
+     200,
+     complex): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for Nanostrip1d N=200 complex",
+}
 
 
 @pytest.mark.parametrize("solver, eigenproblem", fixtures)
@@ -224,8 +226,7 @@ def test_eigensolvers(solver, eigenproblem):
         for dtype in [float, complex]:
             print("[DDD] N={}, dtype={}".format(N, dtype))
             if (solver, eigenproblem, N, dtype) in known_failures:
-                pytest.xfail("Known failure: {}, {}, {}, {}".format(
-                    solver, eigenproblem, N, dtype))
+                pytest.xfail(known_failures[(solver, eigenproblem, N, dtype)])
 
             if not solver_and_problem_are_compatible(solver, eigenproblem):
                 with pytest.raises(ValueError):

@@ -7,7 +7,8 @@ from finmag.util.helpers import stats
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.mark.xfail(reason="saved Magpar reference mesh does not match the regenerated Netgen mesh")
+@pytest.mark.xfail(
+    reason="saved Magpar reference nodes no longer match the regenerated Netgen mesh; compare_field aborts on node-array shape mismatch")
 def test_against_magpar():
     finmag = conftest.setup(K2=0)
 

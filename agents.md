@@ -583,6 +583,9 @@ Python 3 transition path.
   - removed the stale SciPy-sparse/Nanostrip normal-modes `xfail` in
     `eigensolvers_test.py`; only the genuine SLEPc convergence limitations
     remain expected-failing there
+  - verified the remaining Magpar xfails fail on node-array shape mismatch
+    before any field tolerance comparison; this points to reference-mesh drift
+    from regenerated Netgen meshes rather than a Python 3 runtime bug
   - the existing `python3-core-suite` workflow already exercises
     `normal_modes_deprecated_test.py`, so this improvement is already covered
     by CI

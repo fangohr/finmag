@@ -401,6 +401,10 @@ Second meaningful milestone:
 - targeted follow-up in =eigensolvers_test.py= also removed a stale
   SciPy-sparse/Nanostrip =xfail=; the remaining normal-mode expected failures
   are now the genuine SLEPc convergence cases
+- the remaining Magpar comparison =xfail= cases are confirmed to fail because
+  regenerated Netgen node arrays do not match the saved Magpar reference-node
+  shapes, so these are reference-data/mesh-drift issues rather than Python 3
+  regressions
 
 *** Notable Work Completed
 
