@@ -388,7 +388,7 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =502 passed, 14 skipped, 3 xfailed, 31 warnings= in the Python 3 transition
+  =502 passed, 14 skipped, 3 xfailed, 23 warnings= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
@@ -413,6 +413,9 @@ Second meaningful milestone:
   longer asserts strict wall-clock ordering; it now allows a small regression
   margin to avoid CI/container timing noise while still catching real
   slowdowns
+- plotting-heavy tests now close returned matplotlib figures explicitly; this
+  removes the repeated "More than 20 figures have been opened" warnings from
+  the Python 3 core gate
 - the remaining Magpar comparison =xfail= cases are confirmed to fail because
   regenerated Netgen node arrays do not match the saved Magpar reference-node
   shapes, so these are reference-data/mesh-drift issues rather than Python 3
@@ -625,8 +628,8 @@ Observed result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =31 warnings=
-- runtime approximately =1596s=
+- =23 warnings=
+- runtime approximately =1557s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with

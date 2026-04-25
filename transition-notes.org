@@ -1344,8 +1344,8 @@ Result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =31 warnings=
-- runtime: approximately =1596.18s=
+- =23 warnings=
+- runtime: approximately =1556.59s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1382,11 +1382,19 @@ Follow-up targeted verification after this baseline:
 - =src/finmag/energies/demag/fk_demag_test.py::test_thin_film_argument_saves_time_on_thin_film=
   now allows a small regression margin instead of asserting strict
   wall-clock ordering, which removes a flaky CI/container timing failure
+- plotting-heavy tests now close returned matplotlib figures explicitly in
+  =eigenproblems_test.py=, =normal_modes_deprecated_test.py=,
+  =sim_test.py=, and =plot_helpers_test.py=; this removes the repeated
+  "More than 20 figures have been opened" warnings from the core-suite run
 - the GitHub Actions =python3-core-suite= workflow already includes the full
   deprecated normal-modes test file, so this progress is covered by CI without
   further workflow changes
 - the current full rerun of =dev/bin/verify-python3-core-suite= confirms the
   post-cleanup baseline above
+
+The remaining plotting-related warnings are now the separate matplotlib
+=tight_layout= compatibility warnings from the normal-mode profile plotting
+helpers, not figure-leak warnings from the tests.
 
 Remaining expected failures in the current baseline:
 

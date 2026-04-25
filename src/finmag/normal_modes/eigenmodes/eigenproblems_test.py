@@ -49,18 +49,20 @@ class AbstractEigenproblemTest(object):
     @pytest.mark.requires_X_display
     def test_plot_analytical_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
-        self.eigenproblem.plot_analytical_solutions(
+        fig = self.eigenproblem.plot_analytical_solutions(
             [0, 2, 5, 6], N=20, figsize=(12, 3), filename='solutions.png')
         assert(os.path.exists('solutions.png'))
+        plt.close(fig)
 
     @pytest.mark.requires_X_display
     def test_plot_computed_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
         solver = ScipyLinalgEig()
-        self.eigenproblem.plot_computed_solutions(
+        fig = self.eigenproblem.plot_computed_solutions(
             [0, 2, 5, 6], solver=solver, N=50, dtype=float, tol_eigval=1e-1,
             figsize=(12, 3), filename='solutions.png')
         assert(os.path.exists('solutions.png'))
+        plt.close(fig)
 
 
 class TestDiagonalEigenproblem(AbstractEigenproblemTest):

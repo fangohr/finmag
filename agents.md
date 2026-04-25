@@ -571,8 +571,8 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `502 passed, 14 skipped, 3 xfailed, 31 warnings` in
-  approximately 1596 seconds; this is the current broad Python 3 regression
+  image with `502 passed, 14 skipped, 3 xfailed, 23 warnings` in
+  approximately 1557 seconds; this is the current broad Python 3 regression
   baseline
 - targeted follow-up after that full run:
   - restored the historical weak-tolerance demag `xfail` for later manual
@@ -595,6 +595,9 @@ Python 3 transition path.
   - made `test_thin_film_argument_saves_time_on_thin_film` robust against
     CI/container timing jitter by replacing the strict ordering assertion with
     a small tolerated regression margin
+  - closed returned matplotlib figures in the plotting-heavy normal-mode,
+    simulation, and plot-helper tests; this removed the repeated "More than
+    20 figures have been opened" warnings from the core-suite run
   - verified the remaining Magpar xfails fail on node-array shape mismatch
     before any field tolerance comparison; this points to reference-mesh drift
     from regenerated Netgen meshes rather than a Python 3 runtime bug

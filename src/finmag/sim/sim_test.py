@@ -1196,17 +1196,21 @@ def test_NormalModeSimulation(tmpdir):
     assert(
         np.allclose(f.timesteps(), np.linspace(0, 2e-12, 21), atol=0, rtol=1e-8))
 
-    sim.plot_spectrum(use_averaged_m=True)
-    sim.plot_spectrum(use_averaged_m=True, log=True, t_step=1.5e-12,
-                      subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    fig = sim.plot_spectrum(use_averaged_m=True)
+    plt.close(fig)
+    fig = sim.plot_spectrum(use_averaged_m=True, log=True, t_step=1.5e-12,
+                            subtract_values='first', figsize=(16, 6), outfilename='fft_m.png')
+    plt.close(fig)
     # sim.plot_spectrum(use_averaged_m=False)
-    sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12,
-                      subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
+    fig = sim.plot_spectrum(use_averaged_m=False, t_ini=0.0, t_end=1e-12,
+                            subtract_values='average', figsize=(16, 6), outfilename='fft_m_spatially_resolved.png')
+    plt.close(fig)
     assert(os.path.exists('fft_m.png'))
     assert(os.path.exists('fft_m_spatially_resolved.png'))
 
-    sim.plot_spectrum(
+    fig = sim.plot_spectrum(
         t_step=t_step, use_averaged_m=True, outfilename='fft_m.png')
+    plt.close(fig)
 
     sim.find_peak_near_frequency(10e9, component='y', use_averaged_m=True)
 
@@ -1257,9 +1261,12 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
     sim.relax()
     sim.save_vtk('m_relaxed.pvd')
     omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
-    sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
-    sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
-    sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    fig = sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    plt.close(fig)
     sim.export_eigenmode_animations(
         [0, 1, 2], directory='animations', create_movies=False)
 
@@ -1289,9 +1296,12 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
     sim.relax()
     sim.save_vtk('m_relaxed.pvd')
     omega, w, relerr = sim.compute_normal_modes(solver='scipy_sparse')
-    sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
-    sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
-    sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    fig = sim.plot_spatially_resolved_normal_mode(0, outfilename='mode_0.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(1, outfilename='mode_1.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(2, outfilename='mode_2.png')
+    plt.close(fig)
     sim.export_eigenmode_animations(
         [0, 1, 2], directory='animations', create_movies=False)
 
@@ -1497,6 +1507,7 @@ def test_plot_spatially_resolved_normal_modes(tmpdir):
     fig = sim.plot_spatially_resolved_normal_mode(
         k=0, outfilename='mode_00.png')
     assert(isinstance(fig, plt.Figure))
+    plt.close(fig)
 
 
 @pytest.mark.skipif(not _has_movie_export(),
@@ -1752,10 +1763,12 @@ def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
     # assert(np.allclose(psd_my_expected, sim.psd_my, atol=0, rtol=RTOL))
     # assert(np.allclose(psd_mz_expected, sim.psd_mz, atol=0, rtol=RTOL))
 
-    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
-                      mesh_region='left', ticks=11, outfilename='spectrum_left.png')
-    sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
-                      mesh_region='right', ticks=11, outfilename='spectrum_right.png')
+    fig = sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                            mesh_region='left', ticks=11, outfilename='spectrum_left.png')
+    plt.close(fig)
+    fig = sim.plot_spectrum(t_step=t_step, t_ini=t_ini, t_end=t_end,
+                            mesh_region='right', ticks=11, outfilename='spectrum_right.png')
+    plt.close(fig)
 
     logger.debug("Precession frequency 1: {} GHz".format(omega1 / 1e9))
     logger.debug("Precession frequency 2: {} GHz".format(omega2 / 1e9))
@@ -1975,8 +1988,10 @@ def test_plot_dynamics(tmpdir):
         mesh, Ms=8e5, m_init=[1, 0, 0], A=13e-12, H_ext=[0, 0, 5e4], demag_solver=None)
     sim.schedule('save_ndt', every=5e-12)
     sim.run_until(5e-11)
-    sim.plot_dynamics(figsize=(16, 3), outfile='dynamics_2d.png')
-    sim.plot_dynamics_3d(figsize=(5, 5), outfile='dynamics_3d.png')
+    fig = sim.plot_dynamics(figsize=(16, 3), outfile='dynamics_2d.png')
+    plt.close(fig)
+    fig = sim.plot_dynamics_3d(figsize=(5, 5), outfile='dynamics_3d.png')
+    plt.close(fig)
 
 
 def test_profile(tmpdir):
