@@ -213,16 +213,7 @@ def fresh_solver_instance(solver):
 #       fail on others. So it might be better to keep this as 'blacklist',
 #       and document the known failures in the test 'test_document_failures'
 #       below.
-known_failures = {
-    (sample_eigensolvers[4],  # SLEPc
-     available_eigenproblems[1],  # RingGraphLaplace
-     200,
-     float): "SLEPc Krylov-Schur still converges to 0/40 eigenpairs for RingGraphLaplace N=200 float in the multi-case test process",
-    (sample_eigensolvers[4],  # SLEPc
-     available_eigenproblems[1],  # RingGraphLaplace
-     200,
-     complex): "SLEPc Krylov-Schur still converges to 0/40 eigenpairs for RingGraphLaplace N=200 complex in the multi-case test process",
-}
+known_failures = {}
 
 
 @pytest.mark.parametrize("solver, eigenproblem", fixtures)
@@ -302,16 +293,12 @@ def test_document_failures():
     This test documents some cases where the eigensolvers fail. This
     is valuable if I want to write these results up later.
     """
-
-    # Even with the tuned SLEPc settings, the RingGraphLaplace problem still
-    # fails at N=200 in the test process once smaller cases have already been
-    # solved successfully.
     solver = SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
                               which='SMALLEST_MAGNITUDE', tol=1e-10, maxit=1000)
     eigenproblem = RingGraphLaplaceEigenproblem()
     num = 40
-    for N, dtype in [(50, float), (50, complex), (101, float), (101, complex)]:
-        eigenproblem.solve(solver, N, dtype=dtype, num=num)
-    for dtype in [float, complex]:
-        with pytest.raises(RuntimeError):
-            eigenproblem.solve(solver, 200, dtype=dtype, num=num)
+    for N, dtype in [(50, float), (50, complex), (101, float), (101, complex),
+                     (200, float), (200, complex)]:
+        omega, w, _ = eigenproblem.solve(solver, N, dtype=dtype, num=num)
+        assert len(omega) == num
+        eigenproblem.verify_eigenpairs_numerically(zip(omega, w))

@@ -571,8 +571,8 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `501 passed, 14 skipped, 4 xfailed, 31 warnings` in
-  approximately 1610 seconds; this is the current broad Python 3 regression
+  image with `502 passed, 14 skipped, 3 xfailed, 31 warnings` in
+  approximately 1596 seconds; this is the current broad Python 3 regression
   baseline
 - targeted follow-up after that full run:
   - restored the historical weak-tolerance demag `xfail` for later manual
@@ -581,14 +581,17 @@ Python 3 transition path.
     `test_plot_spatially_resolved_normal_mode_in_region` now passes after
     dropping the obsolete `use_fenicstools` keyword
   - removed the stale SciPy-sparse/Nanostrip normal-modes `xfail` in
-    `eigensolvers_test.py`; only the genuine SLEPc convergence limitations
-    remain expected-failing there
+    `eigensolvers_test.py`; a later Hermitian-specialisation fix removed the
+    remaining SLEPc expected failure there as well
   - fixed `SLEPcEigensolver._solve_eigenproblem()` so configured `tol` and
     `maxit` values are actually forwarded instead of being shadowed by truthy
     default arguments
+  - taught `SLEPcEigensolver` to promote Hermitian inputs from the generic
+    non-Hermitian problem classes to `HEP`/`GHEP`, which removes the former
+    RingGraph `N=200` SLEPc `xfail`
   - adjusted the sample SLEPc test fixture to use the stronger convergence
-    budget (`tol=1e-10`, `maxit=1000`) and documented the one remaining
-    process-sensitive RingGraph/SLEPc `xfail`
+    budget (`tol=1e-10`, `maxit=1000`) and verified the full
+    `eigensolvers_test.py` file now passes without SLEPc expected failures
   - made `test_thin_film_argument_saves_time_on_thin_film` robust against
     CI/container timing jitter by replacing the strict ordering assertion with
     a small tolerated regression margin
@@ -599,9 +602,8 @@ Python 3 transition path.
     `normal_modes_deprecated_test.py`, so this improvement is already covered
     by CI
   - the latest full rerun confirms the updated baseline above; the remaining
-    four xfails are two Magpar mesh-drift cases, one RingGraph/SLEPc
-    convergence case, and the intentionally preserved weak-tolerance demag
-    historical xfail
+    three xfails are two Magpar mesh-drift cases and the intentionally
+    preserved weak-tolerance demag historical xfail
 
 ## Native Build Findings
 

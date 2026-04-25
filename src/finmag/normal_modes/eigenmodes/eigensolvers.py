@@ -381,6 +381,15 @@ class SLEPcEigensolver(AbstractEigensolver):
         if shift_invert == None:
             shift_invert = self.shift_invert
 
+        # SLEPc's Hermitian solvers are significantly more robust on Hermitian
+        # inputs than the generic non-Hermitian path. Promote the declared
+        # problem type when the matrices prove the stronger structure.
+        if problem_type in ['NHEP', 'GNHEP']:
+            matrices_are_hermitian = is_hermitian(A) and (
+                M is None or is_hermitian(M))
+            if matrices_are_hermitian:
+                problem_type = 'HEP' if M is None else 'GHEP'
+
         A_petsc = as_petsc_matrix(A)
         M_petsc = None if (M == None) else as_petsc_matrix(M)
         if swap_matrices:

@@ -1341,11 +1341,11 @@ dev/bin/verify-python3-core-suite
 
 Result:
 
-- =501 passed=
+- =502 passed=
 - =14 skipped=
-- =4 xfailed=
+- =3 xfailed=
 - =31 warnings=
-- runtime: approximately =1612.73s=
+- runtime: approximately =1596.18s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1374,9 +1374,11 @@ Follow-up targeted verification after this baseline:
   case now passes
 - =src/finmag/normal_modes/eigenmodes/eigensolvers.py= now correctly forwards
   configured =tol= and =maxit= into the SLEPc solve call instead of
-  accidentally overriding them with truthy default arguments; this reduces the
-  SLEPc expected failures in =eigensolvers_test.py= to one remaining real
-  process-sensitive RingGraph convergence case
+  accidentally overriding them with truthy default arguments
+- =src/finmag/normal_modes/eigenmodes/eigensolvers.py= now also promotes
+  Hermitian inputs from generic SLEPc =NHEP=/=GNHEP= declarations to the
+  stronger =HEP=/=GHEP= solver classes automatically; this removes the former
+  RingGraph =N=200 SLEPc failure in =eigensolvers_test.py=
 - =src/finmag/energies/demag/fk_demag_test.py::test_thin_film_argument_saves_time_on_thin_film=
   now allows a small regression margin instead of asserting strict
   wall-clock ordering, which removes a flaky CI/container timing failure
@@ -1395,9 +1397,6 @@ Remaining expected failures in the current baseline:
   fails for the same reason: saved Magpar reference nodes do not match the
   regenerated Netgen mesh, so =compare_field_directly()= aborts on node-array
   shape mismatch
-- =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py= still has one real
-  SLEPc expected failure where Krylov-Schur returns =0/40= converged
-  eigenpairs for the RingGraph case in this environment
 - =src/finmag/tests/test_interactions_scale_linearly_with_m.py= intentionally
   keeps the historical weak-Krylov-demag =xfail= for later human review,
   alongside the new explicit negative regression test

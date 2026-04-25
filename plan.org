@@ -388,7 +388,7 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =501 passed, 14 skipped, 4 xfailed, 31 warnings= in the Python 3 transition
+  =502 passed, 14 skipped, 3 xfailed, 31 warnings= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
@@ -400,11 +400,15 @@ Second meaningful milestone:
   Python 3 after dropping the obsolete =use_fenicstools= keyword
 - targeted follow-up in =eigensolvers_test.py= also removed a stale
   SciPy-sparse/Nanostrip =xfail=; a later SLEPc wrapper fix reduced the
-  remaining normal-mode expected failures to one real process-sensitive SLEPc
-  convergence case
+  remaining normal-mode expected failures to zero in the active Python 3 core
+  gate
 - =SLEPcEigensolver= now correctly forwards configured =tol= and =maxit=
   values into the solve call; this was the real bug behind one of the former
   SLEPc expected failures
+- =SLEPcEigensolver= now also promotes Hermitian inputs from the generic
+  non-Hermitian SLEPc problem types to =HEP=/=GHEP= automatically; this fixes
+  the former RingGraph =N=200 SLEPc failure without changing the non-Hermitian
+  normal-mode path
 - =fk_demag_test.py::test_thin_film_argument_saves_time_on_thin_film= no
   longer asserts strict wall-clock ordering; it now allows a small regression
   margin to avoid CI/container timing noise while still catching real
@@ -618,11 +622,11 @@ dev/bin/verify-python3-core-suite
 
 Observed result:
 
-- =501 passed=
+- =502 passed=
 - =14 skipped=
-- =4 xfailed=
+- =3 xfailed=
 - =31 warnings=
-- runtime approximately =1613s=
+- runtime approximately =1596s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with
