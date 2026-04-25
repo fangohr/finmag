@@ -388,7 +388,7 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =500 passed, 14 skipped, 5 xfailed, 31 warnings= in the Python 3 transition
+  =501 passed, 14 skipped, 4 xfailed, 31 warnings= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
@@ -399,8 +399,16 @@ Second meaningful milestone:
   =test_plot_spatially_resolved_normal_mode_in_region= now passes under
   Python 3 after dropping the obsolete =use_fenicstools= keyword
 - targeted follow-up in =eigensolvers_test.py= also removed a stale
-  SciPy-sparse/Nanostrip =xfail=; the remaining normal-mode expected failures
-  are now the genuine SLEPc convergence cases
+  SciPy-sparse/Nanostrip =xfail=; a later SLEPc wrapper fix reduced the
+  remaining normal-mode expected failures to one real process-sensitive SLEPc
+  convergence case
+- =SLEPcEigensolver= now correctly forwards configured =tol= and =maxit=
+  values into the solve call; this was the real bug behind one of the former
+  SLEPc expected failures
+- =fk_demag_test.py::test_thin_film_argument_saves_time_on_thin_film= no
+  longer asserts strict wall-clock ordering; it now allows a small regression
+  margin to avoid CI/container timing noise while still catching real
+  slowdowns
 - the remaining Magpar comparison =xfail= cases are confirmed to fail because
   regenerated Netgen node arrays do not match the saved Magpar reference-node
   shapes, so these are reference-data/mesh-drift issues rather than Python 3
@@ -610,11 +618,11 @@ dev/bin/verify-python3-core-suite
 
 Observed result:
 
-- =497 passed=
+- =501 passed=
 - =14 skipped=
-- =7 xfailed=
-- =28 warnings=
-- runtime approximately =1617s=
+- =4 xfailed=
+- =31 warnings=
+- runtime approximately =1613s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with

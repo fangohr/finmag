@@ -15,7 +15,7 @@ sample_eigensolvers = [
     ScipySparseLinalgEigs(sigma=0.0, which='LM', num=10),
     ScipySparseLinalgEigsh(sigma=0.0, which='LM', num=10),
     SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
-                     which='SMALLEST_MAGNITUDE'),
+                     which='SMALLEST_MAGNITUDE', tol=1e-10, maxit=1000),
 ]
 
 
@@ -29,7 +29,7 @@ def test_str():
                 "<ScipyLinalgEigh>",
                 "<ScipySparseLinalgEigs: sigma=0.0, which='LM', num=10>",
                 "<ScipySparseLinalgEigsh: sigma=0.0, which='LM', num=10>",
-                "<SLEPcEigensolver: GNHEP, KRYLOVSCHUR, SMALLEST_MAGNITUDE, num=6, tol=1e-12, maxit=100>",
+                "<SLEPcEigensolver: GNHEP, KRYLOVSCHUR, SMALLEST_MAGNITUDE, num=6, tol=1e-10, maxit=1000>",
                 ]))
 
 
@@ -189,6 +189,20 @@ def solver_and_problem_are_compatible(solver, eigenproblem):
 fixtures = itertools.product(sample_eigensolvers, available_eigenproblems)
 
 
+def fresh_solver_instance(solver):
+    if isinstance(solver, SLEPcEigensolver):
+        return SLEPcEigensolver(problem_type=solver.problem_type,
+                                method_type=solver.method_type,
+                                which=solver.which,
+                                num=solver.num,
+                                tol=solver.tol,
+                                maxit=solver.maxit,
+                                shift_invert=solver.shift_invert,
+                                swap_matrices=solver.swap_matrices,
+                                verbose=solver.verbose)
+    return solver
+
+
 # TODO: Currently we simply skip these and call pytest.xfail directly.
 #       It would be better to actually execute them and wait for them
 #       to fail, so that the failures are confirmed. However, this
@@ -200,21 +214,14 @@ fixtures = itertools.product(sample_eigensolvers, available_eigenproblems)
 #       and document the known failures in the test 'test_document_failures'
 #       below.
 known_failures = {
-    # In the Python 3 transition image these SLEPc runs currently abort with
-    # "Not all requested eigenpairs converged: 0/40." rather than producing a
-    # usable partial spectrum.
     (sample_eigensolvers[4],  # SLEPc
      available_eigenproblems[1],  # RingGraphLaplace
-     101,
-     float): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for RingGraphLaplace N=101 float",
-    (sample_eigensolvers[4],  # SLEPc
-     available_eigenproblems[2],  # Nanostrip1d
      200,
-     float): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for Nanostrip1d N=200 float",
+     float): "SLEPc Krylov-Schur still converges to 0/40 eigenpairs for RingGraphLaplace N=200 float in the multi-case test process",
     (sample_eigensolvers[4],  # SLEPc
-     available_eigenproblems[2],  # Nanostrip1d
+     available_eigenproblems[1],  # RingGraphLaplace
      200,
-     complex): "SLEPc Krylov-Schur converges to 0/40 eigenpairs for Nanostrip1d N=200 complex",
+     complex): "SLEPc Krylov-Schur still converges to 0/40 eigenpairs for RingGraphLaplace N=200 complex in the multi-case test process",
 }
 
 
@@ -224,33 +231,34 @@ def test_eigensolvers(solver, eigenproblem):
     print("[DDD] eigenproblem: {}".format(eigenproblem))
     for N in [50, 101, 200]:
         for dtype in [float, complex]:
+            case_solver = fresh_solver_instance(solver)
             print("[DDD] N={}, dtype={}".format(N, dtype))
             if (solver, eigenproblem, N, dtype) in known_failures:
                 pytest.xfail(known_failures[(solver, eigenproblem, N, dtype)])
 
-            if not solver_and_problem_are_compatible(solver, eigenproblem):
+            if not solver_and_problem_are_compatible(case_solver, eigenproblem):
                 with pytest.raises(ValueError):
-                    eigenproblem.solve(solver, N, dtype=dtype, num=40)
+                    eigenproblem.solve(case_solver, N, dtype=dtype, num=40)
                 continue
 
             # Nanostrip1d can only solve problems of even size
             if not iseven(N) and isinstance(eigenproblem, Nanostrip1dEigenproblemFinmag):
                 with pytest.raises(ValueError):
-                    eigenproblem.solve(solver, N, dtype=dtype, num=40)
+                    eigenproblem.solve(case_solver, N, dtype=dtype, num=40)
                 continue
 
-            omega, w, _ = eigenproblem.solve(solver, N, dtype=dtype, num=40)
+            omega, w, _ = eigenproblem.solve(case_solver, N, dtype=dtype, num=40)
             print("[DDD] len(omega): {}".format(len(omega)))
             try:
                 if isinstance(eigenproblem, Nanostrip1dEigenproblemFinmag):
                     # The Nanostrip1d seems to be quite ill-behaved
                     # with the sparse solvers.
                     tol_eigval = 0.1
-                elif isinstance(solver, ScipySparseSolver):
+                elif isinstance(case_solver, ScipySparseSolver):
                     # The sparse solvers seem to be less accurate, so
                     # we use a less strict tolerance.
                     tol_eigval = 1e-3
-                elif isinstance(solver, SLEPcEigensolver):
+                elif isinstance(case_solver, SLEPcEigensolver):
                     tol_eigval = 1e-13
                 else:
                     tol_eigval = 1e-14
@@ -259,7 +267,7 @@ def test_eigensolvers(solver, eigenproblem):
                     zip(omega, w), tol_eigval=tol_eigval)
             except NotImplementedError:
                 pytest.xfail("Analytical solution not implemented for "
-                             "solver {}".format(solver))
+                             "solver {}".format(case_solver))
             except ValueError:
                 # Here we capture a spurious failure of one of the tests which
                 # only occurs on some computers (and not every time).
@@ -295,27 +303,15 @@ def test_document_failures():
     is valuable if I want to write these results up later.
     """
 
-    # The RingGraphLaplaceEigenproblem seems to be very ill-conditioned.
-    # Strangely, some values of N seem to be more susceptible to failures
-    # than others...
-    # TODO: This is duplicated in known_failures, but there it's not currently
-    #       executed, so we run it here instead.
+    # Even with the tuned SLEPc settings, the RingGraphLaplace problem still
+    # fails at N=200 in the test process once smaller cases have already been
+    # solved successfully.
     solver = SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
-                              which='SMALLEST_MAGNITUDE')
+                              which='SMALLEST_MAGNITUDE', tol=1e-10, maxit=1000)
     eigenproblem = RingGraphLaplaceEigenproblem()
-    N = 101
     num = 40
+    for N, dtype in [(50, float), (50, complex), (101, float), (101, complex)]:
+        eigenproblem.solve(solver, N, dtype=dtype, num=num)
     for dtype in [float, complex]:
         with pytest.raises(RuntimeError):
-            eigenproblem.solve(solver, N, dtype=dtype, num=num)
-
-    # It seems that this SLEPcEigensolver can't cope with problems where N is
-    # too large, so it doesn't converge.
-    solver = SLEPcEigensolver(problem_type='GNHEP', method_type='KRYLOVSCHUR',
-                              which='SMALLEST_MAGNITUDE')
-    eigenproblem = Nanostrip1dEigenproblemFinmag(13e-12, 8e5, 0, 100)
-    N = 300
-    num = 40
-    for dtype in [float, complex]:
-        with pytest.raises(RuntimeError):
-            eigenproblem.solve(solver, N, dtype=dtype, num=num)
+            eigenproblem.solve(solver, 200, dtype=dtype, num=num)

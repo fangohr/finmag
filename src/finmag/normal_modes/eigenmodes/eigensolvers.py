@@ -347,7 +347,10 @@ class SLEPcEigensolver(AbstractEigensolver):
 
         E = SLEPc.EPS()
         E.create()
-        E.setOperators(A, M)
+        if M is None:
+            E.setOperators(A)
+        else:
+            E.setOperators(A, M)
         E.setProblemType(getattr(SLEPc.EPS.ProblemType, problem_type))
         E.setType(getattr(SLEPc.EPS.Type, method_type))
         E.setWhichEigenpairs(getattr(SLEPc.EPS.Which, which))
@@ -359,7 +362,7 @@ class SLEPcEigensolver(AbstractEigensolver):
             st.setShift(0.0)
         return E
 
-    def _solve_eigenproblem(self, A, M=None, num=None, problem_type=None, method_type=None, which=None, tol=1e-12, maxit=100, swap_matrices=None, shift_invert=None):
+    def _solve_eigenproblem(self, A, M=None, num=None, problem_type=None, method_type=None, which=None, tol=None, maxit=None, swap_matrices=None, shift_invert=None):
         num = num or self.num
         problem_type = problem_type or self.problem_type
         method_type = method_type or self.method_type
