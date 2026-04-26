@@ -586,7 +586,11 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     a = np.absolute(w_flat)
     a = a / a.max()  # normalised amplitudes of the oscillations
 
-    t_end = num_cycles * 2 * pi / freq
+    # Zero-frequency modes are still useful to export; treat them as a static frame.
+    if np.isclose(freq, 0.0):
+        t_end = 0.0
+    else:
+        t_end = num_cycles * 2 * pi / freq
     timesteps = np.linspace(
         0, t_end, num_cycles * num_snapshots_per_cycle, endpoint=False)
     m_osc = np.zeros(3 * n)
@@ -759,8 +763,6 @@ def plot_spatially_resolved_normal_mode(
     import matplotlib.tri as tri
     from matplotlib.ticker import FormatStrFormatter
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    from matplotlib import rcParams
-    rcParams.update({'figure.autolayout': True})
 
     coords = mesh.coordinates()
 

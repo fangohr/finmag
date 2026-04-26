@@ -128,7 +128,9 @@ def test_third_node():
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
     diff = ref - computed
-    rel_diff = np.abs(diff / ref)
+    # The Nmag reference contains exact zeros, so mask those entries in the diagnostic.
+    rel_diff = np.abs(np.divide(
+        diff, ref, out=np.full_like(diff, np.nan), where=(ref != 0)))
 
     print("test_third_node, max. difference per axis:")
     print(np.nanmax(np.abs(diff), axis=0))

@@ -388,7 +388,7 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =502 passed, 14 skipped, 3 xfailed, 23 warnings= in the Python 3 transition
+  =502 passed, 14 skipped, 3 xfailed, 4 warnings= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
@@ -416,6 +416,27 @@ Second meaningful milestone:
 - plotting-heavy tests now close returned matplotlib figures explicitly; this
   removes the repeated "More than 20 figures have been opened" warnings from
   the Python 3 core gate
+- =plot_spatially_resolved_normal_mode()= no longer forces matplotlib
+  =figure.autolayout=True= for figures with appended colorbar axes; this
+  removes the old =tight_layout= compatibility warnings from the remaining
+  normal-mode profile plotting tests
+- follow-up warning cleanup also:
+  - guards zero-denominator handling in
+    =normal_modes/eigenmodes/helpers.compute_relative_error()= so the
+    zero-eigenvalue case no longer emits divide-by-zero warnings
+  - treats =freq ~= 0= as a zero-length animation in
+    =export_normal_mode_animation()= so the non-movie eigenmode animation
+    smoke path no longer emits divide-by-zero warnings
+  - uses =np.divide(..., where=...)= in the noisy relative-difference checks
+    in =exchange_test.py= and =tests/nmag/exchange_1d/test_exchange_1d.py=
+    so exact-zero reference values no longer create spurious warnings
+- latest full rerun leaves only four warnings in the active gate:
+  - =helpers.py::fnormalise= invalid divide on zero input
+  - one SciPy singular-matrix warning in =eigensolvers_test.py=
+  - one domain-wall fit warning in
+    =test_1d_domain_wall_profile_uniaxial_anisotropy.py=
+  - one SciPy =vode= "Excess work done" warning in the stiff-ODE transposed
+    test
 - the remaining Magpar comparison =xfail= cases are confirmed to fail because
   regenerated Netgen node arrays do not match the saved Magpar reference-node
   shapes, so these are reference-data/mesh-drift issues rather than Python 3
@@ -628,8 +649,8 @@ Observed result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =23 warnings=
-- runtime approximately =1557s=
+- =4 warnings=
+- runtime approximately =2027s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with

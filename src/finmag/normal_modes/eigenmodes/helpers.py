@@ -62,7 +62,13 @@ def compute_relative_error(A, M, omega, w):
         M = as_dense_array(M)
     lhs = np.dot(A, w)
     rhs = omega * w if (M == None) else omega * np.dot(M, w)
-    rel_err = np.linalg.norm(lhs - rhs) / np.linalg.norm(omega * w)
+    denom = np.linalg.norm(omega * w)
+    numer = np.linalg.norm(lhs - rhs)
+    # Zero-eigenvalue modes are valid here; avoid a warning for the exact 0/0 case.
+    if denom == 0:
+        rel_err = 0.0 if numer == 0 else np.inf
+    else:
+        rel_err = numer / denom
     return rel_err
 
 

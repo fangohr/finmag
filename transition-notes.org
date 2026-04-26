@@ -1344,8 +1344,8 @@ Result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =23 warnings=
-- runtime: approximately =1556.59s=
+- =4 warnings=
+- runtime: approximately =2027.32s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1386,15 +1386,35 @@ Follow-up targeted verification after this baseline:
   =eigenproblems_test.py=, =normal_modes_deprecated_test.py=,
   =sim_test.py=, and =plot_helpers_test.py=; this removes the repeated
   "More than 20 figures have been opened" warnings from the core-suite run
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated.py=
+  no longer forces matplotlib =figure.autolayout=True= inside
+  =plot_spatially_resolved_normal_mode()=; that removes the old
+  =tight_layout= compatibility warnings emitted while saving those figures
+- =src/finmag/normal_modes/eigenmodes/helpers.py::compute_relative_error()=
+  now handles a zero denominator explicitly, so the zero-eigenvalue path in
+  =eigensolvers_test.py= no longer emits divide-by-zero warnings
+- =export_normal_mode_animation()= now treats =freq ~= 0= as a zero-length
+  animation window, which removes the divide-by-zero warnings from the
+  eigenmode-animation smoke tests
+- =src/finmag/energies/exchange_test.py= and
+  =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py= now use masked
+  =np.divide(..., where=...)= for relative-difference diagnostics, which
+  removes warnings caused only by exact-zero reference values
 - the GitHub Actions =python3-core-suite= workflow already includes the full
   deprecated normal-modes test file, so this progress is covered by CI without
   further workflow changes
 - the current full rerun of =dev/bin/verify-python3-core-suite= confirms the
   post-cleanup baseline above
 
-The remaining plotting-related warnings are now the separate matplotlib
-=tight_layout= compatibility warnings from the normal-mode profile plotting
-helpers, not figure-leak warnings from the tests.
+Remaining warnings in the current baseline:
+
+- =helpers.py::fnormalise= still emits an invalid-divide warning on zero input
+- one SciPy singular-matrix warning remains in
+  =eigensolvers_test.py::test_eigensolvers[solver8-eigenproblem8]=
+- =test_1d_domain_wall_profile_uniaxial_anisotropy.py::test_domain_wall_profile=
+  still emits an invalid =sqrt(A / K1)= warning inside the fit function
+- SciPy =vode= still emits one "Excess work done on this call" warning in
+  =test_robertson_scipy_transposed=
 
 Remaining expected failures in the current baseline:
 

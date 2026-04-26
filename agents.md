@@ -571,8 +571,8 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `502 passed, 14 skipped, 3 xfailed, 23 warnings` in
-  approximately 1557 seconds; this is the current broad Python 3 regression
+  image with `502 passed, 14 skipped, 3 xfailed, 4 warnings` in
+  approximately 2027 seconds; this is the current broad Python 3 regression
   baseline
 - targeted follow-up after that full run:
   - restored the historical weak-tolerance demag `xfail` for later manual
@@ -598,6 +598,20 @@ Python 3 transition path.
   - closed returned matplotlib figures in the plotting-heavy normal-mode,
     simulation, and plot-helper tests; this removed the repeated "More than
     20 figures have been opened" warnings from the core-suite run
+  - removed the local `figure.autolayout=True` override in
+    `plot_spatially_resolved_normal_mode()`, which removes the remaining
+    matplotlib `tight_layout` compatibility warnings from the normal-mode
+    profile plotting tests
+  - guarded the zero-denominator path in
+    `normal_modes/eigenmodes/helpers.compute_relative_error()`, which removes
+    the divide-by-zero warning from the zero-eigenvalue eigensolver case
+  - treated `freq ~= 0` as a zero-length animation window in the deprecated
+    normal-mode animation exporter, which removes the divide-by-zero warnings
+    from the non-movie eigenmode animation smoke path
+  - switched the noisy relative-difference diagnostics in
+    `exchange_test.py` and `tests/nmag/exchange_1d/test_exchange_1d.py` to
+    masked `np.divide(..., where=...)`, which removes warnings caused only by
+    exact-zero reference values
   - verified the remaining Magpar xfails fail on node-array shape mismatch
     before any field tolerance comparison; this points to reference-mesh drift
     from regenerated Netgen meshes rather than a Python 3 runtime bug
@@ -607,6 +621,12 @@ Python 3 transition path.
   - the latest full rerun confirms the updated baseline above; the remaining
     three xfails are two Magpar mesh-drift cases and the intentionally
     preserved weak-tolerance demag historical xfail
+  - the remaining warnings are now down to four real legacy/numerical cases:
+    `helpers.py::fnormalise`, one SciPy singular-matrix warning in
+    `eigensolvers_test.py`, one domain-wall fit warning in
+    `test_1d_domain_wall_profile_uniaxial_anisotropy.py`, and one SciPy
+    `vode` "Excess work done" warning in the transposed Robertson stiff-ODE
+    test
 
 ## Native Build Findings
 
