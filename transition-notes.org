@@ -12,6 +12,35 @@ transition from:
 The emphasis here is on exact versions, package sources, and constraints that
 were observed directly during probing.
 
+** Strategic Direction
+
+The transition is now treated as four separate milestones, not one continuous
+upgrade:
+
+1. Python 3 usability on the current legacy =dolfin 2017.1.0= transition
+   stack;
+2. a user-facing installation path outside the specialist container workflow,
+   preferably via =pixi=;
+3. migration to legacy FEniCS/=dolfin 2019.1.0=;
+4. a later, reduced-scope =dolfinx= port.
+
+This matters because legacy FEniCS and =dolfinx= are different targets with
+different risks. The last legacy FEniCS release is =2019.1.0=; =dolfinx= is a
+separate actively developed stack and should be handled as a redesign/porting
+track rather than a routine package upgrade.
+
+Guiding rule:
+
+- do not spend time reviving old features unless that work directly helps one
+  of the four milestones above.
+
+In practice this means:
+
+- keeping historical xfails and niche comparison paths deferred when they do
+  not block Python 3, =pixi=, =dolfin 2019.1.0=, or =dolfinx=;
+- preferring a small stable workflow matrix over broad historical parity;
+- using the current Python 3 core gate as the main M1 regression baseline.
+
 ** Current Reference Environment
 
 Reference container:

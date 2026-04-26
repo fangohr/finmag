@@ -10,6 +10,206 @@ Make Finmag usable again in a controlled sequence:
 
 This sequencing is deliberate. Changing Python and the FEM stack at the same time would make failures hard to attribute.
 
+** Strategic Roadmap
+
+The transition is now split into four separate milestones rather than one
+continuous migration:
+
+1. make Finmag usable under Python 3 on the current legacy =dolfin 2017.1.0=
+   transition stack;
+2. provide a user-facing installation path outside the specialist Docker
+   workflow, preferably with =pixi=;
+3. migrate from legacy =dolfin 2017.1.0= to legacy FEniCS/=dolfin 2019.1.0=;
+4. prototype and then expand a separate =dolfinx= port.
+
+This is deliberate. The last legacy FEniCS release is =2019.1.0=, while
+=dolfinx= is a different actively developed stack. They should not be treated
+as the same migration.
+
+*** Guiding Rule
+
+Do not revive historical features just because they exist.
+
+Work is in scope only if it materially advances at least one of:
+
+- Python 3 usability;
+- a non-container installation story;
+- the legacy =dolfin 2019.1.0= migration;
+- the later =dolfinx= port.
+
+Historical cleanups, broad xfail removal, and reviving niche comparison paths
+are secondary unless they directly support one of those outcomes.
+
+*** Acceptance Matrix
+
+Use the same small workflow matrix across milestones wherever practical:
+
+- =import finmag=
+- run =finmag.example.barmini(...)=
+- run one demag-containing simulation
+- run one restart/save-load workflow
+- run one normal-modes workflow
+- run the curated Python 3 core gate
+
+For the =dolfinx= prototype, use a reduced version of this matrix appropriate
+to the smaller initial scope.
+
+*** Milestone M1: Python 3 Usable On Current Legacy Stack
+
+Goal:
+
+- Finmag is usable under Python 3 while keeping the current legacy DOLFIN 2017
+  transition container.
+
+Done when:
+
+- =import finmag= works;
+- =barmini= runs and advances in time;
+- the curated Python 3 core suite stays green in CI;
+- the smoke and verification scripts are documented and reproducible;
+- remaining skips and xfails are explicit, scoped, and not silently hiding core
+  regressions.
+
+In scope:
+
+- Python 3 runtime compatibility;
+- native module compatibility required for core workflows;
+- curated CI gating;
+- representative scientific workflows.
+
+Out of scope:
+
+- broad historical cleanup for its own sake;
+- making every old comparison/GUI/visualization path pass;
+- deprecating every unused subsystem.
+
+*** Milestone M2: User-Facing Install Path
+
+Goal:
+
+- provide a non-specialist installation path, preferably via =pixi=.
+
+Done when:
+
+- a committed =pixi= configuration exists, or there is a documented proof that
+  only a partial =pixi= environment is currently feasible;
+- a user can run at least a minimal Finmag workflow from that environment;
+- any limitations and external dependencies are explicit.
+
+In scope:
+
+- environment capture;
+- dependency inventory;
+- partial fallback designs if full packaging is not yet practical.
+
+Out of scope:
+
+- requiring full parity with the container before anything can be published;
+- solving every optional external dependency immediately.
+
+*** Milestone M3: Legacy DOLFIN 2019.1.0 Migration
+
+Goal:
+
+- move from legacy =dolfin 2017.1.0= to legacy FEniCS/=dolfin 2019.1.0= while
+  keeping the same representative workflow matrix.
+
+Done when:
+
+- the M1 acceptance matrix runs on a =2019.1.0= stack;
+- CI has a separate gate for the =2019.1.0= environment;
+- core scientific workflows pass, even if long-tail historical features are
+  still deferred.
+
+In scope:
+
+- API and packaging changes needed between the two legacy DOLFIN generations;
+- targeted fixes for representative workflows;
+- a separate compatibility branch or track if needed.
+
+Out of scope:
+
+- full historical parity before declaring progress;
+- mixing this migration with the larger =dolfinx= redesign.
+
+*** Milestone M4: DOLFINx Prototype
+
+Goal:
+
+- demonstrate a reduced but real Finmag-on-=dolfinx= capability.
+
+Done when:
+
+- one meaningful end-to-end example runs on =dolfinx=;
+- the supported scope is explicitly documented;
+- unsupported subsystems are listed rather than left ambiguous.
+
+Minimal intended scope:
+
+- mesh creation;
+- magnetisation/material field setup;
+- a small set of common energies, likely =Exchange=, =Zeeman=, and one
+  anisotropy path;
+- one time-integration workflow;
+- basic output.
+
+Important note:
+
+- this is a port/redesign milestone, not a drop-in package upgrade.
+
+*** Milestone M5: DOLFINx Expansion By Scientific Value
+
+Goal:
+
+- expand the =dolfinx= port only in areas with real scientific value.
+
+Suggested order:
+
+1. core =sim= path and common energies;
+2. demag;
+3. restart and data IO;
+4. normal modes;
+5. LLB/SLLG;
+6. external comparisons and legacy validation tooling.
+
+Rule:
+
+- port what is used, not everything that exists.
+
+*** Work Streams
+
+Run three tracks in parallel where practical:
+
+- Track A: productization
+  - docs
+  - verification scripts
+  - CI
+  - =pixi=
+  - user workflows
+- Track B: legacy upgrade
+  - =2017.1.0 -> 2019.1.0=
+- Track C: =dolfinx= prototype
+  - intentionally reduced-scope exploratory port
+
+Track C should not block A or B.
+
+*** Recommended Immediate Order
+
+1. close M1 cleanly and keep its gate green;
+2. probe M2 feasibility with =pixi=;
+3. start M3 on a separate compatibility track;
+4. begin M4 only after M1 is stable, and keep it intentionally small.
+
+*** Explicit Deferrals
+
+For now, defer:
+
+- broad cleanup unrelated to the milestones above;
+- reviving rarely used historical features just because tests exist;
+- removing every skip/xfail;
+- making all old comparison workflows live again;
+- visualization-heavy tooling unless it directly serves one of the milestones.
+
 ** Reference Environment
 
 The current ground truth is the Docker image:

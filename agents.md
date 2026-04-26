@@ -10,6 +10,25 @@ Finmag is a finite-element micromagnetics codebase built on top of FEniCS/dolfin
 - time integration,
 - scheduled output and data saving.
 
+## Strategic Milestones
+
+The project now has four explicit transition milestones:
+
+1. make Finmag usable under Python 3 on the current legacy `dolfin 2017.1.0`
+   transition stack;
+2. provide a non-container install path, preferably via `pixi`;
+3. migrate from legacy `dolfin 2017.1.0` to legacy FEniCS/`dolfin 2019.1.0`;
+4. later prototype and expand a separate `dolfinx` port.
+
+Working rule for future agent effort:
+
+- do not revive historical features or clean up old xfails unless that work
+  directly advances one of those milestones.
+
+This repository contains many research-era features that may never be needed
+again. The transition should optimize for usable scientific workflows, not for
+maximum historical surface area.
+
 The repository describes itself as a research prototype developed roughly from 2011 to 2018.
 
 ## Repository Shape
