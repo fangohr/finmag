@@ -108,6 +108,13 @@ Out of scope:
 - requiring full parity with the container before anything can be published;
 - solving every optional external dependency immediately.
 
+Immediate packaging note:
+
+- the repository currently has no modern top-level packaging file such as
+  =pyproject.toml=, =setup.py=, =setup.cfg=, or =pixi.toml=;
+- M2 therefore needs both dependency capture and a real packaging decision for
+  Finmag itself.
+
 *** Milestone M3: Legacy DOLFIN 2019.1.0 Migration
 
 Goal:

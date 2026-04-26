@@ -41,6 +41,186 @@ In practice this means:
 - preferring a small stable workflow matrix over broad historical parity;
 - using the current Python 3 core gate as the main M1 regression baseline.
 
+** M2 Dependency Inventory For `pixi`
+
+This section records the first packaging-oriented dependency inventory for the
+`pixi` track.
+
+*** Important structural finding
+
+The repository does not currently contain a modern top-level Python packaging
+file such as:
+
+- `pyproject.toml`
+- `setup.py`
+- `setup.cfg`
+- `pixi.toml`
+
+The only `setup.py` found in the tree is:
+
+- `dev/setup.py`
+
+and that file is only a historical helper for installing an already-prepared
+tree from `/tmp/finmag/`. So M2 is not only a dependency-translation task; it
+also needs an explicit packaging decision for Finmag itself.
+
+*** Current Python 3 transition image inputs
+
+The working Python 3 transition image currently installs, from the Debian
+snapshot and a small amount of pip/GitHub glue:
+
+- Python runtime and build tools:
+  - `python3`
+  - `python3-dev`
+  - `python3-pip`
+  - `python3-setuptools`
+  - `cython3`
+  - `g++`
+  - `make`
+- scientific Python stack:
+  - `numpy`
+  - `scipy`
+  - `matplotlib`
+  - `pytest`
+- legacy FEniCS stack:
+  - `python3-dolfin = 2017.1.0-4`
+  - `python3-ffc = 2017.1.0-2`
+  - `python3-ufl = 2017.1.0-2`
+  - `python3-dijitso = 2017.1.0-2`
+  - `python3-fiat = 2017.1.0-2`
+  - `python3-instant = 2017.1.0-2`
+- PETSc / SLEPc layer:
+  - `python3-petsc4py = 3.7.0-3+b2`
+  - `python3-slepc4py = 3.7.0-3+b1`
+  - matching PETSc / SLEPc / DOLFIN development libraries
+- native build / runtime libraries:
+  - `libsundials-dev = 2.7.0+dfsg-2`
+  - `libboost-python-dev`
+  - `libboost-test-dev`
+  - `libhdf5-openmpi-dev`
+  - `libhdf5-mpi-dev`
+  - `libnetcdf-dev`
+  - `libvtk6-dev`
+  - `libgdal-dev`
+  - `default-libmysqlclient-dev`
+  - image-format and compression headers such as `libpng-dev`, `libtiff-dev`,
+    `zlib1g-dev`
+- mesh and geometry tools:
+  - `gmsh`
+  - `netgen`
+- visualization / headless runtime support:
+  - `xvfb`
+  - `xauth`
+  - `tix`
+  - `tcl-dev`
+  - `tk-dev`
+- extra external components:
+  - `dolfinh5tools` from GitHub via `pip`
+  - `oommf` from `https://github.com/fangohr/oommf`
+
+*** Likely `pixi` / conda-manageable today
+
+Based on the current codebase imports, the transition image, and current
+conda-forge package availability, the following parts look feasible for a
+`pixi` environment:
+
+- core Python toolchain:
+  - `python`
+  - `pip`
+  - `setuptools`
+  - `cython`
+  - `pytest`
+- scientific Python stack:
+  - `numpy`
+  - `scipy`
+  - `matplotlib`
+- legacy FEniCS track:
+  - `fenics = 2019.1.0` is available on conda-forge
+- FEniCSx track:
+  - `fenics-dolfinx` is available on conda-forge
+- PETSc / SLEPc layer:
+  - `petsc`
+  - `petsc4py`
+  - `slepc`
+  - `slepc4py`
+- meshing / geometry:
+  - `gmsh`
+  - `python-gmsh`
+  - `netgen`
+- visualization:
+  - `paraview`
+- external solver:
+  - `oommf`
+
+This is encouraging for M2 and also for later M3/M4 work, because it means the
+broader numerical and meshing ecosystem is not obviously blocked on package
+availability alone.
+
+*** Likely external or project-specific work, even with `pixi`
+
+The following items look like they will still need custom handling:
+
+- Finmag packaging itself
+  - there is no modern top-level package metadata yet
+  - M2 needs a real install layout, not just dependency installation
+- `dolfinh5tools`
+  - this is an external companion package, not part of Finmag
+  - the current Python 3 image installs it directly from GitHub and patches it
+  - for `pixi`, this likely needs either:
+    - a pip dependency from GitHub, or
+    - a separate package recipe / packaging story
+- Finmag native extensions
+  - `native/Makefile` still drives the build
+  - M2 needs a decision on whether `pixi` invokes that build explicitly or
+    whether packaging is taught to build/install these extensions
+- OOMMF integration details
+  - package availability now looks good, but Finmag depends on the
+    Southampton/Fangohr fork and on executable discovery conventions
+  - M2 should verify that the conda-forge `oommf` package is functionally
+    equivalent for Finmag's comparison helpers
+- Netgen runtime behavior
+  - package availability is not the same as runtime reliability
+  - the current Python 3 transition image still needs compatibility handling
+    for the historical `netgen 4.9.13` shutdown bug and Tcl/Tix paths
+  - a `pixi` environment will need its own probe and validation path
+
+*** Likely blockers for a full M2 environment on the current 2017 stack
+
+These look like the main risks for a full `pixi` environment that reproduces
+the current M1 stack exactly:
+
+- exact legacy `dolfin 2017.1.0`
+  - the current working environment depends on a Debian snapshot package set
+  - the conda-forge route is much more naturally aligned with legacy
+    `fenics 2019.1.0` than with this exact `2017.1.0` stack
+- direct parity with the current container's native-library mix
+  - the container uses historical Debian package versions and local native
+    compatibility fixes
+  - `pixi` may be an easier fit once the project moves to M3
+- historical optional tool paths
+  - `nsim`
+  - Mercurial / `hg`
+  - GUI-heavy Paraview workflows
+  - these should not block M2 unless we decide they are part of the supported
+    user-facing environment
+
+*** Current recommendation for M2
+
+Do not aim first for:
+
+- "reproduce the whole M1 Debian-snapshot stack in pixi"
+
+Aim first for:
+
+- a `pixi`-managed environment for the Python-facing Finmag package and its
+  practical workflows,
+- most likely using conda-forge `fenics 2019.1.0` as the more natural legacy
+  FEniCS packaging target,
+- while treating exact `2017.1.0` parity as a container-only reference.
+
+That suggests the packaging track and the M3 legacy-FEniCS-2019 track may be
+partly coupled in practice.
+
 ** Current Reference Environment
 
 Reference container:
