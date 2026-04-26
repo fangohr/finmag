@@ -29,6 +29,28 @@ This repository contains many research-era features that may never be needed
 again. The transition should optimize for usable scientific workflows, not for
 maximum historical surface area.
 
+## Project Documents
+
+The transition work uses three top-level project notes with distinct roles:
+
+- `plan.org`
+  - forward-looking roadmap
+  - milestones, scope, sequencing, acceptance criteria, and priorities
+- `transition-notes.org`
+  - factual engineering log
+  - environment findings, exact versions, technical constraints, verified
+    baselines, and transition-specific discoveries
+- `agents.md`
+  - agent orientation and working conventions
+  - repository summary, architecture pointers, local rules, and collaboration
+    guidance
+
+Short version:
+
+- `plan.org` = intent
+- `transition-notes.org` = evidence
+- `agents.md` = operational context
+
 The repository describes itself as a research prototype developed roughly from 2011 to 2018.
 
 ## Repository Shape
