@@ -912,8 +912,10 @@ docker run --rm \
 
 The repository now contains:
 
+- `dev/bin/verify-python3-m1`
 - `dev/bin/verify-python3-import`
 - `dev/bin/verify-python3-barmini-smoke`
+- `dev/bin/verify-python3-restart-smoke`
 - `dev/bin/verify-python3-normal-modes-smoke`
 
 This helper:
@@ -924,6 +926,12 @@ This helper:
 It can be invoked as:
 
 #+begin_src bash
+dev/bin/verify-python3-m1
+#+end_src
+
+and:
+
+#+begin_src bash
 dev/bin/verify-python3-import
 #+end_src
 
@@ -931,6 +939,12 @@ and:
 
 #+begin_src bash
 dev/bin/verify-python3-barmini-smoke
+#+end_src
+
+and:
+
+#+begin_src bash
+dev/bin/verify-python3-restart-smoke
 #+end_src
 
 and:
@@ -1285,6 +1299,49 @@ Observed result:
 
 - `constructed Simulation`
 - `advanced 1e-12`
+
+** Restart Smoke Milestone
+
+The M1 workflow matrix now also has an explicit restart/save-load smoke command
+built on top of `barmini`.
+
+The following helper succeeds:
+
+#+begin_src bash
+dev/bin/verify-python3-restart-smoke
+#+end_src
+
+Observed result:
+
+- `saved_time 1e-11`
+- `restarted_time 1e-11`
+- `copied_time 1e-11`
+- the canonical restart file `barmini_restart_py3_smoke-restart.npz` is created
+
+This verifies the practical restart path in three steps:
+
+- save restart data from a running `barmini` simulation;
+- restart the same simulation object from the canonical file;
+- create a fresh `barmini` simulation object and restart that from the same
+  saved state.
+
+** Aggregate M1 Verification Command
+
+The practical M1 witness can also be run as one command:
+
+#+begin_src bash
+dev/bin/verify-python3-m1
+#+end_src
+
+This wrapper runs the four manual M1 workflow witnesses in sequence:
+
+- import
+- `barmini` time integration
+- `barmini` restart/save-load
+- supplementary normal-modes smoke coverage
+
+This is intended as the simplest reproducible answer to "is M1 usable right
+now?" without requiring a full pytest run.
 
 ** Normal-Modes Smoke Milestone
 

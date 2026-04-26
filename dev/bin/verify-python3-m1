@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Run the practical M1 verification workflow for the Python 3 legacy-DOLFIN
+# transition stack.
+#
+# Usage:
+#   dev/bin/verify-python3-m1
+#
+# This wrapper keeps the M1 acceptance claim reproducible as one command rather
+# than a checklist spread across multiple notes. [Codex GPT-5.4]
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "==> verify-python3-import"
+"${script_dir}/verify-python3-import"
+
+echo
+echo "==> verify-python3-barmini-smoke"
+"${script_dir}/verify-python3-barmini-smoke"
+
+echo
+echo "==> verify-python3-restart-smoke"
+"${script_dir}/verify-python3-restart-smoke"
+
+echo
+echo "==> verify-python3-normal-modes-smoke"
+"${script_dir}/verify-python3-normal-modes-smoke"
