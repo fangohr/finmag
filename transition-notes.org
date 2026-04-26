@@ -1344,8 +1344,8 @@ Result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =4 warnings=
-- runtime: approximately =2027.32s=
+- =2 warnings=
+- runtime: approximately =1540.37s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1400,6 +1400,12 @@ Follow-up targeted verification after this baseline:
   =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py= now use masked
   =np.divide(..., where=...)= for relative-difference diagnostics, which
   removes warnings caused only by exact-zero reference values
+- =src/finmag/util/helpers.py::fnormalise()= now uses masked division for
+  zero vectors, preserving the historical result without emitting the old
+  invalid-divide warning
+- =test_domain_wall_profile= now suppresses the exploratory =sqrt(A / K1)=
+  warning emitted while =curve_fit()= probes unphysical intermediate
+  parameters, without changing the original fit behavior
 - the GitHub Actions =python3-core-suite= workflow already includes the full
   deprecated normal-modes test file, so this progress is covered by CI without
   further workflow changes
@@ -1408,11 +1414,8 @@ Follow-up targeted verification after this baseline:
 
 Remaining warnings in the current baseline:
 
-- =helpers.py::fnormalise= still emits an invalid-divide warning on zero input
 - one SciPy singular-matrix warning remains in
   =eigensolvers_test.py::test_eigensolvers[solver8-eigenproblem8]=
-- =test_1d_domain_wall_profile_uniaxial_anisotropy.py::test_domain_wall_profile=
-  still emits an invalid =sqrt(A / K1)= warning inside the fit function
 - SciPy =vode= still emits one "Excess work done on this call" warning in
   =test_robertson_scipy_transposed=
 

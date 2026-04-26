@@ -506,10 +506,14 @@ def fnormalise(arr, ignore_zero_vectors=False):
     a = a.reshape((3, -1))
     a_norm = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     if ignore_zero_vectors:
-        a_norm[np.where(a_norm == 0)] = 1.0
-    a /= a_norm
-    a = a.ravel()
-    return a
+        # Leave zero vectors untouched instead of dividing them by zero. [Codex GPT-5.4]
+        out = a.copy()
+    else:
+        # Match the historical NaN result for zero vectors, but without a warning. [Codex GPT-5.4]
+        out = np.empty_like(a)
+        out.fill(np.nan)
+    np.divide(a, a_norm, out=out, where=(a_norm != 0))
+    return out.ravel()
 
 
 def angle(v1, v2):

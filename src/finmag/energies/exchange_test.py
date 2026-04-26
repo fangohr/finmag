@@ -138,7 +138,7 @@ def test_exchange_field_supported_methods(fixt):
             method, H_default.reshape((3, -1)).mean(1),
             H.reshape((3, -1)).mean(1)))
 
-        # Some analytical reference entries are exactly zero; mask them in the diagnostic.
+        # Some analytical reference entries are exactly zero; mask them in the diagnostic. [Codex GPT-5.4]
         rel_diff = np.abs(np.divide(
             H - H_default, H_default,
             out=np.full_like(H, np.nan), where=(H_default != 0)))

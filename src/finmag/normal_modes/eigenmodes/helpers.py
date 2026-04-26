@@ -64,7 +64,7 @@ def compute_relative_error(A, M, omega, w):
     rhs = omega * w if (M == None) else omega * np.dot(M, w)
     denom = np.linalg.norm(omega * w)
     numer = np.linalg.norm(lhs - rhs)
-    # Zero-eigenvalue modes are valid here; avoid a warning for the exact 0/0 case.
+    # Zero-eigenvalue modes are valid here; avoid a warning for the exact 0/0 case. [Codex GPT-5.4]
     if denom == 0:
         rel_err = 0.0 if numer == 0 else np.inf
     else:

@@ -128,7 +128,7 @@ def test_third_node():
 
     ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
     diff = ref - computed
-    # The Nmag reference contains exact zeros, so mask those entries in the diagnostic.
+    # The Nmag reference contains exact zeros, so mask those entries in the diagnostic. [Codex GPT-5.4]
     rel_diff = np.abs(np.divide(
         diff, ref, out=np.full_like(diff, np.nan), where=(ref != 0)))
 

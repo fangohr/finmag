@@ -586,7 +586,7 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     a = np.absolute(w_flat)
     a = a / a.max()  # normalised amplitudes of the oscillations
 
-    # Zero-frequency modes are still useful to export; treat them as a static frame.
+    # Zero-frequency modes are still useful to export; treat them as a static frame. [Codex GPT-5.4]
     if np.isclose(freq, 0.0):
         t_end = 0.0
     else:

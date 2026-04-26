@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy
@@ -98,8 +99,14 @@ def test_domain_wall_profile(do_plot=False):
     except ImportError:
         pass
     else:
-        popt, pcov = scipy.optimize.curve_fit(
-            Mz_exact, x, mz, p0=(x0 * 1.1, A * 1.1, Ms * 1.1))
+        # `curve_fit` may probe unphysical intermediate A values while it [Codex GPT-5.4]
+        # searches; ignore the resulting exploratory sqrt warning here. [Codex GPT-5.4]
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", r"invalid value encountered in sqrt",
+                RuntimeWarning)
+            popt, pcov = scipy.optimize.curve_fit(
+                Mz_exact, x, mz, p0=(x0 * 1.1, A * 1.1, Ms * 1.1))
         print("popt=", popt)
 
         fittedx0, fittedA, fittedMs = popt
