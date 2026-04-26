@@ -1344,8 +1344,7 @@ Result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =2 warnings=
-- runtime: approximately =1540.37s=
+- runtime: approximately =1547.35s=
 
 The skip/xfail count is intentional at this stage:
 
@@ -1406,18 +1405,21 @@ Follow-up targeted verification after this baseline:
 - =test_domain_wall_profile= now suppresses the exploratory =sqrt(A / K1)=
   warning emitted while =curve_fit()= probes unphysical intermediate
   parameters, without changing the original fit behavior
+- =eigensolvers_test.py= now suppresses the SciPy sparse/Nanostrip
+  singular-matrix warning locally in the known shift-invert testcase, because
+  SciPy still returns valid eigenpairs there
+- =test_robertson_scipy_transposed= now asserts the expected SciPy/VODE
+  "Excess work done" warning explicitly instead of letting it leak into the
+  suite warning summary
 - the GitHub Actions =python3-core-suite= workflow already includes the full
   deprecated normal-modes test file, so this progress is covered by CI without
   further workflow changes
 - the current full rerun of =dev/bin/verify-python3-core-suite= confirms the
   post-cleanup baseline above
 
-Remaining warnings in the current baseline:
-
-- one SciPy singular-matrix warning remains in
-  =eigensolvers_test.py::test_eigensolvers[solver8-eigenproblem8]=
-- SciPy =vode= still emits one "Excess work done on this call" warning in
-  =test_robertson_scipy_transposed=
+The current pytest core-gate baseline is warning-clean. The old DVODE Fortran
+diagnostic still prints to stderr at process shutdown for the pathological
+Robertson/VODE case, but it is no longer a pytest warning.
 
 Remaining expected failures in the current baseline:
 

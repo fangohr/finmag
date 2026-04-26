@@ -388,7 +388,7 @@ Second meaningful milestone:
   - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
   - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 - latest full local verification of =dev/bin/verify-python3-core-suite=:
-  =502 passed, 14 skipped, 3 xfailed, 2 warnings= in the Python 3 transition
+  =502 passed, 14 skipped, 3 xfailed= in the Python 3 transition
   container
 - targeted follow-up after that full run added a positive regression test for
   weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
@@ -430,10 +430,15 @@ Second meaningful milestone:
   - uses =np.divide(..., where=...)= in the noisy relative-difference checks
     in =exchange_test.py= and =tests/nmag/exchange_1d/test_exchange_1d.py=
     so exact-zero reference values no longer create spurious warnings
-- latest full rerun leaves only two warnings in the active gate:
-  - one SciPy singular-matrix warning in =eigensolvers_test.py=
-  - one SciPy =vode= "Excess work done" warning in the stiff-ODE transposed
-    test
+- latest full rerun is now warning-clean at the pytest level:
+  - the SciPy sparse/Nanostrip singular-matrix warning is now suppressed
+    locally in =eigensolvers_test.py= because SciPy's shift-invert path still
+    returns valid eigenpairs for that testcase
+  - the transposed Robertson SciPy/VODE test now asserts the expected
+    "Excess work done" warning explicitly instead of leaking it into the suite
+    summary
+  - the legacy DVODE text block still prints to stderr at process shutdown, but
+    it is no longer reported as a pytest warning
 - the remaining Magpar comparison =xfail= cases are confirmed to fail because
   regenerated Netgen node arrays do not match the saved Magpar reference-node
   shapes, so these are reference-data/mesh-drift issues rather than Python 3
@@ -646,8 +651,7 @@ Observed result:
 - =502 passed=
 - =14 skipped=
 - =3 xfailed=
-- =2 warnings=
-- runtime approximately =1540s=
+- runtime approximately =1547s=
 
 This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with

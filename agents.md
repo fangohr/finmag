@@ -577,8 +577,8 @@ Python 3 transition path.
   text, `OVFStream` reads mixed ASCII/binary OVF files in binary mode, and
   `reduce` comes from `functools`
 - `dev/bin/verify-python3-core-suite` completed successfully in the transition
-  image with `502 passed, 14 skipped, 3 xfailed, 2 warnings` in
-  approximately 1540 seconds; this is the current broad Python 3 regression
+  image with `502 passed, 14 skipped, 3 xfailed` in
+  approximately 1547 seconds; this is the current broad Python 3 regression
   baseline
 - targeted follow-up after that full run:
   - restored the historical weak-tolerance demag `xfail` for later manual
@@ -623,6 +623,12 @@ Python 3 transition path.
   - suppressed the exploratory `sqrt(A / K1)` warning inside the
     domain-wall-profile fit, while keeping the original `curve_fit` path and
     assertions unchanged
+  - suppressed the SciPy sparse/Nanostrip singular-matrix warning locally in
+    `eigensolvers_test.py`, because the shift-invert solver path still returns
+    valid eigenpairs for that testcase
+  - changed the transposed Robertson SciPy/VODE test to assert the expected
+    "Excess work done" warning explicitly instead of leaking it into the suite
+    warning summary
   - verified the remaining Magpar xfails fail on node-array shape mismatch
     before any field tolerance comparison; this points to reference-mesh drift
     from regenerated Netgen meshes rather than a Python 3 runtime bug
@@ -632,10 +638,9 @@ Python 3 transition path.
   - the latest full rerun confirms the updated baseline above; the remaining
     three xfails are two Magpar mesh-drift cases and the intentionally
     preserved weak-tolerance demag historical xfail
-  - the remaining warnings are now down to two real SciPy/solver warnings:
-    one singular-matrix warning in `eigensolvers_test.py`, and one SciPy
-    `vode` "Excess work done" warning in the transposed Robertson stiff-ODE
-    test
+  - the pytest core-suite warning summary is now clean; the remaining oddity is
+    only the old DVODE Fortran stderr diagnostic from the pathological
+    Robertson/VODE case
 
 ## Native Build Findings
 

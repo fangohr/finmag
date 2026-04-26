@@ -8,6 +8,7 @@
 
 import unittest
 import numpy as np
+import warnings
 import finmag.native.sundials as sundials
 from finmag.util.ode import scipy_to_cvode_jtimes, scipy_to_cvode_rhs
 from . import robertson_ode
@@ -38,7 +39,12 @@ class SundialsStiffOdeTests(unittest.TestCase):
             robertson_rhs, jac=lambda t, y: robertson_jacobean(t, y).T)
         integrator.set_initial_value(ROBERTSON_Y0)
         integrator.set_integrator("vode", method="bdf", nsteps=5000)
-        integrator.integrate(1e8)
+        # The transposed Jacobian is intentionally pathological here; SciPy
+        # warns before exhausting the configured work budget. [Codex GPT-5.4]
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            integrator.integrate(1e8)
+        self.assertTrue(any("Excess work done" in str(w.message) for w in caught))
         self.assertGreater(robertson_ode.n_rhs_evals, 5000)
 
     def test_robertson_sundials(self):

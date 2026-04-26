@@ -2,6 +2,7 @@ from __future__ import division
 import pytest
 import numpy as np
 import itertools
+import warnings
 from .eigensolvers import *
 from .eigenproblems import *
 from .helpers import normalise_rows
@@ -203,6 +204,19 @@ def fresh_solver_instance(solver):
     return solver
 
 
+def solve_eigenproblem_for_test(eigenproblem, solver, N, dtype, num):
+    if isinstance(solver, ScipySparseLinalgEigs) and \
+            isinstance(eigenproblem, Nanostrip1dEigenproblemFinmag):
+        # ARPACK's shift-invert path may factor through a singular intermediate
+        # matrix here, but still returns valid eigenpairs for this testcase. [Codex GPT-5.4]
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", r".*Singular matrix.*",
+                RuntimeWarning)
+            return eigenproblem.solve(solver, N, dtype=dtype, num=num)
+    return eigenproblem.solve(solver, N, dtype=dtype, num=num)
+
+
 # TODO: Currently we simply skip these and call pytest.xfail directly.
 #       It would be better to actually execute them and wait for them
 #       to fail, so that the failures are confirmed. However, this
@@ -238,7 +252,8 @@ def test_eigensolvers(solver, eigenproblem):
                     eigenproblem.solve(case_solver, N, dtype=dtype, num=40)
                 continue
 
-            omega, w, _ = eigenproblem.solve(case_solver, N, dtype=dtype, num=40)
+            omega, w, _ = solve_eigenproblem_for_test(
+                eigenproblem, case_solver, N, dtype=dtype, num=40)
             print("[DDD] len(omega): {}".format(len(omega)))
             try:
                 if isinstance(eigenproblem, Nanostrip1dEigenproblemFinmag):
