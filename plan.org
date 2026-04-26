@@ -762,6 +762,11 @@ This wrapper runs, in order:
 It is intended as the one-command answer to the question "is the Python 3
 legacy-stack M1 workflow usable right now?"
 
+The wrapper now runs the entire M1 workflow in a single container session and
+single writable checkout copy, so it only pays one native rebuild and is
+efficient enough to back a dedicated CI job. The individual smoke helpers
+remain available for targeted manual checks.
+
 *** Current Verified Normal-Modes Smoke Command
 
 The normal-modes path is kept as supplementary M1 coverage, not as the primary

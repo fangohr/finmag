@@ -1,0 +1,19 @@
+name: python3-m1
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python3-m1:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Verify Python 3 M1 workflow witness
+      run: |
+        # Keep this job focused on the practical M1 usability witness, not the full regression gate. [Codex GPT-5.4]
+        dev/bin/verify-python3-m1
