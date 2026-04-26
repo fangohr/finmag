@@ -221,6 +221,123 @@ Aim first for:
 That suggests the packaging track and the M3 legacy-FEniCS-2019 track may be
 partly coupled in practice.
 
+*** Proposed first `pixi` target
+
+The first `pixi` attempt should be intentionally narrow.
+
+Recommended target environment contents:
+
+- `python`
+- `pip`
+- `setuptools`
+- `cython`
+- `numpy`
+- `scipy`
+- `matplotlib`
+- `pytest`
+- `fenics = 2019.1.0`
+- `petsc4py`
+- `slepc4py`
+- `gmsh`
+- `netgen`
+
+Recommended initial omissions:
+
+- `oommf`
+- `paraview`
+- GUI/rendering support
+- `nsim`
+- Mercurial / `hg`
+- any attempt to preserve exact `dolfin 2017.1.0` package parity
+
+Recommended first acceptance checks for M2:
+
+1. `pixi run import-finmag`
+2. `pixi run barmini-construct`
+3. `pixi run barmini-smoke`
+
+Recommended interpretation of the outcomes:
+
+- if step 1 fails, the blocker is packaging/import-level and M2 should stay
+  focused there;
+- if steps 1 and 2 pass but step 3 fails, M2 has still made real progress,
+  but the native-build/runtime path needs a second pass;
+- if all three pass, M2 has a credible first user-facing environment even
+  before optional tools are layered in.
+
+*** Suggested next M2 deliverables
+
+In order:
+
+1. add a first `pixi.toml` to the repo, even if incomplete;
+2. add a minimal packaging/install story for Finmag itself;
+3. document the exact `pixi` commands for environment creation and the first
+   acceptance checks above;
+4. only then broaden to optional tools such as OOMMF or visualization.
+
+*** First `pixi.toml` draft
+
+The repository now contains:
+
+- `pixi.toml`
+
+This first draft is intentionally a packaging probe, not a claim of immediate
+success. It currently targets:
+
+- conda-forge
+- `linux-64`
+- `python 3.11`
+- `fenics 2019.1.0`
+- `petsc4py`
+- `slepc4py`
+- `gmsh`
+- `netgen`
+- the standard scientific Python stack needed by the current Finmag code
+
+The initial tasks in that file mirror the proposed first M2 acceptance checks:
+
+- `pixi run import-finmag`
+- `pixi run barmini-construct`
+- `pixi run barmini-smoke`
+
+The tasks currently rely on:
+
+- `PYTHONPATH=src`
+
+rather than a real package installation, because Finmag still lacks modern
+top-level packaging metadata. That is acceptable for the first probe, but it
+is not the final M2 install story.
+
+*** Verified first-pass `pixi` status
+
+The current verified position is:
+
+- `pixi run import-finmag` works against conda-forge `fenics 2019.1.0`
+- `pixi run barmini-construct` works with the full default
+  `finmag.example.barmini()` setup
+- `pixi run barmini-smoke` works through `run_until(1e-12)`
+- the verified smoke path uses:
+  - full default `barmini`, including FK demag
+  - `integrator_backend='scipy'`
+
+The `pixi.toml` tasks `barmini-construct` and `barmini-smoke` have been
+aligned to this stronger verified workflow.
+
+*** Current `pixi` blocker beyond the reduced workflow
+
+The biggest remaining runtime gap for M2 is now the native Sundials backend.
+
+- the SciPy backend is sufficient for the current first-pass smoke run
+- the native Sundials extension is still intentionally deferred in the pixi
+  build, because its SUNDIALS 7 API port is a separate migration job
+
+The FK demag path itself is no longer the main blocker:
+
+- a new array-based native BEM entry point now bypasses the old
+  `BoundaryMesh -> std::shared_ptr` Boost.Python conversion assumption
+- this is enough for the default `barmini` construction and short SciPy-backed
+  run under `fenics 2019.1.0`
+
 ** Current Reference Environment
 
 Reference container:

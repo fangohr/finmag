@@ -18,6 +18,12 @@ logger = logging.getLogger(name='finmag')
 #from finmag.native import cvode_petsc, llg_petsc
 
 
+def _dolfin_vector_array(vector):
+    if hasattr(vector, "get_local"):
+        return vector.get_local()
+    return vector.array()
+
+
 class LLG(object):
 
     """
@@ -131,17 +137,17 @@ class LLG(object):
         #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
         self._Ms_dg.name = 'Saturation magnetisation'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        Ms = df.assemble(
-            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+        Ms = df.assemble(self._Ms_dg.f * df.TestFunction(self.S1) * df.dx)
+        Ms = _dolfin_vector_array(Ms) / _dolfin_vector_array(self.volumes)
         self._Ms = Ms.copy()
-        self.Ms_av = np.average(self._Ms_dg.vector().array())
+        self.Ms_av = np.average(_dolfin_vector_array(self._Ms_dg.vector()))
 
     @property
     def M(self):
         """The magnetisation, with length Ms."""
         # FIXME:error here
         m = self.m.view().reshape((3, -1))
-        Ms = self.Ms.vector().array() if isinstance(
+        Ms = _dolfin_vector_array(self.Ms.vector()) if isinstance(
             self.Ms, df.Function) else self.Ms
         M = Ms * m
         return M.ravel()
@@ -180,7 +186,7 @@ class LLG(object):
     @property
     def dmdt(self):
         """ dmdt values for all mesh nodes """
-        return self._dmdt.vector().array()
+        return _dolfin_vector_array(self._dmdt.vector())
 
     @property
     def sundials_m(self):
@@ -223,7 +229,9 @@ class LLG(object):
         reasons and because the attribute m doesn't normalise the vector.
 
         """
-        m0 = helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector().array()[self.v2d_xxx]
+        m0 = _dolfin_vector_array(
+            helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector()
+        )[self.v2d_xxx]
 
         if np.any(np.isnan(m0)):
             raise ValueError("Attempting to initialise m with NaN(s)")
@@ -251,7 +259,7 @@ class LLG(object):
         m.shape = (3, -1)
 
         dmdt = np.zeros(m.shape)
-        alpha__ = self.alpha.vector().array()[self.v2d_scale]
+        alpha__ = _dolfin_vector_array(self.alpha.vector())[self.v2d_scale]
         # Calculate dm/dt
         if self.do_slonczewski:
             if self.fun_slonczewski_time_update != None:
@@ -267,7 +275,7 @@ class LLG(object):
             if self.fun_zhangli_time_update != None:
                 J_profile = self.fun_zhangli_time_update(t)
                 self._J = helpers.vector_valued_function(J_profile, self.S3)
-                self.J = self._J.vector().array()
+                self.J = _dolfin_vector_array(self._J.vector())
                 self.compute_gradient_matrix()
 
             H_gradm = self.compute_gradient_field()
@@ -433,7 +441,7 @@ class LLG(object):
         char_time = 0.1 / self.c
         Heff2 = self.effective_field.H_eff[self.v2d_xxx]
         native_llg.calc_llg_jtimes(m, Heff2.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
-                                   self.alpha.vector().array()[self.v2d_scale], char_time, self.do_precession, self.pins)
+                                   _dolfin_vector_array(self.alpha.vector())[self.v2d_scale], char_time, self.do_precession, self.pins)
         J_mp.shape = (-1, )
         m.shape = (-1,)
         mp.shape = (-1,)
@@ -490,7 +498,7 @@ class LLG(object):
             func = df.Function(self.S1)
             func.assign(df.Constant(J))
             J = func
-        self.J = J.vector().array()
+        self.J = _dolfin_vector_array(J.vector())
         assert P >= 0.0 and P <= 1.0
         self.P = P
         self.d = d
@@ -498,7 +506,7 @@ class LLG(object):
         polarisation.assign(df.Constant((p)))
         # we use fnormalise to ensure that p has unit length
         self.p = helpers.fnormalise(
-            polarisation.vector().array()).reshape((3, -1))
+            _dolfin_vector_array(polarisation.vector())).reshape((3, -1))
 
     def compute_gradient_matrix(self):
         """
@@ -530,7 +538,7 @@ class LLG(object):
 
         self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
 
-        return self.H_gradm.array() / self.nodal_volume_S3
+        return _dolfin_vector_array(self.H_gradm) / self.nodal_volume_S3
 
     def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
         """
@@ -546,7 +554,7 @@ class LLG(object):
         self.do_zhangli = True
         self.fun_zhangli_time_update = with_time_update
         self._J = helpers.vector_valued_function(J_profile, self.S3)
-        self.J = self._J.vector().array()
+        self.J = _dolfin_vector_array(self._J.vector())
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
 

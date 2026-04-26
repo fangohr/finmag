@@ -1,0 +1,35 @@
+[workspace]
+name = "finmag"
+version = "0.1.0"
+description = "First-pass pixi environment for the Finmag Python 3 transition"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = "3.11.*"
+pip = "*"
+setuptools = "*"
+cython = "*"
+cxx-compiler = "*"
+make = "*"
+numpy = "*"
+scipy = "*"
+matplotlib = "*"
+pytest = "*"
+fenics = "2019.1.0.*"
+petsc4py = "*"
+slepc4py = "*"
+sundials = "*"
+boost-cpp = "*"
+libboost-python-devel = "*"
+gmsh = "*"
+netgen = "*"
+
+[tasks]
+# This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
+# to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]
+import-finmag = "PYTHONPATH=src python -c \"import finmag; print(finmag)\""
+barmini-construct = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); print(sim.__class__.__name__)\""
+# The first verified pixi run path uses the SciPy backend because the native
+# Sundials extension is still a separate migration step. [Codex GPT-5.4]
+barmini-smoke = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); sim.integrator_backend = 'scipy'; sim.run_until(1e-12); print(sim.t)\""

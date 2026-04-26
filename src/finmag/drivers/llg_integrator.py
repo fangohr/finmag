@@ -1,6 +1,11 @@
 import logging
 from finmag.field import Field
-from finmag.drivers.sundials_integrator import SundialsIntegrator
+try:
+    from finmag.drivers.sundials_integrator import SundialsIntegrator
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = None
+except Exception as error:
+    SundialsIntegrator = None
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = error
 try:
     from finmag.drivers.scipy_integrator import ScipyIntegrator
     SCIPY_INTEGRATOR_IMPORT_ERROR = None
@@ -34,6 +39,13 @@ def llg_integrator(llg, m0, backend="sundials", **kwargs):
             )
         return ScipyIntegrator(llg, m0, **kwargs)
     elif backend == "sundials":
+        if SundialsIntegrator is None:
+            # The pixi probe allows SciPy-backed stepping before the native
+            # Sundials extension is ported to the newer conda-forge stack. [Codex GPT-5.4]
+            raise ImportError(
+                "The 'sundials' integrator backend is not available in this "
+                "environment: {}".format(SUNDIALS_INTEGRATOR_IMPORT_ERROR)
+            )
         return SundialsIntegrator(llg, m0.get_ordered_numpy_array_xxx(), **kwargs)
     else:
         raise ValueError("backend must be either scipy or sundials")

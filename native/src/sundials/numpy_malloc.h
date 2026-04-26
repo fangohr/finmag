@@ -12,9 +12,44 @@
 #define __FINMAG_UTIL_SUNDIALS_NUMPY_MALLOC_H
 
 #include "util/np_array.h"
+#include <sundials/sundials_config.h>
 #include <nvector/nvector_serial.h>
+#if SUNDIALS_VERSION_MAJOR >= 7
+#include <sundials/sundials_context.h>
+#endif
 
 namespace finmag { namespace sundials {
+    namespace detail {
+#if SUNDIALS_VERSION_MAJOR >= 7
+        inline SUNContext default_suncontext() {
+            static SUNContext sunctx = []() {
+                SUNContext ctx = NULL;
+                if (SUNContext_Create(SUN_COMM_NULL, &ctx) != SUN_SUCCESS) {
+                    throw std::runtime_error("SUNContext_Create failed");
+                }
+                return ctx;
+            }();
+            return sunctx;
+        }
+
+        inline N_Vector new_serial_nvector(sunindextype len) {
+            return N_VNew_Serial(len, default_suncontext());
+        }
+
+        inline N_Vector make_serial_nvector(sunindextype len, sunrealtype *data) {
+            return N_VMake_Serial(len, data, default_suncontext());
+        }
+#else
+        inline N_Vector new_serial_nvector(long int len) {
+            return N_VNew_Serial(len);
+        }
+
+        inline N_Vector make_serial_nvector(long int len, realtype *data) {
+            return N_VMake_Serial(len, data);
+        }
+#endif
+    }
+
     void register_numpy_malloc();
 
     np_array<double> nvector_to_array(N_Vector p);

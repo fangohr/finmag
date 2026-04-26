@@ -141,7 +141,12 @@ def get_debian_package_version(pkg_name):
 
 
 def get_version_sundials():
-    return finmag.native.sundials.get_sundials_version()
+    try:
+        return finmag.native.sundials.get_sundials_version()
+    except Exception:
+        # The pixi probe currently keeps the native Sundials port optional
+        # while establishing a smaller Python 3 / FEniCS 2019 baseline. [Codex GPT-5.4]
+        return None
 
 
 def get_version_paraview():

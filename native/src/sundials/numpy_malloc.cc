@@ -133,7 +133,7 @@ namespace finmag { namespace sundials {
 
     array_nvector::array_nvector(const np_array<double> &arr): vec(0), arr(arr) {
         // Create an N_Vector using data as storage
-        vec = N_VMake_Serial(arr.size(), arr.data());
+        vec = detail::make_serial_nvector(arr.size(), arr.data());
         if (!vec) throw std::runtime_error("N_VMake_Serial returned NULL");
     }
 

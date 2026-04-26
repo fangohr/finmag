@@ -27,6 +27,12 @@ except Exception:
 
 log = logging.getLogger(name="finmag")
 
+
+def _dolfin_vector_array(vector):
+    if hasattr(vector, "get_local"):
+        return vector.get_local()
+    return vector.array()
+
 try:
     basestring
 except NameError:
@@ -334,20 +340,20 @@ class Field(object):
         from the half-open interval `vrange` (default: vrange=[-1, 1)).
 
         """
-        shape = self.f.vector().array().shape
+        shape = _dolfin_vector_array(self.f.vector()).shape
         a, b = vrange
         vals = np.random.random_sample(shape) * float(b - a) + a
         self.set(vals)
 
     def as_array(self):
-        return self.f.vector().array()
+        return _dolfin_vector_array(self.f.vector())
 
     def as_vector(self):
         return self.f.vector()
 
     def get_numpy_array_debug(self):
         """ONLY for debugging"""
-        return self.f.vector().array()
+        return _dolfin_vector_array(self.f.vector())
 
     def is_scalar_field(self):
         """
@@ -434,7 +440,7 @@ class Field(object):
             # Function values are defined at nodes.
             coords = self.functionspace.mesh().coordinates()
             num_nodes = self.functionspace.mesh().num_vertices()
-            f_array = self.f.vector().array()  # numpy array
+            f_array = _dolfin_vector_array(self.f.vector())  # numpy array
             vtd_map = df.vertex_to_dof_map(self.functionspace)
 
             value_dim = self.value_dim()
@@ -559,8 +565,8 @@ class Field(object):
             raise TypeError("Argument `other` must be of type'Field'. "
                             "Got: {} (type {}).".format(other, type(other)))
 
-        a = other.f.vector().array()
-        b = self.f.vector().array()
+        a = _dolfin_vector_array(other.f.vector())
+        b = _dolfin_vector_array(self.f.vector())
 
         return np.allclose(a, b, rtol=rtol, atol=atol)
 
@@ -670,7 +676,7 @@ class Field(object):
 
         """
         dofmap = df.vertex_to_dof_map(self.functionspace)
-        reordered = self.f.vector().array()[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
+        reordered = _dolfin_vector_array(self.f.vector())[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
         vectors = reordered.reshape((3, -1))  # [[x1, y1, z1], ..., [xn, yn, zn]]
         lengths = np.sqrt(np.add.reduce(vectors * vectors, axis=1))
         normalised = np.dot(vectors.T, np.diag(1 / lengths)).T.ravel()

@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_array_to_nvector_and_back)
 
 BOOST_AUTO_TEST_CASE(test_nvector_to_array)
 {
-    N_Vector vec = N_VNew_Serial(N);
+    N_Vector vec = finmag::sundials::detail::new_serial_nvector(N);
     np_array<double> arr = finmag::sundials::nvector_to_array(vec);
     // assign to numpy array
     arr.data()[0] = 3.14;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(test_nvector_to_array)
 
 BOOST_AUTO_TEST_CASE(test_nvector_to_array_object)
 {
-    N_Vector vec = N_VNew_Serial(N);
+    N_Vector vec = finmag::sundials::detail::new_serial_nvector(N);
     bp::object obj = finmag::sundials::nvector_to_array_object(vec);
     np_array<double> arr = bp::extract<np_array<double> >(obj);
     // assign to numpy array

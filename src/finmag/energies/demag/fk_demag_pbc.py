@@ -11,9 +11,16 @@ a template for other techniques like the GCR.
 import logging
 import numpy as np
 import dolfin as df
-from finmag.native.treecode_bem import compute_solid_angle_single
-from finmag.native.treecode_bem import compute_boundary_element
-from finmag.native.treecode_bem import build_boundary_matrix
+try:
+    from finmag.native.treecode_bem import compute_solid_angle_single
+    from finmag.native.treecode_bem import compute_boundary_element
+    from finmag.native.treecode_bem import build_boundary_matrix
+    TREECODE_BEM_IMPORT_ERROR = None
+except Exception as error:
+    compute_solid_angle_single = None
+    compute_boundary_element = None
+    build_boundary_matrix = None
+    TREECODE_BEM_IMPORT_ERROR = error
 
 logger = logging.getLogger('finmag')
 
@@ -75,6 +82,13 @@ class MacroGeometry(object):
 class BMatrixPBC(object):
 
     def __init__(self, mesh, Ts=[(0., 0, 0)]):
+        if TREECODE_BEM_IMPORT_ERROR is not None:
+            # The first pixi milestone keeps treecode/PBC demag optional while
+            # establishing the smaller FK demag baseline. [Codex GPT-5.4]
+            raise ImportError(
+                "treecode_bem support is not available in this environment: "
+                "{}".format(TREECODE_BEM_IMPORT_ERROR)
+            )
         self.mesh = mesh
         self.bmesh = df.BoundaryMesh(self.mesh, 'exterior', False)
         self.b2g_map = self.bmesh.entity_map(0).array()

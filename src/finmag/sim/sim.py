@@ -30,7 +30,12 @@ from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
-from finmag.drivers.sundials_integrator import SundialsIntegrator
+try:
+    from finmag.drivers.sundials_integrator import SundialsIntegrator
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = None
+except Exception as error:
+    SundialsIntegrator = None
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = error
 from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
@@ -39,6 +44,20 @@ from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotr
 #from finmag.native import cvode_petsc, llg_petsc
 
 log = logging.getLogger(name="finmag")
+
+
+def _dolfin_mpi_comm_world():
+    if hasattr(df, "mpi_comm_world"):
+        return df.mpi_comm_world()
+    return df.MPI.comm_world
+
+
+def _dolfin_cell_function(value_type, mesh):
+    if hasattr(df, "CellFunction"):
+        return df.CellFunction(value_type, mesh)
+    if value_type == "uint":
+        value_type = "size_t"
+    return df.MeshFunction(value_type, mesh, mesh.topology().dim())
 
 
 class Simulation(object):
@@ -127,7 +146,7 @@ class Simulation(object):
         #log.debug("__init__:sim-object '{}' refcount 32={}".format(self.name, sys.getrefcount(self)))
 
         log.info("Creating Sim object name='{}', instance_id={} (rank={}/{}).".format(
-            self.name, self.instance_id, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
+            self.name, self.instance_id, df.MPI.rank(_dolfin_mpi_comm_world()), df.MPI.size(_dolfin_mpi_comm_world())))
         log.debug("   Total number of Sim objects in this session: {}".format(self.instances_alive_count()))
 
         log.info(mesh)
@@ -192,7 +211,7 @@ class Simulation(object):
         self.scheduler = scheduler.Scheduler()
         self.callbacks_at_scheduler_events = []
 
-        self.domains = df.CellFunction("uint", self.mesh)
+        self.domains = _dolfin_cell_function("uint", self.mesh)
         self.domains.set_all(0)
         self.region_id = 0
 
@@ -754,6 +773,12 @@ class Simulation(object):
                     "The next line has been deactivated - fix to proceed with parallel")
                 #self._integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
             elif self.kernel == 'llg_stt':
+                if SundialsIntegrator is None:
+                    raise ImportError(
+                        "The 'sundials' integrator backend is required for "
+                        "llg_stt but is not available in this environment: "
+                        "{}".format(SUNDIALS_INTEGRATOR_IMPORT_ERROR)
+                    )
                 self._integrator = SundialsIntegrator(
                     self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
@@ -1314,7 +1339,7 @@ class Simulation(object):
 
         # Create the CellFunction which marks the different mesh regions with
         # integers
-        self.region_markers = df.CellFunction('size_t', self.mesh)
+        self.region_markers = _dolfin_cell_function('size_t', self.mesh)
         for region_id, i in self.region_ids.items():
             class Domain(df.SubDomain):
 
@@ -1449,7 +1474,11 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
+        mg = None
+        if any(value is not None for value in (nx, ny, spacing_x, spacing_y)):
+            # A plain demag setup does not need the PBC/macrogeometry path;
+            # keep that optional in the first pixi milestone. [Codex GPT-5.4]
+            mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
         demag = Demag(solver=demag_solver, macrogeometry=mg,
                       solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)

@@ -181,6 +181,66 @@ namespace finmag { namespace llg {
         return bp::make_tuple(bem, b2g_map);
     }
 
+    // DOLFIN 2019 exposes BoundaryMesh through a Python binding that no longer
+    // round-trips through the legacy shared_ptr converter, so provide an
+    // equivalent array-based entry point for the Python demag path. [Codex GPT-5.4]
+    template<bool ComputeDoubleLayerPotential>
+    bp::object compute_bem_from_arrays(np_array<double> coords, np_array<long> cells, np_array<long> b2g_input) {
+        coords.check_ndim(2, "compute_bem_from_arrays: coords");
+        cells.check_ndim(2, "compute_bem_from_arrays: cells");
+        b2g_input.check_ndim(1, "compute_bem_from_arrays: b2g_map");
+
+        if (coords.dim()[1] != 3) {
+            throw std::invalid_argument("compute_bem_from_arrays: coords must have shape (n, 3)");
+        }
+        if (cells.dim()[1] != 3) {
+            throw std::invalid_argument("compute_bem_from_arrays: cells must have shape (m, 3)");
+        }
+        if (coords.dim()[0] != b2g_input.dim()[0]) {
+            throw std::invalid_argument("compute_bem_from_arrays: coords and b2g_map lengths must agree");
+        }
+
+        int n = coords.dim()[0];
+        int n_cells = cells.dim()[0];
+        np_array<double> bem(n, n);
+        np_array<int> b2g_map(n);
+        for (int i = 0; i < n; i++) {
+            b2g_map.data()[i] = static_cast<int>(b2g_input.data()[i]);
+        }
+
+        #pragma omp parallel for schedule(guided)
+        for (int i = 0; i < n; i++) {
+            vector::vector3 R(coords(i, 0)[0], coords(i, 1)[0], coords(i, 2)[0]);
+            double *bem_row = bem(i);
+
+            for (int c = 0; c < n_cells; c++) {
+                int j_1 = static_cast<int>(cells(c, 0)[0]);
+                int j_2 = static_cast<int>(cells(c, 1)[0]);
+                int j_3 = static_cast<int>(cells(c, 2)[0]);
+
+                vector::vector3 R1(coords(j_1, 0)[0], coords(j_1, 1)[0], coords(j_1, 2)[0]);
+                vector::vector3 R2(coords(j_2, 0)[0], coords(j_2, 1)[0], coords(j_2, 2)[0]);
+                vector::vector3 R3(coords(j_3, 0)[0], coords(j_3, 1)[0], coords(j_3, 2)[0]);
+
+                std::pair<vector::vector3, double> L = lindholm_formula<ComputeDoubleLayerPotential>(R, R1, R2, R3);
+                double factor = ComputeDoubleLayerPotential ? 1 : -1;
+                bem_row[j_1] += factor * L.first[0];
+                bem_row[j_2] += factor * L.first[1];
+                bem_row[j_3] += factor * L.first[2];
+
+                if (ComputeDoubleLayerPotential) {
+                    bem_row[i] += L.second * (1. / (4. * M_PI));
+                }
+            }
+        }
+
+        if (ComputeDoubleLayerPotential) {
+            for (int i = 0; i < n; i++) bem(i)[i] -= 1.;
+        }
+
+        return bp::make_tuple(bem, b2g_map);
+    }
+
     // This function is only used for testing; use compute_bem to compute the BEM itself instead
     // If ComputeDoubleLayerPotential == true, computes the double layer potential
     // If ComputeDoubleLayerPotential == false, computes the single layer potential
@@ -204,6 +264,8 @@ namespace finmag { namespace llg {
     void register_bem() {
         bp::def("compute_bem_fk", &compute_bem<true>);
         bp::def("compute_bem_gcr", &compute_bem<false>);
+        bp::def("compute_bem_fk_from_arrays", &compute_bem_from_arrays<true>);
+        bp::def("compute_bem_gcr_from_arrays", &compute_bem_from_arrays<false>);
         bp::def("compute_lindholm_L", &compute_lindholm_formula<true>);
         bp::def("compute_lindholm_K", &compute_lindholm_formula<false>);
     }

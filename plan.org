@@ -115,6 +115,23 @@ Immediate packaging note:
 - M2 therefore needs both dependency capture and a real packaging decision for
   Finmag itself.
 
+First practical M2 target:
+
+- create a minimal =pixi= environment around legacy conda-forge
+  =fenics 2019.1.0= rather than trying to replicate the exact
+  Debian-snapshot =dolfin 2017.1.0= stack;
+- there is now a first draft =pixi.toml= in the repo to make that probe
+  concrete;
+- keep the first acceptance checks small:
+  - import =finmag=
+  - construct =finmag.example.barmini()=
+  - advance =barmini= with time integration
+  - the currently verified first pass uses the full default =barmini= setup,
+    including FK demag, but runs with the SciPy backend rather than the native
+    Sundials backend
+- treat OOMMF, Paraview, Netgen reliability, =nsim=, Mercurial, and other
+  optional tools as explicit follow-up layers rather than first-pass blockers.
+
 *** Milestone M3: Legacy DOLFIN 2019.1.0 Migration
 
 Goal:

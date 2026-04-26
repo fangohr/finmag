@@ -13,7 +13,7 @@ import dolfin as df
 import logging
 from aeon import timer, Timer
 from finmag.util.consts import mu0
-from finmag.native.llg import compute_bem_fk
+from finmag.native.llg import compute_bem_fk, compute_bem_fk_from_arrays
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers, configuration
 from finmag.field import Field
@@ -22,6 +22,12 @@ from .fk_demag_pbc import BMatrixPBC
 
 logger = logging.getLogger('finmag')
 fk_timer = Timer()
+
+
+def _dolfin_vector_array(vector):
+    if hasattr(vector, "get_local"):
+        return vector.get_local()
+    return vector.array()
 
 
 class FKDemag(object):
@@ -198,8 +204,22 @@ class FKDemag(object):
                     self._b2g_map = np.array(pbc.b2g_map, dtype=np.int)
                     self._bem = pbc.bm
                 else:
-                    self._bem, self._b2g_map = compute_bem_fk(
-                        df.BoundaryMesh(self.m.mesh(), 'exterior', False))
+                    boundary_mesh = df.BoundaryMesh(self.m.mesh(), 'exterior', False)
+                    try:
+                        self._bem, self._b2g_map = compute_bem_fk(boundary_mesh)
+                    except TypeError:
+                        coords = np.asarray(boundary_mesh.coordinates(), dtype=np.float64)
+                        cells = np.asarray(boundary_mesh.cells(), dtype=np.int64)
+                        entity_map = boundary_mesh.entity_map(0)
+                        if hasattr(entity_map, "array"):
+                            b2g_map = entity_map.array()
+                        else:
+                            b2g_map = entity_map.values()
+                        # DOLFIN 2019 no longer converts BoundaryMesh through the
+                        # old shared_ptr Boost.Python path, so fall back to an
+                        # array-based native BEM entry point. [Codex GPT-5.4]
+                        self._bem, self._b2g_map = compute_bem_fk_from_arrays(
+                            coords, cells, np.asarray(b2g_map, dtype=np.int64))
         logger.debug("Boundary element matrix uses {:.2f} MB of memory.".format(
             self._bem.nbytes / 1024. ** 2))
         # solution of inhomogeneous Neumann problem
@@ -298,7 +318,7 @@ class FKDemag(object):
 
         """
         self._H_func.vector()[:] = self.compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * \
+        nodal_E = _dolfin_vector_array(df.assemble(self._nodal_E)) * \
             self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
@@ -370,7 +390,7 @@ class FKDemag(object):
         # operations are symmetric (multiplying by volume, dividing by volume)
         # we don't have to care for the units, i.e. unit_length.
         b = df.dot(self._test3, df.Constant((1, 1, 1))) * df.dx
-        self._nodal_volumes_S3_no_units = df.assemble(b).array()
+        self._nodal_volumes_S3_no_units = _dolfin_vector_array(df.assemble(b))
 
     @fk_timer.method
     def _compute_gradient(self):
@@ -391,4 +411,4 @@ class FKDemag(object):
 
         """
         H = self._gradient * self._phi.vector()
-        return H.array() / self._nodal_volumes_S3_no_units
+        return _dolfin_vector_array(H) / self._nodal_volumes_S3_no_units

@@ -71,7 +71,7 @@ if display_module_versions == "True":
         "Python", _version_or_unknown(versions.get_version_python())))
     try:
         sundials_version = versions.get_version_sundials()
-    except NotImplementedError:
+    except Exception:
         sundials_version = '<unknown>'
     logger.debug(double_column.format(
         "Paraview", _version_or_unknown(versions.get_version_paraview()),
