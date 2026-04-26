@@ -914,6 +914,7 @@ The repository now contains:
 
 - `dev/bin/verify-python3-import`
 - `dev/bin/verify-python3-barmini-smoke`
+- `dev/bin/verify-python3-normal-modes-smoke`
 
 This helper:
 
@@ -930,6 +931,12 @@ and:
 
 #+begin_src bash
 dev/bin/verify-python3-barmini-smoke
+#+end_src
+
+and:
+
+#+begin_src bash
+dev/bin/verify-python3-normal-modes-smoke
 #+end_src
 
 ** Scope-Limiting Import Decisions
@@ -1254,6 +1261,9 @@ The next concrete validation target is:
 
 The runtime milestone above has now been reached.
 
+This remains the primary practical smoke path for M1 because it exercises the
+time-integration workflow directly.
+
 The following command succeeds:
 
 #+begin_src bash
@@ -1275,6 +1285,30 @@ Observed result:
 
 - `constructed Simulation`
 - `advanced 1e-12`
+
+** Normal-Modes Smoke Milestone
+
+The M1 workflow matrix also has an explicit normal-modes smoke command, but it
+is supplementary rather than primary. For practical usability on the legacy
+stack, the =barmini= time-integration path is the more important smoke witness.
+
+The following helper succeeds:
+
+#+begin_src bash
+dev/bin/verify-python3-normal-modes-smoke
+#+end_src
+
+Observed result:
+
+- `constructed NormalModeSimulation`
+- `modes 2`
+- a finite printed `first_freq`
+- a small printed `first_rel_error`
+
+This smoke path is intentionally lightweight. It reuses the checked-in nanodisk
+mesh and relaxed restart state from `src/finmag/example/normal_modes/`, so it
+verifies the Python 3 normal-modes runtime without paying the cost of fresh
+mesh generation or relaxation.
 
 ** What Fixed The Runtime Regression
 

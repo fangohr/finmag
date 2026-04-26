@@ -45,9 +45,10 @@ are secondary unless they directly support one of those outcomes.
 Use the same small workflow matrix across milestones wherever practical:
 
 - =import finmag=
-- run =finmag.example.barmini(...)=
+- run =finmag.example.barmini(...)= as the primary smoke workflow
 - run one demag-containing simulation
-- run one restart/save-load workflow
+- run one restart/save-load workflow, with =barmini= remaining the preferred
+  practical witness where possible
 - run one normal-modes workflow
 - run the curated Python 3 core gate
 
@@ -691,6 +692,7 @@ For local verification there is now also:
 
 - =dev/bin/verify-python3-barmini-suite=
 - =dev/bin/verify-python3-minimal-suite=
+- =dev/bin/verify-python3-normal-modes-smoke=
 - =dev/bin/verify-python3-core-suite=
 
 Expected result:
@@ -699,7 +701,8 @@ Expected result:
 
 *** Current Verified Barmini Smoke Command
 
-The next milestone is now also verified:
+This remains the primary practical M1 smoke witness because it exercises the
+time-integration path directly:
 
 #+begin_src bash
 docker run --rm \
@@ -720,6 +723,25 @@ Expected result:
 
 - =constructed Simulation=
 - =advanced 1e-12=
+
+*** Current Verified Normal-Modes Smoke Command
+
+The normal-modes path is kept as supplementary M1 coverage, not as the primary
+smoke witness:
+
+#+begin_src bash
+dev/bin/verify-python3-normal-modes-smoke
+#+end_src
+
+Expected result:
+
+- =constructed NormalModeSimulation=
+- =modes 2=
+- a finite =first_freq= and small =first_rel_error=
+
+This smoke path uses the checked-in nanodisk mesh plus relaxed restart file, so
+it verifies the Python 3 normal-modes runtime without adding a fresh meshing or
+relaxation step.
 
 *** Current Limitations
 
