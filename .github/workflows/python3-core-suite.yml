@@ -21,6 +21,7 @@ jobs:
 
     - name: Verify Python 3 core transition suite, including OOMMF comparisons
       run: |
+        # Keep this explicit file list as the curated Python 3 transition gate. [Codex GPT-5.4]
         docker run --rm \
           -e OMPI_MCA_plm=isolated \
           -v "${GITHUB_WORKSPACE}:/repo:ro" \

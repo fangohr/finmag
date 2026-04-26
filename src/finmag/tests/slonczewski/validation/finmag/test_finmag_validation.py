@@ -18,6 +18,7 @@ def extract_magnetisation_dynamics():
 
 
 def test_against_nmag():
+    # Keep this as a cross-code validation anchor inside the Python 3 core gate. [Codex GPT-5.4]
     run_simulation()
 
     if not os.path.isfile(FINMAG_DYNAMICS_FILE):

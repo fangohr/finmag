@@ -13,6 +13,7 @@ logger.propagate = False
 from finmag.sim.sim import Simulation, sim_with
 from finmag.energies.demag import MacroGeometry
 try:
+    # Normal-mode imports are optional during the transition so plain `import finmag` stays usable. [Codex GPT-5.4]
     from finmag.sim.normal_mode_sim import (
         NormalModeSimulation,
         normal_mode_simulation,

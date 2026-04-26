@@ -23,6 +23,7 @@ def test_dmi_uses_unit_length_2dmesh():
 
     # unit_lengths 1e-9 and 1 are common, let's throw in an intermediate length
     # just to challenge the system a little:
+    # Keep the extra intermediate unit length here to catch scaling regressions, not just common cases. [Codex GPT-5.4]
     for unit_length in (1, 1e-4, 1e-9):
         radius = 200e-9 / unit_length
         maxh = 5e-9 / unit_length

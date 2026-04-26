@@ -21,6 +21,7 @@ BOX_TOLERANCE = 1e-10
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Mesh-generation regressions should skip cleanly when Netgen is unusable in the image. [Codex GPT-5.4]
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 

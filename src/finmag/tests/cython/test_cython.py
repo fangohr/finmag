@@ -11,6 +11,7 @@ import shutil
 
 import pytest
 
+# Accept Debian's `cython3` executable so this smoke test runs in the transition image. [Codex GPT-5.4]
 CYTHON = shutil.which("cython") or shutil.which("cython3")
 
 # Cython complains about this:

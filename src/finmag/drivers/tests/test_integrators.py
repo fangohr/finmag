@@ -18,6 +18,7 @@ END_TIME = 1e-10
 class IntegratorTests(unittest.TestCase):
 
     def run_test(self, backend, method, nsteps=40000):
+        # This stays as a broad smoke comparison across backends rather than a tight numerical benchmark. [Codex GPT-5.4]
         llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
         integrator = llg_integrator(
             llg, llg.m_field, backend, method=method, nsteps=nsteps)

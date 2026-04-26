@@ -124,6 +124,7 @@ def test_anisotropy_energy_density():
 
 
 def test_DMI_energy_density_2D():
+    # Keep the DMI energy-density path under active Python 3 coverage instead of the old skip. [Codex GPT-5.4]
     """
     For a vector field (x, y, z) = 0.5 * (-y, x, c),
     the curl is exactly 1.0. (HF)
@@ -148,6 +149,7 @@ def test_DMI_energy_density_2D():
 
 
 def test_DMI_energy_density_3D():
+    # Keep the 3D DMI energy-density path paired with the reinstated 2D coverage. [Codex GPT-5.4]
     """Same as above, on a 3D mesh."""
     mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)

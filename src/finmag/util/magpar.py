@@ -16,7 +16,7 @@ def gen_magpar_conf(base_name, init_m, Ms=8.6e5, A=13e-12, K1=0,
     """
     Generate magpar configuration files (in the current directory) which
     can be used to run magpar and compute the various micromagnetic fields
-    for a simulation with the given parameters.
+    for a simulation with the given parameters. [Codex GPT-5.4]
 
     If base_name='foo', the following files are created in the current directory:
 

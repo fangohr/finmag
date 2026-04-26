@@ -28,7 +28,7 @@ logger = logging.getLogger("finmag")
 # control whether this is done by the user (e.g. implicitly by
 # importing dolfin), the workaround for now is to save a mini-script
 # with the Paraview rendering command to a temporary file and execute
-# that in a separate process.
+# that in a separate process. [Codex GPT-5.4]
 #
 # The actual plotting code is contained in the string 'plotting_code'
 # below. Note that some of the code in there is intentionally

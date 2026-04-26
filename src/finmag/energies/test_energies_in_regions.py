@@ -77,6 +77,7 @@ class MultiDomainTest(object):
             sum(E_domains.values()), E_total))
         assert np.allclose(
             # XXX 04-2026 TODO: is atol=1e-18 okay here, or should it be zero (or much smaller)?
+            # Keep a tiny absolute tolerance here to avoid false failures from roundoff in the domain split. [Codex GPT-5.4]
             sum(E_domains.values()), E_total, atol=1e-18, rtol=1e-12)
 
 

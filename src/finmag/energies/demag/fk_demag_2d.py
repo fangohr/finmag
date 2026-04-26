@@ -26,6 +26,7 @@ class Demag2D(FKDemag):
         super(Demag2D, self).__init__(name=name, thin_film=thin_film)
 
     def create_3d_mesh(self, mesh):
+        # The 2D demag path works by extruding into a minimal 3D FK problem on purpose. [Codex GPT-5.4]
 
         nv = mesh.num_vertices()
         nc = mesh.num_cells()

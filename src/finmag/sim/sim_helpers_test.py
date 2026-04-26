@@ -66,6 +66,7 @@ def test_try_to_restart_a_simulation(tmpdir):
 
     # Check that sim2 had less work to do, since it got the
     # results up to t0 for free.
+    # The restart path should save real integrator work, not just reproduce the same final state. [Codex GPT-5.4]
     stats1 = sim1.integrator.stats()
     stats2 = sim2.integrator.stats()
     assert stats2['nsteps'] < stats1['nsteps']

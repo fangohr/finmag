@@ -383,7 +383,7 @@ class SLEPcEigensolver(AbstractEigensolver):
 
         # SLEPc's Hermitian solvers are significantly more robust on Hermitian
         # inputs than the generic non-Hermitian path. Promote the declared
-        # problem type when the matrices prove the stronger structure.
+        # problem type when the matrices prove the stronger structure. [Codex GPT-5.4]
         if problem_type in ['NHEP', 'GNHEP']:
             matrices_are_hermitian = is_hermitian(A) and (
                 M is None or is_hermitian(M))

@@ -124,6 +124,7 @@ def test_using_analytical_solution(finmag):
 @pytest.mark.xfail(
     reason="saved Magpar reference nodes no longer match the regenerated Netgen mesh; compare_field_directly aborts on node-array shape mismatch")
 def test_using_magpar(finmag):
+    # Preserve this historical Magpar comparison even though regenerated meshes no longer line up. [Codex GPT-5.4]
     REL_TOLERANCE = 10.0
 
     magpar_result = os.path.join(MODULE_DIR, 'magpar_result', 'test_demag')

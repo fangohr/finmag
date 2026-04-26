@@ -70,6 +70,7 @@ def run_test(backend, method, mode='onego', nsteps=40000):
 
     if mode == 'twogoesreinit':
         # check that rhs counter goes back to zero
+        # Keep this as the concrete observable for reinit() until we have a better dynamical witness. [Codex GPT-5.4]
         print("re-initialising")
         integrator.reinit()
         assert integrator.n_rhs_evals == 0

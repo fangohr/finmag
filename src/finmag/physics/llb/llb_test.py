@@ -115,6 +115,7 @@ def sim_llb_100(do_plot=False):
 
 def test_llb_save_data():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 2)
+    # Keep two z layers so both saved regions remain non-empty in the Python 3 path. [Codex GPT-5.4]
 
     def region1(coords):
         if coords[2] < 2.5:

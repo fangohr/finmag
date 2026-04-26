@@ -98,6 +98,7 @@ def test_against_nmag(finmag):
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf(finmag):
+    # The Python 3 core gate should run this automatically once the image carries OOMMF. [Codex GPT-5.4]
     REL_TOLERANCE = 8e-2
 
     from finmag.util.oommf import mesh, oommf_uniform_exchange

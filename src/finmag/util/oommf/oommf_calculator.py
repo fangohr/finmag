@@ -96,6 +96,7 @@ def calculate_oommf_fields(name, s0, Ms, spec=None, alpha=0., gamma_G=0., fields
         if isinstance(value, bytes):
             m.update(value)
         else:
+            # Hash text inputs explicitly as UTF-8 so cached OOMMF runs stay stable under Python 3. [Codex GPT-5.4]
             m.update(value.encode("utf-8"))
 
     update_text(SOURCE)

@@ -12,6 +12,7 @@ solvers = ['FK']
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Sphere-based demag references depend on Netgen mesh generation in this environment. [Codex GPT-5.4]
         pytest.skip("netgen is not usable for sphere-based demag tests")
 
 

@@ -10,6 +10,7 @@ from finmag.util.helpers import stats
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf():
+    # Keep collection light when OOMMF is absent, but exercise the comparison when the tool exists. [Codex GPT-5.4]
     finmag = conftest.setup_cubic()
 
     REL_TOLERANCE = 7e-2

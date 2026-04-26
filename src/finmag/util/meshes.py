@@ -199,6 +199,7 @@ def run_netgen(geofile):
     if status == 34304:
         logger.warning("Warning: Ignoring netgen's output status of 34304.")
     elif _netgen_output_is_usable(status, output, diffpackfile):
+        # Newer Netgen can abort after already writing a usable mesh; keep that path working. [Codex GPT-5.4]
         logger.warning(
             "Netgen exited with status %s after writing '%s'; proceeding with the generated mesh.",
             status, diffpackfile)
@@ -228,7 +229,7 @@ def _netgen_command(geofile, diffpackfile):
     if os.environ.get("DISPLAY") or shutil.which("xvfb-run") is None:
         return netgen_inner_cmd
     # Netgen's batch mode still touches Tk/OpenGL startup paths, so run it
-    # under a virtual X server when no display is available.
+    # under a virtual X server when no display is available. [Codex GPT-5.4]
     return "xvfb-run -a {}".format(netgen_inner_cmd)
 
 
@@ -260,7 +261,7 @@ def _netgen_output_is_usable(status, output, diffpackfile):
 def netgen_is_usable():
     """
     Return True if Netgen is present and can complete a minimal mesh-generation
-    run in the current environment.
+    run in the current environment. [Codex GPT-5.4]
     """
     if shutil.which("netgen") is None:
         return False
@@ -324,6 +325,7 @@ def _dolfin_convert_command(infile, outfile):
     if shutil.which("dolfin-convert") is not None:
         return "dolfin-convert {} {}".format(
             shlex.quote(infile), shlex.quote(outfile))
+    # Fall back to the Python meshconvert entry point because `dolfin-convert` is often absent now. [Codex GPT-5.4]
     return (
         "{python} -c "
         "\"from dolfin_utils.meshconvert.meshconvert import convert2xml; "

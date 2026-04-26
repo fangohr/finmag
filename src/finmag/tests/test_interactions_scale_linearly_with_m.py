@@ -59,7 +59,7 @@ def create_demag_params(atol, rtol, maxiter):
              'parameters': create_demag_params(1e-15, 1e-15, 1e4)}, 1.2e-10),
     # Demag with Krylov solver and weak tolerances is *not* linear in m.
     # Keep this xfail as historical evidence and review the precise tolerance
-    # expectations manually later.
+    # expectations manually later. [Codex GPT-5.4]
     pytest.mark.xfail(
         (Demag, {'solver_type': 'Krylov', 'parameters': create_demag_params(1e-6, 1e-6, 1e4)}, 1e-8)),
 ])
@@ -93,7 +93,7 @@ def test_demag_with_weak_krylov_tolerances_is_not_linear_in_m():
     """
     The demag field is only numerically linear when the Krylov solves use
     sufficiently strict tolerances. Preserve the historical weak-tolerance
-    behaviour as an explicit assertion instead of an expected failure.
+    behaviour as an explicit assertion instead of an expected failure. [Codex GPT-5.4]
     """
     init_args = {
         'solver_type': 'Krylov',

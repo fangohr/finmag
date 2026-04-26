@@ -8,6 +8,7 @@ tolerance = 1e-3
 
 @pytest.mark.skip(reason="long Slonczewski oscillator validation; not part of the Python 3 core gate yet")
 def test_oscillator():
+    # Keep the transition gate focused on broad regression coverage before long validation runs. [Codex GPT-5.4]
     import run as sim
 
     nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")

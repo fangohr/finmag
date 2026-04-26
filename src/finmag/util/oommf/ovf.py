@@ -743,6 +743,7 @@ class OVFStream(object):
                     return None
                 l = l[:-1]
                 if isinstance(l, bytes):
+                    # OVF files mix ASCII headers with binary payloads, so decode linewise only when needed. [Codex GPT-5.4]
                     l = l.decode("ascii")
                 self.lines.append(l)
 

@@ -8,6 +8,7 @@ from finmag.util.helpers import stats
 
 K1 = 45e4  # J/m^31
 Ms = 0.86e6
+# Treat this file as optional external-validation coverage tied to the OOMMF executable. [Codex GPT-5.4]
 pytestmark = pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 
 

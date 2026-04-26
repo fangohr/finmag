@@ -110,6 +110,7 @@ def load_restart_data(filename_or_simulation):
 
     def _decode_legacy_bytes(value):
         if isinstance(value, bytes):
+            # Restart metadata may come from Python 2-era archives, so decode it recursively on load. [Codex GPT-5.4]
             return value.decode("utf-8")
         if isinstance(value, dict):
             return {

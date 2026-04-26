@@ -187,11 +187,13 @@ class LLB(object):
 
     def add(self, interaction):
         if isinstance(interaction, Exchange):
+            # LLB exchange uses its own setup signature; do not send it through the standard interaction path. [Codex GPT-5.4]
             interaction.setup(self.S3,
                               self.material._m,
                               self.material.Ms0,
                               unit_length=self.material.unit_length)
         else:
+            # Wrap Ms as a DG0 Field here so standard Finmag interactions still see the API they expect. [Codex GPT-5.4]
             Ms = Field(self.material._Ms_dg.function_space(),
                        self.material._Ms_dg)
             interaction.setup(self.material._m,

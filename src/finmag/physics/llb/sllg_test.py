@@ -42,6 +42,7 @@ def plot_random_number_np():
 
 
 def test_random_mt19937_gaussian_smoke():
+    # Keep this as a lightweight availability check for the native stochastic kernel on Python 3. [Codex GPT-5.4]
     from finmag.native.llb import RandomMT19937
 
     mt = RandomMT19937()

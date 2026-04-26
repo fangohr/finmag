@@ -9,6 +9,7 @@ from math import sin, cos, pi
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Treat Netgen-backed mesh tests as environment coverage rather than unconditional failures. [Codex GPT-5.4]
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 def test_mesh_size():

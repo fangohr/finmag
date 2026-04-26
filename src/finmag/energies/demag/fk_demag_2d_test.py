@@ -44,6 +44,7 @@ def test_demag_2d(plot=False):
 
     # For a uniformly magnetised thin film, the demag field should point
     # predominantly opposite to the out-of-plane magnetisation.
+    # Keep this as a qualitative 2D smoke check; the 2D reduction is approximate by construction. [Codex GPT-5.4]
     assert np.max(np.abs(hx)) < 1e-3
     assert np.max(np.abs(hy)) < 1e-3
     assert np.mean(hz) < -0.5  # XXX check if this value can be smaller 04-2026

@@ -22,6 +22,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def _require_netgen():
     if not netgen_is_usable():
+        # These sphere-based BEM regressions rely on Netgen mesh generation in the transition image. [Codex GPT-5.4]
         pytest.skip("netgen is not usable for sphere-based demag mesh-generation tests")
 
 
@@ -213,6 +214,7 @@ class BemComputationTests(unittest.TestCase):
 
     def test_compute_scalar_potential_gcr(self):
         if "GCR" not in KNOWN_SOLVERS:
+            # The legacy GCR solver is intentionally left unported on the Python 3 path. [Codex GPT-5.4]
             pytest.skip("GCR demag solver is not implemented on the Python 3 transition path")
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)

@@ -32,10 +32,12 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Many simulation regressions still rely on Netgen-backed geometry in the transition image. [Codex GPT-5.4]
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
 def _has_paraview_rendering():
+    # Keep rendering tests explicit about optional GUI/tooling dependencies in the Python 3 gate. [Codex GPT-5.4]
     if shutil.which("paraview") is None:
         return False
     try:

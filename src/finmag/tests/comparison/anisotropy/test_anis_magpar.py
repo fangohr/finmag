@@ -10,6 +10,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 @pytest.mark.xfail(
     reason="saved Magpar reference nodes no longer match the regenerated Netgen mesh; compare_field aborts on node-array shape mismatch")
 def test_against_magpar():
+    # Keep the old Magpar reference visible as mesh-drift history instead of deleting it. [Codex GPT-5.4]
     finmag = conftest.setup(K2=0)
 
     REL_TOLERANCE = 5e-7

@@ -22,6 +22,7 @@ logger = logging.getLogger("finmag")
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Mesh-template coverage is meaningful only when the Netgen-backed generators are usable. [Codex GPT-5.4]
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 

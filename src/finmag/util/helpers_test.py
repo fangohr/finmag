@@ -19,6 +19,7 @@ TOLERANCE = 1e-15
 
 def _require_netgen():
     if not netgen_is_usable():
+        # Netgen-backed helper tests are environment-dependent in the transition image. [Codex GPT-5.4]
         pytest.skip("netgen is not usable in the Python 3 transition container")
 
 
@@ -417,7 +418,7 @@ def test_probe():
 @pytest.mark.skipif(shutil.which("hg") is None,
                     reason="historical Mercurial helper; hg is not a Python 3 transition dependency")
 def test_get_hg_revision_info(tmpdir):
-    """Historical coverage for the pre-Git Mercurial revision helper."""
+    """Historical coverage for the pre-Git Mercurial revision helper. [Codex GPT-5.4]"""
     finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
     os.mkdir('invalid_repo')

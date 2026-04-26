@@ -22,6 +22,7 @@ S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_dmdt_computation_with_oommf():
+    # Keep this external regression optional at collection time, not silently dead. [Codex GPT-5.4]
     # set up finmag
     llg = LLG(S1, S3)
     llg.set_m((-3, -2, 1))

@@ -5,6 +5,7 @@ from finmag.util.helpers import times_curl
 
 
 def test_dmi_term3d_matches_analytical_solution():
+    # Reinstate this DMI-term check as a real Python 3 regression rather than dead skipped code. [Codex GPT-5.4]
     """
     For m(x, y, z) = (-y/2, x/2, c), curl(m) = (0, 0, 1), so
     m . curl(m) = c everywhere on the unit cube.

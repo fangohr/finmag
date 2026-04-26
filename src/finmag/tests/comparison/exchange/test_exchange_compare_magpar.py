@@ -19,6 +19,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_three_dimensional_problem():
+    # This remains a live Magpar cross-check because the BoxMesh discretisation is stable across environments. [Codex GPT-5.4]
     results = three_dimensional_problem()
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 

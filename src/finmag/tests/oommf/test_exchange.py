@@ -11,6 +11,7 @@ from finmag.util.oommf.comparison import compare_exchange
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 8.6e6
 A = 1.3e-11
+# Treat this file as optional external-validation coverage tied to the OOMMF executable. [Codex GPT-5.4]
 pytestmark = pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 
 

@@ -86,7 +86,7 @@ def test_thin_film_argument_saves_time_on_thin_film():
     print("FKDemag thin film settings saved {:.1%} of time.".format(saved_relative))
     # Exact wall-clock ordering is noisy in CI and in containers. Accept a
     # small regression margin so the test still catches real slowdowns without
-    # failing on measurement jitter around parity.
+    # failing on measurement jitter around parity. [Codex GPT-5.4]
     assert saved_relative > -0.05
 
 

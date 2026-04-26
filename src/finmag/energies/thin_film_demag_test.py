@@ -44,6 +44,7 @@ def test_thin_film_demag():
 
 @pytest.mark.slow
 def test_thin_film_demag_against_real_demag():
+    # This is a sanity regression against full Demag, not a claim that the thin-film model is exact. [Codex GPT-5.4]
     sim = Sim(df.BoxMesh(df.Point(0, 0, 0), df.Point(500e-9, 500e-9, 1e-9), 50, 50, 1), Ms)
     sim.set_m((0, 0, 1))
 

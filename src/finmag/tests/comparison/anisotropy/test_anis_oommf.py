@@ -10,6 +10,7 @@ from finmag.util.helpers import stats
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf():
+    # This turns back into a real cross-code regression as soon as OOMMF is present. [Codex GPT-5.4]
     finmag = conftest.setup(K2=0)
 
     REL_TOLERANCE = 9e-2

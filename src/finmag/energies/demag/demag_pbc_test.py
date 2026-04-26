@@ -17,6 +17,7 @@ def compute_field(mesh, nx=1, ny=1, m0=(1, 0, 0), pbc=None):
 
     sim.set_m(m0)
 
+    # Use strict Krylov tolerances here so the PBC comparison exercises physics, not solver drift. [Codex GPT-5.4]
     parameters = {
         'absolute_tolerance': 1e-10,
         'relative_tolerance': 1e-10,

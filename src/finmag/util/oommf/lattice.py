@@ -243,6 +243,7 @@ class FieldLattice(object):
         nodes = self.lattice.nodes
         shape = self.lattice._combine_idx(nodes, [dim])
         if data is not None:
+            # Accept NumPy data arrays directly here without relying on their truth value. [Codex GPT-5.4]
             self.field_data = data
         else:
             self.field_data = \
