@@ -326,6 +326,34 @@ The `pixi.toml` tasks `barmini-construct` and `barmini-smoke` have been
 aligned to this stronger verified workflow, and `restart-smoke` extends that
 matrix to state persistence.
 
+*** Aggregate M2 witness and CI
+
+The pixi side now has a single aggregate witness, analogous to the Docker-side
+=dev/bin/verify-python3-m1= script:
+
+- `dev/bin/verify-python3-m2`
+  - runs:
+    - `pixi run import-finmag`
+    - `pixi run barmini-construct`
+    - `pixi run barmini-smoke`
+    - `pixi run restart-smoke`
+  - exports `XDG_CACHE_HOME=/tmp/pixi-cache` and
+    `PIXI_CACHE_DIR=/tmp/pixi-cache` by default so the pixi witness does not
+    recreate repo-local state that would later interfere with the
+    Docker-copying M1 helpers. [Codex GPT-5.4]
+
+There is now a matching GitHub Actions workflow:
+
+- `.github/workflows/python3-m2.yml`
+  - uses `prefix-dev/setup-pixi@v0.9.3`
+  - pins `pixi-version: v0.62.1`
+  - enables action-managed cache reuse
+  - runs `dev/bin/verify-python3-m2`
+
+This makes the pixi / FEniCS-2019 path visible in CI as a workflow-level M2
+usability witness, rather than only as manually remembered `pixi run ...`
+commands. [Codex GPT-5.4]
+
 *** Native Sundials port status
 
 The previous main runtime gap for M2 was the native Sundials backend. That gap

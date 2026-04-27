@@ -51,6 +51,15 @@ Short version:
 - `transition-notes.org` = evidence
 - `agents.md` = operational context
 
+Workflow witnesses:
+
+- `dev/bin/verify-python3-m1`
+  - Docker / legacy-DOLFIN aggregate witness
+- `dev/bin/verify-python3-m2`
+  - pixi / FEniCS-2019 aggregate witness
+- `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
+  - matching lightweight CI jobs for those two workflow witnesses
+
 The repository describes itself as a research prototype developed roughly from 2011 to 2018.
 
 ## Repository Shape

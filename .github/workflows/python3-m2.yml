@@ -1,0 +1,25 @@
+name: python3-m2
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python3-m2:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    - name: Verify Python 3 M2 pixi workflow witness
+      run: |
+        # Keep this job focused on the practical M2 usability witness, not the full legacy-container gate. [Codex GPT-5.4]
+        dev/bin/verify-python3-m2

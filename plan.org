@@ -130,6 +130,14 @@ First practical M2 target:
   - the currently verified first pass uses the full default =barmini= setup,
     including FK demag, and now reaches =t = 1e-12= on the native Sundials
     backend under conda-forge =fenics 2019.1.0=
+- the currently verified aggregate M2 witness is:
+  - =pixi run import-finmag=
+  - =pixi run barmini-construct=
+  - =pixi run barmini-smoke=
+  - =pixi run restart-smoke=
+  - =dev/bin/verify-python3-m2= wraps those checks into one user-facing
+    command, and =.github/workflows/python3-m2.yml= runs that witness in CI
+    via =prefix-dev/setup-pixi=. [Codex GPT-5.4]
 - treat OOMMF, Paraview, Netgen reliability, =nsim=, Mercurial, and other
   optional tools as explicit follow-up layers rather than first-pass blockers.
 

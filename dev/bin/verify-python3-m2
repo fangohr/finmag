@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Run the practical M2 verification workflow for the Python 3 pixi transition
+# stack.
+#
+# Usage:
+#   dev/bin/verify-python3-m2
+#
+# This wrapper keeps the M2 acceptance claim reproducible as one command
+# instead of a checklist spread across multiple notes. [Codex GPT-5.4]
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi cache state out of the checkout so the Docker-based witnesses do
+# not trip over repo-local environment artefacts again. [Codex GPT-5.4]
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+echo "==> pixi run import-finmag"
+pixi run import-finmag
+
+echo
+echo "==> pixi run barmini-construct"
+pixi run barmini-construct
+
+echo
+echo "==> pixi run barmini-smoke"
+pixi run barmini-smoke
+
+echo
+echo "==> pixi run restart-smoke"
+pixi run restart-smoke
