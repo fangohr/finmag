@@ -146,6 +146,9 @@ Why it matters:
 
 - it is fast enough for repeated testing;
 - it exercises `Simulation`, common energies, Sundials integration, and output paths;
+- the current `pixi` milestone is stronger than the earlier SciPy-only probe:
+  the verified `pixi run barmini-smoke` path now uses full default `barmini()`
+  with FK demag and the native Sundials 7 backend. [Codex GPT-5.4]
 - several existing tests already use it.
 
 Barmini-based tests identified in the repo include:

@@ -315,21 +315,42 @@ The current verified position is:
 - `pixi run import-finmag` works against conda-forge `fenics 2019.1.0`
 - `pixi run barmini-construct` works with the full default
   `finmag.example.barmini()` setup
-- `pixi run barmini-smoke` works through `run_until(1e-12)`
-- the verified smoke path uses:
-  - full default `barmini`, including FK demag
-  - `integrator_backend='scipy'`
+- `pixi run barmini-smoke` works through `run_until(1e-12)` on the default
+  Sundials backend
+- the verified smoke path uses the full default `barmini`, including FK
+  demag, FEniCS 2019.1.0, and the native Sundials 7.2.1 wrapper
 
 The `pixi.toml` tasks `barmini-construct` and `barmini-smoke` have been
 aligned to this stronger verified workflow.
 
-*** Current `pixi` blocker beyond the reduced workflow
+*** Native Sundials port status
 
-The biggest remaining runtime gap for M2 is now the native Sundials backend.
+The previous main runtime gap for M2 was the native Sundials backend. That gap
+is now closed for the first practical workflow.
 
-- the SciPy backend is sufficient for the current first-pass smoke run
-- the native Sundials extension is still intentionally deferred in the pixi
-  build, because its SUNDIALS 7 API port is a separate migration job
+Verified result:
+
+- `from finmag.native import sundials` works in the `pixi` environment
+- `sundials.get_sundials_version()` reports `7.2.1`
+- `finmag.example.barmini().run_until(1e-12)` completes on the default
+  Sundials backend in `pixi`
+
+Key porting points:
+
+- `native/src/sundials/sundials_cvode_impl.h`
+  - conditional SUNDIALS 7 include path
+  - `SUNContext` lifecycle handling
+  - modern `CVodeSetLinearSolver` / `CVodeSetJacTimes` /
+    `CVodeSetPreconditioner` wiring
+  - compatibility aliases for pre-SUNDIALS-6 type and constant names
+  - cloned `N_Vector` template retained from `init()` so iterative solvers do
+    not depend on `CVodeGetCurrentState()` being populated during setup
+  - synthetic scratch vectors supplied to Python preconditioner callbacks on
+    the SUNDIALS 7 path to preserve the historical Python callback signatures
+- `native/Makefile`
+  - `sundials.so` is back in the `pixi` native module set
+  - the module now links explicitly against the split SUNDIALS 7 CVODE,
+    SUNLINSOL, SUNMATRIX, and core libraries
 
 The FK demag path itself is no longer the main blocker:
 

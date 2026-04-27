@@ -30,6 +30,6 @@ netgen = "*"
 # to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]
 import-finmag = "PYTHONPATH=src python -c \"import finmag; print(finmag)\""
 barmini-construct = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); print(sim.__class__.__name__)\""
-# The first verified pixi run path uses the SciPy backend because the native
-# Sundials extension is still a separate migration step. [Codex GPT-5.4]
-barmini-smoke = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); sim.integrator_backend = 'scipy'; sim.run_until(1e-12); print(sim.t)\""
+# The verified pixi smoke path now exercises the default Sundials backend on
+# top of conda-forge FEniCS 2019 and SUNDIALS 7. [Codex GPT-5.4]
+barmini-smoke = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); sim.run_until(1e-12); print(sim.t, sim.integrator_backend)\""

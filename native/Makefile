@@ -39,10 +39,11 @@ UFC_INC=$(shell if [ -f /usr/include/ufc.h ]; then echo -I/usr/include; else ech
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
 # The first pixi probe targets import/construction and SciPy-backed stepping,
-# so build only the llg native path there and defer the larger Sundials port.
+# so build only the native paths needed for the current pixi milestone and
+# fold Sundials back in as that port becomes viable. [Codex GPT-5.4]
 # [Codex GPT-5.4]
 ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
-MODULES = llg.so
+MODULES = sundials.so llg.so
 else
 # The list of extension modules to build
 MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so
@@ -58,7 +59,10 @@ UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
 SUNDIALS_NVECTOR_SO=-lsundials_nvecserial
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
-sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
+# Modern SUNDIALS splits CVODE, linear solvers, and matrix backends into
+# separate shared libraries, so link the wrapper against the actively used
+# SUNLINSOL/SUNMATRIX components as well. [Codex GPT-5.4]
+sundials_LDFLAGS =-lsundials_cvode -lsundials_core -lsundials_sunlinsoldense -lsundials_sunlinsollapackdense -lsundials_sunlinsolband -lsundials_sunlinsollapackband -lsundials_sunlinsolspgmr -lsundials_sunlinsolspbcgs -lsundials_sunlinsolsptfqmr -lsundials_sunmatrixdense -lsundials_sunmatrixband -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
 
 #SUNDIALS_CUSTOM=-I$(SUNDIALS_PATH)/include -Wl,-rpath, -Wl,-L$(SUNDIALS_PATH)/lib
 #$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o
@@ -94,7 +98,7 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
 ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
-SOURCES = $(shell find src/llg src/util -name \*.cc)
+SOURCES = $(shell find src/llg src/util src/sundials -name \*.cc)
 else
 SOURCES = $(shell find src tests -name \*.cc)
 endif
