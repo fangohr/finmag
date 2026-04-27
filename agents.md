@@ -149,6 +149,8 @@ Why it matters:
 - the current `pixi` milestone is stronger than the earlier SciPy-only probe:
   the verified `pixi run barmini-smoke` path now uses full default `barmini()`
   with FK demag and the native Sundials 7 backend. [Codex GPT-5.4]
+- `pixi run restart-smoke` is also verified now, so the pixi path covers both
+  time integration and restart/save-load on the Sundials backend. [Codex GPT-5.4]
 - several existing tests already use it.
 
 Barmini-based tests identified in the repo include:

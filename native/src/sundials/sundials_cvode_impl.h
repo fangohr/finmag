@@ -153,11 +153,15 @@ namespace finmag { namespace sundials {
        -- Max, 12.2.2014
      */
     std::string get_sundials_version() {
+#if SUNDIALS_VERSION_MAJOR >= 7
       char version[128];
       if (SUNDIALSGetVersion(version, sizeof(version)) == SUN_SUCCESS) {
           return std::string(version);
       }
       return "unknown";
+#else
+      return SUNDIALS_PACKAGE_VERSION;
+#endif
     }
 
     class cvode {
@@ -874,18 +878,17 @@ namespace finmag { namespace sundials {
 #endif
         }
 
-        void set_linear_solver_matrix_and_solver(SUNMatrix matrix, SUNLinearSolver solver) {
 #if SUNDIALS_VERSION_MAJOR >= 7
+        void set_linear_solver_matrix_and_solver(SUNMatrix matrix, SUNLinearSolver solver) {
             destroy_linear_solver();
             linear_matrix_ = matrix;
             linear_solver_ = solver;
             if (!linear_solver_) throw std::runtime_error("Failed to create SUNDIALS linear solver");
             CHECK_SUNDIALS_RET(CVodeSetLinearSolver, (cvode_mem, linear_solver_, linear_matrix_));
-#else
-            (void)matrix;
-            (void)solver;
-#endif
         }
+#else
+        void set_linear_solver_matrix_and_solver(void*, void*) {}
+#endif
 
         void* cvode_mem;
 #if SUNDIALS_VERSION_MAJOR >= 7

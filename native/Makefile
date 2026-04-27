@@ -24,7 +24,7 @@ PYTHON_BOOST_TAG := py$(shell $(PYTHON) -c 'import sys; print("{}{}".format(sys.
 PYTHON_CONFIG_EXISTS := $(shell command -v $(PYTHON_CONFIG) >/dev/null 2>&1 && echo 1 || echo 0)
 PYTHON_PREFIX := $(shell $(PYTHON) -c 'import sys; print(sys.prefix)')
 NUMPY_INCLUDE_DIR := $(shell $(PYTHON) -c 'import numpy; print(numpy.get_include())')
-DETECTED_BOOST_PYTHON_LIB := $(shell find "$(PYTHON_PREFIX)/lib" -maxdepth 1 -type f -name 'libboost_python*.so*' | sed -n '1s#.*/lib##;1s#\.so.*##p')
+DETECTED_BOOST_PYTHON_LIB := $(shell find "$(PYTHON_PREFIX)/lib" -maxdepth 1 -type f -name 'libboost_python*.so*' | sed -n '1s|.*/lib||;1s|\.so.*||p')
 # Managed environments often ship a different Boost.Python soname from the
 # old Debian-based `boost_python-pyXY` pattern, so detect it from the active
 # prefix first and only fall back to the historical name. [Codex GPT-5.4]
@@ -59,10 +59,14 @@ UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
 SUNDIALS_NVECTOR_SO=-lsundials_nvecserial
 
 $(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
+ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 # Modern SUNDIALS splits CVODE, linear solvers, and matrix backends into
 # separate shared libraries, so link the wrapper against the actively used
 # SUNLINSOL/SUNMATRIX components as well. [Codex GPT-5.4]
 sundials_LDFLAGS =-lsundials_cvode -lsundials_core -lsundials_sunlinsoldense -lsundials_sunlinsollapackdense -lsundials_sunlinsolband -lsundials_sunlinsollapackband -lsundials_sunlinsolspgmr -lsundials_sunlinsolspbcgs -lsundials_sunlinsolsptfqmr -lsundials_sunmatrixdense -lsundials_sunmatrixband -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread 
+else
+sundials_LDFLAGS =-lsundials_cvode -llapack $(SUNDIALS_NVECTOR_SO) -lboost_thread
+endif
 
 #SUNDIALS_CUSTOM=-I$(SUNDIALS_PATH)/include -Wl,-rpath, -Wl,-L$(SUNDIALS_PATH)/lib
 #$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o

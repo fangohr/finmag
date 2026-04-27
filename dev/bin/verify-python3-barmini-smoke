@@ -33,7 +33,9 @@ docker run --rm \
     "${image_name}" \
     bash -lc '
         rm -rf /tmp/finmag &&
-        cp -a /repo /tmp/finmag &&
+        mkdir -p /tmp/finmag &&
+        cd /repo &&
+        tar --exclude=.pixi -cf - . | tar -xf - -C /tmp/finmag &&  # Skip repo-local pixi state so the smoke scripts stay portable. [Codex GPT-5.4]
         cd /tmp/finmag &&
         PYTHONPATH=/tmp/finmag/src python3 - <<"PY"
 import finmag

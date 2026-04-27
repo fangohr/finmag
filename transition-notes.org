@@ -317,11 +317,14 @@ The current verified position is:
   `finmag.example.barmini()` setup
 - `pixi run barmini-smoke` works through `run_until(1e-12)` on the default
   Sundials backend
+- `pixi run restart-smoke` works through save/restart/reload on the default
+  Sundials backend
 - the verified smoke path uses the full default `barmini`, including FK
   demag, FEniCS 2019.1.0, and the native Sundials 7.2.1 wrapper
 
 The `pixi.toml` tasks `barmini-construct` and `barmini-smoke` have been
-aligned to this stronger verified workflow.
+aligned to this stronger verified workflow, and `restart-smoke` extends that
+matrix to state persistence.
 
 *** Native Sundials port status
 

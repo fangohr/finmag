@@ -26,7 +26,7 @@ jobs:
           -e OMPI_MCA_plm=isolated \
           -v "${GITHUB_WORKSPACE}:/repo:ro" \
           finmag-py3-dolfin2017 \
-          bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+          bash -lc 'rm -rf /tmp/finmag && mkdir -p /tmp/finmag && cd /repo && tar --exclude=.pixi -cf - . | tar -xf - -C /tmp/finmag && cd /tmp/finmag && \
                     PYTHONPATH=/tmp/finmag/src python3 -m pytest -v \
                       src/finmag/tests/test_effective_field.py \
                       src/finmag/tests/test_writing_data.py \
