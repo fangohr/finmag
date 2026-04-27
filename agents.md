@@ -57,8 +57,12 @@ Workflow witnesses:
   - Docker / legacy-DOLFIN aggregate witness
 - `dev/bin/verify-python3-m2`
   - pixi / FEniCS-2019 aggregate witness
+- `dev/bin/verify-python3-m3`
+  - first explicit pytest gate for the FEniCS-2019 compatibility track
 - `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
-  - matching lightweight CI jobs for those two workflow witnesses
+  - matching lightweight CI jobs for the two workflow witnesses
+- `.github/workflows/python3-m3.yml`
+  - matching lightweight CI job for the first FEniCS-2019 pytest gate
 
 The repository describes itself as a research prototype developed roughly from 2011 to 2018.
 

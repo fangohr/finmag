@@ -155,6 +155,20 @@ Done when:
 - core scientific workflows pass, even if long-tail historical features are
   still deferred.
 
+Current verified first M3 gate:
+
+- =pixi run barmini-suite=
+- =dev/bin/verify-python3-m3=
+- =.github/workflows/python3-m3.yml=
+
+The initial M3 gate is intentionally small and reuses the historical
+=barmini=-first pytest subset under conda-forge =fenics 2019.1.0=:
+
+- =src/finmag/tests/test_effective_field.py=
+- =src/finmag/tests/test_writing_data.py=
+- =src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py=
+- =src/finmag/tests/test_restart_simulation.py=
+
 In scope:
 
 - API and packaging changes needed between the two legacy DOLFIN generations;

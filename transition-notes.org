@@ -354,6 +354,32 @@ This makes the pixi / FEniCS-2019 path visible in CI as a workflow-level M2
 usability witness, rather than only as manually remembered `pixi run ...`
 commands. [Codex GPT-5.4]
 
+*** First explicit M3 / FEniCS-2019 pytest gate
+
+The first curated pytest subset under conda-forge `fenics 2019.1.0` is now
+verified and promoted to an explicit M3 gate.
+
+Verified result:
+
+- `7 passed, 15 warnings in 14.44s`
+
+Files in the first gate:
+
+- `src/finmag/tests/test_effective_field.py`
+- `src/finmag/tests/test_writing_data.py`
+- `src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py`
+- `src/finmag/tests/test_restart_simulation.py`
+
+This subset is exposed in three places:
+
+- `pixi run barmini-suite`
+- `dev/bin/verify-python3-m3`
+- `.github/workflows/python3-m3.yml`
+
+This is the first point where M3 becomes more than a packaging/runtime smoke
+story: the `fenics 2019.1.0` path now has a small but real pytest regression
+gate built around the historical `barmini` acceptance slice. [Codex GPT-5.4]
+
 *** Native Sundials port status
 
 The previous main runtime gap for M2 was the native Sundials backend. That gap
