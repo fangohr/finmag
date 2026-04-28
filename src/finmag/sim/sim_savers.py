@@ -65,7 +65,7 @@ def save_field(sim, field_name, filename=None, incremental=False, overwrite=Fals
     field_data = sim.get_field_as_dolfin_function(field_name, region=region)
     field_saver = _get_field_saver(
         sim, field_name, filename, incremental=incremental, overwrite=overwrite)
-    field_saver.save(field_data.vector().array())
+    field_saver.save(field_data.vector().get_local())
 
 
 #-------------------------------------------------------------------------

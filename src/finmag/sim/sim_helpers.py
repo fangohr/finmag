@@ -331,7 +331,7 @@ def skyrmion_number_density_function(self):
     # space.
     nodalSkx = df.dot(integrand, df.TestFunction(S1)) * df.dx
     nodalVolumeS1 = nodal_volume(S1, self.unit_length)
-    skDensity = df.assemble(nodalSkx).array() * self.unit_length\
+    skDensity = df.assemble(nodalSkx).get_local() * self.unit_length\
         ** self.S3.mesh().topology().dim() / nodalVolumeS1
 
     # Build the skyrmion number density dolfin function from the skDensity

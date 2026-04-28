@@ -352,7 +352,7 @@ def _run_shell_command(cmd, failure_message):
 def _gmsh_to_dolfin_mesh(filename, dim):
     mshfile = filename + ".msh"
     xmlfile = filename + ".xml"
-    gmsh_cmd = "gmsh {geo} -{dim} -o {msh}".format(
+    gmsh_cmd = "gmsh {geo} -{dim} -format msh2 -o {msh}".format(
         geo=shlex.quote(filename + ".geo"),
         dim=int(dim),
         msh=shlex.quote(mshfile))
@@ -1563,10 +1563,12 @@ def build_mesh(vertices, cells):
 
     geom_dim = vertices.shape[-1]
     top_dim = cells.shape[-1] - 1
+    cell_type = {1: "interval", 2: "triangle", 3: "tetrahedron"}[top_dim]
 
     mesh = df.Mesh()
     editor = df.MeshEditor()
-    editor.open(mesh, top_dim, geom_dim)
+    # DOLFIN 2019 requires the cell-type string when opening a MeshEditor. [Codex GPT-5.4]
+    editor.open(mesh, cell_type, top_dim, geom_dim)
     editor.init_vertices(len(vertices))
     editor.init_cells(len(cells))
 

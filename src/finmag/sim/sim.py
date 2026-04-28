@@ -1159,7 +1159,8 @@ class Simulation(object):
                 raise KeyError(msg)
 
         try:
-            func_args = inspect.getargspec(func).args
+            getargspec = inspect.getfullargspec if hasattr(inspect, 'getfullargspec') else inspect.getargspec
+            func_args = getargspec(func).args
         except TypeError:
             # This can happen when running the binary distribution, since compiled
             # functions cannot be inspected. Not a great problem, though, because
