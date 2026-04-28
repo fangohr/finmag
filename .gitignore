@@ -26,7 +26,7 @@ src/**.so
 *-restart.npz
 #*#
 *.geo
-src/treecode_bem/treecode_bem_lib.c
+native/src/treecode_bem/treecode_bem_lib.c
 test-reports
 native/**.bin
 native/.add_version

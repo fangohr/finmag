@@ -703,7 +703,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     assert(S3.ufl_element().family() == 'Lagrange')
     assert(S3.ufl_element().degree() == 1)
 
-    if isinstance(value, (df.Constant, df.Expression)):
+    if isinstance(value, (df.Constant, df.Expression, df.UserExpression)):
         fun = df.interpolate(value, S3)
     elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
         # We recognise a sequence of strings as ingredient for a df.Expression.
@@ -730,9 +730,10 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     # if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
 
-        class HelperExpression(df.Expression):
+        class HelperExpression(df.UserExpression):
 
             def __init__(self, value, **kwargs):
+                super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -749,7 +750,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
                         "argument of type '{}'".format(type(value)))
 
     if normalise:
-        fun.vector().set_local(fnormalise(fun.vector().array()))
+        # DOLFIN 2019 exposes vector data via get_local() on PETSc-backed vectors. [Codex GPT-5.4]
+        fun.vector().set_local(fnormalise(fun.vector().get_local()))
 
     return fun
 
@@ -787,7 +789,7 @@ def scalar_valued_function(value, mesh_or_space):
         mesh = mesh_or_space
         S1 = df.FunctionSpace(mesh, "Lagrange", 1)
 
-    if isinstance(value, (df.Constant, df.Expression)):
+    if isinstance(value, (df.Constant, df.Expression, df.UserExpression)):
         fun = df.interpolate(value, S1)
     elif isinstance(value, (np.ndarray, list)):
         fun = df.Function(S1)
@@ -799,9 +801,10 @@ def scalar_valued_function(value, mesh_or_space):
     elif hasattr(value, '__call__'):
 
         # if it's a normal function, we wrapper it into a dolfin expression
-        class HelperExpression(df.Expression):
+        class HelperExpression(df.UserExpression):
 
             def __init__(self, value, **kwargs):
+                super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):

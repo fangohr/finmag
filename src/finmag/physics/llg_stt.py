@@ -57,7 +57,7 @@ class LLG_STT(object):
         self.Ms = 8.6e5  # A/m saturation magnetisation
 
         self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
-                                      df.Constant([1, 1, 1])) * df.dx).array()
+                                      df.Constant([1, 1, 1])) * df.dx).get_local()
         self.real_vol = self.vol * self.unit_length ** 3
 
         self.pins = []
@@ -68,7 +68,7 @@ class LLG_STT(object):
     def set_parameters(self, J_profile=(1e10, 0, 0), P=0.5, D=2.5e-4, lambda_sf=5e-9, lambda_J=1e-9, speedup=1):
 
         self._J = helpers.vector_valued_function(J_profile, self.S3)
-        self.J = self._J.vector().array()
+        self.J = self._J.vector().get_local()
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
 
@@ -120,16 +120,16 @@ class LLG_STT(object):
         self._Ms_dg.name = 'Ms'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(
-        self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes
+        self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).get_local() / self.volumes
         self._Ms = Ms.copy()
-        self.Ms_av = np.average(self._Ms_dg.vector().array())
+        self.Ms_av = np.average(self._Ms_dg.vector().get_local())
 
     @property
     def M(self):
         """The magnetisation, with length Ms."""
         # FIXME:error here
         m = self.m.view().reshape((3, -1))
-        Ms = self.Ms.vector().array() if isinstance(
+        Ms = self.Ms.vector().get_local() if isinstance(
             self.Ms, df.Function) else self.Ms
         M = Ms * m
         return M.ravel()
@@ -200,7 +200,7 @@ class LLG_STT(object):
 
         """
         self.m = helpers.vector_valued_function(
-            value, self.S3, normalise=normalise, **kwargs).vector().array()
+            value, self.S3, normalise=normalise, **kwargs).vector().get_local()
 
     def set_alpha(self, value):
         """
@@ -212,7 +212,7 @@ class LLG_STT(object):
 
         """
         self._alpha[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+            value, self.S1).vector().get_local()[:]
 
     def compute_gradient_matrix(self):
         """
@@ -240,7 +240,7 @@ class LLG_STT(object):
 
         self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
 
-        return self.H_gradm.array() / self.nodal_volume_S3
+        return self.H_gradm.get_local() / self.nodal_volume_S3
 
     def compute_laplace_matrix(self):
 
@@ -254,7 +254,7 @@ class LLG_STT(object):
 
         self.laplace_M.mult(self._delta_m.vector(), self.H_laplace)
 
-        return -1.0 * self.H_laplace.array() / self.nodal_volume_S3
+        return -1.0 * self.H_laplace.get_local() / self.nodal_volume_S3
 
     def sundials_rhs(self, t, y, ydot):
         self.t = t
@@ -284,7 +284,7 @@ class LLG_STT(object):
 
         char_time = 0.1 / self.c
 
-        delta_m = self._delta_m.vector().array()
+        delta_m = self._delta_m.vector().get_local()
         delta_m.shape = (3, -1)
 
         native_llg.calc_llg_nonlocal_stt_dmdt(

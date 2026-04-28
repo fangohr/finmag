@@ -1004,3 +1004,50 @@ This means the current transition gate is no longer just an import or smoke
 test. It now exercises the broad Finmag test inventory under Python 3, with
 remaining unsupported/external paths tracked explicitly as skips or expected
 failures.
+
+*** M3 Pixi/FEniCS-2019 Increment
+
+The current M3 verifier has been widened further on the =pixi= /=fenics
+2019.1.0= path.
+
+Verified command:
+
+#+begin_src bash
+dev/bin/verify-python3-m3
+#+end_src
+
+Observed result:
+
+- =71 passed=
+- =10 skipped=
+- =1 xfailed=
+- runtime approximately =18s=
+
+The newly promoted M3 coverage includes:
+
+- =src/finmag/tests/zhangli/zhang_li_test.py=
+- =src/finmag/tests/zhangli/stt_nonlocal_test.py=
+- =src/finmag/tests/test_skyrmions.py=
+
+The enabling compatibility work in this increment was:
+
+- =finmag.util.helpers.vector_valued_function()= and
+  =scalar_valued_function()= now accept =UserExpression= and initialize
+  callable helper expressions in the DOLFIN 2019-compatible order
+- =finmag.physics.llg_stt.LLG_STT= now reads PETSc-backed vectors through
+  =get_local()= on the M3 path instead of relying on the removed =array()=
+  accessor
+- =test_zhangli_sllg= now skips explicitly when the separate
+  =finmag.native.llb= extension is unavailable, so the deterministic
+  Zhang-Li path can stay in the gate without forcing the stochastic
+  =sllg= native module into the first pixi build
+
+Current M3 boundaries remain explicit:
+
+- =src/finmag/physics/tests/neb/neb_test.py= stays out because the pixi build
+  does not yet provide =finmag.native.neb=
+- =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase stay
+  environment-conditional on the separate =llb= extension
+- =src/finmag/tests/test_solid_angle.py= and
+  =src/finmag/tests/test_solid_angle_invariance.py= stay out until their old
+  =instant= dependency is either packaged or retired on the pixi path

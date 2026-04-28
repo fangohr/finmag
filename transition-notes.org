@@ -2022,3 +2022,49 @@ Remaining expected failures in the current baseline:
 - =src/finmag/tests/test_interactions_scale_linearly_with_m.py= intentionally
   keeps the historical weak-Krylov-demag =xfail= for later human review,
   alongside the new explicit negative regression test
+
+** Current M3 Pixi/FEniCS-2019 Baseline
+
+The current M3 verifier now completes successfully with a wider finite subset
+of the legacy regression suite under =pixi= and conda-forge =fenics 2019.1.0=.
+
+Verified command:
+
+#+begin_src bash
+dev/bin/verify-python3-m3
+#+end_src
+
+Observed result:
+
+- =71 passed=
+- =10 skipped=
+- =1 xfailed=
+- runtime approximately =18.35s=
+
+Newly promoted tests in this increment:
+
+- =src/finmag/tests/zhangli/zhang_li_test.py=
+- =src/finmag/tests/zhangli/stt_nonlocal_test.py=
+- =src/finmag/tests/test_skyrmions.py=
+
+Compatibility changes that enabled this:
+
+- =finmag.util.helpers.vector_valued_function()= and
+  =scalar_valued_function()= now accept =df.UserExpression= and initialize
+  callable helper expressions in the DOLFIN 2019-compatible order, which
+  repairs callable magnetisation/current-profile setup on the pixi path
+- =finmag.physics.llg_stt.LLG_STT= now uses =get_local()= instead of the
+  removed PETSc vector =.array()= accessor in the exercised Sundials/STT path
+- =test_zhangli_sllg= now skips explicitly when =finmag.native.llb= is absent,
+  which keeps the deterministic Zhang-Li regression in M3 without forcing the
+  stochastic =sllg= native module into the first pixi build
+
+Still out of the current M3 gate:
+
+- =src/finmag/physics/tests/neb/neb_test.py= because the pixi build does not
+  yet provide =finmag.native.neb=
+- =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase unless
+  the separate =llb= extension is built
+- =src/finmag/tests/test_solid_angle.py= and
+  =src/finmag/tests/test_solid_angle_invariance.py= until the old =instant=
+  dependency is either packaged or replaced

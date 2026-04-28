@@ -791,3 +791,32 @@ Warnings observed in the passing reference run:
 - Python 2 deprecation warning from use of `msg.message` in `src/finmag/drivers/sundials_integrator.py`
 
 These are not immediate blockers, but they are useful signals when cleaning up the code.
+
+## Current M3 Baseline
+
+The active pixi/FEniCS-2019 verifier now completes at:
+
+- `71 passed`
+- `10 skipped`
+- `1 xfailed`
+
+using:
+
+- `dev/bin/verify-python3-m3`
+- `pixi run barmini-suite`
+
+The newest promoted M3 tests are:
+
+- `src/finmag/tests/zhangli/zhang_li_test.py`
+- `src/finmag/tests/zhangli/stt_nonlocal_test.py`
+- `src/finmag/tests/test_skyrmions.py`
+
+Current M3 boundary notes for future agents:
+
+- `src/finmag/physics/tests/neb/neb_test.py` is still out because the pixi
+  build does not yet provide `finmag.native.neb`
+- `src/finmag/physics/llb/sllg_test.py` and the `test_zhangli_sllg` subcase
+  remain conditional on `finmag.native.llb`
+- `src/finmag/tests/test_solid_angle.py` and
+  `src/finmag/tests/test_solid_angle_invariance.py` still depend on the old
+  `instant` package on this path
