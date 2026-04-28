@@ -43,7 +43,7 @@ def test_domain_wall_profile(do_plot=False):
 
     m0 = df.Function(V)
     coor = mesh.coordinates()
-    n = len(m0.vector().array())
+    n = len(m0.vector().get_local())  # DOLFIN 2019 PETSc vectors use get_local() instead of array(). [Codex GPT-5.4]
 
     print("Double check that the length of the vectors are equal: %g and %g"
           % (n, len(coor) * dim))

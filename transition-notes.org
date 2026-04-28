@@ -390,6 +390,11 @@ The gate has since been widened with passing FEniCS-2019 checks for:
 - `src/finmag/energies/exchange_test.py`
 - `src/finmag/energies/anisotropy_test.py`
 - `src/finmag/energies/cubic_anisotropy_test.py`
+- `src/finmag/energies/demag/fk_demag_test.py`
+- `src/finmag/energies/demag/fk_demag_2d_test.py`
+- `src/finmag/energies/test_energies_in_regions.py`
+- `src/finmag/energies/thin_film_demag_test.py`
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
 
 - `src/finmag/tests/energy_density/test_energy_density.py`
   keeps two explicit dependency skips in the M3 gate:
@@ -423,8 +428,34 @@ Additional DOLFIN-2019 / pytest compatibility fixes for the expanded M3 gate:
     under modern pytest. [Codex GPT-5.4]
 - `src/finmag/energies/demag/fk_demag.py`
   - the LU demag path now treats `reuse_factorization` as an optional hint,
-    because DOLFIN 2019 no longer exposes that parameter on all LU backends.
-    [Codex GPT-5.4]
+  because DOLFIN 2019 no longer exposes that parameter on all LU backends.
+  [Codex GPT-5.4]
+- `src/finmag/energies/demag/fk_demag_2d.py`
+  - updated `MeshEditor` usage to the DOLFIN-2019 signatures
+  - switched assembled nodal-energy vectors to `.get_local()`
+- `src/finmag/energies/thin_film_demag.py`
+- `src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py`
+  - switched remaining DOLFIN 2019 vector accessors from `.array()` to
+    `.get_local()`
+- `src/finmag/util/helpers.py`
+- `src/finmag/field.py`
+  - Python-backed expressions now go through `UserExpression`, and
+    `Field.from_expression()` recognizes both `Expression` and
+    `UserExpression` on the FEniCS-2019 path. [Codex GPT-5.4]
+- `src/finmag/energies/test_energies_in_regions.py`
+  - `CellFunction` replaced with `MeshFunction` for DOLFIN 2019
+
+Demag-heavy M3 additions currently come with explicit environment-conditioned
+skips rather than hard failures:
+
+- `fk_demag_test.py`
+  - skips when `netgen` is not usable
+- `test_energies_in_regions.py::test_energies_in_separated_subdomains`
+  - skips when `netgen` is not usable
+- `demag_pbc_test.py`
+  - remains outside the gate for now and uses `pytest.importorskip(...)` on
+    `finmag.native.treecode_bem`, because the pixi native build does not yet
+    include a working `treecode_bem` extension. [Codex GPT-5.4]
 
 This subset is exposed in three places:
 

@@ -53,12 +53,15 @@ except AttributeError:
 
 
 def expression_from_python_function(func, function_space):
-    class ExpressionFromPythonFunction(df.Expression):
+    class ExpressionFromPythonFunction(df.UserExpression):
         """
         Turn a python function to a dolfin expression over given functionspace.
 
         """
         def __init__(self, python_function, **kwargs):
+            super(ExpressionFromPythonFunction, self).__init__(**kwargs)
+            # DOLFIN 2019 expects Python-backed expressions to derive from
+            # UserExpression, with the base class initialised first. [Codex GPT-5.4]
             self.func = python_function
 
         def eval(self, eval_result, x):

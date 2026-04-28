@@ -37,7 +37,7 @@ class MultiDomainTest(object):
                 def inside(self, pt, on_boundary):
                     return get_domain_id(pt) == k
             domain_classes[k] = DomainK()
-        domains = df.CellFunction("size_t", mesh)
+        domains = df.MeshFunction("size_t", mesh, mesh.topology().dim())
         domains.set_all(0)
         for k, d in domain_classes.items():
             d.mark(domains, k)

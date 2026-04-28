@@ -187,6 +187,11 @@ The initial M3 gate is intentionally small and reuses the historical
   - =src/finmag/energies/exchange_test.py=
   - =src/finmag/energies/anisotropy_test.py=
   - =src/finmag/energies/cubic_anisotropy_test.py=
+  - =src/finmag/energies/demag/fk_demag_test.py=
+  - =src/finmag/energies/demag/fk_demag_2d_test.py=
+  - =src/finmag/energies/test_energies_in_regions.py=
+  - =src/finmag/energies/thin_film_demag_test.py=
+  - =src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py=
 - the earlier SUNDIALS-7 regression in
   =src/finmag/util/ode/tests/test_sundials_ode.py::OdeSundialsTests::test_simple_1d=
   is now fixed by explicitly attaching the correct nonlinear solver on the
@@ -195,6 +200,9 @@ The initial M3 gate is intentionally small and reuses the historical
   =src/finmag/tests/test_interactions_scale_linearly_with_m.py=
   remains an intentional =xfail= / negative-regression pair, and is part of
   the current M3 gate as documented historical behaviour. [Codex GPT-5.4]
+- demag-heavy tests in the M3 gate now include explicit environment skips
+  where the pixi/FEniCS-2019 stack still lacks optional tooling such as
+  =netgen= usability or =treecode_bem=. [Codex GPT-5.4]
 
 In scope:
 

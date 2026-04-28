@@ -63,9 +63,14 @@ Workflow witnesses:
     `sim_ode`, applied-field, exchange-static, `test_llg.py`, the full
     `test_sundials_ode.py` file, and the current anisotropy/DMI/energy
     creation layer under FEniCS-2019, plus the current Heun / varying-alpha /
-    unit-length / interaction-linearity / common-energy regression slice
+    unit-length / interaction-linearity / common-energy regression slice and
+    the currently compatible FK demag / thin-film / domain-wall / region-energy
+    slice
   - the earlier SUNDIALS-7 crash in `test_simple_1d` is fixed by explicitly
     attaching the matching nonlinear solver on the modern wrapper path. [Codex GPT-5.4]
+  - `demag_pbc_test.py` is still outside the gate because the pixi native
+    build does not yet include a working `treecode_bem` extension; treat that
+    as a separate native-build task, not a broad M3 blocker. [Codex GPT-5.4]
 - `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
   - matching lightweight CI jobs for the two workflow witnesses
 - `.github/workflows/python3-m3.yml`

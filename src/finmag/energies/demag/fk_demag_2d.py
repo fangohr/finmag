@@ -34,24 +34,26 @@ class Demag2D(FKDemag):
 
         mesh3 = df.Mesh()
         editor = df.MeshEditor()
-        editor.open(mesh3, 3, 3)
+        # DOLFIN 2019 expects the cell type plus point/list-based insertions in
+        # MeshEditor, so use the newer tetrahedron API here. [Codex GPT 5.4]
+        editor.open(mesh3, "tetrahedron", 3, 3)
         editor.init_vertices(2 * nv)
         editor.init_cells(3 * nc)
 
         for v in df.vertices(mesh):
             i = v.index()
             p = v.point()
-            editor.add_vertex(i, p.x(), p.y(), 0)
-            editor.add_vertex(i + nv, p.x(), p.y(), h)
+            editor.add_vertex(i, [p.x(), p.y(), 0.0])
+            editor.add_vertex(i + nv, [p.x(), p.y(), h])
 
         gid = 0
         for c in df.cells(mesh):
             i, j, k = c.entities(0)
-            editor.add_cell(gid, i, j, k, i + nv)
+            editor.add_cell(gid, [i, j, k, i + nv])
             gid = gid + 1
-            editor.add_cell(gid, j, j + nv, k, i + nv)
+            editor.add_cell(gid, [j, j + nv, k, i + nv])
             gid = gid + 1
-            editor.add_cell(gid, k, k + nv, j + nv, i + nv)
+            editor.add_cell(gid, [k, k + nv, j + nv, i + nv])
             gid = gid + 1
 
         editor.close()
@@ -182,7 +184,7 @@ class Demag2D(FKDemag):
 
         """
         self._H_func.vector()[:] = self.__compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * \
+        nodal_E = df.assemble(self._nodal_E).get_local() * \
             self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 

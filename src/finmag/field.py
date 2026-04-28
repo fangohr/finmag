@@ -131,7 +131,7 @@ class Field(object):
         in which case it will build the dolfin expression for you.
 
         """
-        if not isinstance(expr, df.Expression):
+        if not isinstance(expr, (df.Expression, df.UserExpression)):
             if isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == 0:
                 assert (isinstance(expr, basestring) or
                         isinstance(expr, (tuple, list)) and len(expr) == 1)

@@ -5,6 +5,10 @@ from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag
 from finmag import MacroGeometry
 
+pytest.importorskip(
+    "finmag.native.treecode_bem",
+    reason="treecode_bem support is not available in the current pixi / FEniCS-2019 native build")  # Keep the PBC demag checks explicit about the missing treecode layer. [Codex GPT-5.4]
+
 mesh_1 = df.BoxMesh(df.Point(-10, -10, -10), df.Point(10, 10, 10), 10, 10, 10)
 mesh_3 = df.BoxMesh(df.Point(-30, -10, -10), df.Point(30, 10, 10), 30, 10, 10)
 mesh_9 = df.BoxMesh(df.Point(-30, -30, -10), df.Point(30, 30, 10), 30, 30, 10)
