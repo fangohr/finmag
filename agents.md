@@ -796,7 +796,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `77 passed`
+- `79 passed`
 - `10 skipped`
 - `1 xfailed`
 
@@ -812,13 +812,15 @@ The newest promoted M3 tests are:
 - `src/finmag/tests/test_skyrmions.py`
 - `src/finmag/tests/test_solid_angle.py`
 - `src/finmag/tests/test_solid_angle_invariance.py`
+- `src/finmag/physics/tests/neb/neb_test.py`
 
 Current M3 boundary notes for future agents:
 
-- `src/finmag/physics/tests/neb/neb_test.py` is still out because the pixi
-  build does not yet provide `finmag.native.neb`
 - `src/finmag/physics/llb/sllg_test.py` and the `test_zhangli_sllg` subcase
   remain conditional on `finmag.native.llb`
+- full NEB tangent computations still require `finmag.native.neb`, even
+  though the helper-only `src/finmag/physics/tests/neb/neb_test.py` file now
+  runs in M3
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

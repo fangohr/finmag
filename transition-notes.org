@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =77 passed=
+- =79 passed=
 - =10 skipped=
 - =1 xfailed=
-- runtime approximately =19.42s=
+- runtime approximately =18.99s=
 
 Newly promoted tests in this increment:
 
@@ -2048,6 +2048,7 @@ Newly promoted tests in this increment:
 - =src/finmag/tests/test_skyrmions.py=
 - =src/finmag/tests/test_solid_angle.py=
 - =src/finmag/tests/test_solid_angle_invariance.py=
+- =src/finmag/physics/tests/neb/neb_test.py=
 
 Compatibility changes that enabled this:
 
@@ -2063,10 +2064,14 @@ Compatibility changes that enabled this:
 - =finmag.util.solid_angle_magpar.return_csa_magpar()= now falls back to a
   NumPy implementation of the Magpar solid-angle reference formula when the
   old =instant= package is unavailable on the pixi path
+- =finmag.physics.neb= now imports without =finmag.native.neb= for helper-only
+  use, and defers the native-module requirement to the actual tangent
+  computation path used by full NEB runs
 
 Still out of the current M3 gate:
 
-- =src/finmag/physics/tests/neb/neb_test.py= because the pixi build does not
-  yet provide =finmag.native.neb=
 - =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase unless
   the separate =llb= extension is built
+- full NEB tangent computations still require =finmag.native.neb=, even
+  though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
+  now runs in M3

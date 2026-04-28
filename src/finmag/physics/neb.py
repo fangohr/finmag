@@ -12,7 +12,10 @@ from finmag import Simulation
 # from finmag.field import Field  # Change sim._m to new field class
 # in line 184
 from finmag.native import sundials
-import finmag.native.neb as native_neb
+try:
+    import finmag.native.neb as native_neb
+except ImportError:
+    native_neb = None
 
 from finmag.util.fileio import Tablewriter, Tablereader
 
@@ -22,6 +25,11 @@ from matplotlib.collections import PolyCollection, LineCollection
 
 import logging
 log = logging.getLogger(name="finmag")
+
+
+def _require_native_neb():
+    if native_neb is None:
+        raise ImportError("finmag.native.neb is required for NEB tangent computations on this path")
 
 
 def cartesian2spherical(xyz):
@@ -612,6 +620,7 @@ class NEB_Sundials(object):
         # Use the native NEB to compute the tangents according to the
         # improved NEB method, developed by Henkelman and Jonsson
         # at: Henkelman et al., Journal of Chemical Physics 113, 22 (2000)
+        _require_native_neb()
         native_neb.compute_tangents(y, self.energy, self.tangents)
         # native_neb.compute_springs(y,self.springs,self.spring)
 
