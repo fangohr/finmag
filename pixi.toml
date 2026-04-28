@@ -41,5 +41,5 @@ PYTHONPATH=src python -c "import os, numpy as np, finmag; sim = finmag.example.b
 # This is the first explicit FEniCS-2019 pytest gate beyond workflow smoke
 # tests, built around the historical barmini-first acceptance subset. [Codex GPT-5.4]
 barmini-suite = '''
-PYTHONPATH=src python -m pytest -q src/finmag/tests/test_effective_field.py src/finmag/tests/test_writing_data.py src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py src/finmag/tests/test_restart_simulation.py
+PYTHONPATH=src python -m pytest -q src/finmag/tests/test_effective_field.py src/finmag/tests/test_writing_data.py src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py src/finmag/tests/test_restart_simulation.py src/finmag/tests/test_sim_ode.py src/finmag/tests/test_applied_field.py src/finmag/tests/test_exchange_static.py src/finmag/tests/test_llg.py src/finmag/util/ode/tests/test_sundials_ode.py src/finmag/tests/test_energy_creation_with_variable_Ms.py src/finmag/tests/energy_density/test_energy_density.py src/finmag/tests/test_anis.py src/finmag/tests/test_dmi.py src/finmag/tests/test_dmi_terms.py
 '''

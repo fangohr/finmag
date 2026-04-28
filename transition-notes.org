@@ -370,6 +370,37 @@ Files in the first gate:
 - `src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py`
 - `src/finmag/tests/test_restart_simulation.py`
 
+The gate has since been widened with passing FEniCS-2019 checks for:
+
+- `src/finmag/tests/test_sim_ode.py`
+- `src/finmag/tests/test_applied_field.py`
+- `src/finmag/tests/test_exchange_static.py`
+- `src/finmag/tests/test_llg.py`
+- `src/finmag/util/ode/tests/test_sundials_ode.py`
+- `src/finmag/tests/test_energy_creation_with_variable_Ms.py`
+- `src/finmag/tests/energy_density/test_energy_density.py`
+- `src/finmag/tests/test_anis.py`
+- `src/finmag/tests/test_dmi.py`
+- `src/finmag/tests/test_dmi_terms.py`
+
+- `src/finmag/tests/energy_density/test_energy_density.py`
+  keeps two explicit dependency skips in the M3 gate:
+  - `test_exchange_energy_density` when `nsim` is unavailable
+  - `test_demag_energy_density` when `netgen` is unavailable
+  Those are now explicit environment-conditioned skips rather than hard
+  failures on the pixi path. [Codex GPT-5.4]
+
+Focused SUNDIALS-7 fix:
+
+- `native/src/sundials/sundials_cvode_impl.h`
+  - the SUNDIALS-7 wrapper now attaches an explicit nonlinear solver in
+    `cvode::init(...)`
+  - `CV_FUNCTIONAL` uses `SUNNonlinSol_FixedPoint(...)`
+  - `CV_NEWTON` uses `SUNNonlinSol_Newton(...)`
+  - this fixes the previous pixi/FEniCS-2019 regression where
+    `test_simple_1d` in `test_sundials_ode.py` exited nonzero before pytest
+    could report a normal failure. [Codex GPT-5.4]
+
 This subset is exposed in three places:
 
 - `pixi run barmini-suite`

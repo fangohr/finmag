@@ -30,6 +30,8 @@
 #include <sunlinsol/sunlinsol_sptfqmr.h>
 #include <sunmatrix/sunmatrix_band.h>
 #include <sunmatrix/sunmatrix_dense.h>
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h>
 
 // The legacy wrapper API is phrased in pre-SUNDIALS-6 names, so keep local
 // aliases here while we port the active code paths one layer at a time.
@@ -170,6 +172,7 @@ namespace finmag { namespace sundials {
 
         ~cvode() {
             destroy_linear_solver();
+            destroy_nonlinear_solver();
             destroy_state_vector_template();
             if (cvode_mem) {
                 CVodeFree(&cvode_mem);
@@ -860,6 +863,15 @@ namespace finmag { namespace sundials {
 #endif
         }
 
+        void destroy_nonlinear_solver() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (nonlinear_solver_) {
+                SUNNonlinSolFree(nonlinear_solver_);
+                nonlinear_solver_ = NULL;
+            }
+#endif
+        }
+
         void destroy_state_vector_template() {
 #if SUNDIALS_VERSION_MAJOR >= 7
             if (state_vector_template_) {
@@ -886,6 +898,17 @@ namespace finmag { namespace sundials {
             if (!linear_solver_) throw std::runtime_error("Failed to create SUNDIALS linear solver");
             CHECK_SUNDIALS_RET(CVodeSetLinearSolver, (cvode_mem, linear_solver_, linear_matrix_));
         }
+
+        void ensure_nonlinear_solver() {
+            destroy_nonlinear_solver();
+            if (iter_type_ == CV_FUNCTIONAL) {
+                nonlinear_solver_ = SUNNonlinSol_FixedPoint(require_state_vector(), 0, sunctx_);
+            } else {
+                nonlinear_solver_ = SUNNonlinSol_Newton(require_state_vector(), sunctx_);
+            }
+            if (!nonlinear_solver_) throw std::runtime_error("Failed to create SUNDIALS nonlinear solver");
+            CHECK_SUNDIALS_RET(CVodeSetNonlinearSolver, (cvode_mem, nonlinear_solver_));
+        }
 #else
         void set_linear_solver_matrix_and_solver(void*, void*) {}
 #endif
@@ -895,6 +918,7 @@ namespace finmag { namespace sundials {
         SUNContext sunctx_;
         SUNLinearSolver linear_solver_;
         SUNMatrix linear_matrix_;
+        SUNNonlinearSolver nonlinear_solver_;
         N_Vector state_vector_template_;
         int iter_type_;
 #endif
@@ -925,7 +949,7 @@ namespace finmag { namespace sundials {
 
     cvode::cvode(int lmm, int iter): cvode_mem(0)
 #if SUNDIALS_VERSION_MAJOR >= 7
-        , sunctx_(NULL), linear_solver_(NULL), linear_matrix_(NULL), state_vector_template_(NULL), iter_type_(iter)
+        , sunctx_(NULL), linear_solver_(NULL), linear_matrix_(NULL), nonlinear_solver_(NULL), state_vector_template_(NULL), iter_type_(iter)
 #endif
     {
         if (lmm != CV_ADAMS && lmm != CV_BDF)
@@ -991,11 +1015,17 @@ namespace finmag { namespace sundials {
         rhs_fn = f;
         array_nvector y0_nvec(y0);
 #if SUNDIALS_VERSION_MAJOR >= 7
+        destroy_nonlinear_solver();
         destroy_state_vector_template();
         state_vector_template_ = N_VClone(y0_nvec.ptr());
         if (!state_vector_template_) throw std::runtime_error("N_VClone failed while initialising the CVODE state template");
 #endif
         CHECK_SUNDIALS_RET(CVodeInit, (cvode_mem, rhs_callback, t0, y0_nvec.ptr()));
+#if SUNDIALS_VERSION_MAJOR >= 7
+        // SUNDIALS 7 no longer takes CV_FUNCTIONAL/CV_NEWTON at CVodeCreate
+        // time, so reattach the matching nonlinear solver explicitly here. [Codex GPT-5.4]
+        ensure_nonlinear_solver();
+#endif
         // TODO: add a flag that cvode has been initialised; raise exceptions if flag unset
     }
 

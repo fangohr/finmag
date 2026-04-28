@@ -59,6 +59,12 @@ Workflow witnesses:
   - pixi / FEniCS-2019 aggregate witness
 - `dev/bin/verify-python3-m3`
   - first explicit pytest gate for the FEniCS-2019 compatibility track
+  - currently includes the historical `barmini` subset plus passing
+    `sim_ode`, applied-field, exchange-static, `test_llg.py`, the full
+    `test_sundials_ode.py` file, and the current anisotropy/DMI/energy
+    creation layer under FEniCS-2019
+  - the earlier SUNDIALS-7 crash in `test_simple_1d` is fixed by explicitly
+    attaching the matching nonlinear solver on the modern wrapper path. [Codex GPT-5.4]
 - `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
   - matching lightweight CI jobs for the two workflow witnesses
 - `.github/workflows/python3-m3.yml`

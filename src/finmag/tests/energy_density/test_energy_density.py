@@ -15,7 +15,7 @@ TOL = 1e-14
 
 @pytest.mark.skipif('subprocess.call(["which", "nsim"]) != 0')
 def test_exchange_energy_density():
-    """
+    r"""
     Compare solution with nmag for now. Should derive the
     analytical solution here as well.
 
@@ -169,7 +169,10 @@ def test_DMI_energy_density_3D():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
+@pytest.mark.skipif('subprocess.call(["which", "netgen"]) != 0')
 def test_demag_energy_density():
+    # The analytical demag check depends on an external netgen executable via
+    # sphere(...), so make that dependency explicit on the pixi/FEniCS-2019 path. [Codex GPT-5.4]
     """
     With a sphere mesh, unit magnetisation in x-direction,
     we expect the demag energy to be
