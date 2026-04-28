@@ -46,7 +46,7 @@ ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 MODULES = sundials.so llg.so llb.so
 else
 # The list of extension modules to build
-MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so
+MODULES = sundials.so llg.so llb.so fast_sum_lib.so neb.so #cvode_petsc.so
 endif
 # The directory to store the precompiled header file.
 PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
