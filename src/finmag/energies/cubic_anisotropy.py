@@ -73,11 +73,11 @@ class CubicAnisotropy(EnergyBase):
         
         self.volumes = df.assemble(df.TestFunction(cg_scalar_functionspace) * df.dx)
         self.K1 = df.assemble(
-            self.K1_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
+            self.K1_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes
         self.K2 = df.assemble(
-            self.K2_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
+            self.K2_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes
         self.K3 = df.assemble(
-            self.K3_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).array() / self.volumes
+            self.K3_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes  # DOLFIN 2019 vectors expose assembled coefficients via get_local(). [Codex GPT-5.4]
 
         u1msq = df.dot(self.u1_field.f, m.f) ** 2
         u2msq = df.dot(self.u2_field.f, m.f) ** 2

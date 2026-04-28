@@ -17,7 +17,7 @@ def test_spatially_varying_alpha_using_Simulation_class():
     sim = Simulation(mesh, Ms=1, unit_length=1e-9)
     sim.alpha = 1
     expected_alpha = np.ones(simplices + 1)
-    assert np.array_equal(sim.alpha.vector().array(), expected_alpha)
+    assert np.array_equal(sim.alpha.vector().get_local(), expected_alpha)  # DOLFIN 2019 PETSc vectors use get_local() instead of array(). [Codex GPT-5.4]
 
 
 def test_spatially_varying_alpha_using_LLG_class():
@@ -36,6 +36,6 @@ def test_spatially_varying_alpha_using_LLG_class():
     llg.set_alpha(1)
     expected_alpha = np.ones(simplices + 1)
 
-    print("Got:\n", llg.alpha.vector().array())
+    print("Got:\n", llg.alpha.vector().get_local())
     print("Expected:\n", expected_alpha)
-    assert np.array_equal(llg.alpha.vector().array(), expected_alpha)
+    assert np.array_equal(llg.alpha.vector().get_local(), expected_alpha)  # DOLFIN 2019 PETSc vectors use get_local() instead of array(). [Codex GPT-5.4]

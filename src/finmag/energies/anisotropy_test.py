@@ -102,8 +102,8 @@ def test_anisotropy_field(fixt):
     v = df.TestFunction(fixt["m"].functionspace)
     g_ani = df.Constant(fixt["K1"] / (mu0 * fixt["Ms"].value)) * (
         2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
-    volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
-    dE_dm = df.assemble(g_ani).array() / volume
+    volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).get_local()
+    dE_dm = df.assemble(g_ani).get_local() / volume  # DOLFIN 2019 vectors expose assembled coefficients via get_local(). [Codex GPT-5.4]
 
     print(textwrap.dedent("""
               With m = (1, 0, 1)/sqrt(2),

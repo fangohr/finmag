@@ -190,8 +190,13 @@ class FKDemag(object):
         elif solver_type == 'LU':
             self._poisson_solver = df.LUSolver(self._poisson_matrix.copy())
             self._laplace_solver = df.LUSolver()
-            self._poisson_solver.parameters["reuse_factorization"] = True
-            self._laplace_solver.parameters["reuse_factorization"] = True
+            # DOLFIN 2019 drops some legacy LU parameter names, so keep the
+            # reuse hint only where the backend still exposes it. [Codex GPT-5.4]
+            for solver in (self._poisson_solver, self._laplace_solver):
+                try:
+                    solver.parameters["reuse_factorization"] = True
+                except RuntimeError:
+                    pass
         else:
             raise ValueError("Argument 'solver_type' must be either 'Krylov' or 'LU'. "
                              "Got: '{}'".format(solver_type))

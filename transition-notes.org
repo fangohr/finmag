@@ -382,6 +382,14 @@ The gate has since been widened with passing FEniCS-2019 checks for:
 - `src/finmag/tests/test_anis.py`
 - `src/finmag/tests/test_dmi.py`
 - `src/finmag/tests/test_dmi_terms.py`
+- `src/finmag/tests/test_heun.py`
+- `src/finmag/tests/test_spatially_varying_alpha.py`
+- `src/finmag/tests/test_spatially_varying_anisotropy.py`
+- `src/finmag/tests/test_unit_length.py`
+- `src/finmag/tests/test_interactions_scale_linearly_with_m.py`
+- `src/finmag/energies/exchange_test.py`
+- `src/finmag/energies/anisotropy_test.py`
+- `src/finmag/energies/cubic_anisotropy_test.py`
 
 - `src/finmag/tests/energy_density/test_energy_density.py`
   keeps two explicit dependency skips in the M3 gate:
@@ -400,6 +408,23 @@ Focused SUNDIALS-7 fix:
   - this fixes the previous pixi/FEniCS-2019 regression where
     `test_simple_1d` in `test_sundials_ode.py` exited nonzero before pytest
     could report a normal failure. [Codex GPT-5.4]
+
+Additional DOLFIN-2019 / pytest compatibility fixes for the expanded M3 gate:
+
+- `src/finmag/tests/test_spatially_varying_alpha.py`
+- `src/finmag/energies/exchange_test.py`
+- `src/finmag/energies/anisotropy_test.py`
+- `src/finmag/energies/cubic_anisotropy.py`
+  - switched remaining legacy assembled-vector / PETSc-vector `.array()` calls
+    to `.get_local()` on the FEniCS-2019 path. [Codex GPT-5.4]
+- `src/finmag/tests/test_interactions_scale_linearly_with_m.py`
+  - replaced the old `pytest.mark.xfail((...))` parametrization form with
+    `pytest.param(..., marks=pytest.mark.xfail)` so the file collects cleanly
+    under modern pytest. [Codex GPT-5.4]
+- `src/finmag/energies/demag/fk_demag.py`
+  - the LU demag path now treats `reuse_factorization` as an optional hint,
+    because DOLFIN 2019 no longer exposes that parameter on all LU backends.
+    [Codex GPT-5.4]
 
 This subset is exposed in three places:
 

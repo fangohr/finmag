@@ -62,7 +62,8 @@ Workflow witnesses:
   - currently includes the historical `barmini` subset plus passing
     `sim_ode`, applied-field, exchange-static, `test_llg.py`, the full
     `test_sundials_ode.py` file, and the current anisotropy/DMI/energy
-    creation layer under FEniCS-2019
+    creation layer under FEniCS-2019, plus the current Heun / varying-alpha /
+    unit-length / interaction-linearity / common-energy regression slice
   - the earlier SUNDIALS-7 crash in `test_simple_1d` is fixed by explicitly
     attaching the matching nonlinear solver on the modern wrapper path. [Codex GPT-5.4]
 - `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
