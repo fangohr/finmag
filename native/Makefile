@@ -43,7 +43,7 @@ MODULE_DIR = ../src/finmag/native
 # fold Sundials back in as that port becomes viable. [Codex GPT-5.4]
 # [Codex GPT-5.4]
 ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
-MODULES = sundials.so llg.so
+MODULES = sundials.so llg.so llb.so
 else
 # The list of extension modules to build
 MODULES = sundials.so llg.so llb.so fast_sum_lib.so treecode_bem.so neb.so #cvode_petsc.so

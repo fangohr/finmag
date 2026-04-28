@@ -1018,8 +1018,8 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =79 passed=
-- =10 skipped=
+- =81 passed=
+- =9 skipped=
 - =1 xfailed=
 - runtime approximately =19s=
 
@@ -1031,6 +1031,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/tests/test_solid_angle.py=
 - =src/finmag/tests/test_solid_angle_invariance.py=
 - =src/finmag/physics/tests/neb/neb_test.py=
+- =src/finmag/physics/llb/sllg_test.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1050,11 +1051,12 @@ The enabling compatibility work in this increment was:
 - =finmag.physics.neb= now imports without =finmag.native.neb= for helper-only
   use, and defers the native-module requirement to the actual tangent
   computation path used by full NEB runs
+- the pixi native build now includes =llb.so= again, and the DOLFIN 2019
+  =sllg= runtime path uses =get_local()= on PETSc-backed vectors instead of
+  the removed =.array()= accessor
 
 Current M3 boundaries remain explicit:
 
-- =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase stay
-  environment-conditional on the separate =llb= extension
 - full NEB tangent computations still require =finmag.native.neb=, even
   though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
   now runs in M3
