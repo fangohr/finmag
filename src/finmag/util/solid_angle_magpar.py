@@ -1,12 +1,71 @@
-import instant
+import math
+
+import numpy as np
+
+try:
+    import instant
+except ImportError:
+    instant = None
+
+
+def _point_from_plane(x, v1, v2, v3):
+    """Return the signed plane-distance numerator used by the Magpar formula. [Codex GPT-5.4]"""
+    ab = v1 - v2
+    ac = v1 - v3
+    n = np.cross(ab, ac)
+    return np.dot(x, n) - np.dot(v1, n)
+
+
+def _solid_angle_magpar_numpy(x, v1, v2, v3):
+    """Pure-NumPy fallback for the Magpar solid-angle reference helper. [Codex GPT-5.4]"""
+    x = np.asarray(x, dtype=float)
+    v1 = np.asarray(v1, dtype=float)
+    v2 = np.asarray(v2, dtype=float)
+    v3 = np.asarray(v3, dtype=float)
+
+    d_eps = 1e-12
+    d = _point_from_plane(x, v1, v2, v3)
+    if abs(d) < d_eps:
+        return 0.0
+
+    t_ea = v1 - x
+    t_eb = v2 - x
+    t_ec = v3 - x
+
+    t_nab = np.cross(t_ea, t_eb)
+    t_nbc = np.cross(t_eb, t_ec)
+    t_nca = np.cross(t_ec, t_ea)
+
+    for normal in (t_nab, t_nbc, t_nca):
+        norm = np.linalg.norm(normal)
+        if norm < d_eps:
+            return 0.0
+        normal /= norm
+
+    # Keep a non-instant Magpar reference path for the solid-angle tests on
+    # pixi/FEniCS-2019, where the old JIT helper package is absent. [Codex GPT-5.4]
+    def dihedral(a, b):
+        dot = np.dot(a, b)
+        if dot > 1.0:
+            return math.pi
+        if dot < -1.0:
+            return 0.0
+        return math.pi - math.acos(dot)
+
+    return dihedral(t_nab, t_nbc) + dihedral(t_nbc, t_nca) + dihedral(t_nca, t_nab) - math.pi
 
 
 def return_csa_magpar():
+    """Return the instant-backed helper when available, else the NumPy fallback. [Codex GPT-5.4]"""
+    if instant is None:
+        return _solid_angle_magpar_numpy
+
     args = [["xn", "x", "in"], ["v1n", "v1", "in"],
             ["v2n", "v2", "in"], ["v3n", "v3", "in"]]
     return instant.inline_with_numpy(C_CODE, arrays=args)
 
-C_CODE = """
+
+C_CODE = r"""
 double SolidAngle(int xn, double *x, int v1n, double *v1, int v2n, double *v2, int v3n, double *v3);
 
 #define my_daxpy(a,b,c,d,e,f) {(e)[0]+=b*(c)[0];(e)[1]+=b*(c)[1];(e)[2]+=b*(c)[2];}

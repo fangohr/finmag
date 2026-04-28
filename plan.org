@@ -1018,16 +1018,18 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =71 passed=
+- =77 passed=
 - =10 skipped=
 - =1 xfailed=
-- runtime approximately =18s=
+- runtime approximately =19s=
 
 The newly promoted M3 coverage includes:
 
 - =src/finmag/tests/zhangli/zhang_li_test.py=
 - =src/finmag/tests/zhangli/stt_nonlocal_test.py=
 - =src/finmag/tests/test_skyrmions.py=
+- =src/finmag/tests/test_solid_angle.py=
+- =src/finmag/tests/test_solid_angle_invariance.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1041,6 +1043,9 @@ The enabling compatibility work in this increment was:
   =finmag.native.llb= extension is unavailable, so the deterministic
   Zhang-Li path can stay in the gate without forcing the stochastic
   =sllg= native module into the first pixi build
+- =finmag.util.solid_angle_magpar.return_csa_magpar()= now falls back to a
+  NumPy implementation of the Magpar solid-angle reference formula when the
+  old =instant= JIT helper package is unavailable on the pixi path
 
 Current M3 boundaries remain explicit:
 
@@ -1048,6 +1053,3 @@ Current M3 boundaries remain explicit:
   does not yet provide =finmag.native.neb=
 - =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase stay
   environment-conditional on the separate =llb= extension
-- =src/finmag/tests/test_solid_angle.py= and
-  =src/finmag/tests/test_solid_angle_invariance.py= stay out until their old
-  =instant= dependency is either packaged or retired on the pixi path

@@ -2036,16 +2036,18 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =71 passed=
+- =77 passed=
 - =10 skipped=
 - =1 xfailed=
-- runtime approximately =18.35s=
+- runtime approximately =19.42s=
 
 Newly promoted tests in this increment:
 
 - =src/finmag/tests/zhangli/zhang_li_test.py=
 - =src/finmag/tests/zhangli/stt_nonlocal_test.py=
 - =src/finmag/tests/test_skyrmions.py=
+- =src/finmag/tests/test_solid_angle.py=
+- =src/finmag/tests/test_solid_angle_invariance.py=
 
 Compatibility changes that enabled this:
 
@@ -2058,6 +2060,9 @@ Compatibility changes that enabled this:
 - =test_zhangli_sllg= now skips explicitly when =finmag.native.llb= is absent,
   which keeps the deterministic Zhang-Li regression in M3 without forcing the
   stochastic =sllg= native module into the first pixi build
+- =finmag.util.solid_angle_magpar.return_csa_magpar()= now falls back to a
+  NumPy implementation of the Magpar solid-angle reference formula when the
+  old =instant= package is unavailable on the pixi path
 
 Still out of the current M3 gate:
 
@@ -2065,6 +2070,3 @@ Still out of the current M3 gate:
   yet provide =finmag.native.neb=
 - =src/finmag/physics/llb/sllg_test.py= and the =sllg= Zhang-Li subcase unless
   the separate =llb= extension is built
-- =src/finmag/tests/test_solid_angle.py= and
-  =src/finmag/tests/test_solid_angle_invariance.py= until the old =instant=
-  dependency is either packaged or replaced
