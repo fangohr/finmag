@@ -27,6 +27,11 @@ except Exception:
 
 log = logging.getLogger(name="finmag")
 
+# DOLFIN 2017 only exposes Expression, while newer paths also expose UserExpression. [Codex GPT-5.4]
+_DOLFIN_EXPRESSION_TYPES = tuple(
+    t for t in (df.Expression, getattr(df, "UserExpression", None)) if t is not None
+)
+
 
 def _dolfin_vector_array(vector):
     if hasattr(vector, "get_local"):
@@ -131,7 +136,7 @@ class Field(object):
         in which case it will build the dolfin expression for you.
 
         """
-        if not isinstance(expr, (df.Expression, df.UserExpression)):
+        if not isinstance(expr, _DOLFIN_EXPRESSION_TYPES):
             if isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == 0:
                 assert (isinstance(expr, basestring) or
                         isinstance(expr, (tuple, list)) and len(expr) == 1)
@@ -189,7 +194,7 @@ class Field(object):
         """
         if isinstance(value, df.Constant):
             self.from_constant(value)
-        elif isinstance(value, df.Expression):
+        elif isinstance(value, _DOLFIN_EXPRESSION_TYPES):
             self.from_expression(value)
         elif isinstance(value, df.Function):
             self.from_function(value)

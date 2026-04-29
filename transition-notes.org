@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =81 passed=
-- =9 skipped=
+- =94 passed=
+- =12 skipped=
 - =1 xfailed=
-- runtime approximately =19.23s=
+- runtime approximately =49.77s=
 
 Newly promoted tests in this increment:
 
@@ -2050,6 +2050,8 @@ Newly promoted tests in this increment:
 - =src/finmag/tests/test_solid_angle_invariance.py=
 - =src/finmag/physics/tests/neb/neb_test.py=
 - =src/finmag/physics/llb/sllg_test.py=
+- =src/finmag/util/meshes_test.py=
+- =src/finmag/sim/sim_helpers_test.py=
 
 Compatibility changes that enabled this:
 
@@ -2071,9 +2073,22 @@ Compatibility changes that enabled this:
 - the pixi native build now includes =llb.so= again, and
   =finmag.physics.llb.sllg.SLLG= now uses =get_local()= on the DOLFIN 2019
   PETSc-vector paths exercised by the stochastic =sllg= runtime
+- =finmag.util.meshes.build_mesh()= now opens =MeshEditor= with the DOLFIN
+  2019 cell-type string API, while the Gmsh helper forces =-format msh2= so
+  the legacy =dolfin-convert= path can still import the generated mesh on the
+  pixi stack
+- =finmag.sim.sim_savers= now saves PETSc-backed field data through
+  =vector().get_local()=, and the skyrmion-density helper in
+  =finmag.sim.sim_helpers= uses the same DOLFIN 2019-compatible vector access
+- =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
+  =inspect.getfullargspec= fallback rather than the removed
+  =inspect.getargspec=
 
 Still out of the current M3 gate:
 
 - full NEB tangent computations still require =finmag.native.neb=, even
   though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
   now runs in M3
+- =src/finmag/tests/test_meshes.py= still skips on the pixi path because the
+  Netgen-backed legacy geometry workflow is not yet reliable enough there to
+  promote into the M3 gate

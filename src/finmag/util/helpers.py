@@ -68,7 +68,8 @@ def expression_from_python_function(func, function_space):
             # DOLFIN 2019 expects Python-backed expressions to derive from
             # UserExpression, but the legacy 2017 gate still only exposes
             # Expression. [Codex GPT-5.4]
-            super(ExpressionFromPythonFunction, self).__init__(**kwargs)
+            if expression_base is not df.Expression:
+                super(ExpressionFromPythonFunction, self).__init__(**kwargs)
             self.func = python_function
 
         def eval(self, eval_result, x):
@@ -742,7 +743,9 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
         class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
-                super(HelperExpression, self).__init__(**kwargs)
+                # The legacy 2017 Expression base must not receive __init__ kwargs here. [Codex GPT-5.4]
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -815,7 +818,9 @@ def scalar_valued_function(value, mesh_or_space):
         class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
-                super(HelperExpression, self).__init__(**kwargs)
+                # The legacy 2017 Expression base must not receive __init__ kwargs here. [Codex GPT-5.4]
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -953,7 +958,6 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
         class HelperExpression(df.Expression):
 
             def __init__(self, value, **kwargs):
-                super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):

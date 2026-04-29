@@ -796,8 +796,8 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `81 passed`
-- `9 skipped`
+- `94 passed`
+- `12 skipped`
 - `1 xfailed`
 
 using:
@@ -814,6 +814,8 @@ The newest promoted M3 tests are:
 - `src/finmag/tests/test_solid_angle_invariance.py`
 - `src/finmag/physics/tests/neb/neb_test.py`
 - `src/finmag/physics/llb/sllg_test.py`
+- `src/finmag/util/meshes_test.py`
+- `src/finmag/sim/sim_helpers_test.py`
 
 Current M3 boundary notes for future agents:
 
@@ -832,3 +834,19 @@ The pixi native build now includes `llb.so` again:
 - `src/finmag/physics/llb/sllg_test.py` is active in M3
 - `src/finmag/tests/zhangli/zhang_li_test.py::test_zhangli_sllg` now runs on
   the pixi/FEniCS-2019 path
+
+Recent helper-path compatibility work to know about:
+
+- `src/finmag/util/meshes.py` now uses the DOLFIN 2019 `MeshEditor.open()`
+  cell-type string API and forces Gmsh output to `msh2` for the old
+  `dolfin-convert` bridge
+- `src/finmag/sim/sim_savers.py` and `src/finmag/sim/sim_helpers.py` now use
+  `get_local()` on PETSc-backed vectors in the exercised M3 save/helper paths
+- `src/finmag/sim/sim.py` now uses a Python 3.11-safe
+  `inspect.getfullargspec` fallback in scheduling
+
+Current additional M3 boundary note:
+
+- `src/finmag/tests/test_meshes.py` still skips on the pixi path because the
+  legacy Netgen-backed geometry workflow is not yet reliable enough there for
+  promotion into the gate
