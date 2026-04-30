@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =94 passed=
-- =12 skipped=
+- =165 passed=
+- =6 skipped=
 - =1 xfailed=
-- runtime approximately =49.77s=
+- runtime approximately =99.51s=
 
 Newly promoted tests in this increment:
 
@@ -2052,6 +2052,13 @@ Newly promoted tests in this increment:
 - =src/finmag/physics/llb/sllg_test.py=
 - =src/finmag/util/meshes_test.py=
 - =src/finmag/sim/sim_helpers_test.py=
+- =src/finmag/tests/test_meshes.py=
+- =src/finmag/util/mesh_templates_test.py=
+- =src/finmag/util/helpers_test.py=
+- =src/finmag/util/length_scales_test.py=
+- =src/finmag/util/pbc_test.py=
+- =src/finmag/util/plot_helpers_test.py=
+- =src/finmag/util/vtk_saver_test.py=
 
 Compatibility changes that enabled this:
 
@@ -2083,12 +2090,29 @@ Compatibility changes that enabled this:
 - =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
   =inspect.getfullargspec= fallback rather than the removed
   =inspect.getargspec=
+- =finmag.util.meshes= now falls back to the Netgen Python API when the
+  conda-forge package does not provide the historical =netgen= CLI, and
+  launched-and-hung Netgen probes raise rather than silently turning into
+  skips
+- =finmag.util.meshes= now uses Matplotlib's supported
+  =add_subplot(..., projection='3d')= path for 3D plotting on this stack
+- =finmag.util.helpers= and its exercised callers now use =get_local()= on
+  PETSc-backed vectors, accept =UserExpression=-compatible callable helpers,
+  and avoid the removed =df.parameters.reorder_dofs_serial= attribute on the
+  DOLFIN 2019 path
+- =src/finmag/util/mesh_templates_test.py= now uses a looser combined-mesh
+  volume tolerance on this path to account for the small numerical
+  differences in regenerated Netgen geometry
+- =src/finmag/util/length_scales_test.py= now uses a pytest-9-compatible
+  =setup_method()= hook instead of the old bare =setup()=
+- =src/finmag/util/vtk_saver_test.py= now initializes PETSc-backed vectors
+  with =set_local()= instead of the removed =.array()= accessor
 
 Still out of the current M3 gate:
 
 - full NEB tangent computations still require =finmag.native.neb=, even
   though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
   now runs in M3
-- =src/finmag/tests/test_meshes.py= still skips on the pixi path because the
-  Netgen-backed legacy geometry workflow is not yet reliable enough there to
-  promote into the M3 gate
+- =src/finmag/energies/demag/demag_pbc_test.py= remains outside the gate
+  because the pixi native build still lacks a working =treecode_bem=
+  extension

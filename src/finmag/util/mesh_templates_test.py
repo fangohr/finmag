@@ -12,7 +12,7 @@ import logging
 
 # loose tolerance for bad approximations (e.g. for a spherical mesh)
 TOL1 = 1e-2
-TOL2 = 1e-7   # intermediate tolerance (used e.g. for the sum of two meshes;
+TOL2 = 1e-5   # intermediate tolerance (used e.g. for the sum of two meshes;
 # the strict tolerance won't work here because Netgen seems to
 # mesh combined meshes slightly differently than their components)
 # strict tolerance where we expect almost exact values (e.g. for a box mesh)

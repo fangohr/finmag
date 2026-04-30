@@ -18,7 +18,7 @@ class TestVTKSaver(object):
         N = mesh.num_vertices()
         self.field_data = df.Function(S3)
         # The next line is a hack and not recommended for real work
-        self.field_data.vector().array()[:] = np.zeros(3 * N)
+        self.field_data.vector().set_local(np.zeros(3 * N))
 
     def test_constructor(self, tmpdir):
         """

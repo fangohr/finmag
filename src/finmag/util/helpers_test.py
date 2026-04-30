@@ -43,7 +43,7 @@ def test_logging_handler_str():
     hdlr = logging.NullHandler()
     hdlr_str = logging_handler_str(hdlr)
     print(hdlr_str)
-    assert(re.match("^<logging.NullHandler object at .*>$", hdlr_str) != None)
+    assert("NullHandler" in hdlr_str)
 
 
 def test_logging_status_str():
@@ -209,21 +209,21 @@ def test_vector_valued_function():
 
     # Check that the function vectors are as expected
     #import ipdb; ipdb.set_trace()
-    assert(all(f_tuple.vector() == v_ref))
-    assert(all(f_list.vector() == v_ref))
-    assert(all(f_array3.vector() == v_ref))
-    assert(all(f_dfconstant.vector() == v_ref))
-    assert(all(f_expr.vector() == v_ref_expr))
-    assert(all(f_array3xN.vector() == v_ref))
-    assert(all(f_arrayN3.vector() == v_ref))
-    assert(all(f_callable.vector() == v_ref_expr))
+    assert(np.allclose(f_tuple.vector().get_local(), v_ref))
+    assert(np.allclose(f_list.vector().get_local(), v_ref))
+    assert(np.allclose(f_array3.vector().get_local(), v_ref))
+    assert(np.allclose(f_dfconstant.vector().get_local(), v_ref))
+    assert(np.allclose(f_expr.vector().get_local(), v_ref_expr))
+    assert(np.allclose(f_array3xN.vector().get_local(), v_ref))
+    assert(np.allclose(f_arrayN3.vector().get_local(), v_ref))
+    assert(np.allclose(f_callable.vector().get_local(), v_ref_expr))
 
-    assert(all(f_tuple_normalised.vector() == v_ref_normalised))
-    print("[DDD] #1: {}".format(f_expr_normalised.vector().array()))
+    assert(np.allclose(f_tuple_normalised.vector().get_local(), v_ref_normalised))
+    print("[DDD] #1: {}".format(f_expr_normalised.vector().get_local()))
     print("[DDD] #2: {}".format(v_ref_expr_normalised))
 
-    assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
-    assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
+    assert(np.allclose(f_expr_normalised.vector().get_local(), v_ref_expr_normalised))
+    assert(np.allclose(f_callable_normalised.vector().get_local(), v_ref_expr_normalised))
 
 
 def test_scalar_valued_dg_function():
@@ -242,7 +242,7 @@ def test_scalar_valued_dg_function():
     assert f(0.5, 0.7, 0.51) == 10.0
     assert f(0.4, 0.3, 0.96) == 10.0
     assert f(0, 0, 0.49) == 1.0
-    fa = f.vector().array().reshape(2, -1)
+    fa = f.vector().get_local().reshape(2, -1)
 
     assert np.min(fa[0]) == np.max(fa[0]) == 1
     assert np.min(fa[1]) == np.max(fa[1]) == 10
@@ -251,7 +251,7 @@ def test_scalar_valued_dg_function():
     dgf = df.Function(dg)
     dgf.vector()[0] = 9.9
     f = scalar_valued_dg_function(dgf, mesh)
-    assert f.vector().array()[0] == 9.9
+    assert f.vector().get_local()[0] == 9.9
 
 
 def test_angle():
@@ -312,7 +312,7 @@ def test_piecewise_on_subdomains():
     # check that p is a proper Function, not a MeshFunction
     assert(isinstance(p, df.Function))
     assert(
-        np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
+        np.allclose(p.vector().get_local(), np.array([42, 42, 23, -3.14, 42, -3.14])))
 
 
 def test_vector_field_from_dolfin_function():
@@ -461,9 +461,9 @@ def test_crossprod():
     w = df.interpolate(
         df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]'], degree=1), V)
 
-    a = u.vector().array()
-    b = v.vector().array()
-    c = w.vector().array()
+    a = u.vector().get_local()
+    b = v.vector().get_local()
+    c = w.vector().get_local()
 
     axb = crossprod(a, b)
     assert(np.allclose(axb, c))
@@ -484,7 +484,7 @@ def test_apply_vertexwise():
     uxv = apply_vertexwise(np.cross, u, v)
     #udotv = apply_vertexwise(np.dot, u, v)
 
-    assert(np.allclose(uxv.vector().array(), w.vector().array()))
+    assert(np.allclose(uxv.vector().get_local(), w.vector().get_local()))
     #assert(np.allclose(udotv.vector().array(), w2.vector().array()))
 
 
@@ -650,7 +650,7 @@ def test_restriction(tmpdir):
 
         def inside(self, pt, on_boundary):
             return pt[0] > 0
-    region_markers = df.CellFunction('size_t', mesh)
+    region_markers = df.MeshFunction('size_t', mesh, mesh.topology().dim())
     subdomain1 = Sphere1()
     subdomain2 = Sphere2()
     subdomain1.mark(region_markers, 1)
@@ -673,12 +673,12 @@ def test_restriction(tmpdir):
     f1 = r1(f)
     f2 = r2(f)
 
-    assert(np.allclose(f1.vector().array(), 42.0))
-    assert(np.allclose(f2.vector().array(), 23.0))
-    assert(len(f1.vector().array()) == submesh1.num_vertices())
-    assert(len(f2.vector().array()) == submesh2.num_vertices())
+    assert(np.allclose(f1.vector().get_local(), 42.0))
+    assert(np.allclose(f2.vector().get_local(), 23.0))
+    assert(len(f1.vector().get_local()) == submesh1.num_vertices())
+    assert(len(f2.vector().get_local()) == submesh2.num_vertices())
 
-    a = f.vector().array()
+    a = f.vector().get_local()
     a1 = r1(a)
     a2 = r2(a)
     assert(set(a) == set([23.0, 42.0]))

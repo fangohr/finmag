@@ -490,7 +490,8 @@ def crossprod(v, w):
     of the same form.
 
     """
-    if df.parameters.reorder_dofs_serial != False:
+    reorder_dofs_serial = getattr(df.parameters, "reorder_dofs_serial", False)
+    if reorder_dofs_serial != False:
         raise RuntimeError(
             "Please ensure that df.parameters.reorder_dofs_serial is set to False.")
     assert(v.ndim == 1 and w.ndim == 1)
@@ -882,9 +883,13 @@ def scalar_valued_dg_function(value, mesh_or_space):
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
 
-        class HelperExpression(df.Expression):
+        helper_expression_base = getattr(df, "UserExpression", df.Expression)
+
+        class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -974,7 +979,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
                         "argument of type '{}'".format(type(value)))
 
     if normalise:
-        fun.vector()[:] = fnormalise(fun.vector().array())
+        fun.vector()[:] = fnormalise(fun.vector().get_local())
 
     return fun
 
@@ -1060,7 +1065,7 @@ def restriction(mesh, submesh):
                     "Array must be 1- or 2-dimensional. Got: dim={}".format(f.ndim))
         else:
             assert(isinstance(f, df.Function))
-            f_arr = f.vector().array()
+            f_arr = f.vector().get_local()
             f_submesh = df.Function(V_submesh)
             f_submesh.vector()[:] = f_arr[parent_vertex_indices]
             return f_submesh
@@ -1470,7 +1475,7 @@ def save_dg_fun(fun, name='unnamed.vtk', dataname='m', binary=False):
     grid = pyvtk.UnstructuredGrid(points,
                                   tetra=tetras)
 
-    m = fun.vector().array()
+    m = fun.vector().get_local()
 
     m.shape = (3, -1)
     print(m)
@@ -1503,7 +1508,7 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
     grid = pyvtk.UnstructuredGrid(points,
                                   vertex=verts)
 
-    m = fun.vector().array()
+    m = fun.vector().get_local()
 
     m.shape = (3, -1)
     data = pyvtk.PointData(pyvtk.Vectors(np.transpose(m), dataname))
@@ -1589,7 +1594,7 @@ def apply_vertexwise(f, *args):
     # (u, v) in pairwise(args)))  # check that all meshes coincide
 
     # Extract the array for each dolfin.Function
-    aa = [u.vector().array() for u in args]
+    aa = [u.vector().get_local() for u in args]
     #V = args[0].function_space()
     # assert(all([V == a.function_space() for a in aa]))  # XXX TODO: how to
     # deal with functions defined on different function spaces?!?
