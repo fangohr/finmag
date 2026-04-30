@@ -233,13 +233,21 @@ def _netgen_command(geofile, diffpackfile):
     return "xvfb-run -a {}".format(netgen_inner_cmd)
 
 
-def _run_netgen(geofile, diffpackfile):
+def _run_netgen(geofile, diffpackfile, timeout=None):
     proc = subprocess.Popen(
         _netgen_command(geofile, diffpackfile),
         shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
-    output, _ = proc.communicate()
+    try:
+        output, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        output, _ = proc.communicate()
+        if not isinstance(output, str):
+            output = output.decode('utf-8', 'replace')
+        output += "\n[finmag] netgen probe timed out after {}s".format(timeout)
+        return -1, output
     if not isinstance(output, str):
         output = output.decode('utf-8', 'replace')
     return proc.returncode, output
@@ -277,7 +285,11 @@ def netgen_is_usable():
     try:
         with open(geofile, "w") as f:
             f.write(csg)
-        status, output = _run_netgen(geofile, diffpackfile)
+        # Keep the probe deterministic, but treat a launched-and-hung Netgen
+        # process as a real failure rather than optional-tool unavailability. [Codex GPT-5.4]
+        status, output = _run_netgen(geofile, diffpackfile, timeout=20)
+        if status == -1:
+            raise RuntimeError(output)
         if not _netgen_output_is_usable(status, output, diffpackfile):
             logger.debug("Netgen usability probe failed with exit code %s.", status)
             logger.debug("Netgen usability probe output:\n%s", output)
