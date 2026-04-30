@@ -20,60 +20,65 @@ deb http://snapshot.debian.org/archive/debian/20170920T000000Z sid main
 deb-src http://snapshot.debian.org/archive/debian/20170920T000000Z sid main
 EOF
 
-RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositories "true";\nAPT::Get::AllowUnauthenticated "true";\n' > /etc/apt/apt.conf.d/99snapshot
+RUN printf 'Acquire::Check-Valid-Until "false";\nAcquire::AllowInsecureRepositories "true";\nAPT::Get::AllowUnauthenticated "true";\nAcquire::Retries "5";\nAcquire::http::Timeout "60";\nAcquire::https::Timeout "60";\n' > /etc/apt/apt.conf.d/99snapshot
 
 # Move the base system onto the historical snapshot so that the exact DOLFIN
 # dependency set can be resolved consistently.
 RUN apt-get update -y && \
     apt-get dist-upgrade -y --allow-unauthenticated
 
-RUN apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downgrades \
-    python3 \
-    python3-dev \
-    python3-matplotlib \
-    python3-pip \
-    python3-scipy \
-    python3-setuptools \
-    ca-certificates \
-    default-libmysqlclient-dev \
-    cython3 \
-    g++ \
-    libboost-python-dev \
-    libboost-test-dev \
-    git \
-    gmsh \
-    libfreetype6-dev \
-    libgdal-dev \
-    libhdf5-openmpi-dev \
-    libhdf5-mpi-dev \
-    libnetcdf-dev \
-    netgen \
-    libpng-dev \
-    libptscotch-dev \
-    libscotch-dev \
-    libsundials-dev=2.7.0+dfsg-2 \
-    libtiff-dev \
-    libvtk6-dev \
-    libxft-dev \
-    libpetsc3.7.6-dev \
-    libslepc3.7.4-dev \
-    tcl-dev \
-    tix \
-    tk-dev \
-    make \
-    xauth \
-    xvfb \
-    zlib1g=1:1.2.8.dfsg-5 \
-    zlib1g-dev \
-    libdolfin-dev=2017.1.0-4 \
-    python3-dolfin=2017.1.0-4 \
-    python3-ffc=2017.1.0-2 \
-    python3-ufl=2017.1.0-2 \
-    python3-dijitso=2017.1.0-2 \
-    python3-fiat=2017.1.0-2 \
-    python3-instant=2017.1.0-2 \
-    python3-petsc4py=3.7.0-3+b2 \
-    python3-slepc4py=3.7.0-3+b1
+RUN for attempt in 1 2 3; do \
+        apt-get install -y --fix-missing --no-install-recommends --allow-unauthenticated --allow-downgrades \
+            python3 \
+            python3-dev \
+            python3-matplotlib \
+            python3-pip \
+            python3-scipy \
+            python3-setuptools \
+            ca-certificates \
+            default-libmysqlclient-dev \
+            cython3 \
+            g++ \
+            libboost-python-dev \
+            libboost-test-dev \
+            git \
+            gmsh \
+            libfreetype6-dev \
+            libgdal-dev \
+            libhdf5-openmpi-dev \
+            libhdf5-mpi-dev \
+            libnetcdf-dev \
+            netgen \
+            libpng-dev \
+            libptscotch-dev \
+            libscotch-dev \
+            libsundials-dev=2.7.0+dfsg-2 \
+            libtiff-dev \
+            libvtk6-dev \
+            libxft-dev \
+            libpetsc3.7.6-dev \
+            libslepc3.7.4-dev \
+            tcl-dev \
+            tix \
+            tk-dev \
+            make \
+            xauth \
+            xvfb \
+            zlib1g=1:1.2.8.dfsg-5 \
+            zlib1g-dev \
+            libdolfin-dev=2017.1.0-4 \
+            python3-dolfin=2017.1.0-4 \
+            python3-ffc=2017.1.0-2 \
+            python3-ufl=2017.1.0-2 \
+            python3-dijitso=2017.1.0-2 \
+            python3-fiat=2017.1.0-2 \
+            python3-instant=2017.1.0-2 \
+            python3-petsc4py=3.7.0-3+b2 \
+            python3-slepc4py=3.7.0-3+b1 && break; \
+        if [ "$attempt" -eq 3 ]; then exit 1; fi; \
+        apt-get update -y; \
+        sleep 5; \
+    done
 
 # Netgen 4.9.13 in this snapshot links against Tcl/Tk 8.5 and looks for Tix in
 # historical 8.5-era locations, while Debian's `tix` package installs the files
