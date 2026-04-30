@@ -415,8 +415,9 @@ def test_probe():
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
 
-@pytest.mark.skipif(shutil.which("hg") is None,
-                    reason="historical Mercurial helper; hg is not a Python 3 transition dependency")
+@pytest.mark.skipif(
+    shutil.which("hg") is None or not os.path.isdir(os.path.join(MODULE_DIR, ".hg")),
+    reason="historical Mercurial helper; no Mercurial checkout is available in the Python 3 transition environment")
 def test_get_hg_revision_info(tmpdir):
     """Historical coverage for the pre-Git Mercurial revision helper. [Codex GPT-5.4]"""
     finmag_repo = MODULE_DIR
