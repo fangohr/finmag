@@ -233,7 +233,22 @@ def _netgen_command(geofile, diffpackfile):
     return "xvfb-run -a {}".format(netgen_inner_cmd)
 
 
+def _run_netgen_via_python_api(geofile, diffpackfile):
+    from netgen.csg import CSGeometry
+
+    geo = CSGeometry(geofile)
+    mesh = geo.GenerateMesh()
+    mesh.Export(diffpackfile, "DIFFPACK Format")
+    return 0, "Generated mesh via netgen Python API."
+
+
 def _run_netgen(geofile, diffpackfile, timeout=None):
+    if shutil.which("netgen") is None:
+        try:
+            return _run_netgen_via_python_api(geofile, diffpackfile)
+        except Exception as exc:
+            return 127, "netgen executable not found and Python API fallback failed: {}".format(exc)
+
     proc = subprocess.Popen(
         _netgen_command(geofile, diffpackfile),
         shell=True,
@@ -271,8 +286,12 @@ def netgen_is_usable():
     Return True if Netgen is present and can complete a minimal mesh-generation
     run in the current environment. [Codex GPT-5.4]
     """
-    if shutil.which("netgen") is None:
-        return False
+    has_netgen_cli = shutil.which("netgen") is not None
+    if not has_netgen_cli:
+        try:
+            import netgen.csg  # noqa: F401
+        except ImportError:
+            return False
 
     tmpdir = tempfile.mkdtemp(prefix="finmag-netgen-probe-")
     geofile = os.path.join(tmpdir, "probe.geo")
@@ -1143,7 +1162,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
         follows:
 
            import matplotlib.pyplot as plt
-           ax = plt.gca(projection='3d')
+           ax = plt.gcf().add_subplot(111, projection='3d')
 
     figsize : pair of floats
 
@@ -1436,7 +1455,7 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
                         "Got: '{}' ({})".format(regions, type(regions)))
 
     if ax is None:
-        ax = plt.gca(projection='3d')
+        ax = plt.gcf().add_subplot(111, projection='3d')
 
     mesh = fun_mesh_regions.mesh()
     midpoints = [[c.midpoint() for c in df.cells(mesh)
