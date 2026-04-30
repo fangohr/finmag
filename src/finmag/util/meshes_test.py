@@ -100,7 +100,10 @@ def test_build_mesh():
     mesh1 = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 12, 8)
     assert_mesh_builds_correctly(mesh1)
 
-    mesh2 = df.UnitDiscMesh.create(df.MPI.comm_world, 10, 1, 2)
+    if hasattr(df.UnitDiscMesh, "create"):
+        mesh2 = df.UnitDiscMesh.create(df.MPI.comm_world, 10, 1, 2)
+    else:
+        mesh2 = df.UnitDiscMesh(df.mpi_comm_world(), 10, 1, 2)
     assert_mesh_builds_correctly(mesh2)
 
     mesh3 = df.BoxMesh(df.Point(0, 0, 0), df.Point(20, 10, 5), 12, 8, 3)

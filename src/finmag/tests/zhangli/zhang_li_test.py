@@ -71,7 +71,7 @@ def test_zhangli():
 def test_zhangli_sllg():
     # Keep the deterministic Zhang-Li path in M3, but only exercise the
     # stochastic sllg variant when the separate llb native module is built. [Codex GPT-5.4]
-    pytest.importorskip("finmag.native.llb", reason="sllg kernel needs the llb native module in this environment")
+    pytest.importorskip("finmag.native.llb")
 
     #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)

@@ -34,26 +34,29 @@ class Demag2D(FKDemag):
 
         mesh3 = df.Mesh()
         editor = df.MeshEditor()
-        # DOLFIN 2019 expects the cell type plus point/list-based insertions in
-        # MeshEditor, so use the newer tetrahedron API here. [Codex GPT 5.4]
-        editor.open(mesh3, "tetrahedron", 3, 3)
+        # DOLFIN 2019 expects the cell type string here, while 2017 still uses
+        # the older numeric-only MeshEditor signature. [Codex GPT-5.4]
+        try:
+            editor.open(mesh3, "tetrahedron", 3, 3)
+        except TypeError:
+            editor.open(mesh3, 3, 3)
         editor.init_vertices(2 * nv)
         editor.init_cells(3 * nc)
 
         for v in df.vertices(mesh):
             i = v.index()
             p = v.point()
-            editor.add_vertex(i, [p.x(), p.y(), 0.0])
-            editor.add_vertex(i + nv, [p.x(), p.y(), h])
+            editor.add_vertex(i, np.asarray([p.x(), p.y(), 0.0], dtype=np.float64))
+            editor.add_vertex(i + nv, np.asarray([p.x(), p.y(), h], dtype=np.float64))
 
         gid = 0
         for c in df.cells(mesh):
-            i, j, k = c.entities(0)
-            editor.add_cell(gid, [i, j, k, i + nv])
+            i, j, k = [int(v) for v in c.entities(0)]
+            editor.add_cell(gid, np.asarray([i, j, k, i + nv], dtype=np.uintp))
             gid = gid + 1
-            editor.add_cell(gid, [j, j + nv, k, i + nv])
+            editor.add_cell(gid, np.asarray([j, j + nv, k, i + nv], dtype=np.uintp))
             gid = gid + 1
-            editor.add_cell(gid, [k, k + nv, j + nv, i + nv])
+            editor.add_cell(gid, np.asarray([k, k + nv, j + nv, i + nv], dtype=np.uintp))
             gid = gid + 1
 
         editor.close()
