@@ -124,6 +124,7 @@ class SundialsIntegrator(object):
 
         """
         old_max_steps = self.max_steps
+        initial_nsteps = self.stats()['nsteps']
         self.max_steps = steps
         try:
             # we can't tell sundials to run a certain number of steps
@@ -131,8 +132,15 @@ class SundialsIntegrator(object):
             # stop after the specified number of steps
             self.integrator.advance_time(self.cur_t + 1, self.m)
         except RuntimeError as msg:
-            if "CV_TOO_MUCH_WORK" in str(msg):
-                pass  # this is the error we expect
+            final_nsteps = self.stats()['nsteps']
+            expected_nsteps = initial_nsteps + steps
+            # Newer SUNDIALS wrappers may surface the "stop after mxstep"
+            # condition as a generic RuntimeError instead of the older
+            # CV_TOO_MUCH_WORK text. If the solver advanced exactly the
+            # requested number of internal steps, treat that as success for
+            # advance_steps(). [Codex GPT-5.4]
+            if "CV_TOO_MUCH_WORK" in str(msg) or final_nsteps == expected_nsteps:
+                pass
             else:
                 raise
         self.cur_t = self.integrator.get_current_time()

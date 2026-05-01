@@ -50,4 +50,10 @@ src/finmag/util/length_scales_test.py
 src/finmag/util/pbc_test.py
 src/finmag/util/plot_helpers_test.py
 src/finmag/util/vtk_saver_test.py
+src/finmag/util/fileio_test.py
+src/finmag/util/dmi_helper_test.py
+src/finmag/util/test_set_function_values.py
+src/finmag/util/test_dmi_from_helix.py
+src/finmag/drivers/tests/sundials_nsteps_test.py
+src/finmag/drivers/tests/sundials_reinit_test.py
 '''
