@@ -56,4 +56,7 @@ src/finmag/util/test_set_function_values.py
 src/finmag/util/test_dmi_from_helix.py
 src/finmag/drivers/tests/sundials_nsteps_test.py
 src/finmag/drivers/tests/sundials_reinit_test.py
+src/finmag/drivers/tests/test_scipy.py
+src/finmag/drivers/tests/test_integrators.py
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py
 '''

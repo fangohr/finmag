@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =165 passed=
+- =193 passed=
 - =6 skipped=
 - =1 xfailed=
-- runtime approximately =100s=
+- runtime approximately =206s=
 
 The newly promoted M3 coverage includes:
 
@@ -1041,6 +1041,15 @@ The newly promoted M3 coverage includes:
 - =src/finmag/util/pbc_test.py=
 - =src/finmag/util/plot_helpers_test.py=
 - =src/finmag/util/vtk_saver_test.py=
+- =src/finmag/util/fileio_test.py=
+- =src/finmag/util/dmi_helper_test.py=
+- =src/finmag/util/test_set_function_values.py=
+- =src/finmag/util/test_dmi_from_helix.py=
+- =src/finmag/drivers/tests/sundials_nsteps_test.py=
+- =src/finmag/drivers/tests/sundials_reinit_test.py=
+- =src/finmag/drivers/tests/test_scipy.py=
+- =src/finmag/drivers/tests/test_integrators.py=
+- =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1082,6 +1091,15 @@ The enabling compatibility work in this increment was:
   =get_local()= on PETSc-backed vectors, accept =UserExpression=-compatible
   callable helpers, and avoid the removed
   =df.parameters.reorder_dofs_serial= attribute on the DOLFIN 2019 path
+- =finmag.drivers.sundials_integrator.SundialsIntegrator.advance_steps()=
+  now recognizes the expected "stop after mxstep" condition via actual
+  integrator step counts instead of relying only on older exception text from
+  SUNDIALS wrappers
+- the Robertson stiff-ODE regression in
+  =src/finmag/util/ode/tests/test_sundials_stiff_ode.py= now uses
+  =scipy.integrate.solve_ivp(..., method="BDF")= as the modern SciPy stiff
+  reference instead of the old =ode(..., "vode")= path, whose behaviour has
+  changed substantially between SciPy =0.19.1= and =1.17.1=
 
 Current M3 boundaries remain explicit:
 

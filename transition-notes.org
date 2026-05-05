@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =165 passed=
+- =193 passed=
 - =6 skipped=
 - =1 xfailed=
-- runtime approximately =99.51s=
+- runtime approximately =205.86s=
 
 Newly promoted tests in this increment:
 
@@ -2059,6 +2059,15 @@ Newly promoted tests in this increment:
 - =src/finmag/util/pbc_test.py=
 - =src/finmag/util/plot_helpers_test.py=
 - =src/finmag/util/vtk_saver_test.py=
+- =src/finmag/util/fileio_test.py=
+- =src/finmag/util/dmi_helper_test.py=
+- =src/finmag/util/test_set_function_values.py=
+- =src/finmag/util/test_dmi_from_helix.py=
+- =src/finmag/drivers/tests/sundials_nsteps_test.py=
+- =src/finmag/drivers/tests/sundials_reinit_test.py=
+- =src/finmag/drivers/tests/test_scipy.py=
+- =src/finmag/drivers/tests/test_integrators.py=
+- =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
 
 Compatibility changes that enabled this:
 
@@ -2107,6 +2116,17 @@ Compatibility changes that enabled this:
   =setup_method()= hook instead of the old bare =setup()=
 - =src/finmag/util/vtk_saver_test.py= now initializes PETSc-backed vectors
   with =set_local()= instead of the removed =.array()= accessor
+- =src/finmag/drivers.sundials_integrator.SundialsIntegrator.advance_steps()=
+  now treats the expected "stop after mxstep internal steps" condition as
+  success based on actual step-count deltas, which makes the wrapper robust to
+  newer SUNDIALS bindings that surface the stop as a generic
+  =RuntimeError: CVode has returned error -1=
+- the Robertson stiff-ODE file now uses =scipy.integrate.solve_ivp= with
+  =method="BDF"= as the SciPy-side success reference; direct investigation
+  showed that old =ode(..., "vode")= /= BDF= completed correctly on
+  SciPy =0.19.1= but fails badly on SciPy =1.17.1= for the same equations and
+  Jacobian, while =solve_ivp(BDF)=, =solve_ivp(Radau)=, =solve_ivp(LSODA)=,
+  and =zvode= still converge to the correct Robertson asymptotic state
 
 Still out of the current M3 gate:
 

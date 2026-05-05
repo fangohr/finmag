@@ -796,7 +796,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `165 passed`
+- `193 passed`
 - `6 skipped`
 - `1 xfailed`
 
@@ -823,6 +823,15 @@ The newest promoted M3 tests are:
 - `src/finmag/util/pbc_test.py`
 - `src/finmag/util/plot_helpers_test.py`
 - `src/finmag/util/vtk_saver_test.py`
+- `src/finmag/util/fileio_test.py`
+- `src/finmag/util/dmi_helper_test.py`
+- `src/finmag/util/test_set_function_values.py`
+- `src/finmag/util/test_dmi_from_helix.py`
+- `src/finmag/drivers/tests/sundials_nsteps_test.py`
+- `src/finmag/drivers/tests/sundials_reinit_test.py`
+- `src/finmag/drivers/tests/test_scipy.py`
+- `src/finmag/drivers/tests/test_integrators.py`
+- `src/finmag/util/ode/tests/test_sundials_stiff_ode.py`
 
 Current M3 boundary notes for future agents:
 
@@ -860,6 +869,14 @@ Recent helper-path compatibility work to know about:
 - `src/finmag/util/length_scales_test.py` now uses a pytest-9-compatible
   `setup_method()` hook, and `src/finmag/util/vtk_saver_test.py` now
   initializes PETSc vectors with `set_local()`
+- `src/finmag/drivers/sundials_integrator.py` now treats the expected
+  `mxstep` stop condition in `advance_steps()` via actual step-count deltas,
+  which is more stable across SUNDIALS wrapper versions than matching only the
+  older `CV_TOO_MUCH_WORK` exception text
+- `src/finmag/util/ode/tests/test_sundials_stiff_ode.py` now uses
+  `solve_ivp(method="BDF")` as the SciPy stiff-solver reference because the
+  legacy real-valued `ode(..., "vode")` path no longer behaves like SciPy
+  0.19.1 on the Robertson problem under SciPy 1.17.1
 
 Current additional M3 boundary note:
 
