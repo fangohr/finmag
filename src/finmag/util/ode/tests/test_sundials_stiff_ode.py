@@ -16,24 +16,51 @@ from . import robertson_ode
 from .robertson_ode import robertson_jacobean, robertson_rhs, robertson_reset_n_evals
 
 ROBERTSON_Y0 = np.array([1., 0., 0.])
+ROBERTSON_Y_FINAL = np.array([2.08e-05, 8.33e-11, 9.99979176e-01])
 
 
 class SundialsStiffOdeTests(unittest.TestCase):
 
-    def test_robertson_scipy(self):
+    def _integrate_robertson_with_scipy(self, jac):
         import scipy.integrate
+
+        if hasattr(scipy.integrate, "solve_ivp"):
+            # Modern SciPy's supported stiff-solver reference path.
+            return scipy.integrate.solve_ivp(
+                robertson_rhs,
+                (0, 1e8),
+                ROBERTSON_Y0,
+                method="BDF",
+                jac=jac)
+
+        # Older SciPy releases do not provide solve_ivp; keep the historical
+        # VODE/BDF path for those environments.
+        integrator = scipy.integrate.ode(robertson_rhs, jac=jac)
+        integrator.set_initial_value(ROBERTSON_Y0)
+        integrator.set_integrator("vode", method="bdf", nsteps=5000)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            yout = integrator.integrate(1e8)
+        return integrator, yout
+
+    def test_robertson_scipy(self):
         robertson_reset_n_evals()
-        # Legacy SciPy 0.19 solved this with ode(..., "vode"), but modern
-        # SciPy's real-valued VODE path no longer behaves reliably on this
-        # Robertson problem. Use solve_ivp's current stiff BDF path as the
-        # SciPy reference instead of preserving the old wrapper-specific
-        # behaviour. [Codex GPT-5.4]
-        sol = scipy.integrate.solve_ivp(
-            robertson_rhs,
-            (0, 1e8),
-            ROBERTSON_Y0,
-            method="BDF",
-            jac=robertson_jacobean)
+        result = self._integrate_robertson_with_scipy(robertson_jacobean)
+        if isinstance(result, tuple):
+            integrator, yout = result
+            print("Integration of the Robertson ODE until t=1e8 with scipy vode/BDF: %d steps" % (robertson_ode.n_rhs_evals,))
+            self.assertTrue(integrator.successful())
+            self.assertAlmostEqual(integrator.t, 1e8)
+            self.assertAlmostEqual(np.sum(yout), 1.0, places=10)
+            self.assertLess(robertson_ode.n_rhs_evals, 5000)
+            self.assertTrue(np.allclose(
+                yout,
+                ROBERTSON_Y_FINAL,
+                rtol=5e-3,
+                atol=1e-12))
+            return
+
+        sol = result
         print("Integration of the Robertson ODE until t=1e8 with scipy solve_ivp/BDF: %d steps" % (robertson_ode.n_rhs_evals,))
         self.assertTrue(sol.success)
         self.assertAlmostEqual(sol.t[-1], 1e8)
@@ -44,7 +71,7 @@ class SundialsStiffOdeTests(unittest.TestCase):
         self.assertLess(sol.nfev, 2000)
         self.assertTrue(np.allclose(
             sol.y[:, -1],
-            np.array([2.08e-05, 8.33e-11, 9.99979176e-01]),
+            ROBERTSON_Y_FINAL,
             rtol=5e-3,
             atol=1e-12))
 
