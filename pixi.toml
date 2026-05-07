@@ -72,4 +72,6 @@ src/finmag/scheduler/scheduler_test.py
 src/finmag/tests/test_cyclic_references_in_sim.py
 src/finmag/tests/bugs/test_bug_ndt_file_writing.py
 src/finmag/tests/cython/test_cython.py
+src/finmag/physics/tests/test_effective_field.py
+src/finmag/tests/test_jacobian.py
 '''

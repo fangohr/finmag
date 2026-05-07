@@ -1,5 +1,6 @@
 import pytest
 from dolfin import *
+from ufl import replace
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 from math import log
@@ -35,7 +36,7 @@ class MyLLG(LLG):
         exch = Exchange(1.3e-11)
         print("About to call setup")
         exch.setup(self._m_field, self.Ms)
-        H_ex.vector().array()[:] = exch.compute_field()
+        H_ex.vector().set_local(exch.compute_field())
 
         H_eff = H_ex + H_app
         return H_eff
@@ -86,10 +87,10 @@ def derivative_test(L, M, x, hs, J=None):
     errors = []
     for h in hs:
         H = Function(V)
-        H.vector().set_local(h * x.vector().array())
+        H.vector().set_local(h * x.vector().get_local())
 
         P = Function(V)
-        P.vector().set_local(M.vector().array() + H.vector().array())
+        P.vector().set_local(M.vector().get_local() + H.vector().get_local())
 
         L_P = assemble(replace(L, {M: P}))  # Compute exact result
 
