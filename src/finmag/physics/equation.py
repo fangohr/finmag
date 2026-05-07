@@ -9,7 +9,13 @@ whatever, just straight up solving of the equation of motion.
 
 """
 import logging
-import instant
+try:
+    import instant
+except ModuleNotFoundError:
+    # DOLFIN 2019 on the pixi path still supports the downstream C++ compile
+    # step, but the legacy instant cache helper may be absent. Fall back to
+    # direct compilation instead of failing during module import. [Codex GPT-5.4]
+    instant = None
 import dolfin as df
 import os
 import fnmatch
@@ -121,7 +127,9 @@ def get_equation_module(for_distribution=False):
     # Try to get the module from the known distribution location before
     # asking instant about its cache. This way a distributed copy of FinMag
     # should never attempt recompilation (which would fail without sources).
-    equation_module = instant.import_module("equation", CACHE_DIR)
+    equation_module = None
+    if instant is not None:
+        equation_module = instant.import_module("equation", CACHE_DIR)
     if equation_module is not None:
         log.debug("Got equation extension module from distribution location.")
     else:

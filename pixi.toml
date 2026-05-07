@@ -68,4 +68,5 @@ src/finmag/util/fft_test.py
 src/finmag/drivers/tests/test_relaxation.py
 src/finmag/drivers/tests/test_relax_two_times.py
 src/finmag/tests/test_time.py
+src/finmag/scheduler/scheduler_test.py
 '''

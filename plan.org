@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =216 passed=
+- =230 passed=
 - =8 skipped=
 - =3 xfailed=
-- runtime approximately =279s=
+- runtime approximately =288s=
 
 The newly promoted M3 coverage includes:
 
@@ -1059,6 +1059,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/drivers/tests/test_relaxation.py=
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=
+- =src/finmag/scheduler/scheduler_test.py=
 
 The enabling compatibility work in this increment was:
 
