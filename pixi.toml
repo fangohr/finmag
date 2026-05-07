@@ -69,4 +69,7 @@ src/finmag/drivers/tests/test_relaxation.py
 src/finmag/drivers/tests/test_relax_two_times.py
 src/finmag/tests/test_time.py
 src/finmag/scheduler/scheduler_test.py
+src/finmag/tests/test_cyclic_references_in_sim.py
+src/finmag/tests/bugs/test_bug_ndt_file_writing.py
+src/finmag/tests/cython/test_cython.py
 '''

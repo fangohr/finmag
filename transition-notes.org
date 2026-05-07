@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =230 passed=
+- =238 passed=
 - =8 skipped=
 - =3 xfailed=
-- runtime approximately =288.06s=
+- runtime approximately =289.27s=
 
 Newly promoted tests in this increment:
 
@@ -2078,6 +2078,9 @@ Newly promoted tests in this increment:
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=
 - =src/finmag/scheduler/scheduler_test.py=
+- =src/finmag/tests/test_cyclic_references_in_sim.py=
+- =src/finmag/tests/bugs/test_bug_ndt_file_writing.py=
+- =src/finmag/tests/cython/test_cython.py=
 
 Compatibility changes that enabled this:
 
