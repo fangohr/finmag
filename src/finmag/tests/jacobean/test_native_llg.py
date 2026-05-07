@@ -20,7 +20,7 @@ class NativeLlgTests(unittest.TestCase):
         dmdt = np.zeros(m.shape)
         while c.next():
             native_llg.calc_llg_dmdt(m, H_eff, 0.0, dmdt, llg.pins, llg.gamma, llg.alpha.vector(
-            ).array(), 0.1 / llg.c, llg.do_precession)
+            ).get_local(), 0.1 / llg.c, llg.do_precession)
         print("Computing dm/dt via native C++ code", c)
 
 if __name__ == "__main__":

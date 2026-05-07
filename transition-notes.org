@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =193 passed=
-- =6 skipped=
-- =1 xfailed=
-- runtime approximately =205.86s=
+- =216 passed=
+- =8 skipped=
+- =3 xfailed=
+- runtime approximately =279.33s=
 
 Newly promoted tests in this increment:
 
@@ -2068,6 +2068,15 @@ Newly promoted tests in this increment:
 - =src/finmag/drivers/tests/test_scipy.py=
 - =src/finmag/drivers/tests/test_integrators.py=
 - =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
+- =src/finmag/tests/jacobean/test_jacobean_computation.py=
+- =src/finmag/tests/jacobean/test_jacobean_integration.py=
+- =src/finmag/tests/jacobean/test_native_llg.py=
+- =src/finmag/util/oommf/test_mesh.py=
+- =src/finmag/util/visualization_test.py=
+- =src/finmag/util/fft_test.py=
+- =src/finmag/drivers/tests/test_relaxation.py=
+- =src/finmag/drivers/tests/test_relax_two_times.py=
+- =src/finmag/tests/test_time.py=
 
 Compatibility changes that enabled this:
 
@@ -2127,6 +2136,12 @@ Compatibility changes that enabled this:
   SciPy =0.19.1= but fails badly on SciPy =1.17.1= for the same equations and
   Jacobian, while =solve_ivp(BDF)=, =solve_ivp(Radau)=, =solve_ivp(LSODA)=,
   and =zvode= still converge to the correct Robertson asymptotic state
+- the two transposed-Robertson cases are now explicit =xfail(strict=True)=
+  tests of known pathological failure modes on the current stack, rather than
+  passing negative tests that only asserted work-budget exhaustion
+- =src/finmag/tests/jacobean/test_native_llg.py= now passes on the DOLFIN
+  2019 path by using =get_local()= instead of the removed PETSc
+  =.array()= accessor when passing alpha values into the native LLG helper
 
 Still out of the current M3 gate:
 

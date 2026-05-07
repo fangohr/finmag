@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =193 passed=
-- =6 skipped=
-- =1 xfailed=
-- runtime approximately =206s=
+- =216 passed=
+- =8 skipped=
+- =3 xfailed=
+- runtime approximately =279s=
 
 The newly promoted M3 coverage includes:
 
@@ -1050,6 +1050,15 @@ The newly promoted M3 coverage includes:
 - =src/finmag/drivers/tests/test_scipy.py=
 - =src/finmag/drivers/tests/test_integrators.py=
 - =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
+- =src/finmag/tests/jacobean/test_jacobean_computation.py=
+- =src/finmag/tests/jacobean/test_jacobean_integration.py=
+- =src/finmag/tests/jacobean/test_native_llg.py=
+- =src/finmag/util/oommf/test_mesh.py=
+- =src/finmag/util/visualization_test.py=
+- =src/finmag/util/fft_test.py=
+- =src/finmag/drivers/tests/test_relaxation.py=
+- =src/finmag/drivers/tests/test_relax_two_times.py=
+- =src/finmag/tests/test_time.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1100,6 +1109,11 @@ The enabling compatibility work in this increment was:
   =scipy.integrate.solve_ivp(..., method="BDF")= as the modern SciPy stiff
   reference instead of the old =ode(..., "vode")= path, whose behaviour has
   changed substantially between SciPy =0.19.1= and =1.17.1=
+- the two transposed-Robertson cases are now explicit
+  =xfail(strict=True)= coverage of known pathological failure modes instead of
+  passing negative tests that only checked for work-budget exhaustion
+- =src/finmag/tests/jacobean/test_native_llg.py= now uses =get_local()= for
+  the PETSc-backed alpha vector on the DOLFIN 2019 path
 
 Current M3 boundaries remain explicit:
 

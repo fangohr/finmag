@@ -796,9 +796,9 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `193 passed`
-- `6 skipped`
-- `1 xfailed`
+- `216 passed`
+- `8 skipped`
+- `3 xfailed`
 
 using:
 
@@ -832,6 +832,15 @@ The newest promoted M3 tests are:
 - `src/finmag/drivers/tests/test_scipy.py`
 - `src/finmag/drivers/tests/test_integrators.py`
 - `src/finmag/util/ode/tests/test_sundials_stiff_ode.py`
+- `src/finmag/tests/jacobean/test_jacobean_computation.py`
+- `src/finmag/tests/jacobean/test_jacobean_integration.py`
+- `src/finmag/tests/jacobean/test_native_llg.py`
+- `src/finmag/util/oommf/test_mesh.py`
+- `src/finmag/util/visualization_test.py`
+- `src/finmag/util/fft_test.py`
+- `src/finmag/drivers/tests/test_relaxation.py`
+- `src/finmag/drivers/tests/test_relax_two_times.py`
+- `src/finmag/tests/test_time.py`
 
 Current M3 boundary notes for future agents:
 
@@ -877,6 +886,11 @@ Recent helper-path compatibility work to know about:
   `solve_ivp(method="BDF")` as the SciPy stiff-solver reference because the
   legacy real-valued `ode(..., "vode")` path no longer behaves like SciPy
   0.19.1 on the Robertson problem under SciPy 1.17.1
+- the two transposed Robertson cases are now explicit `xfail(strict=True)`
+  tests of known bad Jacobian orientation behaviour, not passing negative
+  tests
+- `src/finmag/tests/jacobean/test_native_llg.py` now uses `get_local()` for
+  the PETSc-backed alpha vector on the exercised M3 path
 
 Current additional M3 boundary note:
 
