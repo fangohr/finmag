@@ -12,6 +12,19 @@ from .custom_exceptions import EigenproblemVerifyError
 logger = logging.getLogger("finmag")
 
 
+def _lstsq_compat(A, b):
+    """
+    Run ``np.linalg.lstsq`` in a way that works on both the modern NumPy stack
+    and the legacy NumPy 1.13 build used by the Python 3 core-suite image.
+    The newer stack needs an explicit ``rcond`` to avoid warnings, while the
+    older stack raises ``TypeError`` for ``rcond=None``. [Codex GPT-5.4]
+    """
+    try:
+        return np.linalg.lstsq(A, b, rcond=None)
+    except TypeError:
+        return np.linalg.lstsq(A, b)
+
+
 def iseven(n):
     """
     Return True if n is an even number and False otherwise.
@@ -114,10 +127,7 @@ def is_scalar_multiple(v, w, tol=1e-12):
     """
     v_colvec = v.reshape(-1, 1)
     w_colvec = w.reshape(-1, 1)
-    # NumPy changed the default rcond contract; pin the modern explicit value so
-    # this helper stays warning-free and numerically stable across stacks.
-    # [Codex GPT-5.4]
-    _, residuals, _, _ = np.linalg.lstsq(v_colvec, w_colvec, rcond=None)
+    _, residuals, _, _ = _lstsq_compat(v_colvec, w_colvec)
     assert(len(residuals) == 1)
     rel_err = residuals[0] / np.linalg.norm(v)
     return (rel_err < tol)
@@ -223,11 +233,7 @@ def best_linear_combination(v, basis_vecs):
     v_colvec = np.asarray(v).reshape(-1, 1)
     basis_vecs = np.asarray(basis_vecs)
     assert(basis_vecs.shape == (num, N))
-    # Keep the least-squares call explicit for the same reason as above: the
-    # helper is now part of the M3 gate and should not emit version-drift
-    # warnings. [Codex GPT-5.4]
-    coeffs, residuals, _, _ = np.linalg.lstsq(
-        basis_vecs.T, v_colvec, rcond=None)
+    coeffs, residuals, _, _ = _lstsq_compat(basis_vecs.T, v_colvec)
     assert(coeffs.shape == (num, 1))
     coeffs.shape = (num,)
     # XXX TODO: Figure out why it can happen that residuals.shape == (0,)!!

@@ -1463,8 +1463,11 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
         ax = plt.gcf().add_subplot(111, projection='3d')
 
     mesh = fun_mesh_regions.mesh()
-    midpoints = [[c.midpoint() for c in df.cells(mesh)
-                  if fun_mesh_regions[c.index()] == r] for r in regions]
+    # Iterate region cells through DOLFIN's subset iterator instead of manual
+    # MeshFunction indexing. The iterator works on both the legacy DOLFIN 2017
+    # core-suite image and the newer M3 stack. [Codex GPT-5.4]
+    midpoints = [[c.midpoint() for c in df.SubsetIterator(fun_mesh_regions, r)]
+                 for r in regions]
 
     pts = [[(pt.x(), pt.y(), pt.z()) for pt in m] for m in midpoints]
 
