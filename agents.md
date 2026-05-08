@@ -796,7 +796,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `358 passed`
+- `365 passed`
 - `9 skipped`
 - `3 xfailed`
 
@@ -852,6 +852,9 @@ The newest promoted M3 tests are:
 - `src/finmag/normal_modes/eigenmodes/eigensolvers_test.py`
 - `src/finmag/field_setters_test.py`
 - `src/finmag/field_test.py`
+- `src/finmag/energies/dmi_test.py`
+- `src/finmag/energies/magnetostatic_field_test.py`
+- `src/finmag/sim/magnetisation_patterns_test.py`
 
 Current M3 boundary notes for future agents:
 

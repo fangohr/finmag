@@ -28,7 +28,7 @@ def test_vortex_functions():
     # checks that the polarity of z-component from this matches the user input
     # polarity
     def polarity_test(func, coords, p):
-        assert(np.alltrue([(p * func(coord)[2] > 0) for coord in coords]))
+        assert(np.all([(p * func(coord)[2] > 0) for coord in coords]))
 
     # This function finds cross product of radius vector and the evaluated
     # function vector, rxm. The z- component of this will be:
@@ -42,9 +42,9 @@ def test_vortex_functions():
         m = [func(coord) for coord in coords]
         cross_product = np.cross(r, m)
         if hand is True:
-            assert(np.alltrue((cross_product[:, 2] * p) > 0))
+            assert(np.all((cross_product[:, 2] * p) > 0))
         elif hand is False:
-            assert(np.alltrue((cross_product[:, 2] * p) < 0))
+            assert(np.all((cross_product[:, 2] * p) < 0))
 
     # run the tests
     for hand in [True, False]:

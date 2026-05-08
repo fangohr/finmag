@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =358 passed=
+- =365 passed=
 - =9 skipped=
 - =3 xfailed=
-- runtime approximately =331s plus the promoted normal-mode slices=
+- runtime approximately =331s plus the later promoted slices=
 
 The newly promoted M3 coverage includes:
 
@@ -1034,6 +1034,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/physics/llb/sllg_test.py=
 - =src/finmag/util/meshes_test.py=
 - =src/finmag/sim/sim_helpers_test.py=
+- =src/finmag/sim/magnetisation_patterns_test.py=
 - =src/finmag/tests/test_meshes.py=
 - =src/finmag/util/mesh_templates_test.py=
 - =src/finmag/util/helpers_test.py=
@@ -1056,6 +1057,8 @@ The newly promoted M3 coverage includes:
 - =src/finmag/util/oommf/test_mesh.py=
 - =src/finmag/util/visualization_test.py=
 - =src/finmag/util/fft_test.py=
+- =src/finmag/energies/dmi_test.py=
+- =src/finmag/energies/magnetostatic_field_test.py=
 - =src/finmag/drivers/tests/test_relaxation.py=
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=
