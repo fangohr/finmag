@@ -4,10 +4,30 @@ import dolfin as df
 import scipy.linalg
 import scipy.sparse.linalg
 import logging
+from time import perf_counter
 from finmag.util.helpers import format_time
 from .helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 
 logger = logging.getLogger("finmag")
+
+_timer_start = None
+
+
+def _tic():
+    # DOLFIN 2019 dropped df.tic()/df.toc(); keep the solver logging stable
+    # across the legacy and pixi stacks with a tiny local fallback.
+    # [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 class AbstractEigensolver(object):
@@ -79,10 +99,10 @@ class AbstractEigensolver(object):
             raise ValueError("Eigenproblem matrices are non-Hermitian but solver "
                              "assumes Hermitian matrices. Aborting.")
         logger.info("Solving eigenproblem. This may take a while...")
-        df.tic()
+        _tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
         logger.info("Computing the eigenvalues and eigenvectors "
-                    "took {}".format(format_time(df.toc())))
+                    "took {}".format(format_time(_toc())))
 
         # XXX TODO: Remove this conversion to numpy.arrays once we
         #           have better support for different kinds of

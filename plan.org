@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =265 passed=
-- =8 skipped=
+- =358 passed=
+- =9 skipped=
 - =3 xfailed=
-- runtime approximately =331s=
+- runtime approximately =331s plus the promoted normal-mode slices=
 
 The newly promoted M3 coverage includes:
 
@@ -1066,6 +1066,10 @@ The newly promoted M3 coverage includes:
 - =src/finmag/physics/tests/test_effective_field.py=
 - =src/finmag/tests/test_jacobian.py=
 - =src/finmag/normal_modes/eigenmodes/helpers_test.py=
+- =src/finmag/normal_modes/eigenmodes/eigenproblems_test.py=
+- =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
+- =src/finmag/field_setters_test.py=
+- =src/finmag/field_test.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1097,6 +1101,18 @@ The enabling compatibility work in this increment was:
 - =finmag.normal_modes.eigenmodes.helpers= now passes =rcond=None= into
   =numpy.linalg.lstsq()= and uses a raw docstring for the linear-combination
   helper, which removes NumPy API drift warnings from the promoted M3 slice
+- the normal-mode eigenproblem/eigensolver tests now work on the pixi path
+  after:
+  - switching old pytest =setup()= hooks to =setup_method()=
+  - replacing positional Matplotlib =legend(..., 'lower center')= calls with
+    the modern keyword form
+  - adding a local DOLFIN 2019 timing fallback in
+    =finmag.normal_modes.eigenmodes.eigensolvers=
+- the field setter/field regression files now work on the pixi path after:
+  - switching the large =TestField= fixture class to =setup_method()=
+  - replacing removed PETSc vector =.array()= and =.abs()= assumptions in the
+    tests with =get_local()= and NumPy-based comparisons
+  - treating the removed DOLFIN Python =Function.label()= accessor as optional
 - =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
   =inspect.getfullargspec= fallback instead of the removed
   =inspect.getargspec=

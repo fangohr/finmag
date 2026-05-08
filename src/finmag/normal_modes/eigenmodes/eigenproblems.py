@@ -200,7 +200,7 @@ class AbstractEigenproblem(object):
             self.plot(w, fig=fig, label=label)
 
         h, l = fig.gca().get_legend_handles_labels()
-        fig.legend(h, l, 'lower center')
+        fig.legend(h, l, loc='lower center')
         title_str = 'Solutions to {}, N={}'.format(self, N)
         self._set_plot_title(fig, title_str)
         if filename != None:
@@ -278,7 +278,7 @@ class AbstractEigenproblem(object):
             self.plot(w, fmt=fmt, fig=fig, label=label)
 
         h, l = fig.gca().get_legend_handles_labels()
-        fig.legend(h, l, 'lower center')
+        fig.legend(h, l, loc='lower center')
         dtype_str = {float: 'float', complex: 'complex'}[dtype]
         # XXX TODO: Make sure the title reflects the specific values
         #           of the solver used during the 'compute' method.
@@ -373,7 +373,7 @@ class AbstractEigenproblem(object):
         return eigenspace_basis
 
     def best_analytical_approximation(self, a, v, tol_eigval=1e-8):
-        """
+        r"""
         Compute a basis <e_i> of the eigenspace associated with `a` and find
         the vector w which minimise the residual:
 

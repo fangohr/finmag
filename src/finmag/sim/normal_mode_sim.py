@@ -212,7 +212,7 @@ class NormalModeSimulation(Simulation):
             else:
                 # Create a wildcard pattern so that we can read the files using
                 # 'glob'.
-                filename = re.sub('\.npy$', '*.npy', self.m_snapshots_filename)
+                filename = re.sub(r'\.npy$', '*.npy', self.m_snapshots_filename)
         log.debug(
             "Computing normal mode spectrum from file(s) '{}'.".format(filename))
 
@@ -451,7 +451,7 @@ class NormalModeSimulation(Simulation):
             peak_freq = self.psd_freqs[None, use_averaged_m][peak_idx]
 
         if outfilename is None:
-            if directory is '':
+            if directory == '':
                 raise ValueError(
                     "Please specify at least one of the arguments 'outfilename' or 'directory'")
             outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(
@@ -783,7 +783,7 @@ class NormalModeSimulation(Simulation):
             self.compute_normal_modes(max(k, 10))
 
         if filename is None:
-            if directory is '':
+            if directory == '':
                 raise ValueError(
                     "Please specify at least one of the arguments 'filename' or 'directory'")
             filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(

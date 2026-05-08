@@ -67,7 +67,7 @@ class AbstractEigenproblemTest(object):
 
 class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = DiagonalEigenproblem()
         self.omega_ref = [1, 2, 3, 4]
         self.num = 4
@@ -286,7 +286,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
 class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = RingGraphLaplaceEigenproblem()
 
     def test_instantiate(self):
@@ -327,6 +327,6 @@ class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
 
 class TestNanostrip1dEigenproblemFinmag(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = Nanostrip1dEigenproblemFinmag(
             13e-12, 8e5, 0, 100, unit_length=1e-9)

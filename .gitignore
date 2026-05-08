@@ -42,3 +42,4 @@ install/docker/finmag/docker-image.done
 install/docker/finmag/finmag-compiled.done
 install/docker/finmag/finmag-repo-clone.done
 .ipynb_checkpoints/
+/src/finmag/tests/cython/test_cython.c
