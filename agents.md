@@ -796,7 +796,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `365 passed`
+- `367 passed`
 - `9 skipped`
 - `3 xfailed`
 
@@ -855,12 +855,17 @@ The newest promoted M3 tests are:
 - `src/finmag/energies/dmi_test.py`
 - `src/finmag/energies/magnetostatic_field_test.py`
 - `src/finmag/sim/magnetisation_patterns_test.py`
+- `src/finmag/sim/hysteresis_test.py`
 
 Current M3 boundary notes for future agents:
 
 - full NEB tangent computations still require `finmag.native.neb`, even
   though the helper-only `src/finmag/physics/tests/neb/neb_test.py` file now
   runs in M3
+- `src/finmag/energies/zeeman_test.py` is no longer blocked on removed DOLFIN
+  APIs, but the pixi/FEniCS-2019 path still misses the stray-field dipole
+  comparison's hard absolute-difference bound (`150.89` observed vs `140.0`
+  expected), so it remains outside M3 pending numerical review
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

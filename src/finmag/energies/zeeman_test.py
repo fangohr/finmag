@@ -158,7 +158,7 @@ def test_compute_energy_in_regions(tmpdir):
 
     disk1 = Disk1()
     disk2 = Disk2()
-    domains = df.CellFunction("size_t", mesh)
+    domains = df.MeshFunction("size_t", mesh, mesh.topology().dim())
     domains.set_all(0)
     disk1.mark(domains, 1)
     disk2.mark(domains, 2)
@@ -395,9 +395,9 @@ def test_dipolar_field_class(tmpdir):
 
 def compute_field_diffs(sim):
     vals_demag = sim.get_field_as_dolfin_function(
-        'Demag', region='air').vector().array().reshape(3, -1)
+        'Demag', region='air').vector().get_local().reshape(3, -1)
     vals_dipole = sim.get_field_as_dolfin_function(
-        'DipolarField', region='air').vector().array().reshape(3, -1)
+        'DipolarField', region='air').vector().get_local().reshape(3, -1)
     absdiffs = np.linalg.norm(vals_demag - vals_dipole, axis=0)
     reldiffs = absdiffs / np.linalg.norm(vals_dipole, axis=0)
     return absdiffs, reldiffs

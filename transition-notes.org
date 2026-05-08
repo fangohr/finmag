@@ -2036,7 +2036,7 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =365 passed=
+- =367 passed=
 - =9 skipped=
 - =3 xfailed=
 - runtime approximately =330.94s plus the later promoted slices=
@@ -2053,6 +2053,7 @@ Newly promoted tests in this increment:
 - =src/finmag/util/meshes_test.py=
 - =src/finmag/sim/sim_helpers_test.py=
 - =src/finmag/sim/magnetisation_patterns_test.py=
+- =src/finmag/sim/hysteresis_test.py=
 - =src/finmag/tests/test_meshes.py=
 - =src/finmag/util/mesh_templates_test.py=
 - =src/finmag/util/helpers_test.py=
