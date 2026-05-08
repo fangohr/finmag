@@ -2,6 +2,7 @@ import os
 import re
 import types
 import logging
+from time import perf_counter
 import numpy as np
 import dolfin as df
 from finmag.sim.sim import Simulation, sim_with
@@ -16,6 +17,24 @@ from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_tangential_space_basis, mf_mult
 
 log = logging.getLogger(name="finmag")
+
+_timer_start = None
+
+
+def _tic():
+    # DOLFIN 2019 no longer exposes df.tic()/df.toc(); keep the old call sites
+    # intact by emulating that tiny timing API locally. [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 class NormalModeSimulation(Simulation):
@@ -454,24 +473,24 @@ class NormalModeSimulation(Simulation):
                                        differentiate_H_numerically=True, use_real_matrix=True):
         if use_generalized:
             if (self.A is None or self.M is None) or force_recompute_matrices:
-                df.tic()
+                _tic()
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices(
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
                     check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
                 log.debug("Assembling the eigenproblem matrices took {}".format(
-                    helpers.format_time(df.toc())))
+                    helpers.format_time(_toc())))
             else:
                 log.debug(
                     'Re-using previously computed eigenproblem matrices.')
         else:
             if self.D is None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
-                df.tic()
+                _tic()
                 self.D = compute_eigenproblem_matrix(
                     self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
                     dtype=(float if use_real_matrix else complex))
                 self.use_real_matrix = use_real_matrix
                 log.debug("Assembling the eigenproblem matrix took {}".format(
-                    helpers.format_time(df.toc())))
+                    helpers.format_time(_toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 

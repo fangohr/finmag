@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =242 passed=
+- =265 passed=
 - =8 skipped=
 - =3 xfailed=
-- runtime approximately =290s=
+- runtime approximately =331s=
 
 The newly promoted M3 coverage includes:
 
@@ -1065,6 +1065,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/tests/cython/test_cython.py=
 - =src/finmag/physics/tests/test_effective_field.py=
 - =src/finmag/tests/test_jacobian.py=
+- =src/finmag/normal_modes/eigenmodes/helpers_test.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1093,6 +1094,9 @@ The enabling compatibility work in this increment was:
 - =finmag.sim.sim_savers.FieldSaver= and the skyrmion-density helper in
   =finmag.sim.sim_helpers= now use =get_local()= on PETSc-backed vectors
   instead of relying on the removed =.array()= accessor
+- =finmag.normal_modes.eigenmodes.helpers= now passes =rcond=None= into
+  =numpy.linalg.lstsq()= and uses a raw docstring for the linear-combination
+  helper, which removes NumPy API drift warnings from the promoted M3 slice
 - =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
   =inspect.getfullargspec= fallback instead of the removed
   =inspect.getargspec=

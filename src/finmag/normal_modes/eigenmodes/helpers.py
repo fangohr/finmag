@@ -114,7 +114,10 @@ def is_scalar_multiple(v, w, tol=1e-12):
     """
     v_colvec = v.reshape(-1, 1)
     w_colvec = w.reshape(-1, 1)
-    _, residuals, _, _ = np.linalg.lstsq(v_colvec, w_colvec)
+    # NumPy changed the default rcond contract; pin the modern explicit value so
+    # this helper stays warning-free and numerically stable across stacks.
+    # [Codex GPT-5.4]
+    _, residuals, _, _ = np.linalg.lstsq(v_colvec, w_colvec, rcond=None)
     assert(len(residuals) == 1)
     rel_err = residuals[0] / np.linalg.norm(v)
     return (rel_err < tol)
@@ -200,7 +203,7 @@ def sort_eigensolutions(eigvals, eigvecs):
 
 
 def best_linear_combination(v, basis_vecs):
-    """
+    r"""
     Given a vector `v` and a list <e_i> of basis vectors in `basis_vecs`,
     determine the coefficients b_i which minimise the residual:
 
@@ -220,7 +223,11 @@ def best_linear_combination(v, basis_vecs):
     v_colvec = np.asarray(v).reshape(-1, 1)
     basis_vecs = np.asarray(basis_vecs)
     assert(basis_vecs.shape == (num, N))
-    coeffs, residuals, _, _ = np.linalg.lstsq(basis_vecs.T, v_colvec)
+    # Keep the least-squares call explicit for the same reason as above: the
+    # helper is now part of the M3 gate and should not emit version-drift
+    # warnings. [Codex GPT-5.4]
+    coeffs, residuals, _, _ = np.linalg.lstsq(
+        basis_vecs.T, v_colvec, rcond=None)
     assert(coeffs.shape == (num, 1))
     coeffs.shape = (num,)
     # XXX TODO: Figure out why it can happen that residuals.shape == (0,)!!

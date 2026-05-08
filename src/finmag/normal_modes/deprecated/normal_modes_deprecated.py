@@ -4,12 +4,31 @@ import numpy as np
 import logging
 import os
 import scipy.sparse.linalg
-from time import time
+from time import perf_counter, time
 from finmag.util import helpers
 from finmag.util.meshes import embed3d
 from math import pi
 from finmag.field import Field
 logger = logging.getLogger('finmag')
+
+_timer_start = None
+
+
+def _tic():
+    # The deprecated normal-modes code still uses the old DOLFIN timing hooks.
+    # Mirror them here so the module can run on the FEniCS 2019 pixi stack
+    # without rewriting all instrumentation call sites. [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 # Matrix-vector or Matrix-matrix product
@@ -228,14 +247,14 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res.shape = (-1,)
         return res
 
-    df.tic()
+    _tic()
     logger.info("Assembling eigenproblem matrix.")
     D = np.zeros((2 * n, 2 * n), dtype=dtype)
     logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(
         D.nbytes / 1024. ** 2))
     for i, w in enumerate(np.eye(2 * n)):
         if i % 50 == 0:
-            t_cur = df.toc()
+            t_cur = _toc()
             completion_info = '' if (i == 0) else ', estimated remaining time: {}'.format(
                 helpers.format_time(t_cur * (2 * n / i - 1)))
             logger.debug("Processing row {}/{}  (time elapsed: {}{})".format(i,
@@ -379,7 +398,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         res.shape = (3, 1, n)
         return res
 
-    df.tic()
+    _tic()
     logger.info("Assembling eigenproblem matrix.")
     A = np.zeros((2 * n, 2 * n), dtype=complex)
     logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(
@@ -390,7 +409,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
     for i in range(2 * n):
         if i % 50 == 0:
             logger.debug(
-                "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, df.toc()))
+                "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, _toc()))
 
         # Ensure that w is the i-th standard basis vector
         w.shape = (2 * n,)
@@ -448,11 +467,11 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     logger.debug("Solving eigenproblem. This may take a while...")
-    df.tic()
+    _tic()
     omega, w = scipy.sparse.linalg.eigs(
         D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
     logger.debug(
-        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(_toc()))
 
     return omega, w
 
@@ -460,7 +479,7 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
 def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False, sigma=None, which='LM',
                                      v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
     logger.debug("Solving eigenproblem. This may take a while...")
-    df.tic()
+    _tic()
 
     if discard_negative_frequencies:
         n_values *= 2
@@ -472,7 +491,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     omega_inv, w = scipy.sparse.linalg.eigsh(M, k=n_values, M=A, which=which, tol=tol, return_eigenvectors=True, sigma=sigma,
                                              v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
     logger.debug(
-        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(_toc()))
 
     # The true eigenfrequencies are given by 1/omega_inv because we swapped M
     # and A above and thus computed the inverse eigenvalues.

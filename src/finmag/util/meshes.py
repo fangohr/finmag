@@ -88,9 +88,12 @@ def from_geofile(geofile, save_result=True):
             # TODO: If save_result is False but the .xml.gz file
             # already exists, it will be updated (hence, saved)
             # anyway. Is this desired?
-            logger.warn("The mesh file '{}' is outdated (since it is "
-                        "older than the .geo file '{}') and will be "
-                        "overwritten.".format(result_filename, geofile))
+            # Use logger.warning rather than the deprecated warn alias so the
+            # mesh-generation tests stay warning-free under modern Python.
+            # [Codex GPT-5.4]
+            logger.warning("The mesh file '{}' is outdated (since it is "
+                           "older than the .geo file '{}') and will be "
+                           "overwritten.".format(result_filename, geofile))
         else:
             logger.debug("The mesh '{}' already exists and is "
                          "automatically returned.".format(result_filename))
@@ -149,8 +152,10 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # double-check that.
             directory = os.curdir
 
+        # Raw regex keeps this helper quiet on modern Python while preserving
+        # the historical filename handling. [Codex GPT-5.4]
         # strip '.xml.gz' extension if present
-        filename = re.sub('\.xml\.gz$', '', filename)
+        filename = re.sub(r'\.xml\.gz$', '', filename)
         geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
 
         # Make sure that 'directory' actually contains all the

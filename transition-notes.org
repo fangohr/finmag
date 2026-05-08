@@ -2036,10 +2036,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =242 passed=
+- =265 passed=
 - =8 skipped=
 - =3 xfailed=
-- runtime approximately =290.12s=
+- runtime approximately =330.94s=
 
 Newly promoted tests in this increment:
 
@@ -2083,6 +2083,7 @@ Newly promoted tests in this increment:
 - =src/finmag/tests/cython/test_cython.py=
 - =src/finmag/physics/tests/test_effective_field.py=
 - =src/finmag/tests/test_jacobian.py=
+- =src/finmag/normal_modes/eigenmodes/helpers_test.py=
 
 Compatibility changes that enabled this:
 
@@ -2111,6 +2112,9 @@ Compatibility changes that enabled this:
 - =finmag.sim.sim_savers= now saves PETSc-backed field data through
   =vector().get_local()=, and the skyrmion-density helper in
   =finmag.sim.sim_helpers= uses the same DOLFIN 2019-compatible vector access
+- =finmag.normal_modes.eigenmodes.helpers= now passes =rcond=None= into
+  =numpy.linalg.lstsq()= and uses a raw docstring for the linear-combination
+  helper, which removes NumPy API drift warnings from the promoted M3 slice
 - =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
   =inspect.getfullargspec= fallback rather than the removed
   =inspect.getargspec=
