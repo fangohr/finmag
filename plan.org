@@ -1018,7 +1018,7 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =367 passed=
+- =369 passed=
 - =9 skipped=
 - =3 xfailed=
 - runtime approximately =331s plus the later promoted slices=
@@ -1032,6 +1032,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/tests/test_solid_angle_invariance.py=
 - =src/finmag/physics/tests/neb/neb_test.py=
 - =src/finmag/physics/llb/sllg_test.py=
+- =src/finmag/physics/llb/llb_test.py=
 - =src/finmag/util/meshes_test.py=
 - =src/finmag/sim/sim_helpers_test.py=
 - =src/finmag/sim/magnetisation_patterns_test.py=

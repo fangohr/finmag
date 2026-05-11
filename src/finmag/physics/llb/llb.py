@@ -7,7 +7,7 @@ import finmag.native.llb as native_llb
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 from finmag.physics.llb.exchange import Exchange
-from finmag.physics.llb.material import Material
+from finmag.physics.llb.material import Material, _vector_as_numpy
 from finmag.field import Field
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
@@ -26,7 +26,7 @@ class LLB(object):
     def __init__(self, mat, method='RK2b', name='unnamed', pbc2d=None):
         self.material = mat
         self._m = mat._m
-        self.m = self._m.vector().array()
+        self.m = _vector_as_numpy(self._m.vector())
         self.S1 = mat.S1
         self.S3 = mat.S3
         self.mesh = self.S1.mesh()
@@ -54,7 +54,7 @@ class LLB(object):
             self.logfilename, mode='w', level=logging.DEBUG)
         self.scheduler = scheduler.Scheduler()
 
-        self.domains = df.CellFunction("uint", self.mesh)
+        self.domains = df.MeshFunction("size_t", self.mesh, self.mesh.topology().dim())
         self.domains.set_all(0)
         self.region_id = 0
 
@@ -78,8 +78,9 @@ class LLB(object):
         self.t = 0.0  # s
         self.do_precession = True
 
-        self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
-                                      df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = _vector_as_numpy(
+            df.assemble(df.dot(df.TestFunction(self.S3),
+                               df.Constant([1, 1, 1])) * df.dx))
         self.real_vol = self.vol * self.material.unit_length ** 3
 
         self.nxyz = self.mesh.num_vertices()
@@ -173,8 +174,8 @@ class LLB(object):
     pins = property(pins, set_pins)
 
     def set_spatial_alpha(self, value):
-        self._alpha[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+        self._alpha[:] = _vector_as_numpy(
+            helpers.scalar_valued_function(value, self.S1).vector())[:]
 
     def setup_parameters(self):
         self.integrator.set_parameters(self.dt,
@@ -241,7 +242,7 @@ class LLB(object):
         timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
 
-        native_llb.calc_llb_dmdt(self._m.vector().array(),
+        native_llb.calc_llb_dmdt(y,
                                  self.H_eff,
                                  self.dm_dt,
                                  self.material.T,
@@ -312,7 +313,7 @@ class LLB(object):
         log.debug("Integrating dynamics up to t = %g" % t)
 
     def m_average_fun(self, dx=df.dx):
-        """
+        r"""
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
@@ -359,7 +360,8 @@ class LLB(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        func_args = inspect.getargspec(func).args
+        getargspec = inspect.getfullargspec if hasattr(inspect, 'getfullargspec') else inspect.getargspec
+        func_args = getargspec(func).args
         illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
         for kw in illegal_argnames:
             if kw in func_args:

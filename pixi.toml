@@ -46,6 +46,7 @@ src/finmag/energies/dmi_test.py src/finmag/energies/magnetostatic_field_test.py
 src/finmag/tests/zhangli/zhang_li_test.py src/finmag/tests/zhangli/stt_nonlocal_test.py src/finmag/tests/test_skyrmions.py src/finmag/tests/test_solid_angle.py src/finmag/tests/test_solid_angle_invariance.py src/finmag/physics/tests/neb/neb_test.py src/finmag/physics/llb/sllg_test.py src/finmag/util/meshes_test.py src/finmag/sim/sim_helpers_test.py
 src/finmag/sim/magnetisation_patterns_test.py
 src/finmag/sim/hysteresis_test.py
+src/finmag/physics/llb/llb_test.py
 src/finmag/tests/test_meshes.py
 src/finmag/util/mesh_templates_test.py
 src/finmag/util/helpers_test.py
