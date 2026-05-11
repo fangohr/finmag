@@ -2036,10 +2036,21 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =369 passed=
-- =9 skipped=
+- =425 passed=
+- =11 skipped=
 - =3 xfailed=
-- runtime approximately =330.94s plus the later promoted slices=
+- runtime approximately =441s=
+
+This increment promoted the full =src/finmag/sim/sim_test.py= file
+into the active =pixi= /=fenics2019= gate. The remaining failures were
+all compatibility-level issues rather than deeper numerical drift:
+
+- PETSc vector reads in the test moved from =.array()= to =get_local()=
+- deprecated normal-mode slice extraction now uses
+  =df.LagrangeInterpolator.interpolate(...)= on DOLFIN 2019
+- the mesh discretisation regression forces Gmsh to emit =msh2= because
+  the legacy =dolfin-convert= path cannot parse Gmsh v4 files
+- 3D plotting now uses =fig.add_subplot(111, projection='3d')=
 
 Newly promoted tests in this increment:
 

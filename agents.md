@@ -796,8 +796,8 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `369 passed`
-- `9 skipped`
+- `425 passed`
+- `11 skipped`
 - `3 xfailed`
 
 using:
@@ -807,6 +807,7 @@ using:
 
 The newest promoted M3 tests are:
 
+- `src/finmag/sim/sim_test.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`

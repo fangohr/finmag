@@ -235,7 +235,7 @@ def plot_dynamics_3d(ndt_file, field='m', style='-', elev=None, azim=None,
     """
     f = Tablereader(ndt_file)
     fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot('111', projection='3d')
+    ax = fig.add_subplot(111, projection='3d')
     ax.view_init(elev=elev, azim=azim)
     fld_x = f[field + '_x']
     fld_y = f[field + '_y']

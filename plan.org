@@ -1018,10 +1018,21 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =369 passed=
-- =9 skipped=
+- =425 passed=
+- =11 skipped=
 - =3 xfailed=
-- runtime approximately =331s plus the later promoted slices=
+- runtime approximately =441s=
+
+The latest increment promoted the full =src/finmag/sim/sim_test.py=
+file into the active M3 verifier after cleaning up the remaining
+Python-3/DOLFIN-2019 compatibility buckets:
+
+- PETSc vector reads in the test now use =get_local()=
+- deprecated normal-mode slice extraction now uses the DOLFIN-2019
+  =LagrangeInterpolator.interpolate(...)= helper
+- the mesh-discretisation regression forces Gmsh =msh2= output so the
+  legacy =dolfin-convert= fallback can still parse the mesh
+- 3D plotting now uses =fig.add_subplot(111, projection='3d')=
 
 The newly promoted M3 coverage includes:
 

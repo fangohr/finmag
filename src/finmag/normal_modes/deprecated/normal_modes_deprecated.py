@@ -682,11 +682,12 @@ def extract_mesh_slice(mesh, slice_z):
     V_slice = df.FunctionSpace(slice_mesh, 'CG', 1)
     f_slice = df.Function(V_slice)
 
-    lg = df.LagrangeInterpolator()
     def restrict_to_slice_mesh(a):
         f.vector().set_local(a)
-        lg.interpolate(f_slice, f)
-        return f_slice.vector().array()
+        # DOLFIN 2019 exposes Lagrange interpolation as a static helper rather
+        # than a constructible object. [Codex GPT-5.4]
+        df.LagrangeInterpolator.interpolate(f_slice, f)
+        return f_slice.vector().get_local()
 
     return slice_mesh, restrict_to_slice_mesh
 

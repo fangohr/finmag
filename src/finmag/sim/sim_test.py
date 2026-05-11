@@ -587,7 +587,7 @@ class TestSimulation(object):
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.add(Zeeman((1, 2, 3)))
 
-        H = sim.get_field_as_dolfin_function('Zeeman').vector().array()
+        H = sim.get_field_as_dolfin_function('Zeeman').vector().get_local()
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [1, 2, 3]))
 
@@ -599,7 +599,7 @@ class TestSimulation(object):
         # interaction yet
         sim = Simulation(mesh, Ms=1, unit_length=1e-9)
         sim.set_H_ext((1, 2, 3))  # this should not raise an error!
-        H = sim.get_field_as_dolfin_function('Zeeman').vector().array()
+        H = sim.get_field_as_dolfin_function('Zeeman').vector().get_local()
         H = sim.probe_field('Zeeman', [0.5e-9, 0.5e-9, 0.5e-9])
         assert(np.allclose(H, [1, 2, 3]))
 
@@ -848,7 +848,7 @@ class TestSimulation(object):
 
         demag_bottom = np.load('demag_bottom.npy')
         demag_top = np.load('demag_top.npy')
-        demag_full = sim.get_field_as_dolfin_function('Demag').vector().array()
+        demag_full = sim.get_field_as_dolfin_function('Demag').vector().get_local()
         assert len(demag_bottom) < len(demag_full)
         assert len(demag_top) < len(demag_full)
 
@@ -878,7 +878,7 @@ class TestSimulation(object):
 
         # Check that both sim.m and sim.m_field have the newly assigned value
         assert np.allclose(sim.m, m_random)
-        assert np.allclose(sim.m_field.f.vector().array(), m_random)
+        assert np.allclose(sim.m_field.f.vector().get_local(), m_random)
 
     def test_run_until_0_does_not_change_m(self):
         """
@@ -1925,7 +1925,10 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
     # transition image uses the Python meshconvert fallback when the old
     # dolfin-convert script is not installed.
     subprocess.check_call([
-        'gmsh', '-3', '-optimize', '-optimize_netgen',
+        # Force the legacy MSH2 format because the Python meshconvert fallback
+        # used on the transition path does not understand Gmsh v4 files.
+        # [Codex GPT-5.4]
+        'gmsh', '-3', '-format', 'msh2', '-optimize', '-optimize_netgen',
         '-o', 'nanostrip.msh', 'nanostrip.geo'])
     subprocess.check_call(
         _dolfin_convert_command('nanostrip.msh', 'nanostrip.xml'), shell=True)
