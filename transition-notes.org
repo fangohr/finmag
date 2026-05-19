@@ -2036,21 +2036,33 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =425 passed=
-- =11 skipped=
+- =441 passed=
+- =15 skipped=
 - =3 xfailed=
-- runtime approximately =441s=
+- runtime approximately =445s=
 
-This increment promoted the full =src/finmag/sim/sim_test.py= file
-into the active =pixi= /=fenics2019= gate. The remaining failures were
-all compatibility-level issues rather than deeper numerical drift:
+This increment promoted:
 
-- PETSc vector reads in the test moved from =.array()= to =get_local()=
-- deprecated normal-mode slice extraction now uses
-  =df.LagrangeInterpolator.interpolate(...)= on DOLFIN 2019
-- the mesh discretisation regression forces Gmsh to emit =msh2= because
-  the legacy =dolfin-convert= path cannot parse Gmsh v4 files
-- 3D plotting now uses =fig.add_subplot(111, projection='3d')=
+- =src/finmag/physics/tests/test_equation.py=
+- =src/finmag/physics/tests/test_terms.py=
+
+The blocker here was the removed =dolfin.compile_extension_module=
+entry point on the =pixi= /=fenics2019= path. The active workaround is a
+small Python fallback for the low-level =Equation=/=terms= wrapper, while
+the legacy Docker path still uses the compiled implementation.
+
+Follow-up backend-confidence checks are now in place as well:
+
+- native-vs-Python parity tests for the low-level =terms= wrapper
+- native-vs-Python parity tests for =Equation.solve()= and pinning
+- a Python-fallback =jtimes= test checked against centered finite differences
+- checked-in native reference data in
+  =src/finmag/physics/tests/equation_reference_data.json= so the fallback can
+  still be validated numerically after the compiled backend is no longer
+  runnable in active environments
+- a benchmark-report test on the legacy/native stack; the current observed
+  ratio is roughly =107x= slower for the Python fallback on a small repeated
+  =Equation.solve()= loop
 
 Newly promoted tests in this increment:
 

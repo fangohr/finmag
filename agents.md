@@ -796,8 +796,8 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `425 passed`
-- `11 skipped`
+- `441 passed`
+- `15 skipped`
 - `3 xfailed`
 
 using:
@@ -808,6 +808,8 @@ using:
 The newest promoted M3 tests are:
 
 - `src/finmag/sim/sim_test.py`
+- `src/finmag/physics/tests/test_equation.py`
+- `src/finmag/physics/tests/test_terms.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -831,6 +833,20 @@ The newest promoted M3 tests are:
 - `src/finmag/util/test_dmi_from_helix.py`
 - `src/finmag/drivers/tests/sundials_nsteps_test.py`
 - `src/finmag/drivers/tests/sundials_reinit_test.py`
+
+Additional confidence added around the new `physics/equation.py` Python
+fallback:
+
+- direct native-vs-Python parity tests for `terms`
+- direct native-vs-Python parity tests for `Equation.solve()` and pinning
+- a Python-fallback `jtimes` finite-difference contract test
+- checked-in native reference data in
+  `src/finmag/physics/tests/equation_reference_data.json` so the fallback can
+  still be checked against legacy native outputs without requiring the
+  container backend
+- a native-stack benchmark report showing the Python fallback is roughly
+  `107x` slower on a small repeated `Equation.solve()` loop, so it remains a
+  compatibility bridge rather than a performance-equivalent replacement
 - `src/finmag/drivers/tests/test_scipy.py`
 - `src/finmag/drivers/tests/test_integrators.py`
 - `src/finmag/util/ode/tests/test_sundials_stiff_ode.py`

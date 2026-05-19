@@ -1,25 +1,43 @@
 import pytest
+import json
 from os import path
-import dolfin as df
 import finmag.physics.equation as eqn
+
 
 @pytest.fixture
 def terms_module():
-    MODULE_DIR = path.dirname(path.abspath(__file__))
-    SOURCE_DIR = path.join(MODULE_DIR, "..", "native")
+    """
+    Return whichever terms backend is active on this stack.
 
-    with open(path.join(SOURCE_DIR, "terms.h"), "r") as header:
-        code = header.read()
+    The basic term-identity tests below should hold whether the current stack
+    uses the live native backend or the Python fallback. [Codex GPT-5.4]
+    """
+    return eqn.get_terms_module()
 
-    extension_module = df.compile_extension_module(
-        code=code,
-        source_directory=SOURCE_DIR,
-        sources=["terms.cpp"],
-        # declare dm_x, dm_y and dm_z as input/output parameters
-        # they will turn up in Python as return values
-        additional_declarations="%apply double& INOUT { double& dm_x, double& dm_y, double& dm_z };",
-        include_dirs=[SOURCE_DIR, eqn.find_petsc(), eqn.find_slepc()],)
-    return extension_module
+
+def load_reference_data():
+    """
+    Load the checked-in native terms/equation reference payload.
+
+    This keeps the Python fallback tied to backend-derived results even after
+    the compiled container path is retired. [Codex GPT-5.4]
+    """
+    data_file = path.join(path.dirname(__file__), "equation_reference_data.json")
+    with open(data_file, "r") as f:
+        return json.load(f)
+
+
+@pytest.fixture
+def native_and_python_terms_modules():
+    """
+    Return both terms backends when the compiled hook still exists.
+
+    These parity tests intentionally skip on stacks that no longer expose the
+    legacy compiled extension entry point. [Codex GPT-5.4]
+    """
+    if not eqn.native_equation_module_available():
+        pytest.skip("compiled equation backend is not available on this DOLFIN stack")
+    return eqn.get_native_terms_module(), eqn.get_python_terms_module()
 
 
 def test_damping(terms_module):
@@ -43,3 +61,40 @@ def test_relaxation(terms_module):
     mx, my, mz = 2, 0, 0
     dmx, dmy, dmz = terms_module.relaxation(c, mx, my, mz, 0, 0, 0)
     assert (dmx, dmy, dmz) == (-6, 0, 0)
+
+
+def test_python_terms_match_native_terms(native_and_python_terms_modules):
+    """
+    Compare live native and Python terms outputs directly.
+
+    This runs only while the compiled backend still exists and gives a direct
+    parity signal in addition to the simpler formula-based tests above.
+    [Codex GPT-5.4]
+    """
+    native_terms, python_terms = native_and_python_terms_modules
+    damping_args = (1.2, 2.3, 0.6, -0.2, 0.7, -1.1, 0.4, 3.2, 0.1, -0.2, 0.3)
+    precession_args = (0.7, 2.1, -0.5, 0.4, 0.3, 1.5, -0.6, 0.9, 0.2, 0.5, -0.4)
+    relaxation_args = (1.7, 1.4, -0.8, 0.6, -0.2, 0.1, 0.3)
+
+    assert native_terms.damping(*damping_args) == pytest.approx(
+        python_terms.damping(*damping_args))
+    assert native_terms.precession(*precession_args) == pytest.approx(
+        python_terms.precession(*precession_args))
+    assert native_terms.relaxation(*relaxation_args) == pytest.approx(
+        python_terms.relaxation(*relaxation_args))
+
+
+def test_python_terms_match_checked_in_native_reference():
+    """
+    Compare Python terms outputs against stored native reference data.
+
+    This keeps a backend-derived oracle available even after the live native
+    container path disappears. [Codex GPT-5.4]
+    """
+    reference_data = load_reference_data()
+    python_terms = eqn.get_python_terms_module()
+
+    for name in ("damping", "precession", "relaxation"):
+        case = reference_data["terms"][name]
+        result = getattr(python_terms, name)(*case["args"])
+        assert result == pytest.approx(case["result"])

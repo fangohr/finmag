@@ -1018,21 +1018,35 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =425 passed=
-- =11 skipped=
+- =441 passed=
+- =15 skipped=
 - =3 xfailed=
-- runtime approximately =441s=
+- runtime approximately =445s=
 
-The latest increment promoted the full =src/finmag/sim/sim_test.py=
-file into the active M3 verifier after cleaning up the remaining
-Python-3/DOLFIN-2019 compatibility buckets:
+The latest increment promoted:
 
-- PETSc vector reads in the test now use =get_local()=
-- deprecated normal-mode slice extraction now uses the DOLFIN-2019
-  =LagrangeInterpolator.interpolate(...)= helper
-- the mesh-discretisation regression forces Gmsh =msh2= output so the
-  legacy =dolfin-convert= fallback can still parse the mesh
-- 3D plotting now uses =fig.add_subplot(111, projection='3d')=
+- =src/finmag/physics/tests/test_equation.py=
+- =src/finmag/physics/tests/test_terms.py=
+
+The DOLFIN-2019 /=pixi= path no longer has
+=dolfin.compile_extension_module=, so this increment keeps those tests
+active by providing a small Python fallback for the old
+=Equation=/=terms= wrapper when the legacy native hook is unavailable.
+The legacy Docker path continues to exercise the compiled implementation.
+
+Follow-up validation now also keeps backend confidence alive explicitly:
+
+- direct native-vs-Python parity tests for the low-level =terms= helpers
+- direct native-vs-Python parity tests for =Equation.solve()= and pinning
+- a Python-fallback =jtimes= finite-difference contract test
+- checked-in native reference data in
+  =src/finmag/physics/tests/equation_reference_data.json= so the fallback can
+  still be compared against legacy native results after the container backend
+  disappears
+- a benchmark report on the legacy/native stack showing the Python fallback
+  is substantially slower (roughly two orders of magnitude on a small
+  looped solve micro-benchmark), so it should be treated as a compatibility
+  bridge rather than a production-performance replacement
 
 The newly promoted M3 coverage includes:
 
