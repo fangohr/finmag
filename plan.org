@@ -1018,19 +1018,26 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =441 passed=
+- =455 passed=
 - =15 skipped=
 - =3 xfailed=
-- runtime approximately =445s=
+- runtime approximately =460s=
 
 The latest increment promoted:
 
-- =src/finmag/physics/tests/test_equation.py=
-- =src/finmag/physics/tests/test_terms.py=
+- =src/finmag/energies/zeeman_test.py=
 
-The DOLFIN-2019 /=pixi= path no longer has
-=dolfin.compile_extension_module=, so this increment keeps those tests
-active by providing a small Python fallback for the old
+This promotes the Zeeman regression file after numerical review of the
+stray-field sphere-vs-dipole comparison. The DOLFIN-2019/Netgen mesh produced
+a slightly larger pointwise absolute tail with the old sphere resolution
+(about =150.9= A/m versus the historical =140.0= A/m guard), while the
+relative checks still passed. The test now refines only the magnetic sphere
+(=maxh_sphere= = =2.0=) so the original absolute tolerance remains a real
+regression guard rather than being relaxed. [Codex GPT-5.4]
+
+Earlier M3 work handled the fact that the DOLFIN-2019 /=pixi= path no longer
+has =dolfin.compile_extension_module=, keeping those tests active by
+providing a small Python fallback for the old
 =Equation=/=terms= wrapper when the legacy native hook is unavailable.
 The legacy Docker path continues to exercise the compiled implementation.
 
@@ -1086,6 +1093,7 @@ The newly promoted M3 coverage includes:
 - =src/finmag/util/fft_test.py=
 - =src/finmag/energies/dmi_test.py=
 - =src/finmag/energies/magnetostatic_field_test.py=
+- =src/finmag/energies/zeeman_test.py=
 - =src/finmag/drivers/tests/test_relaxation.py=
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=

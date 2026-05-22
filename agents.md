@@ -796,7 +796,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `441 passed`
+- `455 passed`
 - `15 skipped`
 - `3 xfailed`
 
@@ -810,6 +810,7 @@ The newest promoted M3 tests are:
 - `src/finmag/sim/sim_test.py`
 - `src/finmag/physics/tests/test_equation.py`
 - `src/finmag/physics/tests/test_terms.py`
+- `src/finmag/energies/zeeman_test.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -872,6 +873,7 @@ fallback:
 - `src/finmag/field_test.py`
 - `src/finmag/energies/dmi_test.py`
 - `src/finmag/energies/magnetostatic_field_test.py`
+- `src/finmag/energies/zeeman_test.py`
 - `src/finmag/sim/magnetisation_patterns_test.py`
 - `src/finmag/sim/hysteresis_test.py`
 
@@ -880,10 +882,12 @@ Current M3 boundary notes for future agents:
 - full NEB tangent computations still require `finmag.native.neb`, even
   though the helper-only `src/finmag/physics/tests/neb/neb_test.py` file now
   runs in M3
-- `src/finmag/energies/zeeman_test.py` is no longer blocked on removed DOLFIN
-  APIs, but the pixi/FEniCS-2019 path still misses the stray-field dipole
-  comparison's hard absolute-difference bound (`150.89` observed vs `140.0`
-  expected), so it remains outside M3 pending numerical review
+- `src/finmag/energies/zeeman_test.py` now runs in M3. The sphere-vs-dipole
+  test keeps the historical `140.0` A/m absolute guard; it uses
+  `maxh_sphere=2.0` because investigation showed the pixi/FEniCS-2019 Netgen
+  mesh at `maxh_sphere=2.5` had a slightly larger pointwise tail despite
+  passing the relative field checks. Do not loosen that tolerance without
+  renewed numerical review. [Codex GPT-5.4]
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

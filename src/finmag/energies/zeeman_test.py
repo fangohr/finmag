@@ -421,7 +421,13 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     r_sphere = 3
     r_shell = 30
     l_box = 100
-    maxh_sphere = 2.5
+    # The DOLFIN-2019/Netgen path generates a slightly different air mesh from
+    # the legacy DOLFIN-2017 stack. With maxh_sphere=2.5 the relative dipole
+    # comparison still passes, but the pointwise absolute tail rises just above
+    # the historical 140 A/m guard. Refining only the magnetic sphere keeps the
+    # original tolerance meaningful instead of hiding the drift by relaxing the
+    # assertion. [Codex GPT-5.4]
+    maxh_sphere = 2.0
     maxh_shell = None
     maxh_box = 10.0
     Ms_sphere = 8.6e5
@@ -446,8 +452,10 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     # stray field of the sphere and the field of the point dipole
     # are below a given tolerance.
     absdiffs, reldiffs = compute_field_diffs(sim)
-    assert np.max(reldiffs) < 0.4
-    assert np.mean(reldiffs) < 0.15
-    assert np.max(absdiffs) < 140.0
-
-    print(np.max(reldiffs), np.mean(reldiffs), np.max(absdiffs))
+    max_reldiff = np.max(reldiffs)
+    mean_reldiff = np.mean(reldiffs)
+    max_absdiff = np.max(absdiffs)
+    print(max_reldiff, mean_reldiff, max_absdiff)
+    assert max_reldiff < 0.4
+    assert mean_reldiff < 0.15
+    assert max_absdiff < 140.0
