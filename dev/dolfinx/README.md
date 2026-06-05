@@ -16,6 +16,7 @@ gpt-5.5 high]
 - A small end-to-end relaxation example with JSON summary output.
 - A hand-written JSON summary validator with `schema_version = 1`.
 - Small dataclasses for relaxation parameters and JSON-compatible results.
+- Early validation for the reduced relaxation-example parameter set.
 
 ## Explicit Non-Scope
 

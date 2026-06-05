@@ -43,6 +43,21 @@ class RelaxationParameters:
     saturation_magnetisation: float = 1.0
     unit_length: float = 1.0
 
+    def __post_init__(self):
+        """Reject invalid prototype parameters before DOLFINx form assembly."""
+        if self.anisotropy_constant < 0:
+            raise ValueError("anisotropy_constant must be non-negative")
+        if self.exchange_constant < 0:
+            raise ValueError("exchange_constant must be non-negative")
+        if self.saturation_magnetisation <= 0:
+            raise ValueError("saturation_magnetisation must be positive")
+        if self.unit_length <= 0:
+            raise ValueError("unit_length must be positive")
+        if len(self.field) != 3:
+            raise ValueError("field must have three components")
+        if len(self.anisotropy_axis) != 3:
+            raise ValueError("anisotropy_axis must have three components")
+
 
 @dataclass(frozen=True)
 class RelaxationResult:

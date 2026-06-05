@@ -63,6 +63,27 @@ def test_relaxation_example_accepts_parameter_dataclass(tmp_path):
     assert validate_summary(summary) == summary
 
 
+def test_relaxation_parameters_reject_invalid_values():
+    """Invalid prototype parameters should fail before form assembly."""
+    with pytest.raises(ValueError, match="anisotropy_constant must be non-negative"):
+        RelaxationParameters(anisotropy_constant=-1.0)
+
+    with pytest.raises(ValueError, match="exchange_constant must be non-negative"):
+        RelaxationParameters(exchange_constant=-1.0)
+
+    with pytest.raises(ValueError, match="saturation_magnetisation must be positive"):
+        RelaxationParameters(saturation_magnetisation=0.0)
+
+    with pytest.raises(ValueError, match="unit_length must be positive"):
+        RelaxationParameters(unit_length=0.0)
+
+    with pytest.raises(ValueError, match="field must have three components"):
+        RelaxationParameters(field=(0.0, 1.0))
+
+    with pytest.raises(ValueError, match="anisotropy_axis must have three components"):
+        RelaxationParameters(anisotropy_axis=(0.0, 1.0))
+
+
 def test_relaxation_summary_validation_rejects_broken_output(tmp_path):
     """The JSON contract should fail explicitly for malformed summaries."""
     summary = run_relaxation_example(tmp_path / "summary.json", steps=2)

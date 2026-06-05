@@ -2357,9 +2357,11 @@ The next small M4 step adds a DOLFINx-only prototype module:
 - the relaxation example uses small dataclasses for parameters and
   JSON-compatible results. Treat these as an API sketch for review, not as a
   stable public API. [Codex gpt-5.5 high]
+- the reduced parameter dataclass now validates constants and vector sizes
+  before DOLFINx form assembly. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =21 passed= for =pixi run -e dolfinx
+public API. Local verification: =22 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

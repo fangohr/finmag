@@ -297,7 +297,10 @@ Current second probe:
   parameters and JSON-compatible results. These make the reduced API shape
   clearer without promising legacy =finmag.Simulation= compatibility. [Codex
   gpt-5.5 high]
-- local verification now gives =21 passed= for =pixi run -e dolfinx
+- the prototype parameter dataclass validates the reduced example inputs early,
+  before DOLFINx form assembly, so invalid constants or vector sizes fail with
+  explicit messages. [Codex gpt-5.5 high]
+- local verification now gives =22 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value
