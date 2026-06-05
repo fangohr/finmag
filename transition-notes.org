@@ -2300,3 +2300,24 @@ Still out of the current M3 gate:
   agreed follow-up is to build and activate =finmag.native.treecode_bem= under
   pixi, then unskip the PBC demag checks after native validation; a NumPy
   fallback is not the next step. [Codex gpt-5.5 high]
+
+** First M4 / DOLFINx Dependency Probe
+
+M4 now has an isolated pixi environment rather than sharing the FEniCS-2019
+default environment:
+
+- =pixi.toml= defines a =dolfinx= feature with =python = "3.12.*"=,
+  =fenics-dolfinx=, =pytest=, and =numpy=
+- the =dolfinx= environment uses =no-default-feature = true= so it does not
+  inherit the default =fenics 2019.1.0= stack
+- =dev/bin/verify-dolfinx-m4= runs =dolfinx-import= and =dolfinx-smoke=
+- =.github/workflows/dolfinx-m4.yml= wires the same probe into CI
+
+Verified local result:
+
+- =dolfinx 0.10.0 rank 0=
+- =dofs 9 sum 13.5=
+
+This is intentionally only a dependency and tiny mesh/function smoke probe. It
+creates a clean place to start M4 without perturbing the green M2/M3 gates.
+[Codex gpt-5.5 high]

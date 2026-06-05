@@ -28,6 +28,22 @@ netgen = "*"
 # comparisons without reviving the old source-build path. [Codex GPT-5.4]
 oommf = "*"
 
+[feature.dolfinx.dependencies]
+# Keep DOLFINx in a separate no-default-feature environment: current
+# fenics-dolfinx builds require CPython 3.12+ and must not perturb the
+# FEniCS-2019/Python-3.11 M2/M3 environment. [Codex gpt-5.5 high]
+python = "3.12.*"
+fenics-dolfinx = "*"
+pytest = "*"
+numpy = "*"
+
+[feature.dolfinx.tasks]
+dolfinx-import = "python -c \"from mpi4py import MPI; import dolfinx; print('dolfinx', dolfinx.__version__, 'rank', MPI.COMM_WORLD.rank)\""
+dolfinx-smoke = "python -c \"from mpi4py import MPI; import numpy as np; from dolfinx import mesh, fem; m = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2); V = fem.functionspace(m, ('Lagrange', 1)); u = fem.Function(V); u.interpolate(lambda x: x[0] + 2*x[1]); print('dofs', V.dofmap.index_map.size_global, 'sum', float(np.sum(u.x.array)))\""
+
+[environments]
+dolfinx = { features = ["dolfinx"], no-default-feature = true }
+
 [tasks]
 # This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
 # to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]

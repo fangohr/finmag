@@ -240,6 +240,21 @@ Important note:
 
 - this is a port/redesign milestone, not a drop-in package upgrade.
 
+Current first probe:
+
+- =pixi.toml= now defines a separate =dolfinx= feature/environment with
+  =no-default-feature = true= so the DOLFINx/CPython-3.12 dependency stack does
+  not disturb the default FEniCS-2019/Python-3.11 M2/M3 environment. [Codex
+  gpt-5.5 high]
+- =dev/bin/verify-dolfinx-m4= wraps two minimal tasks:
+  - =pixi run -e dolfinx dolfinx-import=
+  - =pixi run -e dolfinx dolfinx-smoke=
+- =.github/workflows/dolfinx-m4.yml= runs the same isolated probe in CI
+- local verification succeeded with =dolfinx 0.10.0=, =dofs 9=, and
+  interpolated function-array =sum 13.5=. [Codex gpt-5.5 high]
+- this is only a dependency and tiny mesh/function smoke probe; it is not yet a
+  Finmag-on-DOLFINx port. [Codex gpt-5.5 high]
+
 *** Milestone M5: DOLFINx Expansion By Scientific Value
 
 Goal:

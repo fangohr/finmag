@@ -1015,3 +1015,21 @@ Current additional M3 boundary note:
   Do not add a NumPy fallback as the next step; the agreed path is to build
   and activate `finmag.native.treecode_bem` on pixi, then unskip the PBC demag
   checks once the native extension is validated. [Codex gpt-5.5 high]
+
+## M4 / DOLFINx Probe
+
+The first DOLFINx work is deliberately isolated from the default pixi
+environment:
+
+- `pixi.toml` has a `dolfinx` feature with `python = "3.12.*"` and
+  `fenics-dolfinx`
+- the `dolfinx` environment uses `no-default-feature = true`, so it does not
+  inherit the FEniCS-2019/Python-3.11 M2/M3 stack
+- `dev/bin/verify-dolfinx-m4` runs the current import and tiny
+  mesh/function smoke probes
+- `.github/workflows/dolfinx-m4.yml` runs the same isolated probe in CI
+- local verification produced `dolfinx 0.10.0 rank 0` and
+  `dofs 9 sum 13.5`
+
+Do not treat this as a Finmag port yet; it only establishes a separate M4
+dependency/probe lane. [Codex gpt-5.5 high]
