@@ -6,7 +6,7 @@ import numpy as np
 import dolfin as df
 from finmag.field import Field
 from finmag.util.versions import get_version_dolfin
-from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_gcr
+from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_fk_from_arrays, compute_bem_gcr
 from finmag.util import time_counter
 from finmag.util import helpers
 from finmag.util.meshes import mesh_volume, sphere, netgen_is_usable
@@ -54,7 +54,24 @@ def compute_belement_magpar(r1, r2, r3):
 def normalise_phi(phi, mesh):
     volume = mesh_volume(mesh)
     average = df.assemble(phi * df.dx)
-    phi.vector()[:] = phi.vector().array() - average / volume
+    phi.vector().set_local(phi.vector().get_local() - average / volume)
+
+
+def compute_bem_fk_compatible(boundary_mesh):
+    try:
+        return compute_bem_fk(boundary_mesh)
+    except TypeError:
+        coords = np.asarray(boundary_mesh.coordinates(), dtype=np.float64)
+        cells = np.asarray(boundary_mesh.cells(), dtype=np.int64)
+        entity_map = boundary_mesh.entity_map(0)
+        if hasattr(entity_map, "array"):
+            b2g_map = entity_map.array()
+        else:
+            b2g_map = entity_map.values()
+        # DOLFIN 2019 no longer converts BoundaryMesh objects through the old
+        # shared_ptr Boost.Python path; use the production array fallback here
+        # so this regression still checks the same native FK BEM code. [Codex GPT-5.4]
+        return compute_bem_fk_from_arrays(coords, cells, np.asarray(b2g_map, dtype=np.int64))
 
 
 def compute_scalar_potential_llg(mesh, m_expr=df.Constant([1, 0, 0]), Ms=1.):
@@ -134,7 +151,7 @@ class BemComputationTests(unittest.TestCase):
 
         bem_magpar, g2finmag = belement.BEM_matrix(mesh)
         bem_finmag = np.zeros(bem_magpar.shape)
-        bem, b2g = compute_bem_fk(df.BoundaryMesh(mesh, 'exterior', False))
+        bem, b2g = compute_bem_fk_compatible(df.BoundaryMesh(mesh, 'exterior', False))
         for i_dolfin in range(bem.shape[0]):
             i_finmag = g2finmag[b2g[i_dolfin]]
 
@@ -165,9 +182,13 @@ class BemComputationTests(unittest.TestCase):
         print("Boundary mesh computation for %s: %s" % (mesh, c))
         c = time_counter.counter()
         while c.next():
-            bem, _ = compute_bem_fk(boundary_mesh)
+            bem, _ = compute_bem_fk_compatible(boundary_mesh)
             n = bem.shape[0]
         print("FK BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c))
+        if "GCR" not in KNOWN_SOLVERS:
+            # Keep the useful FK timing smoke check active, but do not require
+            # the legacy GCR BEM path that is not ported on Python 3. [Codex GPT-5.4]
+            return
         c = time_counter.counter()
         while c.next():
             bem, _ = compute_bem_gcr(boundary_mesh)
@@ -177,7 +198,7 @@ class BemComputationTests(unittest.TestCase):
         module_dir = os.path.dirname(os.path.abspath(__file__))
         netgen_mesh = df.Mesh(
             os.path.join(module_dir, "bem_netgen_test_mesh.xml.gz"))
-        bem, b2g_map = compute_bem_fk(
+        bem, b2g_map = compute_bem_fk_compatible(
             df.BoundaryMesh(netgen_mesh, 'exterior', False))
 
     def run_demag_computation_test(self, mesh, m_expr, compute_func, method_name, tol=1e-10, ref=compute_scalar_potential_llg, k=0):

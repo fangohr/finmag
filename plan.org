@@ -1018,14 +1018,16 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =455 passed=
-- =15 skipped=
+- =467 passed=
+- =16 skipped=
 - =3 xfailed=
-- runtime approximately =460s=
+- runtime approximately =540s=
 
 The latest increment promoted:
 
 - =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
 
 This promotes the Zeeman regression file after numerical review of the
 stray-field sphere-vs-dipole comparison. The DOLFIN-2019/Netgen mesh produced
@@ -1034,6 +1036,12 @@ a slightly larger pointwise absolute tail with the old sphere resolution
 relative checks still passed. The test now refines only the magnetic sphere
 (=maxh_sphere= = =2.0=) so the original absolute tolerance remains a real
 regression guard rather than being relaxed. [Codex GPT-5.4]
+
+It also promotes the non-PBC demag/BEM regression files. The old Magpar
+boundary-element reference helper now has a NumPy fallback for the removed
+=instant= JIT package, and the BEM tests use the same DOLFIN-2019
+=BoundaryMesh=-to-array native fallback as production =FKDemag=. The
+unported legacy GCR branch remains an explicit skip. [Codex GPT-5.4]
 
 Earlier M3 work handled the fact that the DOLFIN-2019 /=pixi= path no longer
 has =dolfin.compile_extension_module=, keeping those tests active by
@@ -1094,6 +1102,8 @@ The newly promoted M3 coverage includes:
 - =src/finmag/energies/dmi_test.py=
 - =src/finmag/energies/magnetostatic_field_test.py=
 - =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
 - =src/finmag/drivers/tests/test_relaxation.py=
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=

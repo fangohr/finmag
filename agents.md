@@ -796,8 +796,8 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `455 passed`
-- `15 skipped`
+- `467 passed`
+- `16 skipped`
 - `3 xfailed`
 
 using:
@@ -811,6 +811,8 @@ The newest promoted M3 tests are:
 - `src/finmag/physics/tests/test_equation.py`
 - `src/finmag/physics/tests/test_terms.py`
 - `src/finmag/energies/zeeman_test.py`
+- `src/finmag/tests/demag/test_bem_computation.py`
+- `src/finmag/tests/demag/test_demag_sphere.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -874,6 +876,8 @@ fallback:
 - `src/finmag/energies/dmi_test.py`
 - `src/finmag/energies/magnetostatic_field_test.py`
 - `src/finmag/energies/zeeman_test.py`
+- `src/finmag/tests/demag/test_bem_computation.py`
+- `src/finmag/tests/demag/test_demag_sphere.py`
 - `src/finmag/sim/magnetisation_patterns_test.py`
 - `src/finmag/sim/hysteresis_test.py`
 
@@ -888,6 +892,10 @@ Current M3 boundary notes for future agents:
   mesh at `maxh_sphere=2.5` had a slightly larger pointwise tail despite
   passing the relative field checks. Do not loosen that tolerance without
   renewed numerical review. [Codex GPT-5.4]
+- `src/finmag/tests/demag/test_bem_computation.py` now runs in M3 with the
+  same DOLFIN-2019 array fallback for native FK BEM construction that
+  production `FKDemag` uses. The unported GCR branch is still an explicit
+  skip. [Codex GPT-5.4]
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

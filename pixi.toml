@@ -70,6 +70,8 @@ src/finmag/tests/jacobean/test_native_llg.py
 src/finmag/util/oommf/test_mesh.py
 src/finmag/util/visualization_test.py
 src/finmag/util/fft_test.py
+src/finmag/tests/demag/test_bem_computation.py
+src/finmag/tests/demag/test_demag_sphere.py
 src/finmag/drivers/tests/test_relaxation.py
 src/finmag/drivers/tests/test_relax_two_times.py
 src/finmag/tests/test_time.py

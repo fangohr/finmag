@@ -2036,14 +2036,16 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =455 passed=
-- =15 skipped=
+- =467 passed=
+- =16 skipped=
 - =3 xfailed=
-- runtime approximately =460s=
+- runtime approximately =540s=
 
 This increment promoted:
 
 - =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
 
 The Zeeman promotion keeps the historical sphere-vs-dipole absolute
 stray-field guard at =140.0= A/m. Investigation showed that the
@@ -2052,6 +2054,12 @@ pointwise tail (about =150.9= A/m) despite passing the relative field checks;
 refining only the magnetic sphere to =maxh_sphere= = =2.0= brings the tail
 back below the original guard and avoids hiding the drift by loosening the
 assertion. [Codex GPT-5.4]
+
+The same increment promotes the non-PBC demag/BEM regression files. The
+Magpar boundary-element reference helper now falls back to a pure-NumPy
+implementation when =instant= is absent, and the BEM tests use the production
+DOLFIN-2019 array fallback for native FK BEM construction. The legacy GCR
+solver path remains intentionally skipped on Python 3. [Codex GPT-5.4]
 
 An earlier blocker was the removed =dolfin.compile_extension_module=
 entry point on the =pixi= /=fenics2019= path. The active workaround is a
@@ -2110,6 +2118,8 @@ Newly promoted tests in this increment:
 - =src/finmag/energies/dmi_test.py=
 - =src/finmag/energies/magnetostatic_field_test.py=
 - =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
 - =src/finmag/drivers/tests/test_relaxation.py=
 - =src/finmag/drivers/tests/test_relax_two_times.py=
 - =src/finmag/tests/test_time.py=
