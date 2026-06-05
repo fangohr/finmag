@@ -41,8 +41,10 @@ def start_table():
     table += ".. table:: Summary of comparison of the demag field\n\n"
     table += table_delim
     table += table_entries.format(
-        # hack because sphinx light table syntax does not allow an empty header
-        ":math:`\,`",
+        # Hack because sphinx light table syntax does not allow an empty
+        # header; escape the literal backslash so Python does not warn while
+        # the generated reST table stays unchanged. [Codex gpt-5.5 high]
+        ":math:`\\,`",
         ":math:`\\subn{\\Delta}{test}`",
         ":math:`\\subn{\\Delta}{max}`",
         ":math:`\\bar{\\Delta}`",

@@ -461,8 +461,8 @@ Intentional skips and xfails are explicit:
   `normal_modes/eigenmodes/eigenproblems_test.py`, and
   `normal_modes/eigenmodes/eigensolvers_test.py` now pass under Python 3 and
   are included in both the local verifier and GitHub Actions core-suite gate
-- `normal_modes/deprecated/normal_modes_deprecated_test.py` also passes under
-  Python 3 and is included in both gates
+- `normal_modes/deprecated/normal_modes_deprecated_test.py` passes under the
+  legacy-DOLFIN Python 3 core gate, but it is not yet in the pixi/M3 gate
 - `normal_modes/eigenmodes/eigensolvers.py` no longer treats `num=None` as an
   operand to `min(...)`, and the unconditional SLEPc debug dumps were removed
 - `normal_modes/deprecated/normal_modes_deprecated.py` materializes
@@ -804,9 +804,9 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `476 passed`
-- `16 skipped`
-- `3 xfailed`
+- `488 passed`
+- `18 skipped`
+- `5 xfailed`
 
 using:
 
@@ -827,6 +827,16 @@ The newest promoted M3 tests are:
 - `src/finmag/tests/comparison/anisotropy/test_anis_oommf.py`
 - `src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py`
 - `src/finmag/tests/comparison/exchange/test_exchange_field.py`
+- `src/finmag/tests/comparison/anisotropy/test_anis_magpar.py`
+- `src/finmag/tests/comparison/demag/test_demag_field.py`
+- `src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py`
+- `src/finmag/tests/test_sim_parallel.py`
+- `src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py`
+- `src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py`
+- `src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py`
+- `src/finmag/tests/nmag/spinwaves/test_spinwaves.py`
+- `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
+- `src/finmag/tests/slonczewski/oscillator/test_oscillator.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -900,6 +910,16 @@ fallback:
 - `src/finmag/tests/comparison/anisotropy/test_anis_oommf.py`
 - `src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py`
 - `src/finmag/tests/comparison/exchange/test_exchange_field.py`
+- `src/finmag/tests/comparison/anisotropy/test_anis_magpar.py`
+- `src/finmag/tests/comparison/demag/test_demag_field.py`
+- `src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py`
+- `src/finmag/tests/test_sim_parallel.py`
+- `src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py`
+- `src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py`
+- `src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py`
+- `src/finmag/tests/nmag/spinwaves/test_spinwaves.py`
+- `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
+- `src/finmag/tests/slonczewski/oscillator/test_oscillator.py`
 
 Current M3 boundary notes for future agents:
 
@@ -924,6 +944,15 @@ Current M3 boundary notes for future agents:
 - Do not try to install `nsim` on the pixi track. Where Nmag comparisons are
   useful, prefer checked-in reference data, as in
   `src/finmag/tests/comparison/exchange/test_exchange_field.py`. [Codex GPT-5.4]
+- The latest M3 expansion promoted checked Nmag reference-data tests and
+  Slonczewski validation without installing `nsim`; the focused subset passed
+  as `12 passed, 2 skipped, 2 xfailed`, and the full M3 gate exited
+  successfully. [Codex gpt-5.5 high]
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py` is the
+  remaining non-PBC core-suite delta on M3. Its Kittel sphere check currently
+  computes `omega[0] = -13.778782240125864` versus expected
+  `15.547790145290367`, so treat it as a numerical/sign issue requiring
+  review, not as an environment skip. [Codex gpt-5.5 high]
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

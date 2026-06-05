@@ -97,4 +97,14 @@ src/finmag/tests/comparison/test_dmdt.py
 src/finmag/tests/comparison/anisotropy/test_anis_oommf.py
 src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py
 src/finmag/tests/comparison/exchange/test_exchange_field.py
+src/finmag/tests/comparison/anisotropy/test_anis_magpar.py
+src/finmag/tests/comparison/demag/test_demag_field.py
+src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py
+src/finmag/tests/test_sim_parallel.py
+src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py
+src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py
+src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py
+src/finmag/tests/nmag/spinwaves/test_spinwaves.py
+src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py
+src/finmag/tests/slonczewski/oscillator/test_oscillator.py
 '''

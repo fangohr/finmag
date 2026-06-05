@@ -1018,12 +1018,32 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =476 passed=
-- =16 skipped=
-- =3 xfailed=
-- runtime approximately =540s=
+- =488 passed=
+- =18 skipped=
+- =5 xfailed=
+- runtime approximately =700s=
 
-The latest increment promoted the conda-forge =oommf= package into the pixi
+The latest increment promoted the remaining checked-reference comparison and
+single-rank-safe boundary files that do not require installing =nsim=:
+
+- =src/finmag/tests/comparison/anisotropy/test_anis_magpar.py=
+- =src/finmag/tests/comparison/demag/test_demag_field.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py=
+- =src/finmag/tests/test_sim_parallel.py=
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py=
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py=
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py=
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
+
+The focused promoted subset passes as =12 passed, 2 skipped, 2 xfailed=, and
+the expanded =dev/bin/verify-python3-m3= gate exits successfully. The two new
+xfails are documented Magpar mesh-drift comparisons, the skips are the
+single-rank MPI boundary and the intentionally long Slonczewski oscillator
+validation. [Codex gpt-5.5 high]
+
+The previous increment promoted the conda-forge =oommf= package into the pixi
 environment and moved real OOMMF cross-code comparisons into M3:
 
 - =src/finmag/tests/oommf/test_anisotropy.py=
@@ -1140,6 +1160,16 @@ The newly promoted M3 coverage includes:
 - =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
 - =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
 - =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_magpar.py=
+- =src/finmag/tests/comparison/demag/test_demag_field.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py=
+- =src/finmag/tests/test_sim_parallel.py=
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py=
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py=
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py=
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1214,6 +1244,9 @@ The enabling compatibility work in this increment was:
   from conda-forge; =src/finmag/tests/comparison/test_dmdt.py= and the
   exchange comparison use =get_local()= for DOLFIN-2019 PETSc vectors instead
   of the removed =.array()= accessor. [Codex GPT-5.4]
+- the remaining Magpar comparison files now avoid invalid Python string
+  escapes in their reST table labels; this keeps the newly promoted M3 slice
+  warning-clean at the pytest level. [Codex gpt-5.5 high]
 
 Current M3 boundaries remain explicit:
 
@@ -1223,6 +1256,11 @@ Current M3 boundaries remain explicit:
 - =nsim= remains outside the pixi environment because it is not reasonable to
   install on this track; tests promoted here rely on checked-in Nmag reference
   data rather than executing =nsim=. [Codex GPT-5.4]
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
+  remains outside M3: under the pixi/FEniCS-2019 stack the Kittel sphere check
+  computes =omega[0] = -13.778782240125864= versus the expected
+  =15.547790145290367=, so this is a real numerical/sign discrepancy rather
+  than an environment skip. [Codex gpt-5.5 high]
 - =src/finmag/energies/demag/demag_pbc_test.py= remains outside the M3 gate
   because the pixi native build still lacks a working =treecode_bem=
   extension
