@@ -1012,4 +1012,6 @@ Current additional M3 boundary note:
 
 - `treecode_bem` is still missing from the pixi native build. The PBC demag
   regression file is represented in M3 as a skip until that extension exists.
-  [Codex gpt-5.5 high]
+  Do not add a NumPy fallback as the next step; the agreed path is to build
+  and activate `finmag.native.treecode_bem` on pixi, then unskip the PBC demag
+  checks once the native extension is validated. [Codex gpt-5.5 high]

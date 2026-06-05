@@ -2296,5 +2296,7 @@ Still out of the current M3 gate:
   track should continue to rely on checked-in Nmag reference data where that
   is sufficient, rather than trying to install Nmag. [Codex GPT-5.4]
 - =treecode_bem= remains unavailable on the pixi native build, but the PBC
-  demag regression file is now represented in M3 as a collected skip. [Codex
-  gpt-5.5 high]
+  demag regression file is now represented in M3 as a collected skip. The
+  agreed follow-up is to build and activate =finmag.native.treecode_bem= under
+  pixi, then unskip the PBC demag checks after native validation; a NumPy
+  fallback is not the next step. [Codex gpt-5.5 high]

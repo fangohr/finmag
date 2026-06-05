@@ -1279,4 +1279,6 @@ Current M3 boundaries remain explicit:
   data rather than executing =nsim=. [Codex GPT-5.4]
 - =src/finmag/energies/demag/demag_pbc_test.py= is included in M3 as an
   explicit collected skip until the pixi native build provides a working
-  =treecode_bem= extension. [Codex gpt-5.5 high]
+  =treecode_bem= extension. The next step is to build and activate the native
+  extension under pixi, not to add a NumPy fallback first. [Codex gpt-5.5
+  high]
