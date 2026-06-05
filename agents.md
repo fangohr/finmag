@@ -1064,8 +1064,10 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   Treat them as an API sketch, not as a stable public API. [Codex gpt-5.5 high]
 - the parameter dataclass validates constants and vector sizes before DOLFINx
   form assembly. Keep invalid M4 inputs explicit. [Codex gpt-5.5 high]
+- the relaxation example CLI path has pytest coverage for stdout JSON and the
+  requested output file. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `22 passed`
+  is `23 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

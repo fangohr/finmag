@@ -12,6 +12,7 @@ import pytest
 
 from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
 from dev.dolfinx.relaxation_example import RelaxationParameters
+from dev.dolfinx.relaxation_example import main
 from dev.dolfinx.relaxation_example import run_relaxation_example, validate_summary
 
 
@@ -82,6 +83,31 @@ def test_relaxation_parameters_reject_invalid_values():
 
     with pytest.raises(ValueError, match="anisotropy_axis must have three components"):
         RelaxationParameters(anisotropy_axis=(0.0, 1.0))
+
+
+def test_relaxation_example_cli_writes_valid_json(tmp_path, monkeypatch, capsys):
+    """Cover the command-line path used by the M4 verification wrapper."""
+    output_path = tmp_path / "cli-summary.json"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "relaxation_example",
+            "--output",
+            str(output_path),
+            "--steps",
+            "2",
+            "--dt",
+            "0.01",
+        ],
+    )
+
+    main()
+
+    printed = json.loads(capsys.readouterr().out)
+    written = json.loads(output_path.read_text())
+    assert printed == written
+    assert validate_summary(written) == written
+    assert written["steps"] == 2
 
 
 def test_relaxation_summary_validation_rejects_broken_output(tmp_path):
