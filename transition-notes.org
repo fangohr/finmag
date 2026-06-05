@@ -2324,3 +2324,17 @@ Verified local result:
 This is intentionally only a dependency and tiny mesh/function smoke probe. It
 creates a clean place to start M4 without perturbing the green M2/M3 gates.
 [Codex gpt-5.5 high]
+
+The next small M4 step adds a DOLFINx-only prototype module:
+
+- =dev/dolfinx/prototype.py= creates vector-valued magnetisation function
+  spaces, interpolates constant vector fields, and assembles the constant-field
+  Zeeman energy =-mu0 * Ms * integral(m . H)=
+- =dev/dolfinx/test_prototype.py= compares that assembled Zeeman energy with
+  the analytical unit-square value and checks =unit_length= scaling
+- =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
+
+This is deliberately not imported from =src/finmag= yet. The point is to pin
+down DOLFINx form/function semantics before attempting a Finmag-compatible
+public API. Local verification: =6 passed= for =pixi run -e dolfinx
+dolfinx-pytest=. [Codex gpt-5.5 high]

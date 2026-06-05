@@ -1035,3 +1035,16 @@ environment:
 
 Do not treat this as a Finmag port yet; it only establishes a separate M4
 dependency/probe lane. [Codex gpt-5.5 high]
+
+The next small M4 prototype step is also isolated under `dev/dolfinx`:
+
+- `dev/dolfinx/prototype.py` creates vector-valued DOLFINx magnetisation
+  fields and assembles constant-field Zeeman energy
+- `dev/dolfinx/test_prototype.py` checks constant-vector interpolation,
+  component-count validation, analytical unit-square Zeeman energy, and
+  `unit_length` scaling
+- `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
+  is `6 passed`
+
+Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
+[Codex gpt-5.5 high]

@@ -257,6 +257,19 @@ Current first probe:
 - this is only a dependency and tiny mesh/function smoke probe; it is not yet a
   Finmag-on-DOLFINx port. [Codex gpt-5.5 high]
 
+Current second probe:
+
+- =dev/dolfinx/prototype.py= adds DOLFINx-only helper functions for
+  vector-valued magnetisation fields and the smallest useful micromagnetic
+  energy form: constant-field Zeeman energy. The file intentionally lives under
+  =dev/dolfinx= rather than =src/finmag= so M4 can develop without perturbing
+  the green legacy FEniCS-2019 path. [Codex gpt-5.5 high]
+- =dev/dolfinx/test_prototype.py= checks constant-vector interpolation,
+  component-count validation, analytical Zeeman energy on a unit square, and
+  =unit_length= scaling.
+- local verification now gives =6 passed= for =pixi run -e dolfinx
+  dolfinx-pytest=. [Codex gpt-5.5 high]
+
 *** Milestone M5: DOLFINx Expansion By Scientific Value
 
 Goal:
