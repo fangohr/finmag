@@ -84,6 +84,12 @@ def test_relaxation_parameters_reject_invalid_values():
     with pytest.raises(ValueError, match="anisotropy_axis must have three components"):
         RelaxationParameters(anisotropy_axis=(0.0, 1.0))
 
+    with pytest.raises(ValueError, match="field must contain numeric values"):
+        RelaxationParameters(field=("not", "numeric", "values"))
+
+    with pytest.raises(ValueError, match="anisotropy_axis must contain numeric values"):
+        RelaxationParameters(anisotropy_axis=(object(), 0.0, 1.0))
+
 
 def test_relaxation_example_cli_writes_valid_json(tmp_path, monkeypatch, capsys):
     """Cover the command-line path used by the M4 verification wrapper."""

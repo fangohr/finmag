@@ -14,6 +14,7 @@ from pathlib import Path
 import dolfinx
 from dolfinx import mesh
 from mpi4py import MPI
+import numpy as np
 
 from dev.dolfinx.prototype import average_nodal_vector
 from dev.dolfinx.prototype import constant_vector_function
@@ -45,6 +46,8 @@ class RelaxationParameters:
 
     def __post_init__(self):
         """Reject invalid prototype parameters before DOLFINx form assembly."""
+        _validate_vector("field", self.field)
+        _validate_vector("anisotropy_axis", self.anisotropy_axis)
         if self.anisotropy_constant < 0:
             raise ValueError("anisotropy_constant must be non-negative")
         if self.exchange_constant < 0:
@@ -53,10 +56,16 @@ class RelaxationParameters:
             raise ValueError("saturation_magnetisation must be positive")
         if self.unit_length <= 0:
             raise ValueError("unit_length must be positive")
-        if len(self.field) != 3:
-            raise ValueError("field must have three components")
-        if len(self.anisotropy_axis) != 3:
-            raise ValueError("anisotropy_axis must have three components")
+
+
+def _validate_vector(name, values):
+    """Validate the small three-component vectors used by the M4 example."""
+    try:
+        array = np.asarray(values, dtype=np.float64)
+    except (TypeError, ValueError):
+        raise ValueError("%s must contain numeric values" % name)
+    if array.shape != (3,):
+        raise ValueError("%s must have three components" % name)
 
 
 @dataclass(frozen=True)

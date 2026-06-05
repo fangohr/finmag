@@ -2361,6 +2361,8 @@ The next small M4 step adds a DOLFINx-only prototype module:
   before DOLFINx form assembly. [Codex gpt-5.5 high]
 - the relaxation example CLI path is covered by pytest, including the JSON
   printed to stdout and written to disk. [Codex gpt-5.5 high]
+- vector-parameter validation rejects wrong sizes and non-numeric values before
+  DOLFINx form assembly. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
