@@ -1018,10 +1018,10 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =488 passed=
-- =18 skipped=
+- =493 passed=
+- =21 skipped=
 - =5 xfailed=
-- runtime approximately =700s=
+- runtime approximately =730s=
 
 The latest increment promoted the remaining checked-reference comparison and
 single-rank-safe boundary files that do not require installing =nsim=:
@@ -1036,12 +1036,27 @@ single-rank-safe boundary files that do not require installing =nsim=:
 - =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
 - =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
 - =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
+- =src/finmag/energies/demag/demag_pbc_test.py=
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 
 The focused promoted subset passes as =12 passed, 2 skipped, 2 xfailed=, and
 the expanded =dev/bin/verify-python3-m3= gate exits successfully. The two new
 xfails are documented Magpar mesh-drift comparisons, the skips are the
 single-rank MPI boundary and the intentionally long Slonczewski oscillator
 validation. [Codex gpt-5.5 high]
+
+The PBC demag file is also in M3 now, but it is an explicit collected skip
+when =finmag.native.treecode_bem= is unavailable. The module-level
+=importorskip= was replaced with a module-level =skipif= marker so focused
+runs report =2 skipped= with exit code 0 instead of pytest's no-tests-collected
+exit code. [Codex gpt-5.5 high]
+
+The deprecated normal-mode file is also in M3 now. The Kittel sphere failure
+was traced to ARPACK's implicit random start vector in SciPy =1.17.1=; the
+deprecated generalised solver now uses a deterministic alternating =v0= when
+callers do not provide one. The focused file passes as =5 passed, 1 skipped=,
+and the pixi/M3 suite now lists all =101= files from
+=dev/bin/verify-python3-core-suite=. [Codex gpt-5.5 high]
 
 The previous increment promoted the conda-forge =oommf= package into the pixi
 environment and moved real OOMMF cross-code comparisons into M3:
@@ -1170,6 +1185,8 @@ The newly promoted M3 coverage includes:
 - =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
 - =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
 - =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
+- =src/finmag/energies/demag/demag_pbc_test.py=
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1247,6 +1264,10 @@ The enabling compatibility work in this increment was:
 - the remaining Magpar comparison files now avoid invalid Python string
   escapes in their reST table labels; this keeps the newly promoted M3 slice
   warning-clean at the pytest level. [Codex gpt-5.5 high]
+- =compute_normal_modes_generalised()= in the deprecated normal-mode module
+  now uses a deterministic alternating ARPACK start vector when =v0= is not
+  supplied, stabilising the Kittel-mode regression on SciPy =1.17.1=. [Codex
+  gpt-5.5 high]
 
 Current M3 boundaries remain explicit:
 
@@ -1256,11 +1277,6 @@ Current M3 boundaries remain explicit:
 - =nsim= remains outside the pixi environment because it is not reasonable to
   install on this track; tests promoted here rely on checked-in Nmag reference
   data rather than executing =nsim=. [Codex GPT-5.4]
-- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
-  remains outside M3: under the pixi/FEniCS-2019 stack the Kittel sphere check
-  computes =omega[0] = -13.778782240125864= versus the expected
-  =15.547790145290367=, so this is a real numerical/sign discrepancy rather
-  than an environment skip. [Codex gpt-5.5 high]
-- =src/finmag/energies/demag/demag_pbc_test.py= remains outside the M3 gate
-  because the pixi native build still lacks a working =treecode_bem=
-  extension
+- =src/finmag/energies/demag/demag_pbc_test.py= is included in M3 as an
+  explicit collected skip until the pixi native build provides a working
+  =treecode_bem= extension. [Codex gpt-5.5 high]

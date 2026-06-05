@@ -46,6 +46,7 @@ PYTHONPATH=src python -c "import os, numpy as np, finmag; sim = finmag.example.b
 barmini-suite = '''
 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_effective_field.py src/finmag/tests/test_writing_data.py src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py src/finmag/tests/test_restart_simulation.py src/finmag/tests/test_sim_ode.py src/finmag/tests/test_applied_field.py src/finmag/tests/test_exchange_static.py src/finmag/tests/test_llg.py src/finmag/util/ode/tests/test_sundials_ode.py src/finmag/tests/test_energy_creation_with_variable_Ms.py src/finmag/tests/energy_density/test_energy_density.py src/finmag/tests/test_anis.py src/finmag/tests/test_dmi.py src/finmag/tests/test_dmi_terms.py src/finmag/tests/test_heun.py src/finmag/tests/test_spatially_varying_alpha.py src/finmag/tests/test_spatially_varying_anisotropy.py src/finmag/tests/test_unit_length.py src/finmag/tests/test_interactions_scale_linearly_with_m.py src/finmag/energies/exchange_test.py src/finmag/energies/anisotropy_test.py src/finmag/energies/cubic_anisotropy_test.py src/finmag/energies/demag/fk_demag_test.py src/finmag/energies/demag/fk_demag_2d_test.py src/finmag/energies/test_energies_in_regions.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py
 src/finmag/energies/dmi_test.py src/finmag/energies/magnetostatic_field_test.py src/finmag/energies/zeeman_test.py
+src/finmag/energies/demag/demag_pbc_test.py
 src/finmag/tests/zhangli/zhang_li_test.py src/finmag/tests/zhangli/stt_nonlocal_test.py src/finmag/tests/test_skyrmions.py src/finmag/tests/test_solid_angle.py src/finmag/tests/test_solid_angle_invariance.py src/finmag/physics/tests/neb/neb_test.py src/finmag/physics/llb/sllg_test.py src/finmag/util/meshes_test.py src/finmag/sim/sim_helpers_test.py
 src/finmag/sim/magnetisation_patterns_test.py
 src/finmag/sim/hysteresis_test.py
@@ -89,6 +90,7 @@ src/finmag/tests/test_jacobian.py
 src/finmag/normal_modes/eigenmodes/helpers_test.py
 src/finmag/normal_modes/eigenmodes/eigenproblems_test.py
 src/finmag/normal_modes/eigenmodes/eigensolvers_test.py
+src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py
 src/finmag/field_setters_test.py
 src/finmag/field_test.py
 src/finmag/tests/oommf/test_anisotropy.py

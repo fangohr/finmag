@@ -5,8 +5,17 @@ from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag
 from finmag import MacroGeometry
 
-pytest.importorskip(
-    "finmag.native.treecode_bem")  # Keep the PBC demag checks explicit about the missing treecode layer, while staying compatible with old pytest in the legacy container gate. [Codex GPT-5.4]
+try:
+    import finmag.native.treecode_bem as _treecode_bem  # noqa: F401
+except ImportError:
+    _treecode_bem = None
+
+pytestmark = pytest.mark.skipif(
+    _treecode_bem is None,
+    reason="PBC demag checks require finmag.native.treecode_bem")
+# Keep the PBC demag checks collected as explicit skips when treecode_bem is
+# absent; module-level importorskip returns exit code 5 for this file alone on
+# modern pytest, which makes focused M3 probes awkward. [Codex gpt-5.5 high]
 
 mesh_1 = df.BoxMesh(df.Point(-10, -10, -10), df.Point(10, 10, 10), 10, 10, 10)
 mesh_3 = df.BoxMesh(df.Point(-30, -10, -10), df.Point(30, 10, 10), 30, 10, 10)

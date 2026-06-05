@@ -484,6 +484,13 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     if discard_negative_frequencies:
         n_values *= 2
 
+    if v0 is None:
+        # ARPACK's implicit random start vector is unstable for the deprecated
+        # generalised Kittel-mode problem on SciPy 1.17. A deterministic
+        # alternating start keeps the expected +/- pair visible without
+        # changing callers that already provide v0. [Codex gpt-5.5 high]
+        v0 = np.where(np.arange(M.shape[0]) % 2, 1.0, -1.0)
+
     # XXX TODO: The following call seems to increase memory consumption quite a bit. Why?!?
     #
     # We have to swap M and A when passing them to eigsh since the M matrix

@@ -76,9 +76,9 @@ Workflow witnesses:
     slice
   - the earlier SUNDIALS-7 crash in `test_simple_1d` is fixed by explicitly
     attaching the matching nonlinear solver on the modern wrapper path. [Codex GPT-5.4]
-  - `demag_pbc_test.py` is still outside the gate because the pixi native
-    build does not yet include a working `treecode_bem` extension; treat that
-    as a separate native-build task, not a broad M3 blocker. [Codex GPT-5.4]
+  - `demag_pbc_test.py` is now included in M3 as a collected skip when the
+    pixi native build lacks `treecode_bem`; treat the native extension as a
+    separate build task, not a broad M3 blocker. [Codex gpt-5.5 high]
 - `.github/workflows/python3-m1.yml` and `.github/workflows/python3-m2.yml`
   - matching lightweight CI jobs for the two workflow witnesses
 - `.github/workflows/python3-m3.yml`
@@ -804,8 +804,8 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `488 passed`
-- `18 skipped`
+- `493 passed`
+- `21 skipped`
 - `5 xfailed`
 
 using:
@@ -837,6 +837,8 @@ The newest promoted M3 tests are:
 - `src/finmag/tests/nmag/spinwaves/test_spinwaves.py`
 - `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
 - `src/finmag/tests/slonczewski/oscillator/test_oscillator.py`
+- `src/finmag/energies/demag/demag_pbc_test.py`
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -920,6 +922,8 @@ fallback:
 - `src/finmag/tests/nmag/spinwaves/test_spinwaves.py`
 - `src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py`
 - `src/finmag/tests/slonczewski/oscillator/test_oscillator.py`
+- `src/finmag/energies/demag/demag_pbc_test.py`
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py`
 
 Current M3 boundary notes for future agents:
 
@@ -948,11 +952,17 @@ Current M3 boundary notes for future agents:
   Slonczewski validation without installing `nsim`; the focused subset passed
   as `12 passed, 2 skipped, 2 xfailed`, and the full M3 gate exited
   successfully. [Codex gpt-5.5 high]
-- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py` is the
-  remaining non-PBC core-suite delta on M3. Its Kittel sphere check currently
-  computes `omega[0] = -13.778782240125864` versus expected
-  `15.547790145290367`, so treat it as a numerical/sign issue requiring
-  review, not as an environment skip. [Codex gpt-5.5 high]
+- `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py` now
+  runs in M3. Its previous Kittel sphere failure was caused by ARPACK's
+  implicit random start vector on SciPy 1.17.1; the deprecated generalized
+  solver now supplies a deterministic alternating `v0` when callers do not
+  pass one. [Codex gpt-5.5 high]
+- `src/finmag/energies/demag/demag_pbc_test.py` is now in M3 as a collected
+  skip: focused pixi runs report `2 skipped` with exit code 0 when
+  `finmag.native.treecode_bem` is missing. [Codex gpt-5.5 high]
+- The pixi/M3 `barmini-suite` now lists all `101` files from
+  `dev/bin/verify-python3-core-suite`; remaining differences are collected
+  skips/xfails, not missing files. [Codex gpt-5.5 high]
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:
@@ -1000,6 +1010,6 @@ Recent helper-path compatibility work to know about:
 
 Current additional M3 boundary note:
 
-- `src/finmag/energies/demag/demag_pbc_test.py` is still outside M3 because
-  the pixi native build does not yet provide a working `treecode_bem`
-  extension
+- `treecode_bem` is still missing from the pixi native build. The PBC demag
+  regression file is represented in M3 as a skip until that extension exists.
+  [Codex gpt-5.5 high]
