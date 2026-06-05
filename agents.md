@@ -1050,8 +1050,12 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
 - the prototype also has an explicit normalized LLG step for a constant
   effective field. Treat it as the first checked time-integration workflow, not
   as a production solver. [Codex gpt-5.5 high]
+- `dev/dolfinx/relaxation_example.py` is the first checked end-to-end M4
+  example with JSON output. The `dolfinx-example` task writes
+  `/tmp/finmag-dolfinx-relaxation-summary.json` by default. [Codex gpt-5.5
+  high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `17 passed`
+  is `19 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

@@ -277,7 +277,16 @@ Current second probe:
   preservation, Zeeman energy decrease, and invalid input handling. This is a
   first time-integration workflow, not a production solver. [Codex gpt-5.5
   high]
-- local verification now gives =17 passed= for =pixi run -e dolfinx
+- =dev/dolfinx/relaxation_example.py= is the first end-to-end M4 example: it
+  creates a DOLFINx mesh, sets a uniform magnetisation, evaluates exchange,
+  Zeeman, and anisotropy energies, takes explicit LLG steps, and writes a JSON
+  summary with energy history and final average magnetisation. [Codex gpt-5.5
+  high]
+- =pixi run -e dolfinx dolfinx-example= runs that example and writes
+  =/tmp/finmag-dolfinx-relaxation-summary.json= by default in the verification
+  wrapper. This provides the first basic M4 output artefact. [Codex gpt-5.5
+  high]
+- local verification now gives =19 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value

@@ -2342,9 +2342,15 @@ The next small M4 step adds a DOLFINx-only prototype module:
   a constant effective field. This checks a first DOLFINx-backed
   time-integration workflow without claiming to be a production solver.
   [Codex gpt-5.5 high]
+- =dev/dolfinx/relaxation_example.py= ties the prototype into a small
+  end-to-end example: mesh creation, magnetisation setup, exchange/Zeeman/
+  anisotropy energy evaluation, explicit LLG stepping, and JSON summary output.
+  The wrapper task =dolfinx-example= writes
+  =/tmp/finmag-dolfinx-relaxation-summary.json= by default. [Codex gpt-5.5
+  high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =17 passed= for =pixi run -e dolfinx
+public API. Local verification: =19 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

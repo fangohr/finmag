@@ -48,6 +48,27 @@ def nodal_vector_values(vector_function):
     return vector_function.x.array.reshape((-1, value_size))
 
 
+def average_nodal_vector(vector_function):
+    """Return the MPI-reduced average vector over local nodal values.
+
+    This is a prototype output helper, not a replacement for volume-averaged
+    finite-element integration. It is sufficient for the first M4 JSON example
+    because the example uses a spatially uniform magnetisation. [Codex
+    gpt-5.5 high]
+    """
+    values = nodal_vector_values(vector_function)
+    local_sum = np.sum(values, axis=0)
+    local_count = np.array([values.shape[0]], dtype=np.float64)
+
+    comm = vector_function.function_space.mesh.comm
+    global_sum = np.zeros_like(local_sum)
+    global_count = np.zeros_like(local_count)
+    comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
+    comm.Allreduce(local_count, global_count, op=MPI.SUM)
+
+    return global_sum / global_count[0]
+
+
 def zeeman_energy(magnetisation, field, saturation_magnetisation, unit_length=1.0):
     """Compute ``-mu0 * Ms * integral(m . H)`` for a DOLFINx field.
 
