@@ -2311,12 +2311,15 @@ default environment:
 - the =dolfinx= environment uses =no-default-feature = true= so it does not
   inherit the default =fenics 2019.1.0= stack
 - =dev/bin/verify-dolfinx-m4= runs =dolfinx-import= and =dolfinx-smoke=
+- =dev/dolfinx/test_dolfinx_smoke.py= captures the same tiny DOLFINx
+  mesh/function workflow as a pytest regression
 - =.github/workflows/dolfinx-m4.yml= wires the same probe into CI
 
 Verified local result:
 
 - =dolfinx 0.10.0 rank 0=
 - =dofs 9 sum 13.5=
+- =2 passed= for =dev/dolfinx/test_dolfinx_smoke.py=
 
 This is intentionally only a dependency and tiny mesh/function smoke probe. It
 creates a clean place to start M4 without perturbing the green M2/M3 gates.

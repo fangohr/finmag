@@ -24,3 +24,6 @@ pixi run -e dolfinx dolfinx-import
 
 echo "==> pixi run -e dolfinx dolfinx-smoke"
 pixi run -e dolfinx dolfinx-smoke
+
+echo "==> pixi run -e dolfinx dolfinx-pytest"
+pixi run -e dolfinx dolfinx-pytest

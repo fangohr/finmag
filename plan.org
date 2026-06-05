@@ -249,9 +249,11 @@ Current first probe:
 - =dev/bin/verify-dolfinx-m4= wraps two minimal tasks:
   - =pixi run -e dolfinx dolfinx-import=
   - =pixi run -e dolfinx dolfinx-smoke=
+  - =pixi run -e dolfinx dolfinx-pytest=
 - =.github/workflows/dolfinx-m4.yml= runs the same isolated probe in CI
 - local verification succeeded with =dolfinx 0.10.0=, =dofs 9=, and
-  interpolated function-array =sum 13.5=. [Codex gpt-5.5 high]
+  interpolated function-array =sum 13.5=; the pytest probe passes as
+  =2 passed=. [Codex gpt-5.5 high]
 - this is only a dependency and tiny mesh/function smoke probe; it is not yet a
   Finmag-on-DOLFINx port. [Codex gpt-5.5 high]
 

@@ -1026,10 +1026,12 @@ environment:
 - the `dolfinx` environment uses `no-default-feature = true`, so it does not
   inherit the FEniCS-2019/Python-3.11 M2/M3 stack
 - `dev/bin/verify-dolfinx-m4` runs the current import and tiny
-  mesh/function smoke probes
+  mesh/function smoke probes plus `dolfinx-pytest`
+- `dev/dolfinx/test_dolfinx_smoke.py` keeps the same tiny DOLFINx
+  mesh/function workflow under pytest
 - `.github/workflows/dolfinx-m4.yml` runs the same isolated probe in CI
 - local verification produced `dolfinx 0.10.0 rank 0` and
-  `dofs 9 sum 13.5`
+  `dofs 9 sum 13.5`; the pytest probe passes as `2 passed`
 
 Do not treat this as a Finmag port yet; it only establishes a separate M4
 dependency/probe lane. [Codex gpt-5.5 high]
