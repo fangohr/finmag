@@ -1056,6 +1056,10 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   high]
 - the example JSON has `schema_version = 1` and a hand-written validator. Keep
   this contract explicit if the output grows. [Codex gpt-5.5 high]
+- `dev/dolfinx/README.md` documents supported scope and explicit non-scope for
+  M4. Do not imply demag, restart/data I/O, production time integration, or
+  legacy `finmag.Simulation` API compatibility until those are actually built.
+  [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
   is `20 passed`
 

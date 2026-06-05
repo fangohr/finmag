@@ -2351,6 +2351,9 @@ The next small M4 step adds a DOLFINx-only prototype module:
 - the JSON summary has =schema_version = 1= and a hand-written validator,
   keeping the first M4 output contract explicit without adding a JSON-schema
   dependency. [Codex gpt-5.5 high]
+- =dev/dolfinx/README.md= records the supported prototype scope and explicit
+  non-scope. This is important because M4 is a reduced prototype, not a
+  promise of legacy =finmag.Simulation= compatibility. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin

@@ -289,6 +289,10 @@ Current second probe:
 - the JSON summary has a small hand-written schema validator and schema version
   so the first M4 output contract remains explicit without adding another
   dependency to the isolated =dolfinx= environment. [Codex gpt-5.5 high]
+- =dev/dolfinx/README.md= documents the currently supported M4 prototype scope
+  and explicit non-scope, including the absence of demag, restart/I/O,
+  production time integration, and legacy Finmag API compatibility. [Codex
+  gpt-5.5 high]
 - local verification now gives =20 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
