@@ -25,6 +25,14 @@ Working rule for future agent effort:
 - do not revive historical features or clean up old xfails unless that work
   directly advances one of those milestones.
 
+Current model-label convention:
+
+- the Codex app currently reports `gpt-5.5 high` for this workstream
+- use `gpt-5.5 high` in commit-message attribution and new agent-authored
+  signatures until the user updates this information
+- older `[Codex GPT-5.4]` comments are historical labels and should not be
+  treated as the current runtime model
+
 This repository contains many research-era features that may never be needed
 again. The transition should optimize for usable scientific workflows, not for
 maximum historical surface area.
@@ -796,7 +804,7 @@ These are not immediate blockers, but they are useful signals when cleaning up t
 
 The active pixi/FEniCS-2019 verifier now completes at:
 
-- `467 passed`
+- `476 passed`
 - `16 skipped`
 - `3 xfailed`
 
@@ -813,6 +821,12 @@ The newest promoted M3 tests are:
 - `src/finmag/energies/zeeman_test.py`
 - `src/finmag/tests/demag/test_bem_computation.py`
 - `src/finmag/tests/demag/test_demag_sphere.py`
+- `src/finmag/tests/oommf/test_anisotropy.py`
+- `src/finmag/tests/oommf/test_exchange.py`
+- `src/finmag/tests/comparison/test_dmdt.py`
+- `src/finmag/tests/comparison/anisotropy/test_anis_oommf.py`
+- `src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py`
+- `src/finmag/tests/comparison/exchange/test_exchange_field.py`
 - `src/finmag/tests/zhangli/zhang_li_test.py`
 - `src/finmag/tests/zhangli/stt_nonlocal_test.py`
 - `src/finmag/tests/test_skyrmions.py`
@@ -880,6 +894,12 @@ fallback:
 - `src/finmag/tests/demag/test_demag_sphere.py`
 - `src/finmag/sim/magnetisation_patterns_test.py`
 - `src/finmag/sim/hysteresis_test.py`
+- `src/finmag/tests/oommf/test_anisotropy.py`
+- `src/finmag/tests/oommf/test_exchange.py`
+- `src/finmag/tests/comparison/test_dmdt.py`
+- `src/finmag/tests/comparison/anisotropy/test_anis_oommf.py`
+- `src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py`
+- `src/finmag/tests/comparison/exchange/test_exchange_field.py`
 
 Current M3 boundary notes for future agents:
 
@@ -896,6 +916,14 @@ Current M3 boundary notes for future agents:
   same DOLFIN-2019 array fallback for native FK BEM construction that
   production `FKDemag` uses. The unported GCR branch is still an explicit
   skip. [Codex GPT-5.4]
+- OOMMF is now installed from conda-forge in the pixi environment, so M3 runs
+  the promoted OOMMF comparison files directly instead of treating them as
+  external-tool skips. `src/finmag/tests/comparison/test_dmdt.py` and
+  `src/finmag/tests/comparison/exchange/test_exchange_field.py` use
+  `get_local()` for DOLFIN-2019 PETSc vectors. [Codex GPT-5.4]
+- Do not try to install `nsim` on the pixi track. Where Nmag comparisons are
+  useful, prefer checked-in reference data, as in
+  `src/finmag/tests/comparison/exchange/test_exchange_field.py`. [Codex GPT-5.4]
 
 The old `instant` dependency is no longer required for the solid-angle
 reference tests on this path:

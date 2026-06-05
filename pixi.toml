@@ -24,6 +24,9 @@ boost-cpp = "*"
 libboost-python-devel = "*"
 gmsh = "*"
 netgen = "*"
+# Conda-forge provides OOMMF directly, so M3 can run real OOMMF cross-code
+# comparisons without reviving the old source-build path. [Codex GPT-5.4]
+oommf = "*"
 
 [tasks]
 # This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
@@ -88,4 +91,10 @@ src/finmag/normal_modes/eigenmodes/eigenproblems_test.py
 src/finmag/normal_modes/eigenmodes/eigensolvers_test.py
 src/finmag/field_setters_test.py
 src/finmag/field_test.py
+src/finmag/tests/oommf/test_anisotropy.py
+src/finmag/tests/oommf/test_exchange.py
+src/finmag/tests/comparison/test_dmdt.py
+src/finmag/tests/comparison/anisotropy/test_anis_oommf.py
+src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py
+src/finmag/tests/comparison/exchange/test_exchange_field.py
 '''

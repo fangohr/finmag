@@ -185,6 +185,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/netgen-6.2.2601-py311h8fd36b8_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.26.4-py311h64a7726_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/occt-7.9.3-novtk_hb176d5c_103.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/oommf-2.1a0-he9114eb_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openexr-3.4.10-h9f1635d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.4-h55fea9a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openjph-0.27.0-h8d634f6_0.conda
@@ -2508,6 +2509,18 @@ packages:
   license_family: LGPL
   size: 25385099
   timestamp: 1776668879469
+- conda: https://conda.anaconda.org/conda-forge/linux-64/oommf-2.1a0-he9114eb_1.conda
+  sha256: ca35bd60da407f3e97f646bbc6193e3b95a53ff0172ae5e258ca33a962549e9a
+  md5: 0a2fccded102c55f6b2582652114cc0a
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=14
+  - libstdcxx >=14
+  - tk >=8.6.13,<8.7.0a0
+  - xorg-libx11 >=1.8.13,<2.0a0
+  license: Custom
+  size: 24193985
+  timestamp: 1773985245427
 - conda: https://conda.anaconda.org/conda-forge/linux-64/openexr-3.4.10-h9f1635d_0.conda
   sha256: fdc523a0af9edc3a3e59c79ae0b966d439641a688a965be22d98ef60b78de903
   md5: d99acfa404408ea141415f74196699a9

@@ -1018,12 +1018,28 @@ dev/bin/verify-python3-m3
 
 Observed result:
 
-- =467 passed=
+- =476 passed=
 - =16 skipped=
 - =3 xfailed=
 - runtime approximately =540s=
 
-The latest increment promoted:
+The latest increment promoted the conda-forge =oommf= package into the pixi
+environment and moved real OOMMF cross-code comparisons into M3:
+
+- =src/finmag/tests/oommf/test_anisotropy.py=
+- =src/finmag/tests/oommf/test_exchange.py=
+- =src/finmag/tests/comparison/test_dmdt.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+- =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+
+The focused OOMMF/reference-data subset passes as =9 passed=, and the full
+=dev/bin/verify-python3-m3= gate exits successfully with the files above
+included. =nsim= remains intentionally absent: the promoted exchange file
+uses checked-in Nmag reference data and does not require installing the Nmag
+toolchain. [Codex GPT-5.4]
+
+The previous increment promoted:
 
 - =src/finmag/energies/zeeman_test.py=
 - =src/finmag/tests/demag/test_bem_computation.py=
@@ -1118,6 +1134,12 @@ The newly promoted M3 coverage includes:
 - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
 - =src/finmag/field_setters_test.py=
 - =src/finmag/field_test.py=
+- =src/finmag/tests/oommf/test_anisotropy.py=
+- =src/finmag/tests/oommf/test_exchange.py=
+- =src/finmag/tests/comparison/test_dmdt.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+- =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_field.py=
 
 The enabling compatibility work in this increment was:
 
@@ -1188,12 +1210,19 @@ The enabling compatibility work in this increment was:
   passing negative tests that only checked for work-budget exhaustion
 - =src/finmag/tests/jacobean/test_native_llg.py= now uses =get_local()= for
   the PETSc-backed alpha vector on the DOLFIN 2019 path
+- the OOMMF-backed comparison tests now run in M3 because =oommf= is available
+  from conda-forge; =src/finmag/tests/comparison/test_dmdt.py= and the
+  exchange comparison use =get_local()= for DOLFIN-2019 PETSc vectors instead
+  of the removed =.array()= accessor. [Codex GPT-5.4]
 
 Current M3 boundaries remain explicit:
 
 - full NEB tangent computations still require =finmag.native.neb=, even
   though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
   now runs in M3
+- =nsim= remains outside the pixi environment because it is not reasonable to
+  install on this track; tests promoted here rely on checked-in Nmag reference
+  data rather than executing =nsim=. [Codex GPT-5.4]
 - =src/finmag/energies/demag/demag_pbc_test.py= remains outside the M3 gate
   because the pixi native build still lacks a working =treecode_bem=
   extension

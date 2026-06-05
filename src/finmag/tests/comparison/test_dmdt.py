@@ -27,7 +27,9 @@ def test_dmdt_computation_with_oommf():
     llg = LLG(S1, S3)
     llg.set_m((-3, -2, 1))
 
-    Ms = llg.Ms.vector().array()[0]
+    # DOLFIN 2019 uses PETSc vectors without the legacy array() accessor.
+    # Keep this cross-code comparison active on the pixi path. [Codex GPT-5.4]
+    Ms = llg.Ms.vector().get_local()[0]
     Ms = float(Ms)
     h = Ms / 2
     H_app = (h / np.sqrt(3), h / np.sqrt(3), h / np.sqrt(3))
@@ -65,8 +67,6 @@ def test_dmdt_computation_with_oommf():
     print("comparison with oommf, dm/dt, relative difference:")
     print(stats(relative_difference))
     assert np.max(relative_difference) < TOLERANCE
-
-    return difference, relative_difference
 
 if __name__ == '__main__':
     test_dmdt_computation_with_oommf()

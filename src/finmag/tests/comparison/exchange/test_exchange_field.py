@@ -78,7 +78,9 @@ def test_against_nmag(finmag):
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
-    H_computed = vectors(finmag["H"].vector().array())
+    # DOLFIN 2019 PETSc vectors no longer expose array(); keep this
+    # checked-in Nmag reference-data comparison active without nsim. [Codex GPT-5.4]
+    H_computed = vectors(finmag["H"].vector().get_local())
     assert H_ref.shape == H_computed.shape
 
     assert m_ref.shape == H_ref.shape
