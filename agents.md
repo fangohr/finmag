@@ -1047,8 +1047,11 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   axis normalisation, zero-axis validation, and exchange energy for constant
   and linear fields. Exchange scaling is documented as
   `unit_length ** (dim - 2)`. [Codex gpt-5.5 high]
+- the prototype also has an explicit normalized LLG step for a constant
+  effective field. Treat it as the first checked time-integration workflow, not
+  as a production solver. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `14 passed`
+  is `17 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

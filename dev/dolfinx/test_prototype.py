@@ -12,6 +12,7 @@ from mpi4py import MPI
 
 from dev.dolfinx.prototype import MU0, constant_vector_function
 from dev.dolfinx.prototype import exchange_energy, uniaxial_anisotropy_energy
+from dev.dolfinx.prototype import explicit_llg_step, llg_rhs, nodal_vector_values
 from dev.dolfinx.prototype import vector_function_space, zeeman_energy
 
 
@@ -22,7 +23,7 @@ def test_constant_vector_function_sets_all_components():
 
     magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
 
-    values = magnetisation.x.array.reshape((-1, 3))
+    values = nodal_vector_values(magnetisation)
     assert np.allclose(values, (1.0, 0.0, 0.0))
 
 
@@ -173,3 +174,57 @@ def test_exchange_energy_rejects_non_positive_unit_length():
 
     with pytest.raises(ValueError, match="unit_length must be positive"):
         exchange_energy(magnetisation, exchange_constant=5.0, unit_length=0.0)
+
+
+def test_llg_rhs_for_constant_field_has_expected_direction():
+    """A damped spin initially along x should precess and relax toward z."""
+    magnetisation = np.array([[1.0, 0.0, 0.0]])
+    effective_field = np.array([[0.0, 0.0, 1.0]])
+
+    rhs = llg_rhs(magnetisation, effective_field, gamma=1.0, alpha=1.0)
+
+    assert np.allclose(rhs, [[0.0, 0.5, 0.5]])
+
+
+def test_explicit_llg_step_preserves_norm_and_lowers_zeeman_energy():
+    """The first checked M4 time step should keep |m|=1 and reduce energy."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    energy_before = zeeman_energy(
+        magnetisation,
+        field=(0.0, 0.0, 1.0),
+        saturation_magnetisation=1.0,
+    )
+    explicit_llg_step(
+        magnetisation,
+        effective_field=(0.0, 0.0, 1.0),
+        dt=1e-3,
+        gamma=1.0,
+        alpha=1.0,
+    )
+    energy_after = zeeman_energy(
+        magnetisation,
+        field=(0.0, 0.0, 1.0),
+        saturation_magnetisation=1.0,
+    )
+
+    values = nodal_vector_values(magnetisation)
+    assert np.allclose(np.linalg.norm(values, axis=1), 1.0)
+    assert np.all(values[:, 1] > 0.0)
+    assert np.all(values[:, 2] > 0.0)
+    assert energy_after < energy_before
+
+
+def test_explicit_llg_step_rejects_invalid_inputs():
+    """Invalid timestep and field shape errors should be explicit."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    with pytest.raises(ValueError, match="dt must be positive"):
+        explicit_llg_step(magnetisation, effective_field=(0.0, 0.0, 1.0), dt=0.0)
+
+    with pytest.raises(ValueError, match="effective field has 2 components"):
+        explicit_llg_step(magnetisation, effective_field=(0.0, 1.0), dt=1e-3)

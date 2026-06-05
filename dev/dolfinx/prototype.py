@@ -42,6 +42,12 @@ def constant_vector_function(function_space, values):
     return result
 
 
+def nodal_vector_values(vector_function):
+    """Return vector-valued function dofs as an ``(n_dofs, components)`` array."""
+    value_size = int(np.prod(vector_function.function_space.element.value_shape))
+    return vector_function.x.array.reshape((-1, value_size))
+
+
 def zeeman_energy(magnetisation, field, saturation_magnetisation, unit_length=1.0):
     """Compute ``-mu0 * Ms * integral(m . H)`` for a DOLFINx field.
 
@@ -99,6 +105,69 @@ def uniaxial_anisotropy_energy(
         )
     )
     return domain.comm.allreduce(local_energy, op=MPI.SUM)
+
+
+def llg_rhs(magnetisation_values, effective_field_values, gamma=1.0, alpha=0.0):
+    """Evaluate the normalized LLG right-hand side at nodal vector values.
+
+    The prototype uses nodal arrays on purpose: this keeps the first M4 time
+    integrator transparent and testable before we decide how a Finmag-facing
+    DOLFINx time-stepping API should assemble or project effective fields.
+    [Codex gpt-5.5 high]
+    """
+    if gamma <= 0:
+        raise ValueError("gamma must be positive")
+    if alpha < 0:
+        raise ValueError("alpha must be non-negative")
+
+    magnetisation_values = np.asarray(magnetisation_values, dtype=np.float64)
+    effective_field_values = np.asarray(effective_field_values, dtype=np.float64)
+
+    precession = np.cross(magnetisation_values, effective_field_values)
+    damping = np.cross(magnetisation_values, precession)
+    return -float(gamma) / (1 + float(alpha) ** 2) * (
+        precession + float(alpha) * damping
+    )
+
+
+def explicit_llg_step(
+    magnetisation, effective_field, dt, gamma=1.0, alpha=0.0, normalise=True
+):
+    """Advance a DOLFINx magnetisation field by one explicit LLG step.
+
+    This is a deliberately small time-integration workflow rather than a
+    production solver. It supports a constant effective field, updates the
+    DOLFINx function in place, and optionally renormalises nodal magnetisation
+    vectors after the explicit Euler step. [Codex gpt-5.5 high]
+    """
+    if dt <= 0:
+        raise ValueError("dt must be positive")
+
+    values = nodal_vector_values(magnetisation)
+    effective_field = np.asarray(effective_field, dtype=np.float64)
+    if effective_field.shape != (values.shape[1],):
+        raise ValueError(
+            "effective field has %d components, but magnetisation expects %d"
+            % (effective_field.size, values.shape[1])
+        )
+
+    field_values = np.repeat(effective_field[None, :], values.shape[0], axis=0)
+    updated = values + float(dt) * llg_rhs(
+        values,
+        field_values,
+        gamma=gamma,
+        alpha=alpha,
+    )
+
+    if normalise:
+        norms = np.linalg.norm(updated, axis=1)
+        if np.any(norms == 0):
+            raise ValueError("cannot normalise zero magnetisation vector")
+        updated = updated / norms[:, None]
+
+    values[:] = updated
+    magnetisation.x.scatter_forward()
+    return magnetisation
 
 
 def exchange_energy(magnetisation, exchange_constant, unit_length=1.0):

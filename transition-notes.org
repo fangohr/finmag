@@ -2338,9 +2338,13 @@ The next small M4 step adds a DOLFINx-only prototype module:
   zero-axis validation. It also checks exchange energy for constant and linear
   fields, including the explicit gradient scaling convention
   =unit_length ** (dim - 2)=. [Codex gpt-5.5 high]
+- the prototype includes a deliberately small explicit normalized LLG step for
+  a constant effective field. This checks a first DOLFINx-backed
+  time-integration workflow without claiming to be a production solver.
+  [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =14 passed= for =pixi run -e dolfinx
+public API. Local verification: =17 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

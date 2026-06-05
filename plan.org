@@ -272,7 +272,12 @@ Current second probe:
   validation. Exchange checks cover constant zero energy, a linear unit-square
   field, 3D gradient =unit_length= scaling, and invalid length validation.
   [Codex gpt-5.5 high]
-- local verification now gives =14 passed= for =pixi run -e dolfinx
+- the same prototype now includes a deliberately small explicit normalized LLG
+  step for a constant effective field. Tests check the LLG sign convention, norm
+  preservation, Zeeman energy decrease, and invalid input handling. This is a
+  first time-integration workflow, not a production solver. [Codex gpt-5.5
+  high]
+- local verification now gives =17 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value
