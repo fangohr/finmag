@@ -1060,8 +1060,10 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   M4. Do not imply demag, restart/data I/O, production time integration, or
   legacy `finmag.Simulation` API compatibility until those are actually built.
   [Codex gpt-5.5 high]
+- the relaxation example has small dataclasses for parameters and JSON results.
+  Treat them as an API sketch, not as a stable public API. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `20 passed`
+  is `21 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

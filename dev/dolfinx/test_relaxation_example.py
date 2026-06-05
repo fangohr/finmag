@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 
 from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
+from dev.dolfinx.relaxation_example import RelaxationParameters
 from dev.dolfinx.relaxation_example import run_relaxation_example, validate_summary
 
 
@@ -39,6 +40,27 @@ def test_relaxation_example_rejects_invalid_controls(tmp_path):
 
     with pytest.raises(ValueError, match="dt must be positive"):
         run_relaxation_example(tmp_path / "bad-dt.json", dt=0.0)
+
+
+def test_relaxation_example_accepts_parameter_dataclass(tmp_path):
+    """The prototype API shape should allow explicit parameter objects."""
+    parameters = RelaxationParameters(
+        anisotropy_constant=0.1,
+        exchange_constant=2.0,
+        saturation_magnetisation=2.0,
+    )
+
+    summary = run_relaxation_example(
+        tmp_path / "custom-summary.json",
+        steps=3,
+        parameters=parameters,
+    )
+
+    assert summary["steps"] == 3
+    assert summary["parameters"]["anisotropy_constant"] == 0.1
+    assert summary["parameters"]["exchange_constant"] == 2.0
+    assert summary["parameters"]["saturation_magnetisation"] == 2.0
+    assert validate_summary(summary) == summary
 
 
 def test_relaxation_summary_validation_rejects_broken_output(tmp_path):

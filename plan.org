@@ -293,7 +293,11 @@ Current second probe:
   and explicit non-scope, including the absence of demag, restart/I/O,
   production time integration, and legacy Finmag API compatibility. [Codex
   gpt-5.5 high]
-- local verification now gives =20 passed= for =pixi run -e dolfinx
+- =dev/dolfinx/relaxation_example.py= now uses small dataclasses for prototype
+  parameters and JSON-compatible results. These make the reduced API shape
+  clearer without promising legacy =finmag.Simulation= compatibility. [Codex
+  gpt-5.5 high]
+- local verification now gives =21 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value

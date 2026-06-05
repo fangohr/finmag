@@ -15,6 +15,7 @@ gpt-5.5 high]
 - Explicit normalized LLG stepping in a constant effective field.
 - A small end-to-end relaxation example with JSON summary output.
 - A hand-written JSON summary validator with `schema_version = 1`.
+- Small dataclasses for relaxation parameters and JSON-compatible results.
 
 ## Explicit Non-Scope
 
@@ -24,6 +25,7 @@ gpt-5.5 high]
 - No adaptive or production-grade time integrator is provided.
 - No finite-element projection of general effective fields is provided.
 - No compatibility guarantee is made for legacy Finmag public APIs.
+- The dataclasses are a prototype API sketch, not a stable public API.
 - No attempt is made here to port rarely used historical features.
 
 ## Verification

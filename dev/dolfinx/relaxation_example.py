@@ -7,6 +7,7 @@ time stepping, and basic machine-readable output. [Codex gpt-5.5 high]
 """
 
 import argparse
+from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
 
@@ -26,74 +27,111 @@ from dev.dolfinx.prototype import zeeman_energy
 SUMMARY_SCHEMA_VERSION = 1
 
 
+@dataclass(frozen=True)
+class RelaxationParameters:
+    """Configuration for the deliberately small M4 relaxation example.
+
+    The dataclass is a prototype API shape only. It makes the example easier to
+    review and test without implying compatibility with legacy Finmag
+    configuration objects. [Codex gpt-5.5 high]
+    """
+
+    anisotropy_axis: tuple = (0.0, 0.0, 1.0)
+    anisotropy_constant: float = 0.25
+    exchange_constant: float = 1.0
+    field: tuple = (0.0, 0.0, 1.0)
+    saturation_magnetisation: float = 1.0
+    unit_length: float = 1.0
+
+
+@dataclass(frozen=True)
+class RelaxationResult:
+    """JSON-compatible result contract for the M4 relaxation example."""
+
+    dolfinx_version: str
+    dt: float
+    energy_history: list
+    final_average_m: list
+    final_energy: float
+    initial_energy: float
+    mesh: str
+    parameters: dict
+    schema_version: int
+    steps: int
+
+    def as_summary(self):
+        """Return the JSON-compatible dictionary validated by CI."""
+        return asdict(self)
+
+
+def parameters_as_summary(parameters):
+    """Convert prototype parameters to JSON-compatible scalar/list values."""
+    return {
+        key: list(value) if isinstance(value, tuple) else value
+        for key, value in asdict(parameters).items()
+    }
+
+
 def total_energy(magnetisation, parameters):
     """Compute the reduced prototype energy used by the example."""
     return (
         exchange_energy(
             magnetisation,
-            exchange_constant=parameters["exchange_constant"],
-            unit_length=parameters["unit_length"],
+            exchange_constant=parameters.exchange_constant,
+            unit_length=parameters.unit_length,
         )
         + zeeman_energy(
             magnetisation,
-            field=parameters["field"],
-            saturation_magnetisation=parameters["saturation_magnetisation"],
-            unit_length=parameters["unit_length"],
+            field=parameters.field,
+            saturation_magnetisation=parameters.saturation_magnetisation,
+            unit_length=parameters.unit_length,
         )
         + uniaxial_anisotropy_energy(
             magnetisation,
-            axis=parameters["anisotropy_axis"],
-            anisotropy_constant=parameters["anisotropy_constant"],
-            unit_length=parameters["unit_length"],
+            axis=parameters.anisotropy_axis,
+            anisotropy_constant=parameters.anisotropy_constant,
+            unit_length=parameters.unit_length,
         )
     )
 
 
-def run_relaxation_example(output_path=None, steps=5, dt=1e-2):
+def run_relaxation_example(output_path=None, steps=5, dt=1e-2, parameters=None):
     """Run a tiny deterministic relaxation and optionally write JSON output."""
     if steps < 1:
         raise ValueError("steps must be positive")
     if dt <= 0:
         raise ValueError("dt must be positive")
+    if parameters is None:
+        parameters = RelaxationParameters()
 
     domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
     function_space = vector_function_space(domain)
     magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
-    parameters = {
-        "anisotropy_axis": (0.0, 0.0, 1.0),
-        "anisotropy_constant": 0.25,
-        "exchange_constant": 1.0,
-        "field": (0.0, 0.0, 1.0),
-        "saturation_magnetisation": 1.0,
-        "unit_length": 1.0,
-    }
 
     energy_history = [float(total_energy(magnetisation, parameters))]
     for _ in range(steps):
         explicit_llg_step(
             magnetisation,
-            effective_field=parameters["field"],
+            effective_field=parameters.field,
             dt=dt,
             gamma=1.0,
             alpha=1.0,
         )
         energy_history.append(float(total_energy(magnetisation, parameters)))
 
-    summary = {
-        "dolfinx_version": dolfinx.__version__,
-        "dt": float(dt),
-        "energy_history": energy_history,
-        "final_average_m": average_nodal_vector(magnetisation).tolist(),
-        "initial_energy": energy_history[0],
-        "final_energy": energy_history[-1],
-        "mesh": "unit_square_2x2",
-        "parameters": {
-            key: list(value) if isinstance(value, tuple) else value
-            for key, value in parameters.items()
-        },
-        "schema_version": SUMMARY_SCHEMA_VERSION,
-        "steps": int(steps),
-    }
+    result = RelaxationResult(
+        dolfinx_version=dolfinx.__version__,
+        dt=float(dt),
+        energy_history=energy_history,
+        final_average_m=average_nodal_vector(magnetisation).tolist(),
+        final_energy=energy_history[-1],
+        initial_energy=energy_history[0],
+        mesh="unit_square_2x2",
+        parameters=parameters_as_summary(parameters),
+        schema_version=SUMMARY_SCHEMA_VERSION,
+        steps=int(steps),
+    )
+    summary = result.as_summary()
 
     if output_path is not None and domain.comm.rank == 0:
         output_path = Path(output_path)
