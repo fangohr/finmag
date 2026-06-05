@@ -116,6 +116,35 @@ def test_relaxation_example_cli_writes_valid_json(tmp_path, monkeypatch, capsys)
     assert written["steps"] == 2
 
 
+def test_relaxation_example_cli_rejects_invalid_controls(tmp_path, monkeypatch):
+    """The CLI should expose the same explicit validation as the function API."""
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "relaxation_example",
+            "--output",
+            str(tmp_path / "bad-steps.json"),
+            "--steps",
+            "0",
+        ],
+    )
+    with pytest.raises(ValueError, match="steps must be positive"):
+        main()
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "relaxation_example",
+            "--output",
+            str(tmp_path / "bad-dt.json"),
+            "--dt",
+            "0",
+        ],
+    )
+    with pytest.raises(ValueError, match="dt must be positive"):
+        main()
+
+
 def test_relaxation_summary_validation_rejects_broken_output(tmp_path):
     """The JSON contract should fail explicitly for malformed summaries."""
     summary = run_relaxation_example(tmp_path / "summary.json", steps=2)

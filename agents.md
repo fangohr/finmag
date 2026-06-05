@@ -1066,10 +1066,12 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   form assembly. Keep invalid M4 inputs explicit. [Codex gpt-5.5 high]
 - the relaxation example CLI path has pytest coverage for stdout JSON and the
   requested output file. [Codex gpt-5.5 high]
+- invalid CLI controls are covered by pytest; keep wrapper-facing validation
+  aligned with function-level validation. [Codex gpt-5.5 high]
 - vector-parameter validation rejects wrong sizes and non-numeric values before
   DOLFINx form assembly. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `23 passed`
+  is `24 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

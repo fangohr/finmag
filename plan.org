@@ -303,9 +303,12 @@ Current second probe:
 - the relaxation example command-line path is covered by pytest, including
   JSON printed to stdout and written to the requested output path. [Codex
   gpt-5.5 high]
+- invalid command-line controls are also covered, so the wrapper-facing entry
+  point uses the same explicit validation as the function API. [Codex
+  gpt-5.5 high]
 - the reduced vector-parameter validation now rejects wrong sizes and
   non-numeric values before DOLFINx form assembly. [Codex gpt-5.5 high]
-- local verification now gives =23 passed= for =pixi run -e dolfinx
+- local verification now gives =24 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value
