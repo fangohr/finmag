@@ -261,13 +261,18 @@ Current second probe:
 
 - =dev/dolfinx/prototype.py= adds DOLFINx-only helper functions for
   vector-valued magnetisation fields and the smallest useful micromagnetic
-  energy form: constant-field Zeeman energy. The file intentionally lives under
+  energy forms: exchange energy, constant-field Zeeman energy, and
+  constant-axis uniaxial anisotropy energy. The file intentionally lives under
   =dev/dolfinx= rather than =src/finmag= so M4 can develop without perturbing
   the green legacy FEniCS-2019 path. [Codex gpt-5.5 high]
 - =dev/dolfinx/test_prototype.py= checks constant-vector interpolation,
   component-count validation, analytical Zeeman energy on a unit square, and
-  =unit_length= scaling.
-- local verification now gives =6 passed= for =pixi run -e dolfinx
+  =unit_length= scaling. It also checks analytical uniaxial anisotropy cases:
+  parallel axis, perpendicular axis, axis normalisation, and zero-axis
+  validation. Exchange checks cover constant zero energy, a linear unit-square
+  field, 3D gradient =unit_length= scaling, and invalid length validation.
+  [Codex gpt-5.5 high]
+- local verification now gives =14 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value

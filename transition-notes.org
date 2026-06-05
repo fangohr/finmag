@@ -2328,13 +2328,19 @@ creates a clean place to start M4 without perturbing the green M2/M3 gates.
 The next small M4 step adds a DOLFINx-only prototype module:
 
 - =dev/dolfinx/prototype.py= creates vector-valued magnetisation function
-  spaces, interpolates constant vector fields, and assembles the constant-field
-  Zeeman energy =-mu0 * Ms * integral(m . H)=
+  spaces, interpolates constant vector fields, assembles exchange energy
+  =A * integral(grad(m) : grad(m))=, assembles the constant-field Zeeman energy
+  =-mu0 * Ms * integral(m . H)=, and assembles constant-axis uniaxial
+  anisotropy energy =K * integral(1 - (m . axis)^2)=
 - =dev/dolfinx/test_prototype.py= compares that assembled Zeeman energy with
-  the analytical unit-square value and checks =unit_length= scaling
+  the analytical unit-square value, checks =unit_length= scaling, and covers
+  analytical uniaxial anisotropy cases including axis normalisation and
+  zero-axis validation. It also checks exchange energy for constant and linear
+  fields, including the explicit gradient scaling convention
+  =unit_length ** (dim - 2)=. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =6 passed= for =pixi run -e dolfinx
+public API. Local verification: =14 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

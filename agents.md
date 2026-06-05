@@ -1039,12 +1039,16 @@ dependency/probe lane. [Codex gpt-5.5 high]
 The next small M4 prototype step is also isolated under `dev/dolfinx`:
 
 - `dev/dolfinx/prototype.py` creates vector-valued DOLFINx magnetisation
-  fields and assembles constant-field Zeeman energy
+  fields and assembles exchange, constant-field Zeeman, and constant-axis
+  uniaxial anisotropy energy
 - `dev/dolfinx/test_prototype.py` checks constant-vector interpolation,
   component-count validation, analytical unit-square Zeeman energy, and
-  `unit_length` scaling
+  `unit_length` scaling. It also covers analytical uniaxial anisotropy cases,
+  axis normalisation, zero-axis validation, and exchange energy for constant
+  and linear fields. Exchange scaling is documented as
+  `unit_length ** (dim - 2)`. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `6 passed`
+  is `14 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]
