@@ -1054,8 +1054,10 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   example with JSON output. The `dolfinx-example` task writes
   `/tmp/finmag-dolfinx-relaxation-summary.json` by default. [Codex gpt-5.5
   high]
+- the example JSON has `schema_version = 1` and a hand-written validator. Keep
+  this contract explicit if the output grows. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `19 passed`
+  is `20 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

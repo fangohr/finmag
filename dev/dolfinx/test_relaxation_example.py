@@ -10,7 +10,8 @@ import json
 import numpy as np
 import pytest
 
-from dev.dolfinx.relaxation_example import run_relaxation_example
+from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
+from dev.dolfinx.relaxation_example import run_relaxation_example, validate_summary
 
 
 def test_relaxation_example_writes_json_summary(tmp_path):
@@ -21,6 +22,8 @@ def test_relaxation_example_writes_json_summary(tmp_path):
 
     written = json.loads(output_path.read_text())
     assert written == summary
+    assert validate_summary(written) == written
+    assert written["schema_version"] == SUMMARY_SCHEMA_VERSION
     assert written["mesh"] == "unit_square_2x2"
     assert written["steps"] == 5
     assert len(written["energy_history"]) == 6
@@ -36,3 +39,23 @@ def test_relaxation_example_rejects_invalid_controls(tmp_path):
 
     with pytest.raises(ValueError, match="dt must be positive"):
         run_relaxation_example(tmp_path / "bad-dt.json", dt=0.0)
+
+
+def test_relaxation_summary_validation_rejects_broken_output(tmp_path):
+    """The JSON contract should fail explicitly for malformed summaries."""
+    summary = run_relaxation_example(tmp_path / "summary.json", steps=2)
+
+    missing_key = dict(summary)
+    del missing_key["energy_history"]
+    with pytest.raises(ValueError, match="missing keys: energy_history"):
+        validate_summary(missing_key)
+
+    bad_history = dict(summary)
+    bad_history["energy_history"] = bad_history["energy_history"][:-1]
+    with pytest.raises(ValueError, match="history length"):
+        validate_summary(bad_history)
+
+    bad_energy = dict(summary)
+    bad_energy["final_energy"] = bad_energy["initial_energy"]
+    with pytest.raises(ValueError, match="final energy does not match"):
+        validate_summary(bad_energy)

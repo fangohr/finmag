@@ -286,7 +286,10 @@ Current second probe:
   =/tmp/finmag-dolfinx-relaxation-summary.json= by default in the verification
   wrapper. This provides the first basic M4 output artefact. [Codex gpt-5.5
   high]
-- local verification now gives =19 passed= for =pixi run -e dolfinx
+- the JSON summary has a small hand-written schema validator and schema version
+  so the first M4 output contract remains explicit without adding another
+  dependency to the isolated =dolfinx= environment. [Codex gpt-5.5 high]
+- local verification now gives =20 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value

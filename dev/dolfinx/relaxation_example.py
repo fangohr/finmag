@@ -23,6 +23,9 @@ from dev.dolfinx.prototype import vector_function_space
 from dev.dolfinx.prototype import zeeman_energy
 
 
+SUMMARY_SCHEMA_VERSION = 1
+
+
 def total_energy(magnetisation, parameters):
     """Compute the reduced prototype energy used by the example."""
     return (
@@ -88,6 +91,7 @@ def run_relaxation_example(output_path=None, steps=5, dt=1e-2):
             key: list(value) if isinstance(value, tuple) else value
             for key, value in parameters.items()
         },
+        "schema_version": SUMMARY_SCHEMA_VERSION,
         "steps": int(steps),
     }
 
@@ -96,6 +100,51 @@ def run_relaxation_example(output_path=None, steps=5, dt=1e-2):
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
     domain.comm.Barrier()
+
+    return summary
+
+
+def validate_summary(summary):
+    """Validate the JSON-compatible output contract for the M4 example.
+
+    The schema is intentionally small and hand-written. It gives CI a stable
+    contract for the first M4 output artefact without adding a JSON-schema
+    dependency to the isolated DOLFINx environment. [Codex gpt-5.5 high]
+    """
+    required_keys = {
+        "dolfinx_version",
+        "dt",
+        "energy_history",
+        "final_average_m",
+        "final_energy",
+        "initial_energy",
+        "mesh",
+        "parameters",
+        "schema_version",
+        "steps",
+    }
+    missing = required_keys.difference(summary)
+    if missing:
+        raise ValueError("summary is missing keys: %s" % ", ".join(sorted(missing)))
+
+    if summary["schema_version"] != SUMMARY_SCHEMA_VERSION:
+        raise ValueError("unsupported summary schema version")
+    if summary["mesh"] != "unit_square_2x2":
+        raise ValueError("unexpected mesh label")
+    if summary["steps"] < 1:
+        raise ValueError("steps must be positive")
+    if summary["dt"] <= 0:
+        raise ValueError("dt must be positive")
+    if len(summary["energy_history"]) != summary["steps"] + 1:
+        raise ValueError("energy history length does not match steps")
+    if summary["initial_energy"] != summary["energy_history"][0]:
+        raise ValueError("initial energy does not match energy history")
+    if summary["final_energy"] != summary["energy_history"][-1]:
+        raise ValueError("final energy does not match energy history")
+    if len(summary["final_average_m"]) != 3:
+        raise ValueError("final average magnetisation must have three components")
+    if summary["final_energy"] >= summary["initial_energy"]:
+        raise ValueError("example did not reduce energy")
 
     return summary
 
@@ -113,6 +162,7 @@ def main():
     args = parser.parse_args()
 
     summary = run_relaxation_example(args.output, steps=args.steps, dt=args.dt)
+    validate_summary(summary)
     if MPI.COMM_WORLD.rank == 0:
         print(json.dumps(summary, sort_keys=True))
 

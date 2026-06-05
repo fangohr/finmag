@@ -2348,9 +2348,12 @@ The next small M4 step adds a DOLFINx-only prototype module:
   The wrapper task =dolfinx-example= writes
   =/tmp/finmag-dolfinx-relaxation-summary.json= by default. [Codex gpt-5.5
   high]
+- the JSON summary has =schema_version = 1= and a hand-written validator,
+  keeping the first M4 output contract explicit without adding a JSON-schema
+  dependency. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =19 passed= for =pixi run -e dolfinx
+public API. Local verification: =20 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]
