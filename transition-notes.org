@@ -2394,6 +2394,8 @@ M5 starts with a reduced core-path wrapper rather than a legacy API port:
   energy decrease, custom parameters, and invalid wrapper controls
 - the reduced wrapper exposes a JSON-compatible relaxation summary as a basic
   output path for the first M5 core sketch
+- the wrapper summary is checked with the existing relaxation summary validator
+  and includes =dolfinx_version= plus schema version
 
 This is intentionally not =finmag.Simulation= compatibility. It is a small API
 sketch to make the next DOLFINx core path reviewable. [Codex gpt-5.5 high]

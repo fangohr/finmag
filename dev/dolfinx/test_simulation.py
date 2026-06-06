@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from dev.dolfinx.relaxation_example import RelaxationParameters
+from dev.dolfinx.relaxation_example import validate_summary
 from dev.dolfinx.simulation import PrototypeSimulation
 
 
@@ -72,3 +73,4 @@ def test_prototype_simulation_relaxation_summary_is_json_compatible():
     assert summary["final_energy"] < summary["initial_energy"]
     assert np.isclose(np.linalg.norm(summary["final_average_m"]), 1.0)
     assert summary["schema_version"] == 1
+    assert validate_summary(summary) == summary

@@ -343,6 +343,8 @@ Current first M5 slice:
 - the reduced simulation wrapper now exposes a JSON-compatible relaxation
   summary so the M5 core-path sketch has a basic output path. [Codex
   gpt-5.5 high]
+- the wrapper summary conforms to the existing relaxation summary validator,
+  including =dolfinx_version= and schema version. [Codex gpt-5.5 high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
 - local verification now gives =32 passed= for =pixi run -e dolfinx

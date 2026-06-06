@@ -8,6 +8,7 @@ promised. [Codex gpt-5.5 high]
 
 from dataclasses import dataclass
 
+import dolfinx
 from dolfinx import mesh
 from mpi4py import MPI
 
@@ -105,6 +106,7 @@ class PrototypeSimulation:
         """Run relaxation and return a JSON-compatible reduced summary."""
         energy_history = self.relax(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
         return {
+            "dolfinx_version": dolfinx.__version__,
             "dt": float(dt),
             "energy_history": energy_history,
             "final_average_m": self.average_m().tolist(),
