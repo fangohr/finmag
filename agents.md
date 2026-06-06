@@ -1082,6 +1082,22 @@ lane: one end-to-end example, documented supported scope, and explicit
 unsupported subsystems. Treat this as a stable base for M5, not as a production
 port or legacy API replacement. [Codex gpt-5.5 high]
 
+Keep `dev/dolfinx` as an exploration lane. It should reduce DOLFINx risk and
+provide executable witnesses, but it must not become a clean-room replacement
+for Finmag by accident. [Codex gpt-5.5 high]
+
+For the actual FEniCS-2019.1-to-DOLFINx port, preserve the existing Finmag
+software design wherever practical: public API, `Simulation`, energy modules,
+drivers, field/data abstractions, restart/output conventions, and tests are
+the baseline. Departures need concrete justification from DOLFINx semantics,
+Python/MPI/runtime changes, packaging constraints, or other software-stack
+changes. [Codex gpt-5.5 high]
+
+Use the green FEniCS-2019/Python-3 tests as the behavioural contract. If the
+DOLFINx port requires changed behaviour, update tests explicitly and document
+why; do not let `PrototypeSimulation` become the production API unless that is
+deliberately mapped back to the existing Finmag design. [Codex gpt-5.5 high]
+
 M5 has started with `dev/dolfinx/simulation.py`, a reduced
 `PrototypeSimulation` wrapper over the checked M4 helpers. It is an API sketch
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex

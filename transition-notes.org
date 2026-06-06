@@ -2382,6 +2382,26 @@ by the current =dev/dolfinx= lane. There is one end-to-end DOLFINx example,
 documented supported scope, and explicit unsupported subsystems. Treat this as
 a stable base for M5, not as a production port. [Codex gpt-5.5 high]
 
+** DOLFINx Porting Strategy
+
+The current =dev/dolfinx= work is an exploration lane. It should answer
+practical DOLFINx questions and provide executable witnesses, but it should not
+become a clean-room mini-Finmag or the default architecture for the final port.
+[Codex gpt-5.5 high]
+
+For the actual port from FEniCS 2019.1 to DOLFINx, preserve the existing Finmag
+software design as far as practical: public API, =Simulation= orchestration,
+energy modules, drivers, field/data abstractions, restart/output conventions,
+and the existing test suite should remain the baseline. Any departures should
+be justified by DOLFINx semantics, Python/MPI/runtime changes, packaging
+constraints, or other concrete software-stack changes. [Codex gpt-5.5 high]
+
+Use the green FEniCS-2019/Python-3 tests as the behavioural contract. If the
+DOLFINx port needs different behaviour, change the tests explicitly and record
+why. Do not let the exploratory =PrototypeSimulation= API become the production
+API unless that choice is made deliberately after mapping it back to the
+existing Finmag design. [Codex gpt-5.5 high]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

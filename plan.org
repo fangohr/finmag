@@ -330,6 +330,24 @@ Goal:
 
 - expand the =dolfinx= port only in areas with real scientific value.
 
+Porting strategy:
+
+- keep =dev/dolfinx= as an exploration lane for DOLFINx mechanics, dependency
+  shape, serialization, and small executable witnesses; do not let it become a
+  clean-room replacement for Finmag. [Codex gpt-5.5 high]
+- when the actual FEniCS-2019.1 code base is ported, preserve the existing
+  Finmag software design, public API, data structures, and tests as far as
+  practical. Changes should be driven by DOLFINx, Python, MPI, packaging, or
+  other software-stack differences, not by preference for a new architecture.
+  [Codex gpt-5.5 high]
+- treat the green FEniCS-2019/Python-3 transition tests as the behavioural
+  contract for the DOLFINx port. If DOLFINx requires changed behaviour, update
+  tests deliberately and document the reason rather than silently drifting.
+  [Codex gpt-5.5 high]
+- promote code from =dev/dolfinx= into =src/finmag= only after deciding how it
+  fits the existing =finmag.Simulation=, energy, driver, field, restart, and
+  output abstractions. [Codex gpt-5.5 high]
+
 Current first M5 slice:
 
 - =dev/dolfinx/simulation.py= adds a reduced =PrototypeSimulation= wrapper
