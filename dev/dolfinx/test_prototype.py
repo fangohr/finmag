@@ -127,6 +127,21 @@ def test_uniaxial_anisotropy_energy_rejects_zero_axis():
         )
 
 
+def test_uniaxial_anisotropy_energy_zero_constant_short_circuits():
+    """A zero anisotropy constant should not build a degenerate UFL form."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    energy = uniaxial_anisotropy_energy(
+        magnetisation,
+        axis=(0.0, 0.0, 0.0),
+        anisotropy_constant=0.0,
+    )
+
+    assert np.isclose(energy, 0.0)
+
+
 def test_exchange_energy_zero_for_constant_magnetisation():
     """A constant magnetisation has zero exchange energy."""
     domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
@@ -174,6 +189,15 @@ def test_exchange_energy_rejects_non_positive_unit_length():
 
     with pytest.raises(ValueError, match="unit_length must be positive"):
         exchange_energy(magnetisation, exchange_constant=5.0, unit_length=0.0)
+
+
+def test_exchange_energy_zero_constant_short_circuits():
+    """A zero exchange constant should not build a degenerate UFL form."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    assert np.isclose(exchange_energy(magnetisation, exchange_constant=0.0), 0.0)
 
 
 def test_llg_rhs_for_constant_field_has_expected_direction():

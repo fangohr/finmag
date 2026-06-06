@@ -330,6 +330,21 @@ Goal:
 
 - expand the =dolfinx= port only in areas with real scientific value.
 
+Current first M5 slice:
+
+- =dev/dolfinx/simulation.py= adds a reduced =PrototypeSimulation= wrapper
+  that composes the checked M4 mesh, magnetisation, exchange, Zeeman,
+  anisotropy, and explicit relaxation helpers. This is an API sketch for the
+  core path, not compatibility with legacy =finmag.Simulation=. [Codex
+  gpt-5.5 high]
+- =dev/dolfinx/test_simulation.py= checks supported energy reporting, short
+  relaxation, custom parameters, and invalid wrapper controls. [Codex
+  gpt-5.5 high]
+- zero exchange and anisotropy constants now short-circuit before UFL assembly,
+  avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
+- local verification now gives =31 passed= for =pixi run -e dolfinx
+  dolfinx-pytest=. [Codex gpt-5.5 high]
+
 Suggested order:
 
 1. core =sim= path and common energies;

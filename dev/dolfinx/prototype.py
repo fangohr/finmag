@@ -107,6 +107,8 @@ def uniaxial_anisotropy_energy(
     """
     if unit_length <= 0:
         raise ValueError("unit_length must be positive")
+    if anisotropy_constant == 0:
+        return 0.0
 
     axis = np.asarray(axis, dtype=np.float64)
     axis_norm = np.linalg.norm(axis)
@@ -202,6 +204,8 @@ def exchange_energy(magnetisation, exchange_constant, unit_length=1.0):
     """
     if unit_length <= 0:
         raise ValueError("unit_length must be positive")
+    if exchange_constant == 0:
+        return 0.0
 
     domain = magnetisation.function_space.mesh
     physical_measure_scale = float(unit_length) ** (domain.geometry.dim - 2)

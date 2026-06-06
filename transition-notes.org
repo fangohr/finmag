@@ -2381,3 +2381,23 @@ M4 reduced-prototype status: the original completion criteria are represented
 by the current =dev/dolfinx= lane. There is one end-to-end DOLFINx example,
 documented supported scope, and explicit unsupported subsystems. Treat this as
 a stable base for M5, not as a production port. [Codex gpt-5.5 high]
+
+** First M5 / DOLFINx Core Simulation Slice
+
+M5 starts with a reduced core-path wrapper rather than a legacy API port:
+
+- =dev/dolfinx/simulation.py= introduces =PrototypeSimulation=, composing the
+  checked M4 DOLFINx helpers for mesh creation, magnetisation setup,
+  exchange/Zeeman/anisotropy energy reporting, average magnetisation, one-step
+  explicit LLG updates, and short relaxation histories
+- =dev/dolfinx/test_simulation.py= covers supported energy terms, relaxation
+  energy decrease, custom parameters, and invalid wrapper controls
+
+This is intentionally not =finmag.Simulation= compatibility. It is a small API
+sketch to make the next DOLFINx core path reviewable. [Codex gpt-5.5 high]
+
+The M5 wrapper work also exposed a DOLFINx/UFL zero-form edge case. The
+prototype exchange and anisotropy energy helpers now return =0.0= before form
+assembly when their constants are zero, avoiding missing-domain errors for
+degenerate UFL forms. Local verification: =31 passed= for =pixi run -e dolfinx
+dolfinx-pytest=. [Codex gpt-5.5 high]

@@ -17,10 +17,12 @@ gpt-5.5 high]
 - A hand-written JSON summary validator with `schema_version = 1`.
 - Small dataclasses for relaxation parameters and JSON-compatible results.
 - Early validation for the reduced relaxation-example parameter set.
+- A reduced `PrototypeSimulation` wrapper for the first M5 core-path sketch.
 
 ## Explicit Non-Scope
 
 - This is not a drop-in replacement for `finmag.Simulation`.
+- `PrototypeSimulation` is not legacy `finmag.Simulation` compatibility.
 - No demagnetising field implementation is provided.
 - No restart format, VTK/XDMF output, or full data I/O is provided.
 - No adaptive or production-grade time integrator is provided.

@@ -1082,5 +1082,14 @@ lane: one end-to-end example, documented supported scope, and explicit
 unsupported subsystems. Treat this as a stable base for M5, not as a production
 port or legacy API replacement. [Codex gpt-5.5 high]
 
+M5 has started with `dev/dolfinx/simulation.py`, a reduced
+`PrototypeSimulation` wrapper over the checked M4 helpers. It is an API sketch
+for the core path, not compatibility with legacy `finmag.Simulation`. [Codex
+gpt-5.5 high]
+
+Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
+assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
+is `31 passed`. [Codex gpt-5.5 high]
+
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]
