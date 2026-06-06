@@ -316,6 +316,14 @@ Current second probe:
 - local verification now gives =25 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
+M4 reduced-prototype status:
+
+- the stated M4 completion criteria are now represented: an end-to-end DOLFINx
+  example runs, supported scope is documented, and unsupported subsystems are
+  explicit in =dev/dolfinx/README.md=. [Codex gpt-5.5 high]
+- this should be treated as a stable starting point for M5 expansion, not as a
+  production DOLFINx port or legacy API replacement. [Codex gpt-5.5 high]
+
 *** Milestone M5: DOLFINx Expansion By Scientific Value
 
 Goal:

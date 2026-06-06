@@ -1077,5 +1077,10 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
   is `25 passed`
 
+The reduced M4 completion criteria are represented by the current `dev/dolfinx`
+lane: one end-to-end example, documented supported scope, and explicit
+unsupported subsystems. Treat this as a stable base for M5, not as a production
+port or legacy API replacement. [Codex gpt-5.5 high]
+
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

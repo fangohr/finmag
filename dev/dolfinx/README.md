@@ -29,6 +29,19 @@ gpt-5.5 high]
 - The dataclasses are a prototype API sketch, not a stable public API.
 - No attempt is made here to port rarely used historical features.
 
+## M4 Completion Status
+
+The reduced M4 prototype criteria are now represented in this directory:
+
+- one end-to-end DOLFINx example runs through `dolfinx-example`;
+- supported scope is documented in this file;
+- unsupported subsystems are listed explicitly above;
+- CI-facing verification is available through `dev/bin/verify-dolfinx-m4`.
+
+This does not make M4 a production port. It means the intended reduced
+prototype has enough coverage and documentation to serve as a stable starting
+point for M5 expansion work. [Codex gpt-5.5 high]
+
 ## Verification
 
 Run the isolated M4 checks with:

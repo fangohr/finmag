@@ -2376,3 +2376,8 @@ This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
 public API. Local verification: =25 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]
+
+M4 reduced-prototype status: the original completion criteria are represented
+by the current =dev/dolfinx= lane. There is one end-to-end DOLFINx example,
+documented supported scope, and explicit unsupported subsystems. Treat this as
+a stable base for M5, not as a production port. [Codex gpt-5.5 high]
