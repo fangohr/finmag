@@ -21,6 +21,8 @@ gpt-5.5 high]
 - A reduced `PrototypeSimulation` wrapper for the first M5 core-path sketch.
 - JSON-compatible state summaries from the reduced simulation wrapper.
 - A JSON-compatible relaxation summary from the reduced simulation wrapper.
+- JSON-compatible per-step relaxation traces from the reduced simulation
+  wrapper.
 - JSON summary writing from the reduced simulation wrapper.
 - Narrow JSON restart-state round trips for the reduced `PrototypeSimulation`
   unit-square path.
@@ -30,8 +32,8 @@ gpt-5.5 high]
 - This is not a drop-in replacement for `finmag.Simulation`.
 - `PrototypeSimulation` is not legacy `finmag.Simulation` compatibility.
 - No demagnetising field implementation is provided.
-- No general Finmag restart format, VTK/XDMF output, or full data I/O is
-  provided.
+- No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
+  scheduler-driven data I/O is provided.
 - No adaptive or production-grade time integrator is provided.
 - No finite-element projection of general effective fields is provided.
 - No compatibility guarantee is made for legacy Finmag public APIs.

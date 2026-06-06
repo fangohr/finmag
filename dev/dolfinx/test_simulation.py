@@ -39,6 +39,19 @@ def test_prototype_simulation_state_summary_does_not_advance():
     assert np.allclose(before["average_m"], (1.0, 0.0, 0.0))
 
 
+def test_prototype_simulation_trace_record_does_not_advance():
+    """Trace records should be read-only snapshots of the current state."""
+    sim = PrototypeSimulation.unit_square()
+
+    before = sim.trace_record(step=0, time=0.0)
+    after = sim.trace_record(step=0, time=0.0)
+
+    assert before == after
+    assert before["step"] == 0
+    assert before["time"] == 0.0
+    assert np.allclose(before["average_m"], (1.0, 0.0, 0.0))
+
+
 def test_prototype_simulation_relaxation_decreases_energy():
     """The wrapper should expose the checked explicit relaxation workflow."""
     sim = PrototypeSimulation.unit_square()
@@ -74,6 +87,10 @@ def test_prototype_simulation_rejects_invalid_controls():
     sim = PrototypeSimulation.unit_square()
     with pytest.raises(ValueError, match="steps must be positive"):
         sim.relax(steps=0, dt=1e-2)
+    with pytest.raises(ValueError, match="steps must be positive"):
+        sim.relaxation_trace(steps=0, dt=1e-2)
+    with pytest.raises(ValueError, match="dt must be positive"):
+        sim.relaxation_trace(steps=1, dt=0.0)
 
 
 def test_prototype_simulation_relaxation_summary_is_json_compatible():
@@ -101,6 +118,37 @@ def test_prototype_simulation_writes_relaxation_summary(tmp_path):
     written = json.loads(output_path.read_text())
     assert written == summary
     assert validate_summary(written) == written
+
+
+def test_prototype_simulation_relaxation_trace_is_json_compatible():
+    """The M5 wrapper should expose per-step state records for data I/O."""
+    sim = PrototypeSimulation.unit_square()
+
+    trace = sim.relaxation_trace(steps=3, dt=1e-2)
+
+    assert trace["mesh"] == "unit_square_2x2"
+    assert trace["schema_version"] == 1
+    assert trace["steps"] == 3
+    assert len(trace["records"]) == 4
+    assert [record["step"] for record in trace["records"]] == [0, 1, 2, 3]
+    assert [record["time"] for record in trace["records"]] == pytest.approx(
+        [0.0, 1e-2, 2e-2, 3e-2]
+    )
+    energies = [record["energy_terms"]["total"] for record in trace["records"]]
+    assert energies[-1] < energies[0]
+    assert np.isclose(np.linalg.norm(trace["records"][-1]["average_m"]), 1.0)
+
+
+def test_prototype_simulation_writes_relaxation_trace(tmp_path):
+    """The M5 wrapper should write the same JSON trace it returns."""
+    output_path = tmp_path / "simulation-trace.json"
+    sim = PrototypeSimulation.unit_square()
+
+    trace = sim.write_relaxation_trace(output_path, steps=2, dt=1e-2)
+
+    written = json.loads(output_path.read_text())
+    assert written == trace
+    assert len(written["records"]) == 3
 
 
 def test_prototype_simulation_restart_state_round_trips(tmp_path):

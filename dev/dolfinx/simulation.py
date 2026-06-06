@@ -30,6 +30,7 @@ from dev.dolfinx.relaxation_example import validate_summary
 
 
 RESTART_SCHEMA_VERSION = 1
+TRACE_SCHEMA_VERSION = 1
 
 
 @dataclass
@@ -150,6 +151,16 @@ class PrototypeSimulation:
         self.domain.comm.Barrier()
         return state
 
+    def trace_record(self, step, time):
+        """Return one JSON-compatible time-series record for the current state."""
+        state = self.state_summary()
+        return {
+            "average_m": state["average_m"],
+            "energy_terms": state["energy_terms"],
+            "step": int(step),
+            "time": float(time),
+        }
+
     def step(self, dt, gamma=1.0, alpha=1.0):
         """Advance the reduced simulation by one explicit LLG step."""
         explicit_llg_step(
@@ -170,6 +181,43 @@ class PrototypeSimulation:
             self.step(dt=dt, gamma=gamma, alpha=alpha)
             energy_history.append(self.energy_terms()["total"])
         return energy_history
+
+    def relaxation_trace(self, steps, dt, gamma=1.0, alpha=1.0):
+        """Run relaxation and return JSON-compatible per-step state records.
+
+        The trace is a prototype data-I/O contract for M5. It captures enough
+        state for downstream checks without introducing legacy NDT, VTK, or
+        scheduler compatibility. [Codex gpt-5.5 high]
+        """
+        if steps < 1:
+            raise ValueError("steps must be positive")
+        if dt <= 0:
+            raise ValueError("dt must be positive")
+
+        records = [self.trace_record(step=0, time=0.0)]
+        for step in range(1, steps + 1):
+            self.step(dt=dt, gamma=gamma, alpha=alpha)
+            records.append(self.trace_record(step=step, time=step * dt))
+
+        return {
+            "dolfinx_version": dolfinx.__version__,
+            "dt": float(dt),
+            "mesh": self.mesh_label,
+            "parameters": parameters_as_summary(self.parameters),
+            "records": records,
+            "schema_version": TRACE_SCHEMA_VERSION,
+            "steps": int(steps),
+        }
+
+    def write_relaxation_trace(self, output_path, steps, dt, gamma=1.0, alpha=1.0):
+        """Run relaxation and write the reduced per-step trace to JSON."""
+        trace = self.relaxation_trace(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+        output_path = Path(output_path)
+        if self.domain.comm.rank == 0:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(json.dumps(trace, indent=2, sort_keys=True) + "\n")
+        self.domain.comm.Barrier()
+        return trace
 
     def relaxation_summary(self, steps, dt, gamma=1.0, alpha=1.0):
         """Run relaxation and return a JSON-compatible reduced summary."""
