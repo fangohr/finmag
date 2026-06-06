@@ -2404,6 +2404,9 @@ M5 starts with a reduced core-path wrapper rather than a legacy API port:
 - the wrapper can write and read a narrow JSON restart state for the
   =PrototypeSimulation= unit-square path; this captures nodal magnetisation
   values and parameters, not a general Finmag restart format
+- =dev/dolfinx/restart_example.py= is a runnable restart-state round-trip
+  witness, and the DOLFINx verification wrapper now runs it through the
+  =dolfinx-restart-example= pixi task
 
 This is intentionally not =finmag.Simulation= compatibility. It is a small API
 sketch to make the next DOLFINx core path reviewable. [Codex gpt-5.5 high]
@@ -2411,5 +2414,5 @@ sketch to make the next DOLFINx core path reviewable. [Codex gpt-5.5 high]
 The M5 wrapper work also exposed a DOLFINx/UFL zero-form edge case. The
 prototype exchange and anisotropy energy helpers now return =0.0= before form
 assembly when their constants are zero, avoiding missing-domain errors for
-degenerate UFL forms. Local verification: =36 passed= for =pixi run -e dolfinx
+degenerate UFL forms. Local verification: =39 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

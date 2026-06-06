@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# Run the first isolated M4 dependency probe for the DOLFINx track.
+# Run the isolated DOLFINx prototype verification lane.
 #
-# This does not port Finmag yet; it only verifies that pixi can provide a
-# separate DOLFINx environment and execute a tiny mesh/function workflow without
-# disturbing the FEniCS-2019 M2/M3 environment. [Codex gpt-5.5 high]
+# This does not port Finmag yet; it verifies that pixi can provide a separate
+# DOLFINx environment and execute the reduced M4/M5 mesh, test, output, and
+# restart examples without disturbing the FEniCS-2019 M2/M3 environment.
+# [Codex gpt-5.5 high]
 
 set -euo pipefail
 
@@ -30,3 +31,6 @@ pixi run -e dolfinx dolfinx-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-example"
 pixi run -e dolfinx dolfinx-example
+
+echo "==> pixi run -e dolfinx dolfinx-restart-example"
+pixi run -e dolfinx dolfinx-restart-example

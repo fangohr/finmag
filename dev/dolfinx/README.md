@@ -14,6 +14,7 @@ gpt-5.5 high]
   uniaxial anisotropy.
 - Explicit normalized LLG stepping in a constant effective field.
 - A small end-to-end relaxation example with JSON summary output.
+- A small restart-state round-trip example with JSON output.
 - A hand-written JSON summary validator with `schema_version = 1`.
 - Small dataclasses for relaxation parameters and JSON-compatible results.
 - Early validation for the reduced relaxation-example parameter set.
@@ -62,5 +63,7 @@ dev/bin/verify-dolfinx-m4
 ```
 
 The wrapper runs the import probe, the smoke probe, all tests below
-`dev/dolfinx`, and the JSON-output relaxation example. The example writes
-`/tmp/finmag-dolfinx-relaxation-summary.json` by default. [Codex gpt-5.5 high]
+`dev/dolfinx`, the JSON-output relaxation example, and the restart-state
+round-trip example. The examples write
+`/tmp/finmag-dolfinx-relaxation-summary.json` and
+`/tmp/finmag-dolfinx-restart-state.json` by default. [Codex gpt-5.5 high]

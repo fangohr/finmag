@@ -42,6 +42,7 @@ dolfinx-import = "python -c \"from mpi4py import MPI; import dolfinx; print('dol
 dolfinx-smoke = "python -c \"from mpi4py import MPI; import numpy as np; from dolfinx import mesh, fem; m = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2); V = fem.functionspace(m, ('Lagrange', 1)); u = fem.Function(V); u.interpolate(lambda x: x[0] + 2*x[1]); print('dofs', V.dofmap.index_map.size_global, 'sum', float(np.sum(u.x.array)))\""
 dolfinx-pytest = "python -m pytest -q dev/dolfinx"
 dolfinx-example = "python -m dev.dolfinx.relaxation_example --output /tmp/finmag-dolfinx-relaxation-summary.json"
+dolfinx-restart-example = "python -m dev.dolfinx.restart_example --output /tmp/finmag-dolfinx-restart-state.json"
 
 [environments]
 dolfinx = { features = ["dolfinx"], no-default-feature = true }

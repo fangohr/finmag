@@ -1106,9 +1106,13 @@ a narrow JSON restart-state round trip for the reduced unit-square wrapper.
 This captures nodal magnetisation values and parameters only; it is not a
 general Finmag restart format. [Codex gpt-5.5 high]
 
+`dev/dolfinx/restart_example.py` is a runnable M5 restart-state witness, and
+`dev/bin/verify-dolfinx-m4` now runs it through the `dolfinx-restart-example`
+pixi task. [Codex gpt-5.5 high]
+
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `36 passed`. [Codex gpt-5.5 high]
+is `39 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

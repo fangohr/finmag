@@ -355,9 +355,12 @@ Current first M5 slice:
   for the =PrototypeSimulation= unit-square path. This records nodal
   magnetisation values and parameters, but is not a general Finmag restart
   format. [Codex gpt-5.5 high]
+- =dev/dolfinx/restart_example.py= provides a runnable restart-state
+  round-trip witness, and =dev/bin/verify-dolfinx-m4= now runs it through the
+  =dolfinx-restart-example= pixi task. [Codex gpt-5.5 high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
-- local verification now gives =36 passed= for =pixi run -e dolfinx
+- local verification now gives =39 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 Suggested order:
