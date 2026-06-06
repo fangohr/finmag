@@ -84,6 +84,15 @@ class PrototypeSimulation:
         """Return the nodal average magnetisation vector."""
         return average_nodal_vector(self.magnetisation)
 
+    def state_summary(self):
+        """Return a JSON-compatible snapshot without advancing the simulation."""
+        return {
+            "average_m": self.average_m().tolist(),
+            "energy_terms": self.energy_terms(),
+            "mesh": self.mesh_label,
+            "parameters": parameters_as_summary(self.parameters),
+        }
+
     def step(self, dt, gamma=1.0, alpha=1.0):
         """Advance the reduced simulation by one explicit LLG step."""
         explicit_llg_step(

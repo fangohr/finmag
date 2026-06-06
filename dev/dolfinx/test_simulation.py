@@ -26,6 +26,19 @@ def test_prototype_simulation_reports_supported_energy_terms():
     assert np.isclose(terms["total"], terms["anisotropy"] + terms["zeeman"])
 
 
+def test_prototype_simulation_state_summary_does_not_advance():
+    """State summaries should expose current state without mutating it."""
+    sim = PrototypeSimulation.unit_square()
+
+    before = sim.state_summary()
+    after = sim.state_summary()
+
+    assert before == after
+    assert before["mesh"] == "unit_square_2x2"
+    assert set(before["energy_terms"]) == {"anisotropy", "exchange", "total", "zeeman"}
+    assert np.allclose(before["average_m"], (1.0, 0.0, 0.0))
+
+
 def test_prototype_simulation_relaxation_decreases_energy():
     """The wrapper should expose the checked explicit relaxation workflow."""
     sim = PrototypeSimulation.unit_square()

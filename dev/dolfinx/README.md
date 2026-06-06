@@ -18,6 +18,7 @@ gpt-5.5 high]
 - Small dataclasses for relaxation parameters and JSON-compatible results.
 - Early validation for the reduced relaxation-example parameter set.
 - A reduced `PrototypeSimulation` wrapper for the first M5 core-path sketch.
+- JSON-compatible state summaries from the reduced simulation wrapper.
 - A JSON-compatible relaxation summary from the reduced simulation wrapper.
 - JSON summary writing from the reduced simulation wrapper.
 

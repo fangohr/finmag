@@ -340,6 +340,9 @@ Current first M5 slice:
 - =dev/dolfinx/test_simulation.py= checks supported energy reporting, short
   relaxation, custom parameters, and invalid wrapper controls. [Codex
   gpt-5.5 high]
+- the reduced simulation wrapper exposes a JSON-compatible state summary so
+  callers can inspect mesh label, average magnetisation, parameters, and
+  energy terms without advancing the simulation. [Codex gpt-5.5 high]
 - the reduced simulation wrapper now exposes a JSON-compatible relaxation
   summary so the M5 core-path sketch has a basic output path. [Codex
   gpt-5.5 high]
@@ -350,7 +353,7 @@ Current first M5 slice:
   high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
-- local verification now gives =33 passed= for =pixi run -e dolfinx
+- local verification now gives =34 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 Suggested order:
