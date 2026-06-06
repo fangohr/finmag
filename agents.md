@@ -1087,9 +1087,12 @@ M5 has started with `dev/dolfinx/simulation.py`, a reduced
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex
 gpt-5.5 high]
 
+`PrototypeSimulation.relaxation_summary()` provides a JSON-compatible basic
+output path for the first M5 core sketch. [Codex gpt-5.5 high]
+
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `31 passed`. [Codex gpt-5.5 high]
+is `32 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

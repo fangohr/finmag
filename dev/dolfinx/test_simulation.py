@@ -58,3 +58,17 @@ def test_prototype_simulation_rejects_invalid_controls():
     sim = PrototypeSimulation.unit_square()
     with pytest.raises(ValueError, match="steps must be positive"):
         sim.relax(steps=0, dt=1e-2)
+
+
+def test_prototype_simulation_relaxation_summary_is_json_compatible():
+    """The M5 wrapper should expose a small machine-readable output path."""
+    sim = PrototypeSimulation.unit_square()
+
+    summary = sim.relaxation_summary(steps=3, dt=1e-2)
+
+    assert summary["mesh"] == "unit_square_2x2"
+    assert summary["steps"] == 3
+    assert len(summary["energy_history"]) == 4
+    assert summary["final_energy"] < summary["initial_energy"]
+    assert np.isclose(np.linalg.norm(summary["final_average_m"]), 1.0)
+    assert summary["schema_version"] == 1

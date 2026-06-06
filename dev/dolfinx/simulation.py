@@ -19,6 +19,8 @@ from dev.dolfinx.prototype import uniaxial_anisotropy_energy
 from dev.dolfinx.prototype import vector_function_space
 from dev.dolfinx.prototype import zeeman_energy
 from dev.dolfinx.relaxation_example import RelaxationParameters
+from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
+from dev.dolfinx.relaxation_example import parameters_as_summary
 
 
 @dataclass
@@ -28,6 +30,7 @@ class PrototypeSimulation:
     domain: object
     magnetisation: object
     parameters: RelaxationParameters
+    mesh_label: str = "custom"
 
     @classmethod
     def unit_square(cls, nx=2, ny=2, initial_m=(1.0, 0.0, 0.0), parameters=None):
@@ -40,7 +43,12 @@ class PrototypeSimulation:
         domain = mesh.create_unit_square(MPI.COMM_WORLD, nx, ny)
         function_space = vector_function_space(domain)
         magnetisation = constant_vector_function(function_space, initial_m)
-        return cls(domain=domain, magnetisation=magnetisation, parameters=parameters)
+        return cls(
+            domain=domain,
+            magnetisation=magnetisation,
+            parameters=parameters,
+            mesh_label="unit_square_%dx%d" % (nx, ny),
+        )
 
     def energy_terms(self):
         """Return the currently supported M5 prototype energy terms."""
@@ -92,3 +100,18 @@ class PrototypeSimulation:
             self.step(dt=dt, gamma=gamma, alpha=alpha)
             energy_history.append(self.energy_terms()["total"])
         return energy_history
+
+    def relaxation_summary(self, steps, dt, gamma=1.0, alpha=1.0):
+        """Run relaxation and return a JSON-compatible reduced summary."""
+        energy_history = self.relax(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+        return {
+            "dt": float(dt),
+            "energy_history": energy_history,
+            "final_average_m": self.average_m().tolist(),
+            "final_energy": energy_history[-1],
+            "initial_energy": energy_history[0],
+            "mesh": self.mesh_label,
+            "parameters": parameters_as_summary(self.parameters),
+            "schema_version": SUMMARY_SCHEMA_VERSION,
+            "steps": int(steps),
+        }
