@@ -64,6 +64,14 @@ def test_relaxation_example_accepts_parameter_dataclass(tmp_path):
     assert validate_summary(summary) == summary
 
 
+def test_relaxation_example_is_deterministic(tmp_path):
+    """Repeated runs with the same controls should produce identical summaries."""
+    first = run_relaxation_example(tmp_path / "first.json", steps=4, dt=5e-3)
+    second = run_relaxation_example(tmp_path / "second.json", steps=4, dt=5e-3)
+
+    assert first == second
+
+
 def test_relaxation_parameters_reject_invalid_values():
     """Invalid prototype parameters should fail before form assembly."""
     with pytest.raises(ValueError, match="anisotropy_constant must be non-negative"):

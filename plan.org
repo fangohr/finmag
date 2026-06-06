@@ -309,9 +309,11 @@ Current second probe:
 - summary validation now checks the nested =parameters= block as well as the
   top-level output fields, keeping the JSON contract explicit. [Codex
   gpt-5.5 high]
+- repeated relaxation-example runs with identical controls are tested for
+  deterministic JSON summaries. [Codex gpt-5.5 high]
 - the reduced vector-parameter validation now rejects wrong sizes and
   non-numeric values before DOLFINx form assembly. [Codex gpt-5.5 high]
-- local verification now gives =24 passed= for =pixi run -e dolfinx
+- local verification now gives =25 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value

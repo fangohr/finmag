@@ -2366,11 +2366,13 @@ The next small M4 step adds a DOLFINx-only prototype module:
   gpt-5.5 high]
 - summary validation checks the nested =parameters= block, including missing
   keys and invalid vector values. [Codex gpt-5.5 high]
+- the relaxation example is tested for deterministic JSON summaries across
+  repeated runs with identical controls. [Codex gpt-5.5 high]
 - vector-parameter validation rejects wrong sizes and non-numeric values before
   DOLFINx form assembly. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=
 
 This is deliberately not imported from =src/finmag= yet. The point is to pin
 down DOLFINx form/function semantics before attempting a Finmag-compatible
-public API. Local verification: =24 passed= for =pixi run -e dolfinx
+public API. Local verification: =25 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]

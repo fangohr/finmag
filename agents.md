@@ -1070,10 +1070,12 @@ The next small M4 prototype step is also isolated under `dev/dolfinx`:
   aligned with function-level validation. [Codex gpt-5.5 high]
 - summary validation checks the nested `parameters` block as part of the M4
   JSON contract. [Codex gpt-5.5 high]
+- repeated relaxation-example runs with identical controls are tested for
+  deterministic JSON summaries. [Codex gpt-5.5 high]
 - vector-parameter validation rejects wrong sizes and non-numeric values before
   DOLFINx form assembly. [Codex gpt-5.5 high]
 - `dolfinx-pytest` now runs all tests below `dev/dolfinx`; local verification
-  is `24 passed`
+  is `25 passed`
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]
