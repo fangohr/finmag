@@ -19,6 +19,7 @@ gpt-5.5 high]
 - Early validation for the reduced relaxation-example parameter set.
 - A reduced `PrototypeSimulation` wrapper for the first M5 core-path sketch.
 - A JSON-compatible relaxation summary from the reduced simulation wrapper.
+- JSON summary writing from the reduced simulation wrapper.
 
 ## Explicit Non-Scope
 

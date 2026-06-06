@@ -7,6 +7,8 @@ promised. [Codex gpt-5.5 high]
 """
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 
 import dolfinx
 from dolfinx import mesh
@@ -22,6 +24,7 @@ from dev.dolfinx.prototype import zeeman_energy
 from dev.dolfinx.relaxation_example import RelaxationParameters
 from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
 from dev.dolfinx.relaxation_example import parameters_as_summary
+from dev.dolfinx.relaxation_example import validate_summary
 
 
 @dataclass
@@ -117,3 +120,15 @@ class PrototypeSimulation:
             "schema_version": SUMMARY_SCHEMA_VERSION,
             "steps": int(steps),
         }
+
+    def write_relaxation_summary(self, output_path, steps, dt, gamma=1.0, alpha=1.0):
+        """Run relaxation, validate the reduced summary, and write JSON output."""
+        summary = validate_summary(
+            self.relaxation_summary(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+        )
+        output_path = Path(output_path)
+        if self.domain.comm.rank == 0:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+        self.domain.comm.Barrier()
+        return summary

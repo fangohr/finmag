@@ -5,6 +5,8 @@ first M5 core simulation path explicit without pretending that legacy
 ``finmag.Simulation`` has been ported. [Codex gpt-5.5 high]
 """
 
+import json
+
 import numpy as np
 import pytest
 
@@ -74,3 +76,15 @@ def test_prototype_simulation_relaxation_summary_is_json_compatible():
     assert np.isclose(np.linalg.norm(summary["final_average_m"]), 1.0)
     assert summary["schema_version"] == 1
     assert validate_summary(summary) == summary
+
+
+def test_prototype_simulation_writes_relaxation_summary(tmp_path):
+    """The M5 wrapper should write the same validated JSON summary it returns."""
+    output_path = tmp_path / "simulation-summary.json"
+    sim = PrototypeSimulation.unit_square()
+
+    summary = sim.write_relaxation_summary(output_path, steps=3, dt=1e-2)
+
+    written = json.loads(output_path.read_text())
+    assert written == summary
+    assert validate_summary(written) == written

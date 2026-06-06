@@ -1093,9 +1093,13 @@ output path for the first M5 core sketch. [Codex gpt-5.5 high]
 The simulation wrapper summary conforms to the existing relaxation summary
 validator, including `dolfinx_version` and schema version. [Codex gpt-5.5 high]
 
+`PrototypeSimulation.write_relaxation_summary()` writes the validated summary
+to JSON as the first direct file-output path for the M5 core sketch. [Codex
+gpt-5.5 high]
+
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `32 passed`. [Codex gpt-5.5 high]
+is `33 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]
