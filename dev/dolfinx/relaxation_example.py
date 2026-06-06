@@ -207,8 +207,27 @@ def validate_summary(summary):
         raise ValueError("final average magnetisation must have three components")
     if summary["final_energy"] >= summary["initial_energy"]:
         raise ValueError("example did not reduce energy")
+    _validate_summary_parameters(summary["parameters"])
 
     return summary
+
+
+def _validate_summary_parameters(parameters):
+    """Validate the JSON-compatible parameter block in an M4 summary."""
+    required_keys = set(asdict(RelaxationParameters()).keys())
+    missing = required_keys.difference(parameters)
+    if missing:
+        raise ValueError(
+            "summary parameters are missing keys: %s" % ", ".join(sorted(missing))
+        )
+    RelaxationParameters(
+        anisotropy_axis=tuple(parameters["anisotropy_axis"]),
+        anisotropy_constant=parameters["anisotropy_constant"],
+        exchange_constant=parameters["exchange_constant"],
+        field=tuple(parameters["field"]),
+        saturation_magnetisation=parameters["saturation_magnetisation"],
+        unit_length=parameters["unit_length"],
+    )
 
 
 def main():

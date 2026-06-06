@@ -2364,6 +2364,8 @@ The next small M4 step adds a DOLFINx-only prototype module:
 - invalid relaxation example CLI controls are covered by pytest, keeping the
   wrapper-facing path aligned with function-level validation. [Codex
   gpt-5.5 high]
+- summary validation checks the nested =parameters= block, including missing
+  keys and invalid vector values. [Codex gpt-5.5 high]
 - vector-parameter validation rejects wrong sizes and non-numeric values before
   DOLFINx form assembly. [Codex gpt-5.5 high]
 - =pixi.toml= runs all =dev/dolfinx= tests through =dolfinx-pytest=

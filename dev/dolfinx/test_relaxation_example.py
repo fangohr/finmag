@@ -163,3 +163,15 @@ def test_relaxation_summary_validation_rejects_broken_output(tmp_path):
     bad_energy["final_energy"] = bad_energy["initial_energy"]
     with pytest.raises(ValueError, match="final energy does not match"):
         validate_summary(bad_energy)
+
+    missing_parameter = dict(summary)
+    missing_parameter["parameters"] = dict(summary["parameters"])
+    del missing_parameter["parameters"]["field"]
+    with pytest.raises(ValueError, match="parameters are missing keys: field"):
+        validate_summary(missing_parameter)
+
+    invalid_parameter = dict(summary)
+    invalid_parameter["parameters"] = dict(summary["parameters"])
+    invalid_parameter["parameters"]["field"] = ["bad", "field", "values"]
+    with pytest.raises(ValueError, match="field must contain numeric values"):
+        validate_summary(invalid_parameter)
