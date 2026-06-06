@@ -5,6 +5,10 @@ separate from `src/finmag`: the code here explores a reduced Finmag-on-DOLFINx
 path without changing the green legacy FEniCS-2019 M2/M3 code. [Codex
 gpt-5.5 high]
 
+`porting_map.md` records how this exploration lane should be evaluated against
+the existing Finmag API, data structures, and tests before any code is promoted
+into `src/finmag`. [Codex gpt-5.5 high]
+
 ## Supported Scope
 
 - DOLFINx 0.10.0 import and a tiny mesh/function smoke test.

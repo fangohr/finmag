@@ -347,6 +347,9 @@ Porting strategy:
 - promote code from =dev/dolfinx= into =src/finmag= only after deciding how it
   fits the existing =finmag.Simulation=, energy, driver, field, restart, and
   output abstractions. [Codex gpt-5.5 high]
+- =dev/dolfinx/porting_map.md= records the compatibility surfaces to preserve,
+  the current prototype evidence, and the promotion criteria for moving any
+  DOLFINx code into =src/finmag=. [Codex gpt-5.5 high]
 
 Current first M5 slice:
 

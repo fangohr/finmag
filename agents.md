@@ -1098,6 +1098,10 @@ DOLFINx port requires changed behaviour, update tests explicitly and document
 why; do not let `PrototypeSimulation` become the production API unless that is
 deliberately mapped back to the existing Finmag design. [Codex gpt-5.5 high]
 
+`dev/dolfinx/porting_map.md` records the legacy surfaces to preserve, current
+prototype evidence, and promotion criteria. Consult it before moving any
+`dev/dolfinx` implementation into `src/finmag`. [Codex gpt-5.5 high]
+
 M5 has started with `dev/dolfinx/simulation.py`, a reduced
 `PrototypeSimulation` wrapper over the checked M4 helpers. It is an API sketch
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex
