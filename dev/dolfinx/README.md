@@ -21,13 +21,16 @@ gpt-5.5 high]
 - JSON-compatible state summaries from the reduced simulation wrapper.
 - A JSON-compatible relaxation summary from the reduced simulation wrapper.
 - JSON summary writing from the reduced simulation wrapper.
+- Narrow JSON restart-state round trips for the reduced `PrototypeSimulation`
+  unit-square path.
 
 ## Explicit Non-Scope
 
 - This is not a drop-in replacement for `finmag.Simulation`.
 - `PrototypeSimulation` is not legacy `finmag.Simulation` compatibility.
 - No demagnetising field implementation is provided.
-- No restart format, VTK/XDMF output, or full data I/O is provided.
+- No general Finmag restart format, VTK/XDMF output, or full data I/O is
+  provided.
 - No adaptive or production-grade time integrator is provided.
 - No finite-element projection of general effective fields is provided.
 - No compatibility guarantee is made for legacy Finmag public APIs.

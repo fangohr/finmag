@@ -1101,9 +1101,14 @@ validator, including `dolfinx_version` and schema version. [Codex gpt-5.5 high]
 to JSON as the first direct file-output path for the M5 core sketch. [Codex
 gpt-5.5 high]
 
+`PrototypeSimulation.write_restart_state()` and `read_restart_state()` provide
+a narrow JSON restart-state round trip for the reduced unit-square wrapper.
+This captures nodal magnetisation values and parameters only; it is not a
+general Finmag restart format. [Codex gpt-5.5 high]
+
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `34 passed`. [Codex gpt-5.5 high]
+is `36 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

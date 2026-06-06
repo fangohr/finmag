@@ -351,9 +351,13 @@ Current first M5 slice:
 - the reduced simulation wrapper can write the validated summary to JSON,
   giving the M5 core-path sketch a direct file-output path. [Codex gpt-5.5
   high]
+- the reduced simulation wrapper can write and read a narrow JSON restart state
+  for the =PrototypeSimulation= unit-square path. This records nodal
+  magnetisation values and parameters, but is not a general Finmag restart
+  format. [Codex gpt-5.5 high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
-- local verification now gives =34 passed= for =pixi run -e dolfinx
+- local verification now gives =36 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 Suggested order:

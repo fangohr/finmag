@@ -13,11 +13,13 @@ from pathlib import Path
 import dolfinx
 from dolfinx import mesh
 from mpi4py import MPI
+import numpy as np
 
 from dev.dolfinx.prototype import average_nodal_vector
 from dev.dolfinx.prototype import constant_vector_function
 from dev.dolfinx.prototype import exchange_energy
 from dev.dolfinx.prototype import explicit_llg_step
+from dev.dolfinx.prototype import nodal_vector_values
 from dev.dolfinx.prototype import uniaxial_anisotropy_energy
 from dev.dolfinx.prototype import vector_function_space
 from dev.dolfinx.prototype import zeeman_energy
@@ -25,6 +27,9 @@ from dev.dolfinx.relaxation_example import RelaxationParameters
 from dev.dolfinx.relaxation_example import SUMMARY_SCHEMA_VERSION
 from dev.dolfinx.relaxation_example import parameters_as_summary
 from dev.dolfinx.relaxation_example import validate_summary
+
+
+RESTART_SCHEMA_VERSION = 1
 
 
 @dataclass
@@ -93,6 +98,58 @@ class PrototypeSimulation:
             "parameters": parameters_as_summary(self.parameters),
         }
 
+    def restart_state(self):
+        """Return a narrow JSON-compatible restart state for this M5 wrapper.
+
+        This deliberately captures only the reduced prototype state: mesh label,
+        parameters, and nodal magnetisation values. It is not a legacy Finmag
+        restart format. [Codex gpt-5.5 high]
+        """
+        return {
+            "dolfinx_version": dolfinx.__version__,
+            "magnetisation_values": nodal_vector_values(self.magnetisation).tolist(),
+            "mesh": self.mesh_label,
+            "parameters": parameters_as_summary(self.parameters),
+            "schema_version": RESTART_SCHEMA_VERSION,
+        }
+
+    @classmethod
+    def from_restart_state(cls, state):
+        """Recreate a reduced simulation from ``restart_state`` output."""
+        _validate_restart_state_shape(state)
+        nx, ny = _unit_square_dimensions_from_label(state["mesh"])
+        sim = cls.unit_square(
+            nx=nx,
+            ny=ny,
+            parameters=_parameters_from_summary(state["parameters"]),
+        )
+
+        current_values = nodal_vector_values(sim.magnetisation)
+        stored_values = np.asarray(state["magnetisation_values"], dtype=np.float64)
+        if stored_values.shape != current_values.shape:
+            raise ValueError(
+                "restart magnetisation shape %s does not match mesh shape %s"
+                % (stored_values.shape, current_values.shape)
+            )
+        current_values[:] = stored_values
+        sim.magnetisation.x.scatter_forward()
+        return sim
+
+    @classmethod
+    def read_restart_state(cls, input_path):
+        """Read a reduced restart JSON file and recreate the simulation."""
+        return cls.from_restart_state(json.loads(Path(input_path).read_text()))
+
+    def write_restart_state(self, output_path):
+        """Write the reduced restart state to JSON on rank 0."""
+        state = self.restart_state()
+        output_path = Path(output_path)
+        if self.domain.comm.rank == 0:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
+        self.domain.comm.Barrier()
+        return state
+
     def step(self, dt, gamma=1.0, alpha=1.0):
         """Advance the reduced simulation by one explicit LLG step."""
         explicit_llg_step(
@@ -141,3 +198,57 @@ class PrototypeSimulation:
             output_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
         self.domain.comm.Barrier()
         return summary
+
+
+def _validate_restart_state_shape(state):
+    """Validate the small restart-state contract before rebuilding a mesh."""
+    required_keys = {
+        "dolfinx_version",
+        "magnetisation_values",
+        "mesh",
+        "parameters",
+        "schema_version",
+    }
+    missing = required_keys.difference(state)
+    if missing:
+        raise ValueError(
+            "restart state is missing keys: %s" % ", ".join(sorted(missing))
+        )
+    if state["schema_version"] != RESTART_SCHEMA_VERSION:
+        raise ValueError("unsupported restart schema version")
+
+
+def _unit_square_dimensions_from_label(mesh_label):
+    """Decode the only mesh labels supported by the reduced restart path."""
+    prefix = "unit_square_"
+    if not mesh_label.startswith(prefix):
+        raise ValueError("only unit-square restart states are supported")
+
+    parts = mesh_label[len(prefix) :].split("x")
+    if len(parts) != 2:
+        raise ValueError("invalid unit-square mesh label")
+    try:
+        nx, ny = (int(part) for part in parts)
+    except ValueError:
+        raise ValueError("invalid unit-square mesh label")
+    if nx < 1 or ny < 1:
+        raise ValueError("unit-square mesh dimensions must be positive")
+    return nx, ny
+
+
+def _parameters_from_summary(parameters):
+    """Rebuild reduced relaxation parameters from JSON-compatible values."""
+    required_keys = set(parameters_as_summary(RelaxationParameters()).keys())
+    missing = required_keys.difference(parameters)
+    if missing:
+        raise ValueError(
+            "restart parameters are missing keys: %s" % ", ".join(sorted(missing))
+        )
+    return RelaxationParameters(
+        anisotropy_axis=tuple(parameters["anisotropy_axis"]),
+        anisotropy_constant=parameters["anisotropy_constant"],
+        exchange_constant=parameters["exchange_constant"],
+        field=tuple(parameters["field"]),
+        saturation_magnetisation=parameters["saturation_magnetisation"],
+        unit_length=parameters["unit_length"],
+    )

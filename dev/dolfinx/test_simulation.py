@@ -101,3 +101,42 @@ def test_prototype_simulation_writes_relaxation_summary(tmp_path):
     written = json.loads(output_path.read_text())
     assert written == summary
     assert validate_summary(written) == written
+
+
+def test_prototype_simulation_restart_state_round_trips(tmp_path):
+    """Reduced restart JSON should recreate the same prototype state."""
+    output_path = tmp_path / "simulation-restart.json"
+    sim = PrototypeSimulation.unit_square()
+    sim.relax(steps=2, dt=1e-2)
+
+    state = sim.write_restart_state(output_path)
+    restarted = PrototypeSimulation.read_restart_state(output_path)
+
+    assert json.loads(output_path.read_text()) == state
+    assert state["schema_version"] == 1
+    assert state["mesh"] == "unit_square_2x2"
+    assert np.allclose(restarted.average_m(), sim.average_m())
+    assert restarted.parameters == sim.parameters
+    assert restarted.energy_terms() == pytest.approx(sim.energy_terms())
+
+
+def test_prototype_simulation_restart_state_rejects_invalid_input():
+    """Malformed reduced restart states should fail before state mutation."""
+    state = PrototypeSimulation.unit_square().restart_state()
+
+    wrong_schema = dict(state, schema_version=999)
+    with pytest.raises(ValueError, match="unsupported restart schema"):
+        PrototypeSimulation.from_restart_state(wrong_schema)
+
+    unsupported_mesh = dict(state, mesh="custom")
+    with pytest.raises(ValueError, match="only unit-square restart states"):
+        PrototypeSimulation.from_restart_state(unsupported_mesh)
+
+    wrong_values = dict(state, magnetisation_values=[[1.0, 0.0, 0.0]])
+    with pytest.raises(ValueError, match="magnetisation shape"):
+        PrototypeSimulation.from_restart_state(wrong_values)
+
+    missing_parameter = dict(state["parameters"])
+    del missing_parameter["field"]
+    with pytest.raises(ValueError, match="restart parameters are missing keys"):
+        PrototypeSimulation.from_restart_state(dict(state, parameters=missing_parameter))
