@@ -35,6 +35,7 @@ def test_prototype_simulation_state_summary_does_not_advance():
 
     assert before == after
     assert before["mesh"] == "unit_square_2x2"
+    assert before["time"] == 0.0
     assert set(before["energy_terms"]) == {"anisotropy", "exchange", "total", "zeeman"}
     assert np.allclose(before["average_m"], (1.0, 0.0, 0.0))
 
@@ -60,8 +61,33 @@ def test_prototype_simulation_relaxation_decreases_energy():
 
     assert len(energy_history) == 6
     assert energy_history[-1] < energy_history[0]
+    assert sim.time == pytest.approx(5e-2)
     assert np.isclose(np.linalg.norm(sim.average_m()), 1.0)
     assert sim.average_m()[2] > 0.0
+
+
+def test_prototype_simulation_run_until_tracks_time():
+    """The M5 wrapper should probe the legacy Simulation.run_until shape."""
+    sim = PrototypeSimulation.unit_square()
+
+    returned = sim.run_until(2.5e-2, dt=1e-2)
+
+    assert returned is sim
+    assert sim.time == pytest.approx(2.5e-2)
+    assert np.isclose(np.linalg.norm(sim.average_m()), 1.0)
+    assert sim.average_m()[2] > 0.0
+
+
+def test_prototype_simulation_run_until_rejects_invalid_time_controls():
+    """Invalid prototype time controls should fail before mutating state."""
+    sim = PrototypeSimulation.unit_square()
+    sim.run_until(1e-2, dt=1e-2)
+
+    with pytest.raises(ValueError, match="target_time must not be before"):
+        sim.run_until(0.0, dt=1e-2)
+
+    with pytest.raises(ValueError, match="dt must be positive"):
+        sim.run_until(2e-2, dt=0.0)
 
 
 def test_prototype_simulation_accepts_custom_parameters():
@@ -103,6 +129,7 @@ def test_prototype_simulation_relaxation_summary_is_json_compatible():
     assert summary["steps"] == 3
     assert len(summary["energy_history"]) == 4
     assert summary["final_energy"] < summary["initial_energy"]
+    assert summary["final_time"] == pytest.approx(3e-2)
     assert np.isclose(np.linalg.norm(summary["final_average_m"]), 1.0)
     assert summary["schema_version"] == 1
     assert validate_summary(summary) == summary
@@ -134,6 +161,7 @@ def test_prototype_simulation_relaxation_trace_is_json_compatible():
     assert [record["time"] for record in trace["records"]] == pytest.approx(
         [0.0, 1e-2, 2e-2, 3e-2]
     )
+    assert trace["time"] == pytest.approx(3e-2)
     energies = [record["energy_terms"]["total"] for record in trace["records"]]
     assert energies[-1] < energies[0]
     assert np.isclose(np.linalg.norm(trace["records"][-1]["average_m"]), 1.0)
@@ -163,6 +191,8 @@ def test_prototype_simulation_restart_state_round_trips(tmp_path):
     assert json.loads(output_path.read_text()) == state
     assert state["schema_version"] == 1
     assert state["mesh"] == "unit_square_2x2"
+    assert state["time"] == pytest.approx(sim.time)
+    assert restarted.time == pytest.approx(sim.time)
     assert np.allclose(restarted.average_m(), sim.average_m())
     assert restarted.parameters == sim.parameters
     assert restarted.energy_terms() == pytest.approx(sim.energy_terms())

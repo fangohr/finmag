@@ -39,14 +39,18 @@ def run_restart_example(output_path=None, steps=2, dt=1e-2):
 
     average_m_error = float(np.max(np.abs(sim.average_m() - restarted.average_m())))
     energy_error = _max_energy_error(sim.energy_terms(), restarted.energy_terms())
+    time_error = abs(sim.time - restarted.time)
     return {
         "dt": float(dt),
         "max_average_m_error": average_m_error,
         "max_energy_error": energy_error,
+        "max_time_error": float(time_error),
         "mesh": state["mesh"],
         "restart_path": restart_path,
         "restart_schema_version": state["schema_version"],
-        "roundtrip_matches": average_m_error == 0.0 and energy_error == 0.0,
+        "roundtrip_matches": (
+            average_m_error == 0.0 and energy_error == 0.0 and time_error == 0.0
+        ),
         "steps": int(steps),
     }
 

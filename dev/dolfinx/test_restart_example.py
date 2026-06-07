@@ -22,6 +22,7 @@ def test_restart_example_round_trips_in_memory():
     assert summary["roundtrip_matches"]
     assert summary["max_average_m_error"] == 0.0
     assert summary["max_energy_error"] == 0.0
+    assert summary["max_time_error"] == 0.0
 
 
 def test_restart_example_round_trips_via_json_file(tmp_path):
@@ -33,6 +34,7 @@ def test_restart_example_round_trips_via_json_file(tmp_path):
     written = json.loads(output_path.read_text())
     assert written["mesh"] == "unit_square_2x2"
     assert written["schema_version"] == 1
+    assert written["time"] == pytest.approx(3e-2)
     assert summary["restart_path"] == str(output_path)
     assert summary["steps"] == 3
     assert summary["roundtrip_matches"]

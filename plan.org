@@ -390,6 +390,12 @@ Current first M5 slice:
   relaxation trace with time, average magnetisation, and energy terms. This is
   a small data-I/O contract, not legacy NDT, VTK/XDMF, or scheduler support.
   [Codex gpt-5.5 high]
+- the reduced simulation wrapper now tracks prototype time and exposes a
+  narrow =run_until(...)= method. This is a compatibility-shaped probe for the
+  legacy =Simulation.run_until= concept, but it still uses the explicit M5
+  stepper and is not a production DOLFINx driver. [Codex gpt-5.5 high]
+- the reduced JSON restart state now preserves prototype time as well as
+  parameters and nodal magnetisation values. [Codex gpt-5.5 high]
 - the reduced simulation wrapper can write and read a narrow JSON restart state
   for the =PrototypeSimulation= unit-square path. This records nodal
   magnetisation values and parameters, but is not a general Finmag restart

@@ -48,12 +48,17 @@ must not become the production API by accident. [Codex gpt-5.5 high]
 - Time stepping: `explicit_llg_step` gives a transparent nodal explicit step
   that tests DOLFINx function mutation and normalisation, but it is not a
   production driver.
+- Simulation time: `PrototypeSimulation.time` and `run_until(...)` are a small
+  compatibility-shaped probe for the legacy `Simulation.run_until` concept.
+  They deliberately use the prototype explicit stepper and should not be
+  treated as a production driver. [Codex gpt-5.5 high]
 - Reduced output: `relaxation_example.py`, `PrototypeSimulation` summaries,
   and relaxation traces exercise JSON output contracts only; they do not cover
   legacy NDT tables, VTK/XDMF, or scheduled output.
 - Reduced restart: `restart_state` and `restart_example.py` prove a JSON
-  round trip for a tiny unit-square prototype, not the legacy Finmag restart
-  format. [Codex gpt-5.5 high]
+  round trip for a tiny unit-square prototype, preserving time, parameters, and
+  nodal magnetisation values. This is not the legacy Finmag restart format.
+  [Codex gpt-5.5 high]
 - FK demag baseline: the FEniCS-2019/pixi M3 path still computes the
   Fredkin-Koehler BEM matrix through the compiled `finmag.native.llg`
   extension, using `compute_bem_fk` or the DOLFIN-2019-compatible

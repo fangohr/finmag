@@ -19,6 +19,7 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
 - Explicit normalized LLG stepping in a constant effective field.
+- Prototype simulation time tracking and a narrow `run_until(...)` probe.
 - A small end-to-end relaxation example with JSON summary output.
 - A small restart-state round-trip example with JSON output.
 - A hand-written JSON summary validator with `schema_version = 1`.
@@ -31,7 +32,7 @@ into `src/finmag`. [Codex gpt-5.5 high]
   wrapper.
 - JSON summary writing from the reduced simulation wrapper.
 - Narrow JSON restart-state round trips for the reduced `PrototypeSimulation`
-  unit-square path.
+  unit-square path, including prototype time.
 
 ## Explicit Non-Scope
 
@@ -40,7 +41,8 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - No demagnetising field implementation is provided.
 - No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
   scheduler-driven data I/O is provided.
-- No adaptive or production-grade time integrator is provided.
+- No adaptive or production-grade time integrator is provided; `run_until(...)`
+  is a bounded explicit-step probe only.
 - No finite-element projection of general effective fields is provided.
 - No compatibility guarantee is made for legacy Finmag public APIs.
 - The dataclasses are a prototype API sketch, not a stable public API.

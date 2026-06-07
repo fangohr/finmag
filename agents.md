@@ -1145,10 +1145,14 @@ a JSON-compatible per-step trace with time, average magnetisation, and energy
 terms. This is a reduced data-I/O contract, not legacy NDT, VTK/XDMF, or
 scheduler support. [Codex gpt-5.5 high]
 
+`PrototypeSimulation.time` and `run_until(...)` are a narrow compatibility-
+shaped probe for the legacy `Simulation.run_until` idea. They use the explicit
+M5 stepper and are not a production DOLFINx driver. [Codex gpt-5.5 high]
+
 `PrototypeSimulation.write_restart_state()` and `read_restart_state()` provide
 a narrow JSON restart-state round trip for the reduced unit-square wrapper.
-This captures nodal magnetisation values and parameters only; it is not a
-general Finmag restart format. [Codex gpt-5.5 high]
+This captures prototype time, nodal magnetisation values, and parameters only;
+it is not a general Finmag restart format. [Codex gpt-5.5 high]
 
 `dev/dolfinx/restart_example.py` is a runnable M5 restart-state witness, and
 `dev/bin/verify-dolfinx-m4` now runs it through the `dolfinx-restart-example`
@@ -1156,7 +1160,7 @@ pixi task. [Codex gpt-5.5 high]
 
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `48 passed`. [Codex gpt-5.5 high]
+is `50 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

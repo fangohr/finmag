@@ -41,6 +41,7 @@ class PrototypeSimulation:
     magnetisation: object
     parameters: RelaxationParameters
     mesh_label: str = "custom"
+    time: float = 0.0
 
     @classmethod
     def unit_square(cls, nx=2, ny=2, initial_m=(1.0, 0.0, 0.0), parameters=None):
@@ -97,6 +98,7 @@ class PrototypeSimulation:
             "energy_terms": self.energy_terms(),
             "mesh": self.mesh_label,
             "parameters": parameters_as_summary(self.parameters),
+            "time": float(self.time),
         }
 
     def restart_state(self):
@@ -112,6 +114,7 @@ class PrototypeSimulation:
             "mesh": self.mesh_label,
             "parameters": parameters_as_summary(self.parameters),
             "schema_version": RESTART_SCHEMA_VERSION,
+            "time": float(self.time),
         }
 
     @classmethod
@@ -134,6 +137,7 @@ class PrototypeSimulation:
             )
         current_values[:] = stored_values
         sim.magnetisation.x.scatter_forward()
+        sim.time = float(state["time"])
         return sim
 
     @classmethod
@@ -163,6 +167,8 @@ class PrototypeSimulation:
 
     def step(self, dt, gamma=1.0, alpha=1.0):
         """Advance the reduced simulation by one explicit LLG step."""
+        if dt <= 0:
+            raise ValueError("dt must be positive")
         explicit_llg_step(
             self.magnetisation,
             effective_field=self.parameters.field,
@@ -170,6 +176,29 @@ class PrototypeSimulation:
             gamma=gamma,
             alpha=alpha,
         )
+        self.time += float(dt)
+        return self
+
+    def run_until(self, target_time, dt, gamma=1.0, alpha=1.0):
+        """Advance to ``target_time`` with bounded explicit prototype steps.
+
+        This is a deliberately narrow compatibility-shaped probe for the legacy
+        ``Simulation.run_until`` concept. It uses the checked explicit nodal
+        stepper and records prototype time, but it is not a production DOLFINx
+        time integrator. [Codex gpt-5.5 high]
+        """
+        if dt <= 0:
+            raise ValueError("dt must be positive")
+        target_time = float(target_time)
+        if target_time < self.time:
+            raise ValueError("target_time must not be before the current time")
+
+        while self.time < target_time:
+            self.step(
+                dt=min(float(dt), target_time - self.time),
+                gamma=gamma,
+                alpha=alpha,
+            )
         return self
 
     def relax(self, steps, dt, gamma=1.0, alpha=1.0):
@@ -207,6 +236,7 @@ class PrototypeSimulation:
             "records": records,
             "schema_version": TRACE_SCHEMA_VERSION,
             "steps": int(steps),
+            "time": float(self.time),
         }
 
     def write_relaxation_trace(self, output_path, steps, dt, gamma=1.0, alpha=1.0):
@@ -228,6 +258,7 @@ class PrototypeSimulation:
             "energy_history": energy_history,
             "final_average_m": self.average_m().tolist(),
             "final_energy": energy_history[-1],
+            "final_time": float(self.time),
             "initial_energy": energy_history[0],
             "mesh": self.mesh_label,
             "parameters": parameters_as_summary(self.parameters),
@@ -256,6 +287,7 @@ def _validate_restart_state_shape(state):
         "mesh",
         "parameters",
         "schema_version",
+        "time",
     }
     missing = required_keys.difference(state)
     if missing:
