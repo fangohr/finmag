@@ -355,6 +355,11 @@ Porting strategy:
   (=compute_bem_fk= or =compute_bem_fk_from_arrays=). The DOLFINx port should
   treat that as the production baseline unless a tested replacement is chosen.
   [Codex gpt-5.5 high]
+- =pixi run native-fk-bem-smoke= and =dev/bin/verify-python3-m3= now check the
+  compiled array-based FK BEM entry point directly before the larger demag
+  regressions. This keeps native BEM availability distinct from the Python
+  Magpar comparison helpers and makes the M3 failure mode easier to diagnose.
+  [Codex gpt-5.5 high]
 
 Current first M5 slice:
 

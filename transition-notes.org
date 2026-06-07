@@ -2414,6 +2414,15 @@ small-reference/comparison path, not the production FK BEM implementation.
 Keep PBC/treecode demag separate because it depends on the missing
 =finmag.native.treecode_bem= extension. [Codex gpt-5.5 high]
 
+=pixi run native-fk-bem-smoke= now gives that compiled FK BEM baseline its own
+small witness by building a tiny boundary mesh and calling
+=compute_bem_fk_from_arrays=. The M3 verifier runs this before the larger test
+suite so a missing or broken native FK BEM backend is reported directly.
+[Codex gpt-5.5 high]
+
+=dev/bin/verify-python3-native-fk-bem-smoke= exposes the same check as a
+single-purpose diagnostic command for CI triage. [Codex gpt-5.5 high]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

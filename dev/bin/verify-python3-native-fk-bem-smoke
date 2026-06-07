@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# Run the smallest Python 3 / pixi witness for the compiled FK BEM baseline.
+# This is useful when an M3 demag failure needs to be separated from broader
+# pytest behaviour. [Codex gpt-5.5 high]
+#
+# Usage:
+#   dev/bin/verify-python3-native-fk-bem-smoke
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi cache state out of the checkout, matching the other Python 3
+# transition verifiers. [Codex gpt-5.5 high]
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+echo "==> pixi run native-fk-bem-smoke"
+pixi run native-fk-bem-smoke

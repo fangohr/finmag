@@ -1108,6 +1108,14 @@ Magpar helper as the production FK BEM implementation. PBC/treecode demag is a
 separate native-code gap because it depends on `finmag.native.treecode_bem`.
 [Codex gpt-5.5 high]
 
+`pixi run native-fk-bem-smoke` is the direct smoke for that compiled FK BEM
+baseline. Keep it in the M3 verifier before `barmini-suite` so native BEM
+failures are isolated from broader demag regression failures.
+[Codex gpt-5.5 high]
+
+Use `dev/bin/verify-python3-native-fk-bem-smoke` for a single-command
+diagnostic run of the same witness. [Codex gpt-5.5 high]
+
 M5 has started with `dev/dolfinx/simulation.py`, a reduced
 `PrototypeSimulation` wrapper over the checked M4 helpers. It is an API sketch
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex

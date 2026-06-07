@@ -60,6 +60,10 @@ barmini-smoke = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.
 restart-smoke = '''
 PYTHONPATH=src python -c "import os, numpy as np, finmag; sim = finmag.example.barmini(name='barmini_restart_pixi_smoke'); sim.run_until(1e-11); sim.save_restart_data(); t_saved = sim.t; m_saved = sim.m.copy(); canonical_restart = sim.name + '-restart.npz'; assert os.path.exists(canonical_restart); sim.run_until(2e-11); sim.restart(); assert sim.t == t_saved; assert np.allclose(sim.m, m_saved); sim2 = finmag.example.barmini(name='barmini_restart_pixi_smoke_copy'); sim2.restart(canonical_restart); assert sim2.t == t_saved; assert np.allclose(sim2.m, m_saved); print('saved_time', t_saved); print('restarted_time', sim.t); print('copied_time', sim2.t); print('restart_file', canonical_restart)"
 '''
+# Keep a direct witness for the compiled FK BEM baseline: the larger demag
+# tests depend on this native array entry point, so M3 should fail early if it
+# disappears or stops producing finite matrices. [Codex gpt-5.5 high]
+native-fk-bem-smoke = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python dev/bin/native-fk-bem-smoke.py"
 # This is the first explicit FEniCS-2019 pytest gate beyond workflow smoke
 # tests, built around the historical barmini-first acceptance subset. [Codex GPT-5.4]
 barmini-suite = '''
