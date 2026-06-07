@@ -38,6 +38,10 @@ must not become the production API by accident. [Codex gpt-5.5 high]
 - Mesh/function basics: `dev/dolfinx/prototype.py` and
   `test_dolfinx_smoke.py` exercise DOLFINx import, mesh creation, scalar and
   vector function spaces, constant vector fields, and nodal inspection.
+- Field compatibility: `field_adapter.py` probes the first legacy
+  `finmag.field.Field` behaviours with DOLFINx, including scalar/vector
+  distinction, constants, callables, nodal values, normalisation, and volume
+  averages.
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -67,7 +71,9 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
 
 ## Near-Term Gaps
 
-- There is no DOLFINx-backed `Field` compatibility layer yet.
+- The DOLFINx-backed `Field` adapter is only a narrow probe; it does not yet
+  cover all legacy setters, coordinate/value ordering, HDF5/PVD output, or
+  integration with `finmag.Simulation`.
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
 - Demag, DMI, cubic anisotropy, variable material parameters, regions, PBC,
   scheduler output, legacy restart files, and production integrators are not

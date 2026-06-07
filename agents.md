@@ -1107,6 +1107,11 @@ M5 has started with `dev/dolfinx/simulation.py`, a reduced
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex
 gpt-5.5 high]
 
+`dev/dolfinx/field_adapter.py` is a narrow DOLFINx-backed compatibility probe
+for initial legacy `finmag.field.Field` behaviours: scalar/vector inspection,
+constants, callables, nodal values, normalisation, and volume averages. [Codex
+gpt-5.5 high]
+
 `PrototypeSimulation.state_summary()` reports mesh label, average
 magnetisation, parameters, and energy terms without advancing the simulation.
 [Codex gpt-5.5 high]
@@ -1137,7 +1142,7 @@ pixi task. [Codex gpt-5.5 high]
 
 Zero exchange and anisotropy constants short-circuit to `0.0` before UFL form
 assembly to avoid degenerate zero-form domain errors. Local DOLFINx verification
-is `42 passed`. [Codex gpt-5.5 high]
+is `48 passed`. [Codex gpt-5.5 high]
 
 Keep this out of `src/finmag` until the reduced DOLFINx API shape is clearer.
 [Codex gpt-5.5 high]

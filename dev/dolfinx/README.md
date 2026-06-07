@@ -14,6 +14,8 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - DOLFINx 0.10.0 import and a tiny mesh/function smoke test.
 - Vector-valued Lagrange magnetisation fields on simple DOLFINx meshes.
 - Constant magnetisation setup and nodal vector inspection.
+- A narrow DOLFINx-backed `Field` compatibility adapter for constants,
+  callables, scalar/vector inspection, nodal values, and volume averages.
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
 - Explicit normalized LLG stepping in a constant effective field.

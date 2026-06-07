@@ -353,6 +353,10 @@ Porting strategy:
 
 Current first M5 slice:
 
+- =dev/dolfinx/field_adapter.py= adds a narrow DOLFINx-backed compatibility
+  probe for the first legacy =finmag.field.Field= behaviours: scalar/vector
+  inspection, constants, callables, nodal values, normalisation, and volume
+  averages. [Codex gpt-5.5 high]
 - =dev/dolfinx/simulation.py= adds a reduced =PrototypeSimulation= wrapper
   that composes the checked M4 mesh, magnetisation, exchange, Zeeman,
   anisotropy, and explicit relaxation helpers. This is an API sketch for the
@@ -385,7 +389,7 @@ Current first M5 slice:
   =dolfinx-restart-example= pixi task. [Codex gpt-5.5 high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
-- local verification now gives =42 passed= for =pixi run -e dolfinx
+- local verification now gives =48 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 Suggested order:
