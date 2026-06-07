@@ -350,6 +350,11 @@ Porting strategy:
 - =dev/dolfinx/porting_map.md= records the compatibility surfaces to preserve,
   the current prototype evidence, and the promotion criteria for moving any
   DOLFINx code into =src/finmag=. [Codex gpt-5.5 high]
+- FK demag is a native-code compatibility item: the M3/pixi path computes the
+  Fredkin-Koehler BEM matrix through compiled =finmag.native.llg=
+  (=compute_bem_fk= or =compute_bem_fk_from_arrays=). The DOLFINx port should
+  treat that as the production baseline unless a tested replacement is chosen.
+  [Codex gpt-5.5 high]
 
 Current first M5 slice:
 

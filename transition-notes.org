@@ -2407,6 +2407,13 @@ the current DOLFINx exploration evidence, and the criteria for promoting
 prototype code into =src/finmag=. Treat it as a gate before moving any
 =dev/dolfinx= implementation into production code. [Codex gpt-5.5 high]
 
+The FK demag baseline in the M3/pixi path still uses compiled native BEM code:
+=finmag.native.llg.compute_bem_fk= or the DOLFIN-2019-compatible
+=compute_bem_fk_from_arrays= entry point. The Python/NumPy Magpar code is a
+small-reference/comparison path, not the production FK BEM implementation.
+Keep PBC/treecode demag separate because it depends on the missing
+=finmag.native.treecode_bem= extension. [Codex gpt-5.5 high]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

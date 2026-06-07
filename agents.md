@@ -1102,6 +1102,12 @@ deliberately mapped back to the existing Finmag design. [Codex gpt-5.5 high]
 prototype evidence, and promotion criteria. Consult it before moving any
 `dev/dolfinx` implementation into `src/finmag`. [Codex gpt-5.5 high]
 
+The FK demag/BEM baseline in M3/pixi is compiled `finmag.native.llg`
+(`compute_bem_fk` or `compute_bem_fk_from_arrays`). Do not treat the NumPy
+Magpar helper as the production FK BEM implementation. PBC/treecode demag is a
+separate native-code gap because it depends on `finmag.native.treecode_bem`.
+[Codex gpt-5.5 high]
+
 M5 has started with `dev/dolfinx/simulation.py`, a reduced
 `PrototypeSimulation` wrapper over the checked M4 helpers. It is an API sketch
 for the core path, not compatibility with legacy `finmag.Simulation`. [Codex

@@ -54,6 +54,12 @@ must not become the production API by accident. [Codex gpt-5.5 high]
 - Reduced restart: `restart_state` and `restart_example.py` prove a JSON
   round trip for a tiny unit-square prototype, not the legacy Finmag restart
   format. [Codex gpt-5.5 high]
+- FK demag baseline: the FEniCS-2019/pixi M3 path still computes the
+  Fredkin-Koehler BEM matrix through the compiled `finmag.native.llg`
+  extension, using `compute_bem_fk` or the DOLFIN-2019-compatible
+  `compute_bem_fk_from_arrays` entry point. The Python/NumPy Magpar code is a
+  reference/comparison path, not the production FK BEM implementation. [Codex
+  gpt-5.5 high]
 
 ## Promotion Criteria
 
@@ -75,9 +81,17 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
   cover all legacy setters, coordinate/value ordering, HDF5/PVD output, or
   integration with `finmag.Simulation`.
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
-- Demag, DMI, cubic anisotropy, variable material parameters, regions, PBC,
-  scheduler output, legacy restart files, and production integrators are not
-  covered by the current prototype lane.
+- Demag is not covered by the current DOLFINx prototype lane. The production
+  DOLFINx port should either reuse/port the array-based native FK BEM routines
+  or provide a replacement with equivalent tests; a pure Python/NumPy BEM path
+  may be acceptable for tiny references, but not as the assumed production
+  implementation. [Codex gpt-5.5 high]
+- DMI, cubic anisotropy, variable material parameters, regions, PBC, scheduler
+  output, legacy restart files, and production integrators are not covered by
+  the current prototype lane.
+- PBC/treecode demag depends on the separate `finmag.native.treecode_bem`
+  extension, which is still missing in the pixi path and should remain tracked
+  separately from the FK BEM baseline. [Codex gpt-5.5 high]
 - The current traces and restart states are useful witnesses, but they are not
   replacements for Finmag's NDT, VTK/XDMF, and restart conventions. [Codex
   gpt-5.5 high]
