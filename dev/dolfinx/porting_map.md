@@ -53,8 +53,9 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   They deliberately use the prototype explicit stepper and should not be
   treated as a production driver. [Codex gpt-5.5 high]
 - Reduced output: `relaxation_example.py`, `PrototypeSimulation` summaries,
-  and relaxation traces exercise JSON output contracts only; they do not cover
-  legacy NDT tables, VTK/XDMF, or scheduled output.
+  and relaxation traces exercise JSON output contracts only. Trace records use
+  absolute prototype simulation times, but they do not cover legacy NDT tables,
+  VTK/XDMF, or scheduled output. [Codex gpt-5.5 high]
 - Reduced restart: `restart_state` and `restart_example.py` prove a JSON
   round trip for a tiny unit-square prototype, preserving time, parameters, and
   nodal magnetisation values. This is not the legacy Finmag restart format.

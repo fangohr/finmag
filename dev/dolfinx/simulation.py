@@ -155,14 +155,14 @@ class PrototypeSimulation:
         self.domain.comm.Barrier()
         return state
 
-    def trace_record(self, step, time):
+    def trace_record(self, step):
         """Return one JSON-compatible time-series record for the current state."""
         state = self.state_summary()
         return {
             "average_m": state["average_m"],
             "energy_terms": state["energy_terms"],
             "step": int(step),
-            "time": float(time),
+            "time": state["time"],
         }
 
     def step(self, dt, gamma=1.0, alpha=1.0):
@@ -223,10 +223,11 @@ class PrototypeSimulation:
         if dt <= 0:
             raise ValueError("dt must be positive")
 
-        records = [self.trace_record(step=0, time=0.0)]
+        start_time = float(self.time)
+        records = [self.trace_record(step=0)]
         for step in range(1, steps + 1):
             self.step(dt=dt, gamma=gamma, alpha=alpha)
-            records.append(self.trace_record(step=step, time=step * dt))
+            records.append(self.trace_record(step=step))
 
         return {
             "dolfinx_version": dolfinx.__version__,
@@ -235,6 +236,7 @@ class PrototypeSimulation:
             "parameters": parameters_as_summary(self.parameters),
             "records": records,
             "schema_version": TRACE_SCHEMA_VERSION,
+            "start_time": start_time,
             "steps": int(steps),
             "time": float(self.time),
         }

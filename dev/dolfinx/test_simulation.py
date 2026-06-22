@@ -44,8 +44,8 @@ def test_prototype_simulation_trace_record_does_not_advance():
     """Trace records should be read-only snapshots of the current state."""
     sim = PrototypeSimulation.unit_square()
 
-    before = sim.trace_record(step=0, time=0.0)
-    after = sim.trace_record(step=0, time=0.0)
+    before = sim.trace_record(step=0)
+    after = sim.trace_record(step=0)
 
     assert before == after
     assert before["step"] == 0
@@ -156,6 +156,7 @@ def test_prototype_simulation_relaxation_trace_is_json_compatible():
     assert trace["mesh"] == "unit_square_2x2"
     assert trace["schema_version"] == 1
     assert trace["steps"] == 3
+    assert trace["start_time"] == 0.0
     assert len(trace["records"]) == 4
     assert [record["step"] for record in trace["records"]] == [0, 1, 2, 3]
     assert [record["time"] for record in trace["records"]] == pytest.approx(
@@ -165,6 +166,20 @@ def test_prototype_simulation_relaxation_trace_is_json_compatible():
     energies = [record["energy_terms"]["total"] for record in trace["records"]]
     assert energies[-1] < energies[0]
     assert np.isclose(np.linalg.norm(trace["records"][-1]["average_m"]), 1.0)
+
+
+def test_prototype_simulation_relaxation_trace_uses_absolute_time():
+    """Trace output should not reset time when the simulation already advanced."""
+    sim = PrototypeSimulation.unit_square()
+    sim.run_until(2e-2, dt=1e-2)
+
+    trace = sim.relaxation_trace(steps=2, dt=1e-2)
+
+    assert trace["start_time"] == pytest.approx(2e-2)
+    assert trace["time"] == pytest.approx(4e-2)
+    assert [record["time"] for record in trace["records"]] == pytest.approx(
+        [2e-2, 3e-2, 4e-2]
+    )
 
 
 def test_prototype_simulation_writes_relaxation_trace(tmp_path):

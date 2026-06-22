@@ -29,7 +29,7 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - JSON-compatible state summaries from the reduced simulation wrapper.
 - A JSON-compatible relaxation summary from the reduced simulation wrapper.
 - JSON-compatible per-step relaxation traces from the reduced simulation
-  wrapper.
+  wrapper, using absolute prototype simulation times.
 - JSON summary writing from the reduced simulation wrapper.
 - Narrow JSON restart-state round trips for the reduced `PrototypeSimulation`
   unit-square path, including prototype time.

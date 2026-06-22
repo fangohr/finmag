@@ -387,9 +387,9 @@ Current first M5 slice:
   giving the M5 core-path sketch a direct file-output path. [Codex gpt-5.5
   high]
 - the reduced simulation wrapper can emit a JSON-compatible per-step
-  relaxation trace with time, average magnetisation, and energy terms. This is
-  a small data-I/O contract, not legacy NDT, VTK/XDMF, or scheduler support.
-  [Codex gpt-5.5 high]
+  relaxation trace with absolute prototype time, average magnetisation, and
+  energy terms. This is a small data-I/O contract, not legacy NDT, VTK/XDMF,
+  or scheduler support. [Codex gpt-5.5 high]
 - the reduced simulation wrapper now tracks prototype time and exposes a
   narrow =run_until(...)= method. This is a compatibility-shaped probe for the
   legacy =Simulation.run_until= concept, but it still uses the explicit M5
@@ -397,15 +397,15 @@ Current first M5 slice:
 - the reduced JSON restart state now preserves prototype time as well as
   parameters and nodal magnetisation values. [Codex gpt-5.5 high]
 - the reduced simulation wrapper can write and read a narrow JSON restart state
-  for the =PrototypeSimulation= unit-square path. This records nodal
-  magnetisation values and parameters, but is not a general Finmag restart
-  format. [Codex gpt-5.5 high]
+  for the =PrototypeSimulation= unit-square path. This records prototype time,
+  nodal magnetisation values, and parameters, but is not a general Finmag
+  restart format. [Codex gpt-5.5 high]
 - =dev/dolfinx/restart_example.py= provides a runnable restart-state
   round-trip witness, and =dev/bin/verify-dolfinx-m4= now runs it through the
   =dolfinx-restart-example= pixi task. [Codex gpt-5.5 high]
 - zero exchange and anisotropy constants now short-circuit before UFL assembly,
   avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
-- local verification now gives =48 passed= for =pixi run -e dolfinx
+- local verification now gives =51 passed= for =pixi run -e dolfinx
   dolfinx-pytest=. [Codex gpt-5.5 high]
 
 Suggested order:
