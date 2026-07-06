@@ -27,11 +27,18 @@ Working rule for future agent effort:
 
 Current model-label convention:
 
-- the Codex app currently reports `gpt-5.5 high` for this workstream
-- use `gpt-5.5 high` in commit-message attribution and new agent-authored
-  signatures until the user updates this information
-- older `[Codex GPT-5.4]` comments are historical labels and should not be
-  treated as the current runtime model
+- do not assume a fixed workstream-wide label; agent tools frequently report an
+  inaccurate or stale app/model name (e.g. `Codex gpt-5.5 high`), and different
+  sessions may run different underlying agents/models entirely
+- each agent should sign new agent-authored comments and commit-message
+  attribution with its own actual identity as it understands it (e.g.
+  `[GitHub Copilot / Claude Sonnet 5]`), not a value carried over from a
+  previous session or another tool
+- if genuinely unsure of the current model, ask the user rather than guessing
+  or reusing an old label
+- older `[Codex GPT-5.4]` / `[Codex gpt-5.5 high]` comments are historical
+  labels from earlier sessions and should not be treated as the current
+  runtime model, nor copied forward by new sessions
 
 This repository contains many research-era features that may never be needed
 again. The transition should optimize for usable scientific workflows, not for
