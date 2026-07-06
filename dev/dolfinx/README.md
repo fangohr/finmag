@@ -16,6 +16,24 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - Constant magnetisation setup and nodal vector inspection.
 - A narrow DOLFINx-backed `Field` compatibility adapter for constants,
   callables, scalar/vector inspection, nodal values, and volume averages.
+- `set()`/`from_field()`/`from_function()` dispatch on another `DOLFINxField`
+  or `fem.Function`, mirroring legacy `Field.set`'s type-based dispatch
+  (`from_field` interpolates between different function spaces; 
+  `from_function` requires a matching space). [GitHub Copilot / Claude
+  Sonnet 5]
+- `set_random_values()`, `is_constant()`/`as_constant()`, `normalise()`
+  (per-node unit-length nodal normalisation), `coords_and_values()`, and
+  `allclose()`, matching their legacy `Field` counterparts (with `allclose`
+  and `normalise` using different implementation approaches internally, but
+  matching outcomes/semantics; see code docstrings for the differences).
+  [GitHub Copilot / Claude Sonnet 5]
+- `save_pvd()`/`close_pvd()` (via `dolfinx.io.VTKFile`) and
+  `save_xdmf()`/`close_xdmf()` (via `dolfinx.io.XDMFFile`) for basic,
+  write-only, Paraview-viewable file output. These use DOLFINx-native
+  formats, not the external `dolfinh5tools` package/format that legacy
+  `Field.save_hdf5` depends on, and there is no read-back/round-trip support
+  in this DOLFINx version (0.10.0 has no `XDMFFile.read_function`).
+  [GitHub Copilot / Claude Sonnet 5]
 - Raw dof-array (`from_array`) and mesh-vertex-ordered
   (`get/set_with_ordered_numpy_array_xyz`) field value access, matching
   legacy `Field`'s coordinate/value ordering methods. Coordinate matching is
@@ -61,6 +79,12 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - This is not a drop-in replacement for `finmag.Simulation`.
 - `PrototypeSimulation` is not legacy `finmag.Simulation` compatibility.
 - No demagnetising field implementation is provided.
+- The `Field` adapter does not implement legacy's `from_expression`
+  (DOLFINx has no `dolfin.Expression`/`UserExpression` equivalent; use a
+  Python callable with `set()`/`f.interpolate()` instead), the point-measure
+  arithmetic operators (`__add__`/`__mul__`/`__div__`/`cross`/`dot`), Paraview
+  plotting, `get_spherical()`, or `dolfinh5tools`-format HDF5.
+  [GitHub Copilot / Claude Sonnet 5]
 - Non-zero DMI is only usable on a 3D mesh; the current example/wrapper
   meshes are 2D, so DMI stays at its inert default (`0.0`) there in practice.
 - `explicit_llg_step` only precesses/damps toward a fixed applied field

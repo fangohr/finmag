@@ -47,7 +47,12 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   with an explicit guard for spaces that don't have one dof per vertex (e.g.
   `DG0`). The legacy component-blocked `"xxx"` ordering has no DOLFINx
   equivalent for blocked vector spaces and is intentionally not provided.
-  [GitHub Copilot / Claude Sonnet 5]
+  It further covers `from_field`/`from_function` dispatch through `set()`,
+  `set_random_values`, `is_constant`/`as_constant`, `normalise`,
+  `coords_and_values`, `allclose`, `mesh_dim`, and basic write-only
+  `save_pvd`/`save_xdmf` file output via DOLFINx-native `VTKFile`/`XDMFFile`
+  (not the external `dolfinh5tools` format, and with no read-back support in
+  this DOLFINx version). [GitHub Copilot / Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -112,11 +117,13 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
 
 ## Near-Term Gaps
 
-- The DOLFINx-backed `Field` adapter is only a narrow probe; it now covers
-  `from_array` and mesh-vertex-ordered (`"xyz"`) access, but still does not
-  cover all legacy setters (e.g. `from_expression`, `from_field`), HDF5/PVD
-  output, or integration with `finmag.Simulation`. [GitHub Copilot / Claude
-  Sonnet 5]
+- The DOLFINx-backed `Field` adapter now covers a broader legacy surface
+  (setters, `is_constant`/`normalise`/`coords_and_values`/`allclose`, basic
+  file output), but still does not implement `from_expression` (no DOLFINx
+  `Expression`/`UserExpression` equivalent), the point-measure arithmetic
+  operators, Paraview plotting, `get_spherical`, or integration with
+  `finmag.Simulation`. `save_xdmf` has no read-back support in this DOLFINx
+  version. [GitHub Copilot / Claude Sonnet 5]
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
 - Demag is not covered by the current DOLFINx prototype lane. The production
   DOLFINx port should either reuse/port the array-based native FK BEM routines
