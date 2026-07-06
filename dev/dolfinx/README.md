@@ -26,6 +26,13 @@ into `src/finmag`. [Codex gpt-5.5 high]
   analytic form; checked directly against that module's own reference test
   values. Spatially varying cubic-anisotropy fields are not covered yet.
   [GitHub Copilot / Claude Sonnet 5]
+- DMI and cubic anisotropy are wired into `RelaxationParameters` and
+  `PrototypeSimulation.energy_terms()`, both defaulting to inert values
+  (`dmi_constant=0.0`, `cubic_anisotropy_K1=K2=K3=0.0`). Since `dmi_energy`
+  only supports 3D meshes and both example/wrapper meshes are 2D unit
+  squares, a non-zero `dmi_constant` there raises explicitly rather than
+  silently doing the wrong thing; this is a tested boundary, not a bug.
+  [GitHub Copilot / Claude Sonnet 5]
 - Explicit normalized LLG stepping in a constant effective field.
 - Prototype simulation time tracking and a narrow `run_until(...)` probe.
 - A small end-to-end relaxation example with JSON summary output.
@@ -47,6 +54,15 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - This is not a drop-in replacement for `finmag.Simulation`.
 - `PrototypeSimulation` is not legacy `finmag.Simulation` compatibility.
 - No demagnetising field implementation is provided.
+- Non-zero DMI is only usable on a 3D mesh; the current example/wrapper
+  meshes are 2D, so DMI stays at its inert default (`0.0`) there in practice.
+- `explicit_llg_step` only precesses/damps toward a fixed applied field
+  argument; it does not derive an effective field from the full energy
+  functional (exchange/anisotropy/DMI/cubic-anisotropy gradients are not fed
+  back into the stepper). Adding a non-Zeeman energy term therefore changes
+  the reported `energy_terms()`/`total_energy()` value, but is not guaranteed
+  to still produce a monotonic energy decrease under `relax()`/
+  `run_relaxation_example()`. [GitHub Copilot / Claude Sonnet 5]
 - No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
   scheduler-driven data I/O is provided.
 - No adaptive or production-grade time integrator is provided; `run_until(...)`

@@ -56,9 +56,21 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   constants/axes as `cubic_anisotropy_test.py`), not just a self-derived case.
   Spatially varying cubic-anisotropy `Field` coefficients are not covered.
   [GitHub Copilot / Claude Sonnet 5]
+- Wiring: `RelaxationParameters`/`PrototypeSimulation.energy_terms()` now
+  include `dmi_constant` and `cubic_anisotropy_K1`/`K2`/`K3`/`u1`/`u2`
+  fields, both defaulting to inert values. `dmi_energy` requires a 3D mesh, and
+  both the reduced example and `PrototypeSimulation.unit_square` are 2D, so a
+  non-zero `dmi_constant` there raises explicitly; this is covered by an
+  explicit test rather than left as a silent gap. [GitHub Copilot / Claude
+  Sonnet 5]
 - Time stepping: `explicit_llg_step` gives a transparent nodal explicit step
   that tests DOLFINx function mutation and normalisation, but it is not a
-  production driver.
+  production driver. It only precesses/damps toward a fixed applied-field
+  argument and does not derive an effective field from the full energy
+  functional, so adding DMI/cubic-anisotropy/exchange/anisotropy contributions
+  changes the reported energy but is not guaranteed to keep `relax(...)`
+  monotonically decreasing for arbitrary parameter choices. [GitHub Copilot /
+  Claude Sonnet 5]
 - Simulation time: `PrototypeSimulation.time` and `run_until(...)` are a small
   compatibility-shaped probe for the legacy `Simulation.run_until` concept.
   They deliberately use the prototype explicit stepper and should not be

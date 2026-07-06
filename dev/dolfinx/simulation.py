@@ -17,6 +17,8 @@ import numpy as np
 
 from dev.dolfinx.prototype import average_nodal_vector
 from dev.dolfinx.prototype import constant_vector_function
+from dev.dolfinx.prototype import cubic_anisotropy_energy
+from dev.dolfinx.prototype import dmi_energy
 from dev.dolfinx.prototype import exchange_energy
 from dev.dolfinx.prototype import explicit_llg_step
 from dev.dolfinx.prototype import nodal_vector_values
@@ -62,7 +64,14 @@ class PrototypeSimulation:
         )
 
     def energy_terms(self):
-        """Return the currently supported M5 prototype energy terms."""
+        """Return the currently supported M5 prototype energy terms.
+
+        ``dmi`` uses ``dmi_constant`` from ``self.parameters``, which defaults
+        to ``0.0``. ``dmi_energy`` only supports 3D meshes, so a non-zero
+        ``dmi_constant`` on a 2D mesh (such as ``unit_square``) raises
+        explicitly rather than silently doing the wrong thing. [GitHub
+        Copilot / Claude Sonnet 5]
+        """
         exchange = exchange_energy(
             self.magnetisation,
             exchange_constant=self.parameters.exchange_constant,
@@ -80,10 +89,28 @@ class PrototypeSimulation:
             anisotropy_constant=self.parameters.anisotropy_constant,
             unit_length=self.parameters.unit_length,
         )
+        dmi = dmi_energy(
+            self.magnetisation,
+            dmi_constant=self.parameters.dmi_constant,
+            unit_length=self.parameters.unit_length,
+        )
+        cubic_anisotropy = cubic_anisotropy_energy(
+            self.magnetisation,
+            u1=self.parameters.cubic_anisotropy_u1,
+            u2=self.parameters.cubic_anisotropy_u2,
+            K1=self.parameters.cubic_anisotropy_K1,
+            K2=self.parameters.cubic_anisotropy_K2,
+            K3=self.parameters.cubic_anisotropy_K3,
+            unit_length=self.parameters.unit_length,
+        )
         return {
             "anisotropy": float(anisotropy),
+            "cubic_anisotropy": float(cubic_anisotropy),
+            "dmi": float(dmi),
             "exchange": float(exchange),
-            "total": float(exchange + zeeman + anisotropy),
+            "total": float(
+                exchange + zeeman + anisotropy + dmi + cubic_anisotropy
+            ),
             "zeeman": float(zeeman),
         }
 

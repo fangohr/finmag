@@ -21,8 +21,17 @@ def test_prototype_simulation_reports_supported_energy_terms():
 
     terms = sim.energy_terms()
 
-    assert set(terms) == {"anisotropy", "exchange", "total", "zeeman"}
+    assert set(terms) == {
+        "anisotropy",
+        "cubic_anisotropy",
+        "dmi",
+        "exchange",
+        "total",
+        "zeeman",
+    }
     assert np.isclose(terms["exchange"], 0.0)
+    assert np.isclose(terms["dmi"], 0.0)
+    assert np.isclose(terms["cubic_anisotropy"], 0.0)
     assert np.isclose(terms["total"], terms["anisotropy"] + terms["zeeman"])
 
 
@@ -36,7 +45,14 @@ def test_prototype_simulation_state_summary_does_not_advance():
     assert before == after
     assert before["mesh"] == "unit_square_2x2"
     assert before["time"] == 0.0
-    assert set(before["energy_terms"]) == {"anisotropy", "exchange", "total", "zeeman"}
+    assert set(before["energy_terms"]) == {
+        "anisotropy",
+        "cubic_anisotropy",
+        "dmi",
+        "exchange",
+        "total",
+        "zeeman",
+    }
     assert np.allclose(before["average_m"], (1.0, 0.0, 0.0))
 
 
@@ -117,6 +133,60 @@ def test_prototype_simulation_rejects_invalid_controls():
         sim.relaxation_trace(steps=0, dt=1e-2)
     with pytest.raises(ValueError, match="dt must be positive"):
         sim.relaxation_trace(steps=1, dt=0.0)
+
+
+def test_prototype_simulation_reports_cubic_anisotropy_energy():
+    """Cubic anisotropy has no dimensionality restriction and works on 2D.
+
+    Reuses the same K1/K2/K3/axis reference case as
+    ``test_cubic_anisotropy_energy_matches_legacy_reference_values`` in
+    ``test_prototype.py`` (in turn ported from finmag's own
+    ``cubic_anisotropy_test.py``), so the wiring is checked against a real
+    analytic value rather than only shown not to crash. [GitHub Copilot /
+    Claude Sonnet 5]
+    """
+    k1, k2, k3 = -8608726, -13744132, 1100269
+    u1 = (0, -0.7071, 0.7071)
+    u2 = (0, 0.7071, 0.7071)
+    u3 = np.cross(u1, u2)
+    m = (0.0, 0.0, 1.0)
+    a, b, c = np.dot(u1, m), np.dot(u2, m), np.dot(u3, m)
+    expected = (
+        k1 * (a**2 * b**2 + a**2 * c**2 + b**2 * c**2)
+        + k2 * (a**2 * b**2 * c**2)
+        + k3 * (a**4 * b**4 + a**4 * c**4 + b**4 * c**4)
+    )
+    assert not np.isclose(expected, 0.0)
+
+    parameters = RelaxationParameters(
+        anisotropy_constant=0.0,
+        cubic_anisotropy_K1=k1,
+        cubic_anisotropy_K2=k2,
+        cubic_anisotropy_K3=k3,
+        cubic_anisotropy_u1=u1,
+        cubic_anisotropy_u2=u2,
+        field=(0.0, 0.0, 0.0),
+    )
+    sim = PrototypeSimulation.unit_square(initial_m=m, parameters=parameters)
+
+    terms = sim.energy_terms()
+
+    # unit square has area 1, so the total energy equals the density.
+    assert np.isclose(terms["cubic_anisotropy"], expected, rtol=1e-6)
+
+
+def test_prototype_simulation_dmi_requires_3d_mesh():
+    """A non-zero dmi_constant on the 2D unit-square wrapper should raise.
+
+    ``dmi_energy`` only supports 3D meshes. ``unit_square`` is a 2D prototype
+    mesh, so this is an explicit, tested boundary rather than a silent gap.
+    [GitHub Copilot / Claude Sonnet 5]
+    """
+    parameters = RelaxationParameters(dmi_constant=1.0)
+    sim = PrototypeSimulation.unit_square(parameters=parameters)
+
+    with pytest.raises(ValueError, match="only supports 3D meshes"):
+        sim.energy_terms()
 
 
 def test_prototype_simulation_relaxation_summary_is_json_compatible():

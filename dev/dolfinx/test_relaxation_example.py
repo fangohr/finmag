@@ -72,6 +72,45 @@ def test_relaxation_example_is_deterministic(tmp_path):
     assert first == second
 
 
+def test_relaxation_example_cubic_anisotropy_changes_energy(tmp_path):
+    """Cubic anisotropy has no dimensionality restriction, so it can be
+    exercised directly on this 2D example. [GitHub Copilot / Claude Sonnet 5]
+
+    The example's magnetisation is fixed to (1, 0, 0), so the default cubic
+    axes (1,0,0)/(0,1,0) give a=1, b=0, c=0 and a zero cubic term. Using
+    u2=(1,1,0) instead makes b=1 too, so the K1*a^2*b^2 term is non-zero.
+    """
+    baseline = run_relaxation_example(tmp_path / "baseline.json", steps=1, dt=1e-3)
+
+    parameters = RelaxationParameters(
+        cubic_anisotropy_K1=0.5, cubic_anisotropy_u2=(1.0, 1.0, 0.0)
+    )
+    with_cubic = run_relaxation_example(
+        tmp_path / "with-cubic.json", steps=1, dt=1e-3, parameters=parameters
+    )
+
+    assert with_cubic["parameters"]["cubic_anisotropy_K1"] == 0.5
+    assert np.isclose(with_cubic["initial_energy"] - baseline["initial_energy"], 0.5)
+    # Note: `validate_summary`'s energy-decrease check is not asserted here.
+    # `explicit_llg_step` only precesses/damps toward the fixed Zeeman field,
+    # so adding a large cubic anisotropy term is not guaranteed to still
+    # produce a net energy decrease over one step; that invariant only holds
+    # for the example's default parameters, not for arbitrary combinations.
+
+
+def test_relaxation_example_dmi_requires_3d_mesh(tmp_path):
+    """A non-zero dmi_constant should raise on this 2D example's mesh.
+
+    ``dmi_energy`` only supports 3D meshes, and this example is hardcoded to a
+    2D unit square. This is an explicit, tested boundary rather than a silent
+    gap. [GitHub Copilot / Claude Sonnet 5]
+    """
+    parameters = RelaxationParameters(dmi_constant=1.0)
+
+    with pytest.raises(ValueError, match="only supports 3D meshes"):
+        run_relaxation_example(tmp_path / "dmi.json", steps=1, parameters=parameters)
+
+
 def test_relaxation_parameters_reject_invalid_values():
     """Invalid prototype parameters should fail before form assembly."""
     with pytest.raises(ValueError, match="anisotropy_constant must be non-negative"):
@@ -97,6 +136,16 @@ def test_relaxation_parameters_reject_invalid_values():
 
     with pytest.raises(ValueError, match="anisotropy_axis must contain numeric values"):
         RelaxationParameters(anisotropy_axis=(object(), 0.0, 1.0))
+
+    with pytest.raises(
+        ValueError, match="cubic_anisotropy_u1 must have three components"
+    ):
+        RelaxationParameters(cubic_anisotropy_u1=(0.0, 1.0))
+
+    with pytest.raises(
+        ValueError, match="cubic_anisotropy_u2 must contain numeric values"
+    ):
+        RelaxationParameters(cubic_anisotropy_u2=(object(), 0.0, 1.0))
 
 
 def test_relaxation_example_cli_writes_valid_json(tmp_path, monkeypatch, capsys):
