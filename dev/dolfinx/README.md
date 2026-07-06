@@ -59,6 +59,24 @@ into `src/finmag`. [Codex gpt-5.5 high]
   silently doing the wrong thing; this is a tested boundary, not a bug.
   [GitHub Copilot / Claude Sonnet 5]
 - Explicit normalized LLG stepping in a constant effective field.
+- ``nodal_volume()`` (lumped/"box" nodal volumes) and
+  ``effective_field_values()``, computing the true energy-derived effective
+  field ``H_eff = -1/(mu0*Ms) * dE/dm`` via the same finite-element "box
+  method" used by legacy ``finmag.energies.energy_base.EnergyBase``
+  (assemble the weak-form derivative, divide by lumped nodal volume).
+  Validated directly: for a uniform applied field with all other terms off,
+  this recovers ``H_eff == field`` exactly. [GitHub Copilot / Claude Sonnet 5]
+- ``effective_field_llg_step()``, an LLG stepper driven by that computed
+  effective field (recomputed from the current magnetisation on every
+  call), so exchange/anisotropy/DMI/cubic-anisotropy contributions actually
+  drive the dynamics rather than only changing the reported energy. This
+  fixes the limitation flagged when DMI/cubic anisotropy were first wired
+  into the simulation wrappers. ``PrototypeSimulation.step()`` (and
+  ``run_until``/``relax``/``relaxation_trace``/``relaxation_summary`` and
+  their JSON-writing counterparts) accept an opt-in
+  ``use_effective_field=True`` to use it; the default remains the original
+  fixed-field stepper for backward compatibility. [GitHub Copilot / Claude
+  Sonnet 5]
 - Prototype simulation time tracking and a narrow `run_until(...)` probe.
 - A small end-to-end relaxation example with JSON summary output.
 - A small restart-state round-trip example with JSON output.
@@ -87,13 +105,18 @@ into `src/finmag`. [Codex gpt-5.5 high]
   [GitHub Copilot / Claude Sonnet 5]
 - Non-zero DMI is only usable on a 3D mesh; the current example/wrapper
   meshes are 2D, so DMI stays at its inert default (`0.0`) there in practice.
-- `explicit_llg_step` only precesses/damps toward a fixed applied field
-  argument; it does not derive an effective field from the full energy
-  functional (exchange/anisotropy/DMI/cubic-anisotropy gradients are not fed
-  back into the stepper). Adding a non-Zeeman energy term therefore changes
-  the reported `energy_terms()`/`total_energy()` value, but is not guaranteed
-  to still produce a monotonic energy decrease under `relax()`/
-  `run_relaxation_example()`. [GitHub Copilot / Claude Sonnet 5]
+- `explicit_llg_step` (the default stepper) only precesses/damps toward a
+  fixed applied field argument; it does not derive an effective field from
+  the full energy functional. `effective_field_llg_step` (and
+  `PrototypeSimulation.step(..., use_effective_field=True)`) now provide the
+  fix: exchange/anisotropy/DMI/cubic-anisotropy contributions genuinely
+  drive the dynamics through the box-method effective field, not just the
+  reported energy. The default remains the fixed-field stepper for backward
+  compatibility; the energy-decrease guarantee under `relax()`/
+  `run_relaxation_example()` still only holds for the default fixed-field
+  path (or the effective-field path in genuinely energy-minimising regimes),
+  not for arbitrary parameter/stepper combinations. [GitHub Copilot / Claude
+  Sonnet 5]
 - No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
   scheduler-driven data I/O is provided.
 - No adaptive or production-grade time integrator is provided; `run_until(...)`

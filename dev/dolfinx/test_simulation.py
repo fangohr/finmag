@@ -82,6 +82,52 @@ def test_prototype_simulation_relaxation_decreases_energy():
     assert sim.average_m()[2] > 0.0
 
 
+def test_prototype_simulation_step_with_effective_field_is_driven_by_anisotropy():
+    """``use_effective_field=True`` should let anisotropy drive the dynamics,
+    unlike the default fixed-field stepper. This directly exercises the
+    previously-flagged limitation (energy terms changed the reported energy
+    but not the trajectory) now that it has a real fix. [GitHub Copilot /
+    Claude Sonnet 5]
+    """
+    parameters = RelaxationParameters(
+        anisotropy_axis=(0.0, 0.0, 1.0),
+        anisotropy_constant=5.0,
+        field=(0.0, 0.0, 0.0),
+    )
+    sim = PrototypeSimulation.unit_square(
+        initial_m=(1.0, 0.0, 0.001), parameters=parameters
+    )
+
+    sim.step(dt=1e-2, use_effective_field=True)
+
+    values = sim.magnetisation.x.array.reshape((-1, 3))
+    assert np.all(values[:, 2] > 0.001)
+    assert np.isclose(np.linalg.norm(values, axis=1), 1.0).all()
+
+
+def test_prototype_simulation_relax_with_effective_field_decreases_energy():
+    """The effective-field relax path should still be a valid energy-history
+    workflow (monotonic decrease for a simple Zeeman-driven case)."""
+    sim = PrototypeSimulation.unit_square()
+
+    energy_history = sim.relax(steps=5, dt=1e-2, use_effective_field=True)
+
+    assert len(energy_history) == 6
+    assert energy_history[-1] < energy_history[0]
+    assert np.isclose(np.linalg.norm(sim.average_m()), 1.0)
+
+
+def test_prototype_simulation_relaxation_summary_with_effective_field(tmp_path):
+    """The summary/trace/JSON paths should accept use_effective_field too."""
+    sim = PrototypeSimulation.unit_square()
+
+    summary = sim.relaxation_summary(steps=2, dt=1e-2, use_effective_field=True)
+    trace = sim.relaxation_trace(steps=2, dt=1e-2, use_effective_field=True)
+
+    assert summary["steps"] == 2
+    assert trace["steps"] == 2
+
+
 def test_prototype_simulation_run_until_tracks_time():
     """The M5 wrapper should probe the legacy Simulation.run_until shape."""
     sim = PrototypeSimulation.unit_square()

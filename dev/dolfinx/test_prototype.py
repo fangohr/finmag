@@ -13,8 +13,11 @@ from mpi4py import MPI
 from dev.dolfinx.prototype import MU0, constant_vector_function
 from dev.dolfinx.prototype import cubic_anisotropy_energy, dmi_energy
 from dev.dolfinx.prototype import exchange_energy, uniaxial_anisotropy_energy
+from dev.dolfinx.prototype import effective_field_llg_step, effective_field_values
 from dev.dolfinx.prototype import explicit_llg_step, llg_rhs, nodal_vector_values
+from dev.dolfinx.prototype import nodal_volume
 from dev.dolfinx.prototype import vector_function_space, zeeman_energy
+from dev.dolfinx.relaxation_example import RelaxationParameters
 
 
 def test_constant_vector_function_sets_all_components():
@@ -319,6 +322,164 @@ def test_explicit_llg_step_rejects_invalid_inputs():
 
     with pytest.raises(ValueError, match="effective field has 2 components"):
         explicit_llg_step(magnetisation, effective_field=(0.0, 1.0), dt=1e-3)
+
+
+def test_nodal_volume_sums_to_total_mesh_volume():
+    """Box/lumped nodal volumes should sum to the mesh's total area."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 4, 4)
+    scalar_space = fem.functionspace(domain, ("Lagrange", 1))
+    volume = nodal_volume(scalar_space)
+
+    assert np.isclose(domain.comm.allreduce(volume.sum(), op=MPI.SUM), 1.0)
+
+
+def test_nodal_volume_vector_space_sums_per_component():
+    """Each component block of a vector space's nodal volume should sum to
+    the mesh's total area, matching the scalar-space case."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 4, 4)
+    vector_space = vector_function_space(domain)
+    volume = nodal_volume(vector_space).reshape((-1, 3))
+
+    totals = domain.comm.allreduce(volume.sum(axis=0), op=MPI.SUM)
+    assert np.allclose(totals, 1.0)
+
+
+def test_nodal_volume_applies_unit_length_scaling():
+    """Nodal volume should scale as unit_length**dim, like the other energies."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 4, 4)
+    scalar_space = fem.functionspace(domain, ("Lagrange", 1))
+
+    volume = nodal_volume(scalar_space, unit_length=1e-9)
+
+    assert np.isclose(
+        domain.comm.allreduce(volume.sum(), op=MPI.SUM), 1.0 * 1e-9**2
+    )
+
+
+def test_nodal_volume_rejects_non_positive_unit_length():
+    """Invalid physical length scaling should fail before form assembly."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    scalar_space = fem.functionspace(domain, ("Lagrange", 1))
+
+    with pytest.raises(ValueError, match="unit_length must be positive"):
+        nodal_volume(scalar_space, unit_length=0.0)
+
+
+def test_effective_field_matches_applied_field_for_zeeman_only():
+    """For a uniform applied field with all other terms off, H_eff == field
+    exactly. This is the defining property of the Zeeman effective field, and
+    validates the whole box-method pipeline (derivative assembly, ghost
+    accumulation, nodal-volume division) before trusting it for less trivial
+    terms. [GitHub Copilot / Claude Sonnet 5]
+    """
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 3, 3)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+    parameters = RelaxationParameters(
+        anisotropy_constant=0.0,
+        exchange_constant=0.0,
+        field=(2.0, -1.0, 0.5),
+        saturation_magnetisation=3.0,
+    )
+
+    field = effective_field_values(magnetisation, parameters)
+
+    assert np.allclose(field, (2.0, -1.0, 0.5))
+
+
+def test_effective_field_zero_for_constant_magnetisation_exchange_only():
+    """Exchange field should vanish for a spatially constant magnetisation."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 3, 3)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+    parameters = RelaxationParameters(
+        anisotropy_constant=0.0,
+        exchange_constant=5.0,
+        field=(0.0, 0.0, 0.0),
+        saturation_magnetisation=1.0,
+    )
+
+    field = effective_field_values(magnetisation, parameters)
+
+    assert np.allclose(field, 0.0, atol=1e-10)
+
+
+def test_effective_field_rejects_non_positive_saturation_magnetisation():
+    """An invalid Ms should fail before any form assembly."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+    parameters = object.__new__(RelaxationParameters)
+    object.__setattr__(parameters, "saturation_magnetisation", 0.0)
+
+    with pytest.raises(ValueError, match="saturation_magnetisation must be positive"):
+        effective_field_values(magnetisation, parameters)
+
+
+def test_effective_field_llg_step_preserves_norm_and_lowers_zeeman_energy():
+    """The effective-field stepper should behave like the fixed-field one
+    when only Zeeman is active (H_eff == field in that case)."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+    parameters = RelaxationParameters(
+        anisotropy_constant=0.0,
+        exchange_constant=0.0,
+        field=(0.0, 0.0, 1.0),
+        saturation_magnetisation=1.0,
+    )
+
+    energy_before = zeeman_energy(
+        magnetisation, field=(0.0, 0.0, 1.0), saturation_magnetisation=1.0
+    )
+    effective_field_llg_step(magnetisation, parameters, dt=1e-3, gamma=1.0, alpha=1.0)
+    energy_after = zeeman_energy(
+        magnetisation, field=(0.0, 0.0, 1.0), saturation_magnetisation=1.0
+    )
+
+    values = nodal_vector_values(magnetisation)
+    assert np.allclose(np.linalg.norm(values, axis=1), 1.0)
+    assert energy_after < energy_before
+
+
+def test_effective_field_llg_step_is_driven_by_anisotropy_unlike_fixed_field_step():
+    """With zero applied field, only effective_field_llg_step should move ``m``
+    toward the anisotropy easy axis; explicit_llg_step ignores anisotropy
+    entirely since it only precesses toward its fixed field argument. This is
+    a direct regression test for the limitation documented after wiring DMI/
+    cubic anisotropy into the simulation wrappers. [GitHub Copilot / Claude
+    Sonnet 5]
+    """
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+
+    fixed_field_m = constant_vector_function(function_space, (1.0, 0.0, 0.001))
+    explicit_llg_step(
+        fixed_field_m, effective_field=(0.0, 0.0, 0.0), dt=1e-2, gamma=1.0, alpha=1.0
+    )
+    assert np.allclose(nodal_vector_values(fixed_field_m)[:, 2], 0.001, atol=1e-9)
+
+    effective_field_m = constant_vector_function(function_space, (1.0, 0.0, 0.001))
+    parameters = RelaxationParameters(
+        anisotropy_axis=(0.0, 0.0, 1.0),
+        anisotropy_constant=5.0,
+        exchange_constant=0.0,
+        field=(0.0, 0.0, 0.0),
+        saturation_magnetisation=1.0,
+    )
+    effective_field_llg_step(effective_field_m, parameters, dt=1e-2, gamma=1.0, alpha=1.0)
+    assert np.all(nodal_vector_values(effective_field_m)[:, 2] > 0.001)
+
+
+def test_effective_field_llg_step_rejects_invalid_dt():
+    """Invalid timestep should fail before computing the effective field."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+    parameters = RelaxationParameters()
+
+    with pytest.raises(ValueError, match="dt must be positive"):
+        effective_field_llg_step(magnetisation, parameters, dt=0.0)
 
 
 # Reference constants copied from src/finmag/energies/cubic_anisotropy_test.py

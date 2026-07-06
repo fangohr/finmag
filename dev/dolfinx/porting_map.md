@@ -76,12 +76,15 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   Sonnet 5]
 - Time stepping: `explicit_llg_step` gives a transparent nodal explicit step
   that tests DOLFINx function mutation and normalisation, but it is not a
-  production driver. It only precesses/damps toward a fixed applied-field
-  argument and does not derive an effective field from the full energy
-  functional, so adding DMI/cubic-anisotropy/exchange/anisotropy contributions
-  changes the reported energy but is not guaranteed to keep `relax(...)`
-  monotonically decreasing for arbitrary parameter choices. [GitHub Copilot /
-  Claude Sonnet 5]
+  production driver; it only precesses/damps toward a fixed applied-field
+  argument. `effective_field_llg_step` now provides a real fix: it computes
+  `H_eff = -1/(mu0*Ms) * dE/dm` via the standard finite-element box method
+  (assemble the weak-form derivative of the total energy, divide by lumped
+  nodal volume) and uses that to drive the step, so exchange/anisotropy/DMI/
+  cubic-anisotropy contributions genuinely affect the trajectory.
+  `PrototypeSimulation.step()` (and the relax/trace/summary methods built on
+  it) expose this as an opt-in `use_effective_field=True`, defaulting to the
+  original fixed-field behaviour. [GitHub Copilot / Claude Sonnet 5]
 - Simulation time: `PrototypeSimulation.time` and `run_until(...)` are a small
   compatibility-shaped probe for the legacy `Simulation.run_until` concept.
   They deliberately use the prototype explicit stepper and should not be
