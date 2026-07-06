@@ -41,7 +41,13 @@ must not become the production API by accident. [Codex gpt-5.5 high]
 - Field compatibility: `field_adapter.py` probes the first legacy
   `finmag.field.Field` behaviours with DOLFINx, including scalar/vector
   distinction, constants, callables, nodal values, normalisation, and volume
-  averages.
+  averages. It also covers raw dof-array access (`from_array`) and
+  mesh-vertex-ordered access (`get/set_with_ordered_numpy_array_xyz`),
+  matching dofs to vertices by coordinate rather than assumed index equality,
+  with an explicit guard for spaces that don't have one dof per vertex (e.g.
+  `DG0`). The legacy component-blocked `"xxx"` ordering has no DOLFINx
+  equivalent for blocked vector spaces and is intentionally not provided.
+  [GitHub Copilot / Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -106,9 +112,11 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
 
 ## Near-Term Gaps
 
-- The DOLFINx-backed `Field` adapter is only a narrow probe; it does not yet
-  cover all legacy setters, coordinate/value ordering, HDF5/PVD output, or
-  integration with `finmag.Simulation`.
+- The DOLFINx-backed `Field` adapter is only a narrow probe; it now covers
+  `from_array` and mesh-vertex-ordered (`"xyz"`) access, but still does not
+  cover all legacy setters (e.g. `from_expression`, `from_field`), HDF5/PVD
+  output, or integration with `finmag.Simulation`. [GitHub Copilot / Claude
+  Sonnet 5]
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
 - Demag is not covered by the current DOLFINx prototype lane. The production
   DOLFINx port should either reuse/port the array-based native FK BEM routines

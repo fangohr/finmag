@@ -16,6 +16,13 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - Constant magnetisation setup and nodal vector inspection.
 - A narrow DOLFINx-backed `Field` compatibility adapter for constants,
   callables, scalar/vector inspection, nodal values, and volume averages.
+- Raw dof-array (`from_array`) and mesh-vertex-ordered
+  (`get/set_with_ordered_numpy_array_xyz`) field value access, matching
+  legacy `Field`'s coordinate/value ordering methods. Coordinate matching is
+  done explicitly (not by assuming dof index equals vertex index) and is
+  only supported for one-dof-per-vertex spaces (e.g. not `DG0`). There is no
+  DOLFINx equivalent of legacy's component-blocked `"xxx"` ordering, so that
+  variant is intentionally not provided. [GitHub Copilot / Claude Sonnet 5]
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
 - Bulk (3D, T-symmetry) DMI energy assembly, matching the legacy
