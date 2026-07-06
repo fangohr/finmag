@@ -18,6 +18,9 @@ into `src/finmag`. [Codex gpt-5.5 high]
   callables, scalar/vector inspection, nodal values, and volume averages.
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
+- Bulk (3D, T-symmetry) DMI energy assembly, matching the legacy
+  `dmi_type='auto'` 3D case (`D * inner(m, curl(m))`). Interfacial and
+  1D/2D DMI variants are not covered yet. [GitHub Copilot / Claude Sonnet 5]
 - Explicit normalized LLG stepping in a constant effective field.
 - Prototype simulation time tracking and a narrow `run_until(...)` probe.
 - A small end-to-end relaxation example with JSON summary output.

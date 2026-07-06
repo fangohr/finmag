@@ -9,7 +9,7 @@ legacy FEniCS-2019 M2/M3 code paths. [Codex gpt-5.5 high]
 import numpy as np
 from dolfinx import fem
 from mpi4py import MPI
-from ufl import dx, grad, inner
+from ufl import curl, dx, grad, inner
 
 
 MU0 = 4 * np.pi * 1e-7
@@ -215,6 +215,43 @@ def exchange_energy(magnetisation, exchange_constant, unit_length=1.0):
             float(exchange_constant)
             * physical_measure_scale
             * inner(grad(magnetisation), grad(magnetisation))
+            * dx
+        )
+    )
+    return domain.comm.allreduce(local_energy, op=MPI.SUM)
+
+
+def dmi_energy(magnetisation, dmi_constant, unit_length=1.0):
+    """Compute ``D * integral(m . curl(m))`` for a DOLFINx field.
+
+    This mirrors the bulk (T-symmetry) 3D Dzyaloshinskii-Moriya term used by
+    the legacy ``finmag.energies.dmi.DMI`` class, i.e. ``D * inner(m,
+    curl(m))`` (the ``dmi_type='auto'`` case on a 3D mesh in
+    ``finmag.util.helpers.times_curl``). Interfacial and 1D/2D DMI variants
+    are not covered by this reduced prototype yet. [GitHub Copilot / Claude
+    Sonnet 5]
+
+    The scaling convention matches the other prototype energies: DOLFINx
+    integrates over mesh coordinates, and the curl introduces a single
+    spatial derivative, so the integral scales as
+    ``unit_length ** (dim - 1)``.
+    """
+    if unit_length <= 0:
+        raise ValueError("unit_length must be positive")
+    if dmi_constant == 0:
+        return 0.0
+
+    domain = magnetisation.function_space.mesh
+    if domain.geometry.dim != 3:
+        raise ValueError("dmi_energy currently only supports 3D meshes")
+
+    physical_measure_scale = float(unit_length) ** (domain.geometry.dim - 1)
+
+    local_energy = fem.assemble_scalar(
+        fem.form(
+            float(dmi_constant)
+            * physical_measure_scale
+            * inner(magnetisation, curl(magnetisation))
             * dx
         )
     )

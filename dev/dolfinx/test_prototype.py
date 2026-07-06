@@ -11,7 +11,7 @@ from dolfinx import fem, mesh
 from mpi4py import MPI
 
 from dev.dolfinx.prototype import MU0, constant_vector_function
-from dev.dolfinx.prototype import exchange_energy, uniaxial_anisotropy_energy
+from dev.dolfinx.prototype import dmi_energy, exchange_energy, uniaxial_anisotropy_energy
 from dev.dolfinx.prototype import explicit_llg_step, llg_rhs, nodal_vector_values
 from dev.dolfinx.prototype import vector_function_space, zeeman_energy
 
@@ -198,6 +198,72 @@ def test_exchange_energy_zero_constant_short_circuits():
     magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
 
     assert np.isclose(exchange_energy(magnetisation, exchange_constant=0.0), 0.0)
+
+
+def test_dmi_energy_zero_for_constant_magnetisation():
+    """A constant magnetisation has zero curl, so zero DMI energy."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    assert np.isclose(dmi_energy(magnetisation, dmi_constant=5.0), 0.0)
+
+
+def test_dmi_energy_for_linear_field_on_unit_cube():
+    """For m=(z,x,y), curl(m)=(1,1,1) and integral(m.curl(m)) over the unit
+    cube is integral(x+y+z) = 1.5, so the DMI energy is D * 1.5."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    function_space = vector_function_space(domain)
+    magnetisation = fem.Function(function_space)
+    magnetisation.interpolate(
+        lambda x: np.vstack((x[2], x[0], x[1]))
+    )
+
+    assert np.isclose(dmi_energy(magnetisation, dmi_constant=5.0), 7.5)
+
+
+def test_dmi_energy_applies_unit_length_scaling():
+    """The DMI curl term has one derivative, so energy scales as unit_length**2
+    in 3D (dim - 1)."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    function_space = vector_function_space(domain)
+    magnetisation = fem.Function(function_space)
+    magnetisation.interpolate(
+        lambda x: np.vstack((x[2], x[0], x[1]))
+    )
+
+    energy = dmi_energy(magnetisation, dmi_constant=5.0, unit_length=1e-9)
+
+    assert np.isclose(energy, 7.5e-18)
+
+
+def test_dmi_energy_rejects_non_3d_mesh():
+    """The reduced prototype only supports the standard 3D bulk DMI term."""
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    with pytest.raises(ValueError, match="only supports 3D meshes"):
+        dmi_energy(magnetisation, dmi_constant=5.0)
+
+
+def test_dmi_energy_rejects_non_positive_unit_length():
+    """Invalid physical length scaling should fail before form assembly."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    with pytest.raises(ValueError, match="unit_length must be positive"):
+        dmi_energy(magnetisation, dmi_constant=5.0, unit_length=0.0)
+
+
+def test_dmi_energy_zero_constant_short_circuits():
+    """A zero DMI constant should not build a degenerate UFL form."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    function_space = vector_function_space(domain)
+    magnetisation = constant_vector_function(function_space, (1.0, 0.0, 0.0))
+
+    assert np.isclose(dmi_energy(magnetisation, dmi_constant=0.0), 0.0)
 
 
 def test_llg_rhs_for_constant_field_has_expected_direction():

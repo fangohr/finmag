@@ -45,6 +45,10 @@ must not become the production API by accident. [Codex gpt-5.5 high]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
+- Bulk DMI: `dmi_energy` covers the legacy 3D `dmi_type='auto'` case
+  (`D * inner(m, curl(m))`), with the matching `unit_length ** (dim - 1)`
+  scaling convention and a 3D-mesh guard. Interfacial and 1D/2D DMI variants
+  are still not covered. [GitHub Copilot / Claude Sonnet 5]
 - Time stepping: `explicit_llg_step` gives a transparent nodal explicit step
   that tests DOLFINx function mutation and normalisation, but it is not a
   production driver.
@@ -94,7 +98,10 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
   implementation. [Codex gpt-5.5 high]
 - DMI, cubic anisotropy, variable material parameters, regions, PBC, scheduler
   output, legacy restart files, and production integrators are not covered by
-  the current prototype lane.
+  the current prototype lane. Bulk 3D DMI is now a partial exception (see
+  `dmi_energy`); interfacial/1D/2D DMI, cubic anisotropy, regions, PBC,
+  scheduler output, legacy restart files, and production integrators remain
+  uncovered. [GitHub Copilot / Claude Sonnet 5]
 - PBC/treecode demag depends on the separate `finmag.native.treecode_bem`
   extension, which is still missing in the pixi path and should remain tracked
   separately from the FK BEM baseline. [Codex gpt-5.5 high]
