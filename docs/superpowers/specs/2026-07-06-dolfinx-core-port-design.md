@@ -4,18 +4,20 @@
 
 Finmag's production package under `src/finmag` is a legacy FEniCS/DOLFIN
 implementation. It remains the behavioral and scientific reference for the
-DOLFINx migration, but it is not a runtime that the `dolfinx-port` branch must
-continue to support.
+DOLFINx migration and must remain untouched while the replacement is developed
+and validated.
 
 The code under `dev/dolfinx` is an exploration lane. It establishes useful
 DOLFINx mechanics and numerical evidence, but its `PrototypeSimulation`,
 flat parameter dataclass, JSON contracts, and free-function architecture are
 not the target production design.
 
-The production port will replace the legacy implementation under `src/finmag`
-with DOLFINx code while preserving the original Finmag philosophy, module
+The new implementation will be built as a real `finmag` package under
+`dev/dolfinx/finmag`. It will preserve the original Finmag philosophy, module
 layout, public API, interaction model, and scientifically relevant behavior as
-closely as practical.
+closely as practical. Only after the new package satisfies the migration
+acceptance gates will it be moved to `src/finmag` and the legacy implementation
+removed.
 
 ## Goal
 
@@ -40,15 +42,21 @@ effective field, physical Finmag units, and an adaptive time integrator.
 
 1. Treat legacy `src/finmag` code and trustworthy legacy tests as the
    specification.
-2. Port classes and modules in place rather than promoting the prototype API.
-3. Preserve public names, constructor semantics, properties, interaction
+2. Leave legacy `src/finmag` unchanged during development.
+3. Build the replacement package under `dev/dolfinx/finmag`, mirroring the
+   legacy package layout and public imports.
+4. Port classes and modules into the replacement package rather than promoting
+   the prototype API.
+5. Preserve public names, constructor semantics, properties, interaction
    lifecycle, and errors unless DOLFINx makes a behavior impractical.
-4. Document intentional compatibility differences in tests and migration
+6. Document intentional compatibility differences in tests and migration
    notes.
-5. Port capabilities in scientific-value order rather than attempting to
+7. Port capabilities in scientific-value order rather than attempting to
    revive every historical subsystem.
-6. Keep compiled native FK BEM construction as the future demagnetising-field
+8. Keep compiled native FK BEM construction as the future demagnetising-field
    baseline; do not replace it with the NumPy Magpar reference implementation.
+9. Promote `dev/dolfinx/finmag` to `src/finmag` only as a final, separately
+   reviewed migration step after behavioral and scientific parity is accepted.
 
 ## Initial Corrections
 
@@ -58,16 +66,34 @@ Before porting production modules:
    wildcard can move the environment to a new incompatible release whenever
    the lock file is refreshed. DOLFINx 0.10 is already installed and verified,
    and upgrading is not required for the first compatibility slice.
-2. Update project documentation to state that `src/finmag` is the legacy
-   reference being replaced on `dolfinx-port`, not a second backend that must
-   remain runnable.
-3. Freeze `dev/dolfinx` as exploration evidence. Its known restart and MPI
-   defects are not production blockers because its architecture will not be
-   promoted.
+2. Update project documentation to state that `src/finmag` is the untouched
+   legacy oracle and `dev/dolfinx/finmag` is the staged replacement.
+3. Freeze the existing top-level prototype modules under `dev/dolfinx` as
+   exploration evidence. Their known restart and MPI defects are not production
+   blockers because their architecture will not be promoted into the new
+   package.
 4. Add the successor DOLFINx verification gate and prevent legacy FEniCS gates
-   from defining success for the DOLFINx branch.
+   from being confused with the separate replacement-package gate. Both legacy
+   and DOLFINx gates remain useful during the staged migration.
 
 ## Production Architecture
+
+The replacement package lives at:
+
+```text
+dev/dolfinx/finmag/
+  __init__.py
+  field.py
+  energies/
+  physics/
+  drivers/
+  sim/
+  tests/
+```
+
+During development it is imported with `PYTHONPATH=dev/dolfinx`, ensuring that
+`import finmag` resolves to the replacement package without changing or
+shadow-editing `src/finmag`.
 
 The runtime dependency flow remains the same as legacy Finmag:
 
@@ -231,8 +257,11 @@ zero-ghost-volume defects.
 
 ## Testing Strategy
 
-All production behavior is implemented test-first under `src/finmag`. Tests
-are ported from or directly compared with the legacy suite where trustworthy.
+All replacement behavior is implemented test-first under
+`dev/dolfinx/finmag`. Tests are ported from or directly compared with the
+legacy suite where trustworthy. The corresponding legacy files stay unchanged,
+so reviewers can compare implementations and run both environments throughout
+the migration.
 
 The first gate covers:
 
@@ -250,21 +279,40 @@ The first gate covers:
    `run_until`.
 10. The accepted end-to-end user workflow.
 
-Prototype tests remain available as exploratory evidence, but passing them is
-not a substitute for the production gate.
+Existing prototype tests remain available as exploratory evidence, but passing
+them is not a substitute for the replacement-package gate.
 
 ## CI and Verification
 
-The active DOLFINx workflow will:
+The active DOLFINx replacement workflow will:
 
 - create the pinned DOLFINx 0.10 environment;
-- import the production `finmag` package from `src`;
-- run the production DOLFINx core tests;
+- set `PYTHONPATH=dev/dolfinx`;
+- import the replacement `finmag` package from `dev/dolfinx/finmag`;
+- run the replacement DOLFINx core tests;
 - run the end-to-end core simulation smoke test.
 
-Legacy FEniCS workflows and scripts remain in repository history or as manual
-reference tools, but they do not gate the DOLFINx successor branch after the
-corresponding production modules are replaced.
+Legacy FEniCS workflows continue to run against `src/finmag` independently.
+This keeps the reference implementation executable while the replacement
+grows and makes cross-environment regression comparisons possible.
+
+## Final Promotion
+
+Moving the new package into `src/finmag` is not part of an ordinary feature
+slice. It is the final migration operation and requires all of the following:
+
+1. the agreed representative workflow matrix passes in the DOLFINx
+   environment;
+2. common energy and effective-field results match trusted legacy references;
+3. `barmini` or its accepted DOLFINx equivalent runs with compiled FK demag;
+4. restart and required output workflows pass;
+5. unsupported historical features are documented and accepted;
+6. the replacement package no longer imports code from legacy `src/finmag`;
+7. the user explicitly approves promotion.
+
+At that point, a dedicated change will remove the legacy package, move
+`dev/dolfinx/finmag` to `src/finmag`, adjust packaging and CI paths, and remove
+obsolete prototype code.
 
 ## Deferred Slices
 
@@ -280,6 +328,7 @@ The following are intentionally outside this first implementation:
 8. normal modes, LLB/SLLG, and spin-transfer torque;
 9. multi-rank time integration;
 10. external OOMMF, Nmag, and Magpar comparisons.
+11. final promotion from `dev/dolfinx/finmag` to `src/finmag`.
 
 These slices follow the roadmap order: core simulation and common energies,
 demag, restart/data I/O, normal modes, additional dynamics, then external
@@ -290,8 +339,10 @@ validation tooling.
 The slice is complete when:
 
 - DOLFINx is constrained to `0.10.*`;
-- `PYTHONPATH=src python -c "import finmag"` succeeds in the DOLFINx
-  environment without importing legacy `dolfin`;
+- legacy `src/finmag` has no changes;
+- `PYTHONPATH=dev/dolfinx python -c "import finmag"` imports
+  `dev/dolfinx/finmag` in the DOLFINx environment without importing legacy
+  `dolfin`;
 - the accepted example advances to `1e-12 s` using all configured interaction
   fields;
 - magnetisation remains unit length within the test tolerance;
