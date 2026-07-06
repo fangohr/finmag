@@ -256,3 +256,64 @@ def dmi_energy(magnetisation, dmi_constant, unit_length=1.0):
         )
     )
     return domain.comm.allreduce(local_energy, op=MPI.SUM)
+
+
+def cubic_anisotropy_energy(
+    magnetisation, u1, u2, K1, K2=0.0, K3=0.0, unit_length=1.0
+):
+    """Compute the cubic anisotropy energy for constant axes/constants.
+
+    Mirrors legacy ``finmag.energies.cubic_anisotropy.CubicAnisotropy``: with
+    ``a = u1.m``, ``b = u2.m``, ``c = u3.m`` and ``u3 = u1 x u2``,
+
+        E = integral[
+            K1 * (a^2 b^2 + a^2 c^2 + b^2 c^2)
+            + K2 * (a^2 b^2 c^2)
+            + K3 * (a^4 b^4 + a^4 c^4 + b^4 c^4)
+        ] dx
+
+    Unlike ``uniaxial_anisotropy_energy``, ``u1``/``u2`` are used as given and
+    not renormalised, matching the legacy class, which documents them as
+    "should be unit vectors" but does not enforce it. This reduced prototype
+    only supports spatially constant ``K1``/``K2``/``K3`` and axes; the legacy
+    class also supports spatially varying ``Field`` coefficients, which is out
+    of scope here. [GitHub Copilot / Claude Sonnet 5]
+
+    The scaling convention matches ``zeeman_energy``/
+    ``uniaxial_anisotropy_energy``: no spatial derivatives are involved, so
+    the integral scales as ``unit_length ** dim``.
+    """
+    if unit_length <= 0:
+        raise ValueError("unit_length must be positive")
+    if K1 == 0 and K2 == 0 and K3 == 0:
+        return 0.0
+
+    u1 = np.asarray(u1, dtype=np.float64)
+    u2 = np.asarray(u2, dtype=np.float64)
+    if u1.shape != (3,) or u2.shape != (3,):
+        raise ValueError("cubic anisotropy axes must be 3-vectors")
+    if np.linalg.norm(u1) == 0 or np.linalg.norm(u2) == 0:
+        raise ValueError("cubic anisotropy axes must be non-zero")
+    u3 = np.cross(u1, u2)
+
+    domain = magnetisation.function_space.mesh
+    physical_measure_scale = float(unit_length) ** domain.geometry.dim
+
+    axis1 = fem.Constant(domain, u1)
+    axis2 = fem.Constant(domain, u2)
+    axis3 = fem.Constant(domain, u3)
+
+    a = inner(magnetisation, axis1)
+    b = inner(magnetisation, axis2)
+    c = inner(magnetisation, axis3)
+
+    integrand = (
+        float(K1) * (a**2 * b**2 + a**2 * c**2 + b**2 * c**2)
+        + float(K2) * (a**2 * b**2 * c**2)
+        + float(K3) * (a**4 * b**4 + a**4 * c**4 + b**4 * c**4)
+    )
+
+    local_energy = fem.assemble_scalar(
+        fem.form(physical_measure_scale * integrand * dx)
+    )
+    return domain.comm.allreduce(local_energy, op=MPI.SUM)

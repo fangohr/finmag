@@ -21,6 +21,11 @@ into `src/finmag`. [Codex gpt-5.5 high]
 - Bulk (3D, T-symmetry) DMI energy assembly, matching the legacy
   `dmi_type='auto'` 3D case (`D * inner(m, curl(m))`). Interfacial and
   1D/2D DMI variants are not covered yet. [GitHub Copilot / Claude Sonnet 5]
+- Cubic anisotropy energy assembly for constant `K1`/`K2`/`K3` and constant
+  axes, matching legacy `finmag.energies.cubic_anisotropy.CubicAnisotropy`'s
+  analytic form; checked directly against that module's own reference test
+  values. Spatially varying cubic-anisotropy fields are not covered yet.
+  [GitHub Copilot / Claude Sonnet 5]
 - Explicit normalized LLG stepping in a constant effective field.
 - Prototype simulation time tracking and a narrow `run_until(...)` probe.
 - A small end-to-end relaxation example with JSON summary output.

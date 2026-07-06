@@ -49,6 +49,13 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   (`D * inner(m, curl(m))`), with the matching `unit_length ** (dim - 1)`
   scaling convention and a 3D-mesh guard. Interfacial and 1D/2D DMI variants
   are still not covered. [GitHub Copilot / Claude Sonnet 5]
+- Cubic anisotropy: `cubic_anisotropy_energy` covers the legacy constant-axis,
+  constant-`K1`/`K2`/`K3` case from
+  `finmag.energies.cubic_anisotropy.CubicAnisotropy`, and its test is checked
+  directly against that module's own analytic reference values (same
+  constants/axes as `cubic_anisotropy_test.py`), not just a self-derived case.
+  Spatially varying cubic-anisotropy `Field` coefficients are not covered.
+  [GitHub Copilot / Claude Sonnet 5]
 - Time stepping: `explicit_llg_step` gives a transparent nodal explicit step
   that tests DOLFINx function mutation and normalisation, but it is not a
   production driver.
@@ -98,10 +105,11 @@ Before moving any `dev/dolfinx` code into `src/finmag`, check that:
   implementation. [Codex gpt-5.5 high]
 - DMI, cubic anisotropy, variable material parameters, regions, PBC, scheduler
   output, legacy restart files, and production integrators are not covered by
-  the current prototype lane. Bulk 3D DMI is now a partial exception (see
-  `dmi_energy`); interfacial/1D/2D DMI, cubic anisotropy, regions, PBC,
-  scheduler output, legacy restart files, and production integrators remain
-  uncovered. [GitHub Copilot / Claude Sonnet 5]
+  the current prototype lane. Bulk 3D DMI and constant-axis cubic anisotropy
+  are now partial exceptions (see `dmi_energy` and `cubic_anisotropy_energy`);
+  interfacial/1D/2D DMI, spatially varying cubic anisotropy, variable material
+  parameters, regions, PBC, scheduler output, legacy restart files, and
+  production integrators remain uncovered. [GitHub Copilot / Claude Sonnet 5]
 - PBC/treecode demag depends on the separate `finmag.native.treecode_bem`
   extension, which is still missing in the pixi path and should remain tracked
   separately from the FK BEM baseline. [Codex gpt-5.5 high]
