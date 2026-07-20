@@ -1,352 +1,236 @@
-# Finmag DOLFINx Core Port Design
+# Finmag DOLFINx Direct-Port Design
 
-## Context
+## Decision
 
-Finmag's production package under `src/finmag` is a legacy FEniCS/DOLFIN
-implementation. It remains the behavioral and scientific reference for the
-DOLFINx migration and must remain untouched while the replacement is developed
-and validated.
+Finmag will be ported to DOLFINx by editing the existing modules under
+`src/finmag` directly, one reviewed capability at a time.
 
-The code under `dev/dolfinx` is an exploration lane. It establishes useful
-DOLFINx mechanics and numerical evidence, but its `PrototypeSimulation`,
-flat parameter dataclass, JSON contracts, and free-function architecture are
-not the target production design.
+`dev/dolfinx` remains a laboratory for small, disposable DOLFINx mechanics
+probes. It must not contain a second `finmag` package, and production code must
+not be developed there and copied into `src` later.
 
-The new implementation will be built as a real `finmag` package under
-`dev/dolfinx/finmag`. It will preserve the original Finmag philosophy, module
-layout, public API, interaction model, and scientifically relevant behavior as
-closely as practical. Only after the new package satisfies the migration
-acceptance gates will it be moved to `src/finmag` and the legacy implementation
-removed.
+This replaces the earlier proposal to build `dev/dolfinx/finmag` and promote it
+as a final migration operation.
 
-## Goal
+## Why Direct Porting Is Better Here
 
-Deliver the first production-shaped DOLFINx Finmag slice with this workflow:
+The staged-package proposal would create two implementations with the same
+public API, duplicate package structure and tests, invite drift, and finish with
+a large delete/move diff that obscures which legacy behavior changed. It would
+also make the exploratory `PrototypeSimulation` architecture more likely to
+leak into production even though it does not match Finmag's design.
 
-```python
-import finmag
-from finmag import Simulation
-from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
+Direct in-place porting gives each accepted behavior one implementation and one
+history. Reviewers can compare each changed production module with its legacy
+version and the associated tests without also reviewing a package relocation.
 
-sim = Simulation(mesh, Ms=8.6e5, unit_length=1e-9)
-sim.set_m((1, 0, 1))
-sim.add(Exchange(13e-12))
-sim.add(Zeeman((0, 0, 1e5)))
-sim.run_until(1e-12)
-```
+## Current Baselines
 
-The workflow must use DOLFINx functions and forms, the complete configured
-effective field, physical Finmag units, and an adaptive time integrator.
+- The immutable legacy oracle is commit
+  `ba9280934e188d7f3800e7b9865e70a9422f7687` (`pixi`), which contains the
+  Python-3/FEniCS-2019 implementation and its recorded M3 gate.
+- The active DOLFINx exploration environment resolves to DOLFINx 0.10.0 on
+  Python 3.12.
+- The modules directly under `dev/dolfinx` are evidence about DOLFINx mechanics,
+  not candidate production modules.
+- The current prototype has known restart and multi-rank ownership defects.
+  Those defects are reasons not to copy it, not tasks that must be fixed before
+  the production port starts.
 
 ## Migration Rules
 
-1. Treat legacy `src/finmag` code and trustworthy legacy tests as the
-   specification.
-2. Leave legacy `src/finmag` unchanged during development.
-3. Build the replacement package under `dev/dolfinx/finmag`, mirroring the
-   legacy package layout and public imports.
-4. Port classes and modules into the replacement package rather than promoting
-   the prototype API.
-5. Preserve public names, constructor semantics, properties, interaction
-   lifecycle, and errors unless DOLFINx makes a behavior impractical.
-6. Document intentional compatibility differences in tests and migration
-   notes.
-7. Port capabilities in scientific-value order rather than attempting to
-   revive every historical subsystem.
-8. Keep compiled native FK BEM construction as the future demagnetising-field
-   baseline; do not replace it with the NumPy Magpar reference implementation.
-9. Promote `dev/dolfinx/finmag` to `src/finmag` only as a final, separately
-   reviewed migration step after behavioral and scientific parity is accepted.
+1. Preserve the existing `src/finmag` module names, public classes, constructor
+   semantics, and scientifically relevant behavior where practical.
+2. Use `dev/dolfinx` only to answer a bounded question that must be understood
+   before editing a particular production module.
+3. Once a probe is validated, implement the behavior directly in the matching
+   `src/finmag` module. Re-express it in the production abstraction; do not copy
+   prototype files or APIs wholesale.
+4. Do not introduce a general `dolfin`/DOLFINx compatibility facade. The APIs
+   differ too substantially, and temporary dual-backend branches would enlarge
+   both the implementation and its final cleanup.
+5. After the first DOLFINx-only source slice, compare against the pinned legacy
+   oracle in a separate process or checkout. Do not keep the edited source
+   simultaneously runnable on both FEM stacks unless a change is naturally
+   backend-neutral.
+6. Port existing source tests in place. Add new tests only for DOLFINx-specific
+   semantics or previously untested scientific contracts.
+7. Prefer analytic references. When an analytic result is unavailable, generate
+   a small, versioned legacy reference fixture from the oracle.
+8. Reference fields by coordinates and values, not raw legacy dof ordering.
+   Store only owned DOLFINx dofs in parallel comparisons.
+9. One source slice should change one coherent capability. Avoid unrelated
+   cleanup, formatting, renaming, or revival of historical features.
+10. Unsupported behavior must fail explicitly when requested. It must never be
+    silently omitted from a simulation.
 
-## Initial Corrections
+## Validation Model
 
-Before porting production modules:
+### Legacy oracle
 
-1. Pin the isolated environment to `fenics-dolfinx = "0.10.*"`. The current
-   wildcard can move the environment to a new incompatible release whenever
-   the lock file is refreshed. DOLFINx 0.10 is already installed and verified,
-   and upgrading is not required for the first compatibility slice.
-2. Update project documentation to state that `src/finmag` is the untouched
-   legacy oracle and `dev/dolfinx/finmag` is the staged replacement.
-3. Freeze the existing top-level prototype modules under `dev/dolfinx` as
-   exploration evidence. Their known restart and MPI defects are not production
-   blockers because their architecture will not be promoted into the new
-   package.
-4. Add the successor DOLFINx verification gate and prevent legacy FEniCS gates
-   from being confused with the separate replacement-package gate. Both legacy
-   and DOLFINx gates remain useful during the staged migration.
+The FEniCS-2019 source stops being an executable in-tree baseline as soon as a
+DOLFINx-only module is ported. Preserve its value through:
 
-## Production Architecture
+- the pinned oracle commit above;
+- the recorded M3 workflow and result;
+- focused legacy commands run from a temporary checkout when a new reference is
+  needed;
+- small JSON or NPZ fixtures containing mesh definition, physical parameters,
+  coordinate-ordered results, units, tolerances, and oracle commit metadata.
 
-The replacement package lives at:
+The full immutable oracle does not need to run for every DOLFINx source edit.
+Each source slice instead runs its focused differential or analytic contract.
+
+### DOLFINx probes
+
+A dev probe should test one uncertain mechanism, for example:
+
+- owned and ghost dof semantics;
+- coordinate/value permutations;
+- UFL differentiation and lumped-volume assembly;
+- extraction of boundary arrays for native FK BEM;
+- DOLFINx-native function output or restart primitives.
+
+A probe is complete when the question has an executable answer. Product API,
+orchestration, long-lived state, and duplicate interaction classes do not belong
+in the probe lane.
+
+### Source gates
+
+Every direct source slice must pass:
+
+1. focused tests for the edited production module in the DOLFINx environment;
+2. an analytic or pinned-oracle scientific comparison where applicable;
+3. the still-relevant low-level dev probe;
+4. at least one serial test and, for ownership-sensitive FEM code, a two-rank
+   test;
+5. `git diff --check` and a clean-worktree check that ignores only declared test
+   artifacts.
+
+## First Permanent Source Seam
+
+Finmag currently imports most of the application eagerly from
+`src/finmag/__init__.py`. Importing any submodule therefore imports `Simulation`,
+demag, utilities, native modules, and legacy `dolfin`. That prevents a focused
+in-place port: even testing `finmag.field` requires the rest of the old stack.
+The scope is substantial: 64 non-test Python modules currently import legacy
+`dolfin` directly, so keeping every historical module live during each source
+slice would defeat the goal of reviewable changes.
+
+The first source slice should make package exports explicit and lazy. This is a
+permanent import architecture improvement, not a temporary backend selector.
+It must:
+
+- make plain `import finmag` free of FEM and native-build side effects;
+- preserve the intended top-level names such as `Simulation`, `sim_with`, and
+  `Field` through lazy resolution;
+- allow a ported submodule to be tested without importing unported subsystems;
+- make optional or unported features fail only when requested;
+- stop import-time validation from rewriting tracked version files.
+
+The energy package needs the same treatment because its current `__init__`
+eagerly imports demag, DMI, thermal, and other interactions.
+
+## Direct Source Slices
+
+### 1. `Field`
+
+Port `src/finmag/field.py` in place. Preserve the field behaviors required by
+the core simulation: constants and callables, raw and coordinate-ordered array
+access, assignment from fields/functions, scalar/vector inspection, volume
+averages, normalization, and access to the underlying DOLFINx function.
+
+Owned/ghost handling and coordinate ordering require explicit two-rank tests.
+Historical expression strings, point-measure arithmetic, plotting, or obsolete
+HDF5 behavior may remain unsupported initially, but their public methods should
+raise precise errors if retained.
+
+### 2. Energy foundation and common interactions
+
+Port `src/finmag/energies/energy_base.py`, then the existing Exchange, Zeeman,
+and uniaxial-anisotropy modules. Keep the interaction lifecycle:
 
 ```text
-dev/dolfinx/finmag/
-  __init__.py
-  field.py
-  energies/
-  physics/
-  drivers/
-  sim/
-  tests/
-```
-
-During development it is imported with `PYTHONPATH=dev/dolfinx`, ensuring that
-`import finmag` resolves to the replacement package without changing or
-shadow-editing `src/finmag`.
-
-The runtime dependency flow remains the same as legacy Finmag:
-
-```text
-Simulation
-  -> Field objects for m and Ms
-  -> LLG
-       -> EffectiveField
-            -> named interaction objects
-       -> integration RHS
-  -> selected time integrator
-```
-
-### `finmag.Field`
-
-`Field` wraps a `dolfinx.fem.Function` and its function space. The first slice
-preserves:
-
-- construction from constants and callables;
-- `set`, `from_array`, `from_field`, and `from_function`;
-- scalar/vector inspection;
-- raw local-array access;
-- mesh-vertex-ordered `xyz` array access;
-- nodal vector normalisation;
-- finite-element volume averages;
-- `mesh`, `mesh_dim`, `value_dim`, and access to the wrapped function.
-
-DOLFINx blocked vector layout differs from legacy DOLFIN component-blocked
-layout. The public `xyz` methods preserve their legacy meaning through explicit
-coordinate-based permutation. The historical `xxx` layout is retained only
-where a deterministic compatibility conversion is needed by an existing
-driver or test.
-
-### Energy interactions
-
-The first production interactions are:
-
-- `Exchange(A, method=..., name=...)`;
-- `Zeeman(H, name=..., **kwargs)`;
-- `UniaxialAnisotropy(K1, axis, K2=..., method=..., name=..., assemble=...)`.
-
-Each interaction keeps the legacy lifecycle:
-
-```text
-construct -> Simulation.add -> interaction.setup(m, Ms, unit_length)
+construct -> Simulation.add -> setup(m, Ms, unit_length)
           -> compute_field / compute_energy / average_field
 ```
 
-`EnergyBase` owns common DOLFINx form differentiation, lumped nodal-volume
-division, energy assembly, and MPI scalar reduction. The supported first-slice
-calculation is the legacy box-assembly method. Historical method names may be
-accepted for constructor compatibility, but unsupported implementations must
-raise a precise error rather than silently selecting different mathematics.
+The first supported field calculation is the legacy box-assembly method.
+Constructor values for unsupported legacy methods may be accepted only if use
+raises a clear error; they must not silently choose different mathematics.
 
-### `EffectiveField`
+### 3. `EffectiveField`
 
-`EffectiveField` preserves the legacy named interaction registry:
+Port the existing named interaction registry directly. Preserve unique names,
+add/get/list/remove, time callbacks, total field, and total energy. Test it with
+small interaction doubles as well as the ported common interactions.
 
-- unique-name enforcement;
-- `add`, `get`, `exists`, `all`, and `remove`;
-- summation of interaction fields;
-- summation of interaction energies;
-- optional time-update callbacks.
+### 4. Physical LLG core
 
-It receives the shared magnetisation and saturation-magnetisation `Field`
-objects. Adding an interaction binds it to those fields through `setup`.
+Port the core of `src/finmag/physics/llg.py` around the real total effective
+field. Preserve physical units, signs, `gamma`, scalar `Ms`/`alpha`, `set_m`,
+`solve`, and `solve_for`. Compare the RHS with analytic macrospin cases and
+coordinate-ordered legacy references.
 
-### `LLG`
+Native Sundials, STT, thermal dynamics, and multi-rank time integration remain
+separate slices. They must not complicate the first deterministic LLG port.
 
-`LLG` preserves the original role and relevant properties:
+### 5. Adaptive driver
 
-- owns magnetisation, saturation magnetisation, damping, gyromagnetic ratio,
-  and effective-field state;
-- supports `set_m`, `solve`, and `solve_for`;
-- evaluates the Gilbert-form LLG equation using the complete effective field;
-- uses `gamma = 2.210173e5 m/(A s)` and fields in `A/m`;
-- returns derivatives in `1/s`;
-- normalises the magnetisation after accepted integration steps.
+Reuse and minimally adapt the existing SciPy driver because it already matches
+Finmag's stateful `advance_time` interface and avoids coupling the FEM port to a
+native CVODE build. Add real reinitialization and backward-time checks. Do not
+redesign the integrator API during the FEM migration.
 
-The first slice supports scalar `Ms` and scalar `alpha`. Their internal
-representation will not prevent a later extension to field-valued material
-parameters.
+### 6. Core `Simulation`
 
-### Drivers
+Port `src/finmag/sim/sim.py` directly after its dependencies are ready. Keep the
+core orchestration and public properties, but do not import unported scheduler,
+output, demag, PBC, stochastic, STT, or visualization modules at module import
+time.
 
-The legacy driver abstraction remains:
+In the touched module, dead legacy branches should be removed or changed to
+explicit unsupported-feature errors. Untouched long-tail modules can remain in
+the tree outside the active import graph until their own slices are selected.
 
-```python
-llg_integrator(llg, m0, backend=...)
-```
+### 7. Demag, restart, and output
 
-The first production slice ports the SciPy VODE/BDF driver because it already
-matches the legacy interface and provides adaptive physical-time integration
-without coupling the FEM port to a simultaneous native CVODE build.
+Port these only after the core workflow is green:
 
-The native Sundials/CVODE driver is the next independent driver slice. Until
-then:
+1. native array-based FK demag and a `barmini`-class workflow;
+2. restart persistence with mesh, parameters, time, and owned field values;
+3. NDT and required VTK/XDMF output;
+4. scheduler integration.
 
-- `integrator_backend="scipy"` is supported;
-- requesting `"sundials"` raises an explicit availability error;
-- `Simulation` defaults to `"scipy"` on the DOLFINx successor branch;
-- the public backend-selection interface remains compatible.
+Normal modes, LLB/SLLG, STT, PBC/treecode demag, and external comparison tools
+remain value-driven follow-up slices.
 
-### `Simulation`
+The existing `finmag.native.llg` binary cannot simply be rebuilt unchanged for
+DOLFINx. Its Makefile links `libdolfin`, its Python module registers legacy
+SWIG-DOLFIN converters, and its array-based LLG/BEM entry points share a binary
+with legacy mesh bindings. Before FK demag is ported, split or condition the
+native binding so the array-only surface builds without legacy DOLFIN while
+preserving the production Python API where practical.
 
-`Simulation` remains the user-facing orchestrator. The first slice preserves:
+## Reviewability
 
-- construction from a DOLFINx mesh, `Ms`, `unit_length`, name, kernel, and
-  integrator-backend controls;
-- `set_m` and the `m`, `m_field`, `m_average`, `Ms`, `alpha`, `gamma`, `t`,
-  and `dmdt` surfaces needed by the core workflow;
-- interaction `add`, lookup, listing, removal, and total-energy methods;
-- `effective_field`, `create_integrator`, `set_tol`, `advance_time`,
-  `run_until`, `reinit_integrator`, and `reset_time`;
-- the `sim_with` convenience constructor for supported first-slice
-  interactions.
+Each source commit should contain:
 
-Demag-related `sim_with` arguments remain accepted only when they can fail with
-a clear unsupported-feature error. They must not silently omit demag.
+- the direct edit to the existing production module;
+- the smallest corresponding in-place test changes;
+- at most one new legacy reference fixture;
+- a short status update naming supported and unsupported behavior.
 
-## Data Flow
+Do not combine a dev probe, several production layers, broad test cleanup, and
+documentation reorganization in one commit. Dev evidence may land first; the
+corresponding production port should then be a separate, easy-to-review diff.
 
-1. `Simulation` creates DOLFINx scalar and three-component Lagrange spaces.
-2. It creates `Field` objects for magnetisation and material state.
-3. `Simulation.add(interaction)` delegates to `EffectiveField.add`.
-4. `EffectiveField.add` calls `interaction.setup(m, Ms, unit_length)`.
-5. The driver asks `LLG.solve_for(y, t)` for an ODE derivative.
-6. `LLG` writes `y` into the shared magnetisation field.
-7. `EffectiveField.compute(t)` updates time-dependent interactions and sums
-   every configured interaction field.
-8. `LLG` computes the Gilbert RHS from `m`, total `H_eff`, `alpha`, and
-   `gamma`.
-9. The adaptive driver advances to the requested physical time.
-10. The accepted state is copied back to the shared `Field`, normalised, and
-    exposed through `Simulation`.
+## Completion
 
-No production `relax` or `run_until` path may use only the applied field while
-reporting energies from other interactions.
+There is no final promotion, package copy, or directory move.
 
-## Parallel Scope
-
-The first time-integration slice is serial, matching the practical limitation
-of legacy Finmag's time integration. `Simulation` requires a communicator of
-size one and raises `NotImplementedError` otherwise.
-
-Form assembly and field helpers should still use correct owned/ghost semantics
-so that later MPI support does not inherit the prototype's double-counting and
-zero-ghost-volume defects.
-
-## Error Handling
-
-- Duplicate interaction names raise `ValueError`.
-- Unknown interaction lookup/removal uses a dedicated compatibility error.
-- Invalid field dimensions, zero-vector normalisation, invalid material
-  constants, and non-positive unit lengths fail before form assembly.
-- Integrating backwards in time raises `RuntimeError`.
-- Unsupported kernels, drivers, demag, PBC, stochastic dynamics, spin-transfer
-  torque, and multi-rank stepping raise explicit errors.
-- Optional native modules fail when the feature is requested, not during base
-  `import finmag`.
-
-## Testing Strategy
-
-All replacement behavior is implemented test-first under
-`dev/dolfinx/finmag`. Tests are ported from or directly compared with the
-legacy suite where trustworthy. The corresponding legacy files stay unchanged,
-so reviewers can compare implementations and run both environments throughout
-the migration.
-
-The first gate covers:
-
-1. `import finmag` in the DOLFINx environment.
-2. `Field` constants, callables, array ordering, normalisation, and volume
-   averages.
-3. Analytic Exchange, Zeeman, and uniaxial-anisotropy energy and field values.
-4. `EnergyBase` effective-field sign, units, and nodal-volume scaling.
-5. Interaction add/get/list/remove and duplicate-name behavior.
-6. Total effective-field and total-energy summation.
-7. LLG direction, physical scaling, and unit-length preservation.
-8. SciPy driver time advancement, backward-time rejection, and
-   reinitialisation after magnetisation changes.
-9. `Simulation` construction, properties, interaction management, and
-   `run_until`.
-10. The accepted end-to-end user workflow.
-
-Existing prototype tests remain available as exploratory evidence, but passing
-them is not a substitute for the replacement-package gate.
-
-## CI and Verification
-
-The active DOLFINx replacement workflow will:
-
-- create the pinned DOLFINx 0.10 environment;
-- set `PYTHONPATH=dev/dolfinx`;
-- import the replacement `finmag` package from `dev/dolfinx/finmag`;
-- run the replacement DOLFINx core tests;
-- run the end-to-end core simulation smoke test.
-
-Legacy FEniCS workflows continue to run against `src/finmag` independently.
-This keeps the reference implementation executable while the replacement
-grows and makes cross-environment regression comparisons possible.
-
-## Final Promotion
-
-Moving the new package into `src/finmag` is not part of an ordinary feature
-slice. It is the final migration operation and requires all of the following:
-
-1. the agreed representative workflow matrix passes in the DOLFINx
-   environment;
-2. common energy and effective-field results match trusted legacy references;
-3. `barmini` or its accepted DOLFINx equivalent runs with compiled FK demag;
-4. restart and required output workflows pass;
-5. unsupported historical features are documented and accepted;
-6. the replacement package no longer imports code from legacy `src/finmag`;
-7. the user explicitly approves promotion.
-
-At that point, a dedicated change will remove the legacy package, move
-`dev/dolfinx/finmag` to `src/finmag`, adjust packaging and CI paths, and remove
-obsolete prototype code.
-
-## Deferred Slices
-
-The following are intentionally outside this first implementation:
-
-1. native Sundials/CVODE integration;
-2. FK demagnetising field using compiled array-based BEM construction;
-3. restart persistence and legacy restart compatibility;
-4. scheduler, NDT, VTK/XDMF, and field checkpoint output;
-5. field-valued material parameters and regions;
-6. DMI and cubic anisotropy production interaction classes;
-7. PBC and treecode demag;
-8. normal modes, LLB/SLLG, and spin-transfer torque;
-9. multi-rank time integration;
-10. external OOMMF, Nmag, and Magpar comparisons.
-11. final promotion from `dev/dolfinx/finmag` to `src/finmag`.
-
-These slices follow the roadmap order: core simulation and common energies,
-demag, restart/data I/O, normal modes, additional dynamics, then external
-validation tooling.
-
-## Acceptance Criteria
-
-The slice is complete when:
-
-- DOLFINx is constrained to `0.10.*`;
-- legacy `src/finmag` has no changes;
-- `PYTHONPATH=dev/dolfinx python -c "import finmag"` imports
-  `dev/dolfinx/finmag` in the DOLFINx environment without importing legacy
-  `dolfin`;
-- the accepted example advances to `1e-12 s` using all configured interaction
-  fields;
-- magnetisation remains unit length within the test tolerance;
-- interaction energies and effective fields match analytic or trusted legacy
-  references;
-- unsupported features fail explicitly;
-- the production DOLFINx core test and smoke gates pass from a clean checkout.
+The DOLFINx migration is complete when the agreed scientific workflow matrix
+runs from `src/finmag`, including compiled FK demag, restart, and required
+output; differential results satisfy their declared tolerances; unsupported
+historical features are documented; and `dev/dolfinx` contains only useful
+mechanics witnesses rather than a second implementation.

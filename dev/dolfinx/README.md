@@ -6,8 +6,12 @@ path without changing the green legacy FEniCS-2019 M2/M3 code. [Codex
 gpt-5.5 high]
 
 `porting_map.md` records how this exploration lane should be evaluated against
-the existing Finmag API, data structures, and tests before any code is promoted
-into `src/finmag`. [Codex gpt-5.5 high]
+the existing Finmag API, data structures, and tests before the matching
+production module is edited directly under `src/finmag`.
+
+This directory must not grow a second `finmag` package. A successful probe is
+evidence for a focused in-place source change; prototype modules are not copied
+or moved into production.
 
 ## Supported Scope
 
@@ -90,7 +94,10 @@ into `src/finmag`. [Codex gpt-5.5 high]
   wrapper, using absolute prototype simulation times.
 - JSON summary writing from the reduced simulation wrapper.
 - Narrow JSON restart-state round trips for the reduced `PrototypeSimulation`
-  unit-square path, including prototype time.
+  unit-square path, including prototype time. These tests use default
+  DMI/cubic-anisotropy parameters; the current reader drops non-default values
+  for those newer fields and must not be treated as a production restart
+  implementation.
 
 ## Explicit Non-Scope
 
@@ -119,6 +126,9 @@ into `src/finmag`. [Codex gpt-5.5 high]
   Sonnet 5]
 - No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
   scheduler-driven data I/O is provided.
+- `average_nodal_vector()` includes ghost entries in its MPI reduction. It is
+  reliable for the uniform single-rank example but produces partition-dependent
+  results for nonuniform fields and is not a production average implementation.
 - No adaptive or production-grade time integrator is provided; `run_until(...)`
   is a bounded explicit-step probe only.
 - No finite-element projection of general effective fields is provided.

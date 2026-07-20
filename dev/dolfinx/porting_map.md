@@ -3,8 +3,8 @@
 This map links the isolated `dev/dolfinx` exploration lane back to the legacy
 Finmag design that the real DOLFINx port should preserve where practical. It is
 not an implementation plan for a clean-room rewrite. It is a checklist for
-deciding when a DOLFINx prototype result is ready to be promoted into
-`src/finmag`. [Codex gpt-5.5 high]
+deciding when the evidence is strong enough to edit the matching production
+module directly under `src/finmag`.
 
 ## Porting Rule
 
@@ -12,6 +12,11 @@ The production port should keep the existing Finmag public API, data model, and
 test expectations unless DOLFINx or the modern software stack makes that
 impractical. In particular, `PrototypeSimulation` is an exploration object; it
 must not become the production API by accident. [Codex gpt-5.5 high]
+
+Do not create `dev/dolfinx/finmag`, copy these prototype modules into `src`, or
+defer review to a final package move. Use a probe to answer a bounded mechanics
+question, then implement the accepted behavior once in the existing source
+module with its tests.
 
 ## Legacy Surfaces To Preserve
 
@@ -94,29 +99,40 @@ must not become the production API by accident. [Codex gpt-5.5 high]
   absolute prototype simulation times, but they do not cover legacy NDT tables,
   VTK/XDMF, or scheduled output. [Codex gpt-5.5 high]
 - Reduced restart: `restart_state` and `restart_example.py` prove a JSON
-  round trip for a tiny unit-square prototype, preserving time, parameters, and
-  nodal magnetisation values. This is not the legacy Finmag restart format.
-  [Codex gpt-5.5 high]
+  round trip for a tiny unit-square prototype, preserving time and nodal
+  magnetisation values for the default parameter set. Deserialization currently
+  drops non-default DMI and cubic-anisotropy parameters, so this is neither a
+  complete prototype parameter round trip nor the legacy Finmag restart format.
+- MPI nodal output: `average_nodal_vector` reduces owned and ghost entries
+  together. A two-rank nonuniform-field probe produces a different result from
+  the serial calculation, so production averages and serialized arrays must use
+  explicit owned-dof semantics.
 - FK demag baseline: the FEniCS-2019/pixi M3 path still computes the
   Fredkin-Koehler BEM matrix through the compiled `finmag.native.llg`
   extension, using `compute_bem_fk` or the DOLFIN-2019-compatible
   `compute_bem_fk_from_arrays` entry point. The Python/NumPy Magpar code is a
   reference/comparison path, not the production FK BEM implementation. [Codex
   gpt-5.5 high]
+  The current extension still links `libdolfin` and registers SWIG-DOLFIN
+  converters, so its array entry point must be separated from those legacy
+  bindings before the extension can be rebuilt for the DOLFINx environment.
 
-## Promotion Criteria
+## Direct-Edit Readiness Criteria
 
-Before moving any `dev/dolfinx` code into `src/finmag`, check that:
+Before editing the matching module in `src/finmag`, check that:
 
 - the target legacy API surface is identified;
 - the existing FEniCS-2019/Python-3 tests that define the expected behaviour
   are known;
 - any DOLFINx-driven API or behaviour change is explicitly documented;
-- the implementation fits the existing `Simulation`, `Field`, energy, driver,
-  restart, or output abstraction;
-- the new DOLFINx code has an executable witness or regression test;
+- the intended implementation fits the existing `Simulation`, `Field`, energy,
+  driver, restart, or output abstraction;
+- the DOLFINx mechanic has an executable witness or regression test;
+- coordinate ordering and owned/ghost semantics are explicit where relevant;
 - unsupported legacy behaviour is tracked as deliberate non-scope, not simply
-  omitted. [Codex gpt-5.5 high]
+  omitted;
+- the production change will be written directly rather than copied from the
+  prototype.
 
 ## Near-Term Gaps
 

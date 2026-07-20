@@ -332,9 +332,10 @@ Goal:
 
 Porting strategy:
 
-- keep =dev/dolfinx= as an exploration lane for DOLFINx mechanics, dependency
-  shape, serialization, and small executable witnesses; do not let it become a
-  clean-room replacement for Finmag. [Codex gpt-5.5 high]
+- keep =dev/dolfinx= as an exploration lane for bounded DOLFINx mechanics,
+  reference generation, and small executable witnesses; do not create a second
+  =finmag= package there or let the prototype become a clean-room replacement
+  for Finmag.
 - when the actual FEniCS-2019.1 code base is ported, preserve the existing
   Finmag software design, public API, data structures, and tests as far as
   practical. Changes should be driven by DOLFINx, Python, MPI, packaging, or
@@ -344,12 +345,22 @@ Porting strategy:
   contract for the DOLFINx port. If DOLFINx requires changed behaviour, update
   tests deliberately and document the reason rather than silently drifting.
   [Codex gpt-5.5 high]
-- promote code from =dev/dolfinx= into =src/finmag= only after deciding how it
-  fits the existing =finmag.Simulation=, energy, driver, field, restart, and
-  output abstractions. [Codex gpt-5.5 high]
+- before editing a production capability, validate any unresolved DOLFINx
+  mechanics in =dev/dolfinx= and identify the legacy tests or reference values
+  that define its behaviour;
+- once that evidence is ready, edit the corresponding existing module under
+  =src/finmag= directly. Re-express the result in the production abstraction;
+  do not copy prototype modules into =src= and do not stage a duplicate package
+  for a later move;
+- after the first DOLFINx-only source edit, use the pinned FEniCS-2019 =pixi=
+  commit as an external oracle rather than adding temporary dual-backend logic
+  to the production source;
+- keep each source slice to one coherent capability and its focused in-place
+  tests so that the commit history, not a final package relocation, provides
+  the review structure.
 - =dev/dolfinx/porting_map.md= records the compatibility surfaces to preserve,
-  the current prototype evidence, and the promotion criteria for moving any
-  DOLFINx code into =src/finmag=. [Codex gpt-5.5 high]
+  the current prototype evidence, and the readiness criteria for a direct
+  source edit.
 - FK demag is a native-code compatibility item: the M3/pixi path computes the
   Fredkin-Koehler BEM matrix through compiled =finmag.native.llg=
   (=compute_bem_fk= or =compute_bem_fk_from_arrays=). The DOLFINx port should

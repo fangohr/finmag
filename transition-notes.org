@@ -2402,10 +2402,10 @@ why. Do not let the exploratory =PrototypeSimulation= API become the production
 API unless that choice is made deliberately after mapping it back to the
 existing Finmag design. [Codex gpt-5.5 high]
 
-=dev/dolfinx/porting_map.md= now records the main legacy surfaces to preserve,
-the current DOLFINx exploration evidence, and the criteria for promoting
-prototype code into =src/finmag=. Treat it as a gate before moving any
-=dev/dolfinx= implementation into production code. [Codex gpt-5.5 high]
+=dev/dolfinx/porting_map.md= records the main legacy surfaces to preserve, the
+current DOLFINx exploration evidence, and the readiness criteria for editing the
+matching =src/finmag= module directly. Prototype implementations remain in the
+exploration lane rather than being moved into production.
 
 The FK demag baseline in the M3/pixi path still uses compiled native BEM code:
 =finmag.native.llg.compute_bem_fk= or the DOLFIN-2019-compatible
@@ -2422,6 +2422,42 @@ suite so a missing or broken native FK BEM backend is reported directly.
 
 =dev/bin/verify-python3-native-fk-bem-smoke= exposes the same check as a
 single-purpose diagnostic command for CI triage. [Codex gpt-5.5 high]
+
+** Revised Direct-Source DOLFINx Migration Decision
+
+The production DOLFINx port will not be developed as a second =finmag= package
+under =dev/dolfinx= and copied into place later. The existing modules directly
+under =dev/dolfinx= remain bounded mechanics probes. Once a capability's
+DOLFINx behavior and legacy contract are understood, the corresponding
+=src/finmag= module is edited directly and its existing tests are ported in
+place.
+
+This avoids duplicate implementations, API drift, and a final delete/move diff.
+After the first DOLFINx-only source edit, commit
+=ba9280934e188d7f3800e7b9865e70a9422f7687= is the immutable
+Python-3/FEniCS-2019 oracle and is run from a separate process or checkout when
+new numerical reference data is required. Production source will not acquire a
+general legacy-DOLFIN/DOLFINx compatibility facade merely to keep both stacks
+live in one checkout.
+
+Two focused probes explain why the current prototype must remain evidence only:
+
+- a restart state with cubic-anisotropy values =(7, 3, 2)= restores them as
+  =(0, 0, 0)= because the reader does not reconstruct the newer fields;
+- a nonuniform nodal field averaged on two MPI ranks gives a different result
+  from the serial calculation because ghost entries are included in the global
+  sum and count.
+
+The direct-port design and task sequence are recorded in
+=docs/superpowers/specs/2026-07-06-dolfinx-core-port-design.md= and
+=docs/superpowers/plans/2026-07-06-dolfinx-core-port.md=.
+
+Native-code caveat: =finmag.native.llg.compute_bem_fk_from_arrays= accepts the
+right array-level inputs for a DOLFINx demag port, but the current extension as
+a whole still links =libdolfin=, compiles =swig_dolfin= converters, and
+registers those converters at module import. The array-only LLG/BEM binding must
+therefore be separated from the legacy DOLFIN mesh surface before rebuilding it
+on the Python-3.12/DOLFINx stack.
 
 ** First M5 / DOLFINx Core Simulation Slice
 

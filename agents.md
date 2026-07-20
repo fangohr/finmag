@@ -24,6 +24,13 @@ Working rule for future agent effort:
 
 - do not revive historical features or clean up old xfails unless that work
   directly advances one of those milestones.
+- use `dev/dolfinx` only for bounded mechanics probes and reference generation;
+  do not create a duplicate `finmag` package under `dev`
+- after a probe and its legacy contract are validated, port the capability by
+  editing its existing `src/finmag` module directly, with a focused in-place
+  test diff
+- do not copy prototype modules into `src`, add a general dual-backend facade,
+  or plan a final package promotion/move
 
 Current model-label convention:
 
@@ -1106,8 +1113,9 @@ why; do not let `PrototypeSimulation` become the production API unless that is
 deliberately mapped back to the existing Finmag design. [Codex gpt-5.5 high]
 
 `dev/dolfinx/porting_map.md` records the legacy surfaces to preserve, current
-prototype evidence, and promotion criteria. Consult it before moving any
-`dev/dolfinx` implementation into `src/finmag`. [Codex gpt-5.5 high]
+prototype evidence, and direct-edit readiness criteria. Consult it before
+implementing the matching capability in its existing `src/finmag` module; do
+not move the prototype implementation into production.
 
 The FK demag/BEM baseline in M3/pixi is compiled `finmag.native.llg`
 (`compute_bem_fk` or `compute_bem_fk_from_arrays`). Do not treat the NumPy
