@@ -55,10 +55,14 @@ dolfinx-src-import = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -c \"impor
 dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py"
 dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_field_dolfinx.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
+dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_energies_dolfinx.py"
+dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.energies_dolfinx_mpi_probe"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"
 dolfinx-field-ownership-probe-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m dev.dolfinx.field_ownership_probe"
+dolfinx-energy-box-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.energy_box_probe"
+dolfinx-energy-box-probe-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m dev.dolfinx.energy_box_probe"
 
 [environments]
 dolfinx = { features = ["dolfinx"], no-default-feature = true }

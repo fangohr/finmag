@@ -1,268 +1,197 @@
-import logging
-import dolfin as df
+"""DOLFINx energy-interaction foundation using lumped box assembly."""
+
+from math import pi
+
 import numpy as np
+import ufl
 from aeon import timer
-from finmag.util.meshes import nodal_volume
-from finmag.util import helpers
-from finmag.util.consts import mu0
-from finmag.field import Field
+from dolfinx import fem, la
+from mpi4py import MPI
+from ufl import TestFunction, dx, inner
 
-logger = logging.getLogger('finmag')
-
-
-def _dolfin_vector_array(vector):
-    if hasattr(vector, "get_local"):
-        return vector.get_local()
-    return vector.array()
+from finmag.field import Field, associated_scalar_space
 
 
-class EnergyBase(object):
+mu0 = 4.0 * pi * 1e-7
 
+
+class EnergyBase:
+    """Base class for DOLFINx energy terms.
+
+    The first direct DOLFINx slice supports the historical lumped
+    ``box-assemble`` algorithm only. Setup and every assembly/reduction method
+    are collective over the magnetisation mesh communicator.
     """
-    Computes a field for a given energy functional.
 
-    It is a class from which particular energies should derived from.
-    The derived classes should fill in the necessary details and call
-    methods on the parent. See e.g. Exchange and UniaxialAnisotropy for examples.
+    _supported_methods = ("box-assemble",)
+    _deferred_methods = (
+        "box-matrix-numpy",
+        "box-matrix-petsc",
+        "project",
+        "direct",
+    )
 
-    *Arguments*
-
-        method
-            possible methods are
-                * 'box-assemble'
-                * 'box-matrix-numpy'
-                * 'box-matrix-petsc' [Default]
-                * 'project'
-
-        in_jacobian
-            True or False -- decides whether the interaction is included in
-            the Jacobian.
-
-    At the moment, we think (all) 'box' methods work
-    (and the method is used in Magpar and Nmag).
-
-    - 'box-assemble' is a slower version that assembles the field H for a
-      given m in every iteration.
-
-    - 'box-matrix-numpy' precomputes a matrix g, so that H = g * m.
-
-    - 'box-matrix-petsc' is the same mathematical scheme as 'box-matrix-numpy',
-      but uses a PETSc linear algebra backend that supports sparse matrices
-      to exploit the sparsity of g (default choice).
-
-    - 'project': does not use the box method but 'properly projects' the
-      field into the function space. This is provided for reasons of
-      completeness but is potentially untested.
-
-    """
-    _supported_methods = ['box-assemble', 'box-matrix-numpy',
-                          'box-matrix-petsc', 'project', 'direct']
-
-    def __init__(self, method="box-matrix-petsc", in_jacobian=False):
+    def __init__(self, method="box-assemble", in_jacobian=False):
+        if method in self._deferred_methods:
+            raise NotImplementedError(
+                "energy method {!r} is not yet ported to DOLFINx; "
+                "use 'box-assemble'".format(method)
+            )
         if method not in self._supported_methods:
-            logger.error("Can't create '{}' object with method '{}'. "
-                         "Possible choices are {}.".format(
-                             self.__class__.__name__, method,
-                             self._supported_methods))
-            raise ValueError("Unsupported method '{}' should be "
-                             "one of {}.".format(method,
-                                                 self._supported_methods))
-        else:
-            logger.debug("Creating {} object with method {},{} in "
-                         "Jacobian.".format(self.__class__.__name__,
-                                            method,
-                                            " not " if not in_jacobian else ""))
-
-        self.in_jacobian = in_jacobian
+            raise ValueError(
+                "unsupported energy method {!r}; supported methods are {}".format(
+                    method, self._supported_methods
+                )
+            )
+        self.in_jacobian = bool(in_jacobian)
         self.method = method
 
-    def setup(self, E_integrand, m, Ms, unit_length=1):
+    def setup(self, E_integrand, m, Ms, unit_length=1.0):
+        """Bind an energy-density expression to ``m`` and constant positive ``Ms``.
+
+        ``E_integrand`` is expressed per physical volume while coordinates are
+        mesh units. Total energy therefore gains ``unit_length**mesh_dim``;
+        box-field division uses unscaled mesh-coordinate nodal volumes so that
+        physical volume factors cancel exactly.
         """
-        Function to be called after the energy object has been constructed.
+        if not isinstance(m, Field):
+            raise TypeError("m must be a finmag.Field")
+        if not isinstance(Ms, Field):
+            raise TypeError("Ms must be a finmag.Field")
+        if m.is_scalar_field():
+            raise ValueError("m must be a vector Field")
+        _require_cg1_magnetisation(m)
+        if not Ms.is_scalar_field():
+            raise ValueError("Ms must be a scalar Field")
+        if m.mesh() is not Ms.mesh():
+            raise ValueError("m and Ms must use the same mesh")
 
-        *Arguments*
-
-            E_integrand
-                dolfin form that represents the term inside the energy
-                integral, as a function of m (and maybe Ms) if assembled
-
-            m
-                magnetisation field (usually normalised)
-
-            Ms
-                Saturation magnetisation (scalar, or scalar dolfin function)
-
-            unit_length
-                real length of 1 unit in the mesh
-
-        """
-        ###license_placeholder###
-
-        assert isinstance(m, Field)
-        assert isinstance(Ms, Field)
+        unit_length = float(unit_length)
+        if not np.isfinite(unit_length) or unit_length <= 0.0:
+            raise ValueError("unit_length must be a positive finite number")
+        ms_values = Ms.as_array()
+        local_invalid_ms = bool(
+            np.any(~np.isfinite(ms_values)) or np.any(ms_values <= 0.0)
+        )
+        invalid_ms = m.mesh().comm.allreduce(local_invalid_ms, op=MPI.LOR)
+        if invalid_ms:
+            raise ValueError("Ms must be positive")
+        if not Ms.is_constant():
+            raise NotImplementedError(
+                "spatially varying Ms is deferred from the first DOLFINx "
+                "energy slice"
+            )
+        if hasattr(self, "E_density_function"):
+            del self.E_density_function
 
         self.E_integrand = E_integrand
-        dofmap = m.mesh_dofmap()
-        self.S1 = df.FunctionSpace(m.mesh(), "CG", 1,
-                                   constrained_domain=dofmap.constrained_domain)
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
-
-        self.E = E_integrand * df.dx
-        self.nodal_E = df.dot(E_integrand, df.TestFunction(self.S1)) * df.dx
-        self.dE_dm = df.Constant(-1.0 / mu0) * \
-            df.derivative(E_integrand / self.Ms.f * df.dx, self.m.f)
-
         self.dim = m.mesh_dim()
-        self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
-        # Same as nodal_volume_S1, just three times in an array
-        # to have the same number of elements in the array as the
-        # field to be able to divide it.
-        self.nodal_volume_S3 = nodal_volume(self.m.functionspace)
+        self.S1 = associated_scalar_space(m.functionspace)
 
-        if self.method == 'box-assemble':
-            self.__compute_field = self.__compute_field_assemble
-        elif self.method == 'box-matrix-numpy':
-            self.__setup_field_numpy()
-            self.__compute_field = self.__compute_field_numpy
-        elif self.method == 'box-matrix-petsc':
-            self.__setup_field_petsc()
-            self.__compute_field = self.__compute_field_petsc
-        elif self.method == 'project':
-            self.__setup_field_project()
-            self.__compute_field = self.__compute_field_project
-        elif self.method == 'direct':
-            self.__compute_field = self.__compute_field_petsc
-        else:
-            logger.error("Can't create '{}' object with method '{}'. "
-                         "Possible choices are "
-                         "{}.".format(self.__class__.__name__,
-                                      self.method, self._supported_methods))
-            raise ValueError("Unsupported method '{}' should be one of "
-                             "{}.".format(self.method,
-                                          self._supported_methods))
+        scalar_test = TestFunction(self.S1)
+        vector_test = TestFunction(m.functionspace)
+        self.E = E_integrand * dx
+        self.nodal_E = E_integrand * scalar_test * dx
+        self.dE_dm = (-1.0 / mu0) * ufl.derivative(
+            E_integrand / Ms.f * dx,
+            m.f,
+            vector_test,
+        )
+
+        self.nodal_volume_S1 = _nodal_volume_owned(self.S1)
+        self.nodal_volume_S3 = _nodal_volume_owned(m.functionspace)
+        return self
 
     @timer.method
     def compute_energy(self):
-        """
-        Return the total energy, i.e. energy density integrated
-        over the whole mesh [in units of Joule].
-
-        *Returns*
-            Float
-                The energy.
-
-        """
-        E = df.assemble(self.E) * self.unit_length ** self.dim
-        return E
+        """Collectively return total energy in joules."""
+        mesh_energy = _assemble_scalar(self.m.mesh(), self.E)
+        return mesh_energy * self.unit_length**self.dim
 
     @timer.method
     def energy_density(self):
-        """
-        Compute the energy density,
-
-        .. math::
-
-            \\frac{E}{V},
-
-        where V is the volume of each node.
-
-        *Returns*
-            numpy.ndarray
-                Coefficients of dolfin vector of energy density.
-
-        """
-        nodal_E = _dolfin_vector_array(df.assemble(self.nodal_E)) * \
-            self.unit_length ** self.dim
-        return nodal_E / self.nodal_volume_S1
+        """Collectively return owned lumped nodal energy-density values."""
+        nodal_energy = _assemble_vector_owned(self.nodal_E, self.S1)
+        return nodal_energy / self.nodal_volume_S1
 
     def energy_density_function(self):
-        """
-        Compute the exchange energy density the same way as the
-        energy_density function above, but return a dolfin function to
-        allow probing.
-
-        *Returns*
-            dolfin.Function
-                The energy density function object.
-
-        """
+        """Return the current lumped density as a ghost-refreshed Function."""
         if not hasattr(self, "E_density_function"):
-            self.E_density_function = df.Function(self.S1)
-        self.E_density_function.vector()[:] = self.energy_density()
-        return self.E_density_function
+            name = "{}_energy_density".format(
+                getattr(self, "name", self.__class__.__name__)
+            )
+            self.E_density_function = Field(self.S1, name=name)
+        self.E_density_function.from_array(self.energy_density())
+        return self.E_density_function.f
 
     @timer.method
     def compute_field(self):
-        """
-        Compute the field associated with the energy.
-
-         *Returns*
-            numpy.ndarray
-                The coefficients of the dolfin-function in a numpy array.
-
-        """
-
-        H = self.__compute_field()
-
-        return H
+        """Collectively return flat rank-local owned field coefficients."""
+        derivative = _assemble_vector_owned(self.dE_dm, self.m.functionspace)
+        return derivative / self.nodal_volume_S3
 
     def average_field(self):
-        """
-        Compute the average field.
-        """
-        return helpers.average_field(self.compute_field())
+        """Collectively return the legacy arithmetic nodal field average."""
+        values = self.compute_field().reshape((-1, self.m.value_dim()))
+        local_sum = np.sum(values, axis=0)
+        global_sum = np.zeros_like(local_sum)
+        self.m.mesh().comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
+        global_count = self.m.mesh().comm.allreduce(values.shape[0], op=MPI.SUM)
+        return global_sum / global_count
 
-    def __compute_field_assemble(self):
-        return _dolfin_vector_array(df.assemble(self.dE_dm)) / self.nodal_volume_S3
 
-    def __setup_field_petsc(self):
-        """
-        Same as __setup_field_numpy but with a petsc backend.
+def _assembled_vector(expression):
+    """Assemble a linear form with complete owner and ghost values."""
+    vector = fem.assemble_vector(fem.form(expression))
+    vector.scatter_reverse(la.InsertMode.add)
+    vector.scatter_forward()
+    return vector
 
-        """
-        g_form = df.derivative(self.dE_dm, self.m.f)
-        self.g_petsc = df.PETScMatrix()
-        df.assemble(g_form, tensor=self.g_petsc)
-        self.H_petsc = df.PETScVector()
 
-    def __compute_field_petsc(self):
-        if not hasattr(self, "g_petsc"):
-            self.__setup_field_petsc()
-        self.g_petsc.mult(self.m.f.vector(), self.H_petsc)
-        return _dolfin_vector_array(self.H_petsc) / self.nodal_volume_S3
+def _assemble_vector_owned(expression, function_space):
+    vector = _assembled_vector(expression)
+    return vector.array[: _owned_scalar_dofs(function_space)].copy()
 
-    def __setup_field_numpy(self):
-        """
-        Linearise dE_dm with respect to m. As we know this is linear
-        (at least for exchange, and uniaxial anisotropy? Should add
-        reference to Werner Scholz paper and relevant equation for g),
-        this creates the right matrix to compute dE_dm later as
-        dE_dm = g * m. We essentially compute a Taylor series of the
-        energy in m, and know that the first two terms (for exchange:
-        dE_dm = Hex, and ddE_dmdm = g) are the only finite ones as we
-        know the expression for the energy.
 
-        """
-        g_form = df.derivative(self.dE_dm, self.m.f)
-        self.g = _dolfin_vector_array(df.assemble(g_form))
+def _assemble_scalar(domain, expression):
+    local_value = fem.assemble_scalar(fem.form(expression))
+    return domain.comm.allreduce(local_value, op=MPI.SUM)
 
-    def __compute_field_numpy(self):
-        Mvec = _dolfin_vector_array(self.m.f.vector())
-        H_ex = np.dot(self.g, Mvec)
-        return H_ex / self.nodal_volume_S3
 
-    def __setup_field_project(self):
-        # Note that we could make this 'project' method faster by
-        # computing the matrices that represent a and L, and only to
-        # solve the matrix system in 'compute_field'().
-        # IF this method is actually useful, we can do that. HF 16 Feb 2012
-        self.a = df.dot(df.TrialFunction(self.m.functionspace),
-                        df.TestFunction(self.m.functionspace)) * df.dx
-        self.L = self.dE_dm
-        self.H_project = df.Function(self.m.functionspace)
+def _nodal_volume_owned(function_space):
+    value_shape = function_space.ufl_element().reference_value_shape
+    value_size = int(np.prod(value_shape)) if value_shape else 1
+    test = TestFunction(function_space)
+    if value_size == 1:
+        expression = test * dx
+    else:
+        ones = fem.Constant(function_space.mesh, np.ones(value_size))
+        expression = inner(test, ones) * dx
+    volumes = _assemble_vector_owned(expression, function_space)
+    local_invalid = bool(np.any(~np.isfinite(volumes)) or np.any(volumes <= 0.0))
+    invalid = function_space.mesh.comm.allreduce(local_invalid, op=MPI.LOR)
+    if invalid:
+        raise ValueError("box assembly requires positive owned nodal volumes")
+    return volumes
 
-    def __compute_field_project(self):
-        df.solve(self.a == self.L, self.H_project)
-        return _dolfin_vector_array(self.H_project.vector())
+
+def _owned_scalar_dofs(function_space):
+    dofmap = function_space.dofmap
+    return dofmap.index_map.size_local * dofmap.index_map_bs
+
+
+def _require_cg1_magnetisation(m):
+    element = m.functionspace.ufl_element()
+    if (
+        m.value_dim() != 3
+        or m.functionspace.dofmap.index_map_bs != 3
+        or element.degree != 1
+        or element.family_name not in ("P", "Lagrange")
+    ):
+        raise NotImplementedError(
+            "the first DOLFINx box-energy slice requires a blocked "
+            "three-component CG1 magnetisation space"
+        )

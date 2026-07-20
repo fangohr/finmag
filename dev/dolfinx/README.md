@@ -16,6 +16,20 @@ behavioral contract; it was not copied into production and does not own the
 active API. Production Field checks use `dolfinx-src-field-pytest` and
 `dolfinx-src-field-mpi`. [Codex GPT-5.6]
 
+Task 5 uses `energy_box_probe.py` as a bounded pre-source witness for energy
+assembly. It is not an energy package to copy into `src`: it records the exact
+DOLFINx 0.10 reverse-add/forward-scatter ordering required for complete lumped
+nodal volumes and derivative vectors that was validated before the existing
+production energy modules were edited directly. [Codex GPT-5.6]
+
+The accepted probe has now been implemented directly in
+`src/finmag/energies`: `EnergyBase`, static `Zeeman`, scalar-`A` `Exchange`,
+and constant-`K1`/`K2` `UniaxialAnisotropy` are DOLFINx-native. Production
+checks use `dolfinx-src-energies-pytest` and `dolfinx-src-energies-mpi`; this
+directory remains evidence, not the implementation source. This first box
+slice is restricted to blocked three-component CG1 magnetisation spaces.
+[Codex GPT-5.6]
+
 `porting_map.md` records how this exploration lane should be evaluated against
 the existing Finmag API, data structures, and tests before the matching
 production module is edited directly under `src/finmag`.
@@ -60,6 +74,13 @@ or moved into production.
   contain owned dofs only and refresh ghosts after mutation. [Codex GPT-5.6]
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
+- `energy_box_probe.py` checks the production-port box contract in serial and
+  on two ranks: assembled vectors reverse-add ghost contributions and then
+  forward-refresh completed owner values before owned coefficients are read.
+  The probe verifies scalar/vector lumped volumes, `H_eff == H` for Zeeman,
+  the `-1/(mu0*Ms)` sign, constant `K1`/`K2` anisotropy, exchange
+  `unit_length**-2` field scaling, and analytical total energies. [Codex
+  GPT-5.6]
 - Bulk (3D, T-symmetry) DMI energy assembly, matching the legacy
   `dmi_type='auto'` 3D case (`D * inner(m, curl(m))`). Interfacial and
   1D/2D DMI variants are not covered yet. [GitHub Copilot / Claude Sonnet 5]
@@ -139,12 +160,15 @@ or moved into production.
   Sonnet 5]
 - No general Finmag restart format, legacy NDT tables, VTK/XDMF output, or full
   scheduler-driven data I/O is provided.
-- `average_nodal_vector()` includes ghost entries in its MPI reduction. It is
-  reliable for the uniform single-rank example but produces partition-dependent
-  results for nonuniform fields and is not a production average implementation.
+- `average_nodal_vector()` is an owned-only MPI nodal statistic. It is not a
+  volume-weighted finite-element average and is retained only as prototype
+  output evidence; production `Field.average()` has the FEM-integral contract.
 - No adaptive or production-grade time integrator is provided; `run_until(...)`
   is a bounded explicit-step probe only.
 - No finite-element projection of general effective fields is provided.
+- Matrix/project/direct energy algorithms, spatially varying `A`, `K1`, `K2`,
+  anisotropy axes or `Ms`, `DipolarField`, and all time-dependent Zeeman
+  variants remain deferred from the direct Task 5 source slice.
 - No compatibility guarantee is made for legacy Finmag public APIs.
 - The dataclasses are a prototype API sketch, not a stable public API.
 - No attempt is made here to port rarely used historical features.

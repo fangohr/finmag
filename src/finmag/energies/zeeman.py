@@ -1,416 +1,158 @@
-import logging
-import dolfin as df
+"""DOLFINx static Zeeman interaction."""
+
 import numpy as np
-from finmag.field import Field
-from finmag.util.consts import mu0
-from finmag.util.meshes import nodal_volume
-from finmag.util import helpers
-from math import pi, cos
+from dolfinx import fem
+from mpi4py import MPI
+from ufl import dx, inner
 
-log = logging.getLogger("finmag")
+from finmag.field import Field, associated_scalar_space
+
+from .energy_base import (
+    _assemble_scalar,
+    _require_cg1_magnetisation,
+    mu0,
+)
 
 
-def _vector_as_numpy(vec):
+class Zeeman:
+    """Static external field in A/m.
+
+    Constants and Python callables use the same assignment contract as
+    :class:`finmag.field.Field`. Energy assembly and averages are collective;
+    ``compute_field`` returns flat rank-local owned backend-order values.
     """
-    Return a NumPy copy of a DOLFIN vector on both the legacy and PETSc-backed
-    paths. The Python 3 core-suite image still exposes ``array()``, while the
-    pixi/FEniCS-2019 stack only provides ``get_local()``. [Codex GPT-5.4]
-    """
-    try:
-        return vec.get_local()
-    except AttributeError:
-        return vec.array()
 
-
-class Zeeman(object):
-
-    def __init__(self, H, name='Zeeman', **kwargs):
-        """
-        Specify an external field (in A/m).
-
-        H can have any of the forms accepted by the function
-        'finmag.util.helpers.vector_valued_function' (see its docstring for details).
-
-        """
+    def __init__(self, H, name="Zeeman", **kwargs):
         self.H_value = H
         self.name = name
         self.kwargs = kwargs
         self.in_jacobian = False
 
-    def setup(self, m, Ms, unit_length=1):
-        """
-        Function to be called after the energy object has been constructed.
+    def setup(self, m, Ms, unit_length=1.0):
+        if not isinstance(m, Field):
+            raise TypeError("m must be a finmag.Field")
+        if not isinstance(Ms, Field):
+            raise TypeError("Ms must be a finmag.Field")
+        if m.is_scalar_field() or m.value_dim() != 3:
+            raise ValueError("Zeeman requires a three-component m Field")
+        _require_cg1_magnetisation(m)
+        if not Ms.is_scalar_field():
+            raise ValueError("Ms must be a scalar Field")
+        if m.mesh() is not Ms.mesh():
+            raise ValueError("m and Ms must use the same mesh")
 
-        *Arguments*
+        unit_length = float(unit_length)
+        if not np.isfinite(unit_length) or unit_length <= 0.0:
+            raise ValueError("unit_length must be a positive finite number")
+        ms_values = Ms.as_array()
+        local_invalid_ms = bool(
+            np.any(~np.isfinite(ms_values)) or np.any(ms_values <= 0.0)
+        )
+        if m.mesh().comm.allreduce(local_invalid_ms, op=MPI.LOR):
+            raise ValueError("Ms must be positive")
+        if not Ms.is_constant():
+            raise NotImplementedError(
+                "spatially varying Ms is deferred from the first DOLFINx "
+                "energy slice"
+            )
 
-            m
-                magnetisation field (usually normalised)
-
-            Ms
-                Saturation magnetisation (scalar, or scalar dolfin function)
-
-            unit_length
-                real length of 1 unit in the mesh
-
-        """
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
-
-        dofmap = self.m.functionspace.dofmap()
-        self.S1 = df.FunctionSpace(
-            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
-        # self.dim = S3.mesh().topology().dim()
-        # self.nodal_volume_S1 = nodal_volume(self.S1, self.unit_length)
-
+        self.S1 = associated_scalar_space(m.functionspace)
+        if hasattr(self, "H"):
+            del self.H
+        if hasattr(self, "_energy_density_field"):
+            del self._energy_density_field
         self.set_value(self.H_value, **self.kwargs)
+        return self
 
     def set_value(self, value, **kwargs):
-        """
-        Set the value of the field (in A/m).
-
-        `value` can have any of the forms accepted by the function
-        'finmag.util.helpers.vector_valued_function' (see its
-        docstring for details).
-
-        """
+        """Set a constant or callable external field after ``setup``."""
+        if not hasattr(self, "m"):
+            raise RuntimeError("Zeeman.setup must be called before set_value")
+        if kwargs:
+            raise NotImplementedError(
+                "legacy Expression parameters are unavailable; pass a callable"
+            )
+        if hasattr(self, "H"):
+            self.H.set(value)
+        else:
+            self.H = Field(self.m.functionspace, value, name="H_ext")
+        self.H_value = value
         self.value = value
-        dofmap = self.m.functionspace.dofmap()
-        dg_vector_functionspace = df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain)
-        self.H = Field(dg_vector_functionspace, value, name='H_ext')
-        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H.f)  # Energy density.
-
-    def average_field(self):
-        """
-        Compute the average applied field.
-        """
-        return helpers.average_field(self.compute_field())
+        self.E = -mu0 * self.Ms.f * inner(self.m.f, self.H.f)
+        return self
 
     def compute_field(self):
-        return self.H.get_numpy_array_debug()
+        """Return flat rank-local owned field coefficients."""
+        return self.H.as_array()
 
-    def compute_energy(self, dx=df.dx):
-        dim = self.m.mesh_dim()
-        E = df.assemble(self.E * dx) * self.unit_length ** dim
-        return E
+    def average_field(self):
+        """Collectively return the legacy arithmetic nodal field average."""
+        values = self.compute_field().reshape((-1, self.m.value_dim()))
+        local_sum = np.sum(values, axis=0)
+        global_sum = np.zeros_like(local_sum)
+        self.m.mesh().comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
+        global_count = self.m.mesh().comm.allreduce(values.shape[0], op=MPI.SUM)
+        return global_sum / global_count
+
+    def compute_energy(self, dx=dx):
+        """Collectively integrate Zeeman energy over the supplied measure."""
+        mesh_energy = _assemble_scalar(self.m.mesh(), self.E * dx)
+        return mesh_energy * self.unit_length ** self.m.mesh_dim()
 
     def energy_density(self):
-        """
-        Return energy density (as a finmag.Field object).
-        """
-        # Previous version
-        #return df.project(df.dot(self.m.f, self.H.f) * self.Ms.f * -mu0, self.S1).vector().array()
-        #
-        # New version using the Field class. Note that this is
-        # currently ca. 6-7 times *slower* than the version above.
-        # However, it is slightly more accurate (no rounding errors
-        # due to projection), and we should be able to tune
-        # performance in the Field class.
-        return self.m.dot(self.H) * self.Ms * -mu0
+        """Collectively return legacy pointwise nodal density as a Field."""
+        values = -mu0 * self.Ms.as_constant() * np.sum(
+            self.m.as_array().reshape((-1, 3))
+            * self.H.as_array().reshape((-1, 3)),
+            axis=1,
+        )
+        expected_size = self.S1.dofmap.index_map.size_local
+        if values.shape != (expected_size,):
+            raise ValueError(
+                "Zeeman pointwise density requires matching scalar/vector "
+                "CG1 ownership"
+            )
+        if not hasattr(self, "_energy_density_field"):
+            self._energy_density_field = Field(
+                self.S1, name="{}_energy_density".format(self.name)
+            )
+        self._energy_density_field.from_array(values)
+        return self._energy_density_field
 
     def energy_density_function(self):
-        if not hasattr(self, "E_density_function"):
-            self.E_density_function = self.energy_density().f
-        return self.E_density_function
+        return self.energy_density().f
 
 
-class DipolarField(Zeeman):
+class _DeferredZeeman:
+    feature_name = "time-dependent Zeeman interaction"
 
-    def __init__(self, pos, m, magnitude=None, name='DipolarField'):
-        """
-        Magnetostatic field of a point dipole at position `pos` with a fixed
-        magnetic moment.
+    def __init__(self, *args, **kwargs):
+        del args, kwargs
+        raise NotImplementedError(
+            "{} is deferred from the static Task 5 DOLFINx slice".format(
+                self.feature_name
+            )
+        )
 
-        If `magnitude` is `None`, the magnetic moment is simply given by `m`.
-        Otherwise `m` is interpreted only as the *direction* of the magnetic
-        moment and `magnitude` as its magnitude, i.e. the magnetic moment is
-        given by:
 
-           magnitude * (m / |m|)
+class DipolarField(_DeferredZeeman):
+    feature_name = "dipolar point-field construction"
 
-        """
-        # XXX TODO: Check whether pos coincides with a mesh point and shift it by
-        #           an infinitesimal amount if so!
-        self.pos = np.asarray(pos)
 
-        if magnitude is None:
-            self.m = np.asarray(m)
-        else:
-            self.m = magnitude * np.asarray(m) / np.linalg.norm(m)
+class TimeZeeman(_DeferredZeeman):
+    pass
 
-        def H_fun(pt):
-            v = self.pos - pt
-            r = np.linalg.norm(v)
-            #n = v / np.linalg.norm(v)
-            return 1.0 / (4 * pi) * (3 * v * np.dot(self.m, v) / r ** 5 - self.m / r ** 3)
 
-        Hx_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[0]-posx) - mx / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
-        Hy_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[1]-posy) - my / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
-        Hz_expr = '1/(4*pi) * (3*(mx*(x[0]-posx)+my*(x[1]-posy)+mz*(x[2]-posz)) / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 5) * (x[2]-posz) - mz / pow(sqrt((x[0]-posx)*(x[0]-posx)+(x[1]-posy)*(x[1]-posy)+(x[2]-posz)*(x[2]-posz)), 3))'
-        H_expr = df.Expression([Hx_expr, Hy_expr, Hz_expr], mx=self.m[0], my=self.m[1], mz=self.m[2], posx=pos[0], posy=pos[1], posz=pos[2], degree=1)
+class DiscreteTimeZeeman(_DeferredZeeman):
+    pass
 
-        #super(DipolarField, self).__init__(H_fun, name=name)
-        super(DipolarField, self).__init__(H_expr, name=name)
 
+class TimeZeemanPython(_DeferredZeeman):
+    pass
 
-class TimeZeeman(Zeeman):
 
-    def __init__(self, field_expression, t_off=None, name='TimeZeeman'):
-        """
-        Specify a time dependent external field (in A/m), which gets updated as continuously as possible.
-
-        Pass in a dolfin expression that depends on time. Make sure the time
-        variable is called t. It will get refreshed by calls to update.
-        The argument t_off can specify a time at which the field will
-        get switched off.
-
-        Alternatively, `field_expression` can be a 3-array representing a
-        constant field. In this case `t_off` must be specified, otherwise
-        a ValueError is raised (this is a safety measure because in this
-        case there would be no time update at all, so it's likely that the
-        user intended to do something else).
-
-        """
-        if isinstance(field_expression, (list, tuple, np.ndarray)):
-            field_expression = np.asarray(field_expression)
-            if not field_expression.shape == (3,):
-                raise ValueError(
-                    "If field_expression is not a dolfin expression, it must "
-                    "be a 3-array (representing a constant external field)")
-            if t_off is None:
-                raise ValueError(
-                    "The argument 'field_expression' is a constant array, but "
-                    "t_off was not specified so there will be no time update "
-                    "at all. Use the Zeeman class instead of TimeZeeman if "
-                    "this is what you really want.")
-            # Convert the array to a dolfin constant so that we can proceed as
-            # normal
-            field_expression = df.Constant(tuple(map(float, field_expression)))
-
-        assert isinstance(field_expression, (df.Expression, df.Constant))
-        super(TimeZeeman, self).__init__(field_expression, name=name)
-        # TODO: Maybe set a 'checkpoint' for the time integrator at
-        #       time t_off? (See comment in update() below.)
-        self.t_off = t_off
-        self.switched_off = False
-
-    def update(self, t):
-        if not self.switched_off:
-            if self.t_off and t >= self.t_off:
-                # TODO: It might be cleaner to explicitly set a
-                #       'checkpoint' for the time integrator at time
-                #       t_off, otherwise there is the possibility of
-                #       it slightly "overshooting" and thus missing
-                #       the exact time the field is switched off.
-                #       (This should probably happen in __init__)
-                self.switch_off()
-                return
-            self.value.t = t
-            self.H.set(self.value)
-            self.H.name = 'H_ext'
-
-    def switch_off(self):
-        # It might be nice to provide the option to remove the Zeeman
-        # interaction from the simulation altogether (or at least
-        # provide an option to do so) in order to avoid computing the
-        # Zeeman energy at all once the field is switched off.
-        log.debug("Switching external field off.")
-        dofmap = self.m.functionspace.dofmap()
-        self.H = Field(df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain), (0, 0, 0))
-        self.value = None
-        self.switched_off = True
-
-
-class DiscreteTimeZeeman(TimeZeeman):
-
-    def __init__(self, field_expression, dt_update=None, t_off=None, name='DiscreteTimeZeeman'):
-        """
-        Specify a time dependent external field which gets updated in
-        discrete time intervals.
-
-        Pass in a dolfin expression that depends on time. Make sure
-        the time variable is called t. It will get refreshed by calls
-        to update, if more than dt_update time has passed since the
-        last refresh. The argument t_off can specify a time at which
-        the field will get switched off. If t_off is provided,
-        dt_update can be `None` so that the field remains constant
-        until it is switched off.
-
-        """
-        if dt_update is None and t_off is None:
-            raise ValueError("At least one of the arguments 'dt_update' and "
-                             "'t_off' must be given.")
-        super(DiscreteTimeZeeman, self).__init__(
-            field_expression, t_off, name=name)
-        self.dt_update = dt_update
-        self.t_last_update = 0.0
-
-    def update(self, t):
-        if not self.switched_off:
-            if self.t_off and t >= self.t_off:
-                self.switch_off()
-                return
-
-            if self.dt_update is not None:
-                dt_since_last_update = t - self.t_last_update
-                if dt_since_last_update >= self.dt_update:
-                    self.value.t = t
-                    dofmap = self.m.functionspace.dofmap()
-                    dg_vector_functionspace = df.VectorFunctionSpace(self.m.mesh(), 'CG', 1, 3, constrained_domain=dofmap.constrained_domain)
-                    self.H = Field(dg_vector_functionspace, self.value, name='H_ext')
-                    log.debug("At t={}, after dt={}, update external field again.".format(
-                        t, dt_since_last_update))
-
-
-class TimeZeemanPython(TimeZeeman):
-
-    def __init__(self, df_expression, time_fun, t_off=None, name='TimeZeemanPython'):
-        """
-        Faster version of the TimeZeeman class for the special case
-        that only the amplitude (or the direction) of the field
-        varies over time. That is, if `H_0` denotes the field at time
-        t=0 then the field value at some point `x` at time `t` is
-        assumed to be of the form:
-
-           H(t, x) = H_0(x) * time_fun(t)
-
-        In this situation, the dolfin.interpolate method only needs to
-        be evaluated once at the beginning for the spatial expression,
-        which saves a lot of computational effort.
-
-        *Arguments*
-
-        df_expression :  dolfin.Expression
-
-            The dolfin Expression representing the inital field value
-            (this can vary spatially but must not depend on time).
-
-        time_fun :  callable
-
-            Function representing the scaling factor for the amplitude at time.
-
-            Note that if the given dolfin expression is a scalar,
-            then the time_fun have to return a 3d vector, for example,
-            a spatial rotational field around x-axis could be expressed as,
-
-                Hy = h0(x,y,z)*cos(wt)
-                Hz = h0(x,y,z)*sin(wt)
-
-        t_off :  float
-
-            Time at which the field is switched off.
-        """
-        assert isinstance(df_expression, (df.Expression, df.Constant))
-        self.df_expression = df_expression
-        self.time_fun = time_fun
-        self.t_off = t_off
-        self.switched_off = False
-        self.name = name
-        self.in_jacobian = False
-
-        self.scalar_df_expression = False
-        if df_expression.value_size() == 1:
-            self.scalar_df_expression = True
-
-    def setup(self, m, Ms, unit_length=1):
-        self.m = m
-        self.Ms = Ms
-        self.unit_length = unit_length
-        if self.scalar_df_expression:
-            dofmap = m.functionspace.dofmap()
-            self.S1 = df.FunctionSpace(
-                m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
-            self.h0 = helpers.scalar_valued_function(
-                self.df_expression, self.S1).vector().get_local()
-            self.H0 = df.Function(m.functionspace)
-        else:
-            self.H0 = helpers.vector_valued_function(
-                self.df_expression, self.m.functionspace)
-
-        self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H0)
-
-        self.H_init = _vector_as_numpy(self.H0.vector())
-        self.H = self.H_init.copy()
-
-    def update(self, t):
-        if not self.switched_off:
-            if self.t_off and t >= self.t_off:
-                self.switch_off()
-                return
-
-            if self.scalar_df_expression:
-                tx, ty, tz = self.time_fun(t)
-
-                self.H.shape = (3, -1)
-                self.H[0, :] = self.h0 * tx
-                self.H[1, :] = self.h0 * ty
-                self.H[2, :] = self.h0 * tz
-                self.H.shape = (-1,)
-            else:
-                self.H[:] = self.H_init[:] * self.time_fun(t)
-        return self  # for use in list comprehensions
-
-    def switch_off(self):
-        # It might be nice to provide the option to remove the Zeeman
-        # interaction from the simulation altogether (or at least
-        # provide an option to do so) in order to avoid computing the
-        # Zeeman energy at all once the field is switched off.
-        log.debug("Switching external field off.")
-        self.H = np.zeros_like(self.H)
-        self.value = None
-        self.switched_off = True
-
-    def average_field(self):
-        """
-        Compute the average applied field.
-        """
-        return helpers.average_field(self.compute_field())
-
-    def compute_field(self):
-        return self.H
-
-    def compute_energy(self, dx=df.dx):
-        self.H0.vector().set_local(self.H)
-        E = df.assemble(self.E * dx) * self.unit_length ** 3
-        return E
-
-
-class OscillatingZeeman(TimeZeemanPython):
-
-    def __init__(self, H0, freq, phase=0, t_off=None, name='OscillatingZeeman'):
-        """
-        Create a field which is constant in space but whose amplitude
-        varies sinusoidally with the given frequency and phase. More
-        precisely, the field value at time t is:
-
-            H(t) = H0 * cos(2*pi*freq*t + phase)
-
-        Where H0 is a constant 3-vector representing the 'base field'.
-
-
-        *Arguments*
-
-        H0 :  3-vector
-
-            The constant 'base field' which is scaled by the oscillating amplitude.
-
-        freq :  float
-
-            The oscillation frequency.
-
-        phase :  float
-
-            The phase of the oscillation.
-
-        t_off :  float
-
-            Time at which the field is switched off.
-
-        """
-        H0_expr = df.Constant(tuple(map(float, H0)))
-
-        def amplitude(t):
-            return cos(2 * pi * freq * t + phase)
-
-        super(OscillatingZeeman, self).__init__(
-            H0_expr, amplitude, t_off=t_off, name=name)
+class OscillatingZeeman(_DeferredZeeman):
+    pass

@@ -137,30 +137,30 @@ Direct source acceptance:
 
 ### 5a. Box-method foundation
 
-- [ ] Probe owned/ghost-safe lumped nodal volumes and derivative assembly on
+- [x] Probe owned/ghost-safe lumped nodal volumes and derivative assembly on
   two ranks.
-- [ ] Port `EnergyBase` directly with box assembly as the first supported method.
-- [ ] Verify effective-field sign, `mu0`, `Ms`, unit-length powers, and energy
+- [x] Port `EnergyBase` directly with box assembly as the first supported method.
+- [x] Verify effective-field sign, `mu0`, `Ms`, unit-length powers, and energy
   reduction analytically.
-- [ ] Reject unsupported matrix/project methods precisely rather than silently
+- [x] Reject unsupported matrix/project methods precisely rather than silently
   changing algorithms.
 
 ### 5b. Zeeman
 
-- [ ] Port constant/callable field setup, field values, energy, and average.
-- [ ] Check `H_eff == H` and analytic energy on 2D and 3D meshes.
+- [x] Port constant/callable field setup, field values, energy, and average.
+- [x] Check `H_eff == H` and analytic energy on 2D and 3D meshes.
 
 ### 5c. Exchange
 
-- [ ] Port scalar `A` first, keeping constructor and lifecycle semantics.
-- [ ] Check zero constant fields, analytic linear fields, and unit scaling.
+- [x] Port scalar `A` first, keeping constructor and lifecycle semantics.
+- [x] Check zero constant fields, analytic linear fields, and unit scaling.
 
 ### 5d. Uniaxial anisotropy
 
-- [ ] Port constant `K1`, `K2`, and axis values first.
-- [ ] Check parallel/perpendicular states, axis validation, field direction, and
+- [x] Port constant `K1`, `K2`, and axis values first.
+- [x] Check parallel/perpendicular states, axis validation, field direction, and
   legacy reference values.
-- [ ] Defer spatially varying coefficients to a separate slice rather than
+- [x] Defer spatially varying coefficients to a separate slice rather than
   quietly treating them as constants.
 
 ## Task 6: Port `EffectiveField` directly

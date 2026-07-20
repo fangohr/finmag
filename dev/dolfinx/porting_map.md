@@ -104,6 +104,28 @@ module with its tests.
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
+- Task 5 box-method witness: `energy_box_probe.py` closes an ownership gap in
+  the earlier prototype helper. A DOLFINx linear-form vector must call
+  `scatter_reverse(InsertMode.add)` to accumulate contributions into owners and
+  then `scatter_forward()` to refresh ghost copies before any ghost-inclusive
+  inspection. Production interaction arrays remain owned-only, but this order
+  ensures their owner values include every adjacent cell. The probe passes on
+  a 16-vertex unit square with serial ownership 16/0 and two-rank ownership
+  7/9 plus 5/3 ghosts. [Codex GPT-5.6]
+- Task 5 legacy surface: `EnergyBase`, `Exchange`, and uniaxial anisotropy used
+  to default to `box-matrix-petsc` and advertised NumPy-matrix, project, and
+  direct paths. The DOLFINx source slice deliberately changes the default to
+  the only supported `box-assemble` algorithm; every historical
+  matrix/project/direct request raises `NotImplementedError` instead of being
+  silently remapped. [Codex GPT-5.6]
+- Task 5 import boundary: `finmag.energies` now bypasses the legacy `dolfin`
+  bridge for `EnergyBase`, `Exchange`, static `Zeeman`, and
+  `UniaxialAnisotropy`. The time-Zeeman names resolve to explicit deferred
+  stubs without pretending that installing `dolfin` restores their removed
+  implementation. Demag, DMI, cubic anisotropy, and the other untouched
+  exports retain the real legacy dependency. The ported modules no longer
+  import `finmag.util.meshes`, `finmag.util.helpers`, or `finmag.native`.
+  [Codex GPT-5.6]
 - Bulk DMI: `dmi_energy` covers the legacy 3D `dmi_type='auto'` case
   (`D * inner(m, curl(m))`), with the matching `unit_length ** (dim - 1)`
   scaling convention and a 3D-mesh guard. Interfacial and 1D/2D DMI variants
@@ -203,6 +225,19 @@ Before editing the matching module in `src/finmag`, check that:
   added only for a concrete output/restart consumer; multi-rank ODE state is
   not claimed by the first Field/driver slices. [Codex GPT-5.6]
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
+- The Task 5 box assembly and common interactions are now direct production
+  code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
+  `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
+  region/PBC interaction behavior, `DipolarField`, and time-dependent Zeeman
+  variants remain outside this slice. The ported interactions are currently
+  direct-use building blocks with DOLFINx `Field`; `EffectiveField`,
+  `Simulation`, hysteresis, LLB, and normal-mode consumers remain unported.
+  [Codex GPT-5.6]
+- The production box foundation deliberately requires a blocked
+  three-component CG1 magnetisation space. Some higher-order Lagrange row-sum
+  lumped weights are non-positive, so accepting arbitrary elements would fail
+  late and potentially asymmetrically across ranks. Invalid volume detection
+  is collective as a second guard. [Codex GPT-5.6]
 - Demag is not covered by the current DOLFINx prototype lane. The production
   DOLFINx port should either reuse/port the array-based native FK BEM routines
   or provide a replacement with equivalent tests; a pure Python/NumPy BEM path

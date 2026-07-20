@@ -2689,6 +2689,129 @@ Verified on 2026-07-20:
 - =dev/bin/verify-dolfinx-m4= remained green, including =105 passed in
   1.94s=. [Codex GPT-5.6]
 
+** Task 5 Energy Foundation Probe
+
+The Task 5 source audit found that the energy package was syntactically lazy
+but not backend-sliceable: =finmag.energies.__getattr__= called the legacy
+=dolfin= initializer for every exported interaction. The direct port now lets
+=EnergyBase=, =Exchange=, static =Zeeman=, and =UniaxialAnisotropy= bypass that
+bridge, while untouched interactions retain the real missing-=dolfin= failure.
+The ported modules also removed imports of =finmag.util.meshes=,
+=finmag.util.helpers=, and =finmag.native= so those dependencies cannot reopen
+the legacy backend transitively.
+
+The legacy default =box-matrix-petsc= method could not remain the default when
+the first supported DOLFINx algorithm is =box-assemble=. Task 5 changes the
+default to the usable box-assembly path and rejects historical matrix, project,
+and direct requests explicitly. Mapping those names to assembly would conceal
+an algorithm change. Existing legacy Exchange, Zeeman, and anisotropy test
+files remain oracle history because they import =dolfin= at collection time;
+their analytical cases were translated into a compact DOLFINx production
+matrix rather than edited into a second backend package.
+
+=dev/dolfinx/energy_box_probe.py= now freezes the DOLFINx 0.10 ownership
+sequence before production edits. Linear-form vectors first
+=scatter_reverse(InsertMode.add)= to accumulate contributions into the owning
+rank and then =scatter_forward()= to refresh completed ghost copies. Only after
+that sequence may owned coefficients be divided by lumped nodal volumes. The
+probe checks:
+
+- scalar and three-component nodal volumes summing globally to the unit-square
+  area without double-counting ghosts;
+- Zeeman =H_eff == H=, including the negative variational sign, =mu0=, and
+  cancellation of =Ms=;
+- the constant-axis =K1= and =K2= anisotropy energy and field formulas;
+- analytical linear-field exchange energy and the =unit_length**-2= effective
+  field scaling;
+- complete owner/ghost values in serial and on two ranks.
+
+Verified on 2026-07-20:
+
+- the serial probe passed with 16 owned blocks and no ghosts;
+- the two-rank probe passed with 7/9 owned blocks and 5/3 ghosts, and both runs
+  recovered global volume =1.0=. [Codex GPT-5.6]
+
+** Direct DOLFINx Common-Energy Port
+
+Task 5 edits the existing modules under =src/finmag/energies= directly. No
+energy package was recreated in =dev/= and the validated probe was not copied
+into production. The accepted production contract is:
+
+- setup and every FEM assembly/reduction operation are collective over the
+  magnetisation mesh communicator;
+- the supported magnetisation space is explicitly a blocked three-component
+  CG1 space; higher-order/mixed layouts are rejected before lumped weights can
+  fail inconsistently across ranks;
+- assembled linear forms reverse-add into owners and forward-refresh ghosts,
+  while public =compute_field()= arrays contain flat owned DOLFINx backend
+  order only;
+- total energy performs one scalar MPI sum and applies
+  =unit_length**topological_dimension=; exchange alone puts the additional
+  =unit_length**-2= factor in its gradient density;
+- =EnergyBase= provides box-assembled field, total energy, lumped nodal energy
+  density, refreshed density Function, and owned-only global nodal average;
+- static =Zeeman= accepts constants/callables, keeps its =H= Function live
+  across =set_value()=, rebuilds it when =setup()= moves to a new mesh,
+  preserves restricted =dx= energy assembly and legacy pointwise nodal energy
+  density, and returns =H_eff == H=;
+- =Exchange= accepts a finite scalar =A= and retains the public DG0 =A= Field;
+- uniaxial anisotropy preserves the repository's exact
+  =K1*(1-s**2)-K2*s**4= law and dynamically reassembles the nonlinear =K2=
+  field after =m= changes;
+- Exchange and anisotropy retain their validated constructor inputs so a
+  deliberate second =setup()= can rebuild coefficient Fields/forms on a new
+  mesh instead of failing through deleted state; cached density Functions are
+  invalidated so they cannot remain attached to the old mesh.
+
+The anisotropy source had lost axis normalization during the 2014 Field
+migration even though the API describes the axis as a unit vector and commit
+=eb504a0a= introduced normalization so =axis dot m= is a cosine. The DOLFINx
+port restores that intended behavior: non-zero constant axes are normalized
+and zero axes are rejected. This is a deliberate correction of a historical
+regression, not an accidental numerical change.
+
+The bounded slice requires positive constant =Ms= and finite positive
+=unit_length=. Spatially varying =A=, =K1=, =K2=, anisotropy axes, and =Ms=
+raise precise =NotImplementedError=s. =DipolarField= and the time,
+discrete-time, Python-time, and oscillating Zeeman variants are explicit
+deferred stubs. Matrix, project, native/direct anisotropy, PBC/region
+interaction behavior beyond static Zeeman's passed measure, and downstream
+=EffectiveField=/=Simulation=/hysteresis/LLB/normal-mode integration remain
+future tasks.
+
+Independent review found and resolved five gaps beyond the first analytical
+matrix:
+
+- the first lazy-map draft left the new time-Zeeman stubs behind the legacy
+  bridge, producing a false missing-=dolfin= error; they now resolve without
+  =dolfin= and fail on construction with the intended deferral;
+- arbitrary higher-order spaces could reach non-positive row-sum lumped
+  weights; the supported blocked three-component CG1 boundary and collective
+  invalid-volume check are now explicit;
+- repeated static-Zeeman setup reused an =H= Function from the old mesh and
+  its first density implementation used a lumped projection rather than the
+  legacy pointwise nodal product; both lifecycle and density contracts now
+  have nonuniform regressions;
+- callable/string spatial coefficients failed incidentally, and Exchange/
+  anisotropy deleted the values needed to rebind to a new mesh; every deferred
+  input now raises the documented error and repeated setup is tested;
+- =EnergyBase= kept a cached density Function across re-setup; setup now
+  invalidates it, and the mesh-rebind regression checks the replacement.
+
+Verified on 2026-07-20:
+
+- =pixi run -e dolfinx dolfinx-src-energies-pytest= reported =26 passed=;
+- =pixi run -e dolfinx dolfinx-src-energies-mpi= passed with 7/9 owned and 5/3
+  ghost blocks, including owner/ghost field agreement, global volume, energy
+  density reduction, static/callable Zeeman averages, Exchange scaling, and
+  =K1=/=K2= anisotropy;
+- =pixi run -e dolfinx dolfinx-src-import-pytest= reported =6 passed, 2
+  skipped=;
+- =pixi run src-import-pytest= reported =3 passed, 5 skipped=. [Codex GPT-5.6]
+- the unchanged immutable-oracle Exchange, anisotropy, and Zeeman suites
+  reported =28 passed in 185.89s=; the oracle worktree integrity guard also
+  completed successfully. [Codex GPT-5.6]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

@@ -100,6 +100,54 @@ assert not any(
     )
 
 
+@pytest.mark.skipif(
+    importlib.util.find_spec("dolfinx") is None,
+    reason="The ported energy export check requires the DOLFINx environment.",
+)
+def test_ported_energy_exports_bypass_legacy_dolfin():
+    _run_isolated(
+        """
+import sys
+from finmag.energies import (
+    EnergyBase, Exchange, TimeZeeman, UniaxialAnisotropy, Zeeman,
+)
+
+assert EnergyBase.__module__ == "finmag.energies.energy_base"
+assert Exchange.__module__ == "finmag.energies.exchange"
+assert UniaxialAnisotropy.__module__ == "finmag.energies.anisotropy"
+assert Zeeman.__module__ == "finmag.energies.zeeman"
+assert TimeZeeman.__module__ == "finmag.energies.zeeman"
+try:
+    TimeZeeman((1.0, 0.0, 0.0))
+except NotImplementedError as error:
+    assert "deferred" in str(error)
+else:
+    raise AssertionError("TimeZeeman did not report its explicit deferral")
+assert "dolfin" not in sys.modules
+assert not any(
+    name == "finmag.native" or name.startswith("finmag.native.")
+    for name in sys.modules
+)
+"""
+    )
+
+
+def test_unported_energy_access_reports_the_real_missing_dependency():
+    if importlib.util.find_spec("dolfin") is not None:
+        pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
+
+    result = subprocess.run(
+        [sys.executable, "-c", "import finmag.energies as energies; energies.DMI"],
+        cwd=str(REPO_ROOT),
+        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(SRC_ROOT)},
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "No module named 'dolfin'" in result.stderr
+
+
 def test_unported_public_access_reports_the_real_missing_dependency():
     if importlib.util.find_spec("dolfin") is not None:
         pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
