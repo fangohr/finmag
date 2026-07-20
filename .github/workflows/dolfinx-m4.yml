@@ -19,8 +19,8 @@ jobs:
         pixi-version: v0.62.1
         cache: true
 
-    - name: Verify DOLFINx M4 dependency probe
+    - name: Verify frozen DOLFINx M4 prototype
       run: |
-        # Keep M4 independent from the FEniCS-2019 M2/M3 gates while the
-        # DOLFINx port is still only a dependency smoke probe. [Codex gpt-5.5 high]
+        # M4 is a frozen prototype witness; direct src/finmag port slices get
+        # separate focused tasks and gates. [Codex GPT-5]
         dev/bin/verify-dolfinx-m4

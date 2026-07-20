@@ -43,15 +43,15 @@ written against the existing Finmag abstraction.
 
 **Files:** `pixi.toml`, `pixi.lock`, DOLFINx verifier/CI, migration documents.
 
-- [ ] Pin `fenics-dolfinx = "0.10.*"` instead of `"*"`.
-- [ ] Add SciPy to the isolated DOLFINx environment.
-- [ ] Rename or describe the existing M4 gate as the frozen prototype gate.
-- [ ] Add focused `src`-port task names without referring to a staged package.
-- [ ] Make validation fail if it changes tracked files.
-- [ ] Prevent native version generation from rewriting
+- [x] Pin `fenics-dolfinx = "0.10.*"` instead of `"*"`.
+- [x] Add SciPy to the isolated DOLFINx environment.
+- [x] Rename or describe the existing M4 gate as the frozen prototype gate.
+- [x] Add focused `src`-port task names without referring to a staged package.
+- [x] Make validation fail if it changes tracked files.
+- [x] Prevent native version generation from rewriting
   `src/finmag/__version__.py` during read-only oracle validation.
-- [ ] Record DOLFINx, Python, NumPy, SciPy, PETSc, and MPI versions.
-- [ ] Run the existing 105-test prototype gate after the environment change.
+- [x] Record DOLFINx, Python, NumPy, SciPy, PETSc, and MPI versions.
+- [x] Run the existing 105-test prototype gate after the environment change.
 
 Expected source diff: none.
 
@@ -59,13 +59,13 @@ Expected source diff: none.
 
 **Oracle commit:** `ba9280934e188d7f3800e7b9865e70a9422f7687`.
 
-- [ ] Record the exact M2 and M3 commands and measured results at the oracle.
-- [ ] Add a helper that can run a focused legacy reference command from a
+- [x] Record the exact M2 and M3 commands and measured results at the oracle.
+- [x] Add a helper that can run a focused legacy reference command from a
   temporary detached checkout without altering the active source tree.
-- [ ] Define a small fixture schema: oracle commit, mesh recipe, coordinates,
+- [x] Define a small fixture schema: oracle commit, mesh recipe, coordinates,
   physical parameters, units, values, and tolerances.
-- [ ] Require coordinate ordering rather than raw legacy dof ordering.
-- [ ] Document when an analytic result is sufficient and a fixture is unwanted.
+- [x] Require coordinate ordering rather than raw legacy dof ordering.
+- [x] Document when an analytic result is sufficient and a fixture is unwanted.
 
 Expected source diff: none.
 
@@ -78,16 +78,16 @@ legacy surfaces.
 Dev question: confirm that importing DOLFINx itself has no side effect needed by
 the package initializer. No duplicate package probe is needed.
 
-- [ ] Inventory intentional top-level public names.
-- [ ] Add tests that plain `import finmag` imports neither legacy `dolfin` nor
+- [x] Inventory intentional top-level public names.
+- [x] Add tests that plain `import finmag` imports neither legacy `dolfin` nor
   optional native modules.
-- [ ] Replace eager wildcard imports with explicit lazy public exports.
-- [ ] Make optional/unported features load only when requested.
-- [ ] Preserve top-level `Simulation`, `sim_with`, `Field`, common energy names,
-  and version access through the lazy boundary.
-- [ ] Verify this backend-neutral change against both the oracle environment and
+- [x] Replace eager wildcard imports with explicit lazy public exports.
+- [x] Make optional/unported features load only when requested.
+- [x] Preserve top-level `Simulation`, `sim_with`, `Field`, and version access,
+  plus the common names in `finmag.energies`, through the lazy boundaries.
+- [x] Verify this backend-neutral change against both the oracle environment and
   the DOLFINx environment.
-- [ ] Run the full M3 gate for the final time against the active source before
+- [x] Run the full M3 gate for the final time against the active source before
   the first DOLFINx-only module replacement.
 
 This is the only deliberate transition seam. Do not add a general FEM backend

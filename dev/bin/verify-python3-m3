@@ -17,8 +17,14 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # repo-local environment artefacts that interfere with the Docker witnesses. [Codex GPT-5.4]
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
 export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+# Imports may rebuild native extensions. The oracle is read-only, so suppress
+# the Makefile's historical tracked version-file update. [Codex GPT-5]
+export WRITE_FINMAG_VERSION=0
 
 cd "${repo_root}"
+
+source "${repo_root}/dev/bin/validation-common.sh"
+install_tracked_files_guard "${repo_root}" "M3 oracle validation"
 
 echo "==> pixi run native-fk-bem-smoke"
 pixi run native-fk-bem-smoke

@@ -1,9 +1,13 @@
 # DOLFINx M4 Prototype
 
-This directory contains the isolated M4 DOLFINx prototype. It is intentionally
+This directory contains the frozen, isolated M4 DOLFINx prototype. It is intentionally
 separate from `src/finmag`: the code here explores a reduced Finmag-on-DOLFINx
 path without changing the green legacy FEniCS-2019 M2/M3 code. [Codex
 gpt-5.5 high]
+
+The M4 suite is now a regression witness, not the place where the production
+port grows. New port tests target the existing modules under `src/finmag`
+through separately named `dolfinx-src-*` tasks. [Codex GPT-5]
 
 `porting_map.md` records how this exploration lane should be evaluated against
 the existing Finmag API, data structures, and tests before the matching
@@ -136,7 +140,7 @@ or moved into production.
 - The dataclasses are a prototype API sketch, not a stable public API.
 - No attempt is made here to port rarely used historical features.
 
-## M4 Completion Status
+## Frozen M4 Completion Status
 
 The reduced M4 prototype criteria are now represented in this directory:
 
@@ -144,6 +148,8 @@ The reduced M4 prototype criteria are now represented in this directory:
 - supported scope is documented in this file;
 - unsupported subsystems are listed explicitly above;
 - CI-facing verification is available through `dev/bin/verify-dolfinx-m4`.
+- the environment is pinned to DOLFINx `0.10.*`, and `dolfinx-versions` emits
+  the Python, NumPy, SciPy, PETSc, and MPI runtime versions as JSON.
 
 This does not make M4 a production port. It means the intended reduced
 prototype has enough coverage and documentation to serve as a stable starting
@@ -160,8 +166,9 @@ PIXI_CACHE_DIR=/tmp/pixi-cache \
 dev/bin/verify-dolfinx-m4
 ```
 
-The wrapper runs the import probe, the smoke probe, all tests below
-`dev/dolfinx`, the JSON-output relaxation example, and the restart-state
-round-trip example. The examples write
+The wrapper records the runtime versions, runs the import and smoke probes, the
+frozen `dolfinx-prototype-pytest` suite, the JSON-output relaxation example,
+and the restart-state round-trip example. It also fails if any of those checks
+mutates a tracked file. The examples write
 `/tmp/finmag-dolfinx-relaxation-summary.json` and
 `/tmp/finmag-dolfinx-restart-state.json` by default. [Codex gpt-5.5 high]

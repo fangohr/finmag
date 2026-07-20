@@ -2452,12 +2452,128 @@ The direct-port design and task sequence are recorded in
 =docs/superpowers/specs/2026-07-06-dolfinx-core-port-design.md= and
 =docs/superpowers/plans/2026-07-06-dolfinx-core-port.md=.
 
+The migration control plane now distinguishes the frozen prototype witness
+from future direct source gates:
+
+- the DOLFINx environment pins =fenics-dolfinx = "0.10.*"= and includes
+  SciPy;
+- =dolfinx-prototype-pytest= is the canonical name for the unchanged M4 test
+  scope, while =dolfinx-pytest= remains a compatibility alias;
+- future production slices use =dolfinx-src-*= task names and are not added to
+  the prototype verifier;
+- =dolfinx-versions= emits a sorted JSON report for DOLFINx, Python, NumPy,
+  SciPy, PETSc, and MPI;
+- the M2, M3, and frozen DOLFINx verifiers snapshot the tracked diff and fail
+  if validation changes it;
+- M2/M3 read-only validation exports =WRITE_FINMAG_VERSION=0= so a native
+  rebuild cannot rewrite =src/finmag/__version__.py=. Normal native builds
+  retain the historical version-generation default. [Codex GPT-5]
+
+Verified on 2026-07-20:
+
+- DOLFINx =0.10.0=, Python =3.12.13=, NumPy =2.4.6=, SciPy =1.18.0=,
+  PETSc/petsc4py =3.25.2=, mpi4py =4.1.2=, MPI standard =3.1=, and Open MPI
+  =5.0.10=;
+- the frozen prototype suite remains =105 passed in 2.47s=;
+- import, mesh/function smoke, relaxation JSON, and restart round-trip checks
+  passed;
+- the M2 workflow passed after a real native rebuild, and its tracked-diff
+  guard confirmed that =src/finmag/__version__.py= was not rewritten. [Codex
+  GPT-5]
+
+** Immutable FEniCS-2019 Oracle Contract
+
+The immutable Python-3/FEniCS-2019 oracle is commit
+=ba9280934e188d7f3800e7b9865e70a9422f7687=. Its exact aggregate M2 command is:
+
+#+begin_src bash
+dev/bin/verify-python3-m2
+#+end_src
+
+At that commit the wrapper expands, in order, to:
+
+#+begin_src bash
+pixi run import-finmag
+pixi run barmini-construct
+pixi run barmini-smoke
+pixi run restart-smoke
+#+end_src
+
+The contemporaneous record says all four succeeded against FEniCS =2019.1.0=:
+plain import, full default =barmini= construction, advancement to =1e-12= on
+native Sundials =7.2.1= with FK demag, and save/restart/reload. No aggregate M2
+test count or runtime was recorded, so none should be inferred. A current
+pre-production-source rerun on 2026-07-20 also passed all four after a native
+rebuild; that current control-plane result is evidence about the runner, not a
+replacement numeric result for the historical oracle.
+
+The exact aggregate M3 command at the oracle is:
+
+#+begin_src bash
+dev/bin/verify-python3-m3
+#+end_src
+
+It expands to:
+
+#+begin_src bash
+pixi run native-fk-bem-smoke
+pixi run barmini-suite
+#+end_src
+
+The recorded oracle result is =493 passed, 21 skipped, 5 xfailed= in
+approximately =730s=. This was not rerun during the control-plane work because
+the existing result is tied to the immutable commit and lock, and the full gate
+takes about twelve minutes.
+
+=dev/bin/run-legacy-oracle= now runs focused argv commands in a disposable
+detached worktree at that exact commit. A locked import probe completed and
+reported Finmag =ba9280934e188d7f3800e7b9865e70a9422f7687=, DOLFIN =2019.1.0=,
+Python =3.11.15=, NumPy =1.26.4=, SciPy =1.17.1=, and Sundials =7.2.1=. The
+helper removed the worktree after both successful and deliberately failing
+command probes without changing the active tracked state. Fixture shape and
+analytic-versus-oracle rules are recorded in
+=docs/superpowers/specs/legacy-oracle-fixtures.md=. [Codex GPT-5]
+
 Native-code caveat: =finmag.native.llg.compute_bem_fk_from_arrays= accepts the
 right array-level inputs for a DOLFINx demag port, but the current extension as
 a whole still links =libdolfin=, compiles =swig_dolfin= converters, and
 registers those converters at module import. The array-only LLG/BEM binding must
 therefore be separated from the legacy DOLFIN mesh surface before rebuilding it
 on the Python-3.12/DOLFINx stack.
+
+** Lazy Source Import Boundary
+
+The first direct source slice replaces wildcard package initialization with
+explicit PEP 562 lazy exports in =src/finmag/__init__.py= and
+=src/finmag/energies/__init__.py=. The reviewed public-name inventories are
+recorded in the direct-port design. Plain package discovery now imports neither
+=dolfin=, =dolfinx=, nor =finmag.native=; requesting an unported legacy object
+in the DOLFINx environment fails at the real missing =dolfin= dependency.
+
+Importing DOLFINx =0.10.0= separately showed that it does not load legacy
+=dolfin=, does not load Finmag, and exposes no =dolfinx.parameters= equivalent
+to the old =reorder_dofs_serial= initializer setting. No DOLFINx initializer
+side effect is therefore required. Legacy public-object resolution still sets
+=dolfin.parameters["reorder_dofs_serial"] = False= before loading the object.
+Because direct =from finmag.field import Field= bypasses the root resolver,
+=field.py= makes the same small compatibility call after importing =dolfin=;
+this is relocation of the old initializer contract, not a Field port.
+
+Verified on 2026-07-20:
+
+- =pixi run -e dolfinx dolfinx-src-import= passed;
+- =pixi run -e dolfinx dolfinx-src-import-pytest= reported =4 passed, 2
+  skipped= in =1.60s=;
+- =pixi run src-import-pytest= reported =4 passed, 2 skipped= in =7.02s=;
+- the same active-source test run through =dev/bin/run-legacy-oracle= with the
+  oracle's locked environment reported =4 passed, 2 skipped= in =12.79s=;
+- an oracle inventory command confirmed the defining modules for all retained
+  root and energy exports before the lazy boundary was implemented;
+- =dev/bin/verify-python3-m3= completed with exit status zero against the
+  active lazy-import source after the native FK BEM smoke passed. The terminal
+  transport did not retain pytest's final count line, so the historical
+  =493 passed, 21 skipped, 5 xfailed= count is not restated as a newly measured
+  result. [Codex GPT-5.6]
 
 ** First M5 / DOLFINx Core Simulation Slice
 

@@ -323,6 +323,11 @@ M4 reduced-prototype status:
   explicit in =dev/dolfinx/README.md=. [Codex gpt-5.5 high]
 - this should be treated as a stable starting point for M5 expansion, not as a
   production DOLFINx port or legacy API replacement. [Codex gpt-5.5 high]
+- the prototype gate is now explicitly frozen as
+  =dolfinx-prototype-pytest=. Its isolated environment pins
+  =fenics-dolfinx = "0.10.*"= and includes SciPy; direct source slices use
+  separate =dolfinx-src-*= task names. The verifier records all relevant
+  runtime versions and rejects tracked-file mutations. [Codex GPT-5]
 
 *** Milestone M5: DOLFINx Expansion By Scientific Value
 

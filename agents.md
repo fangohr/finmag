@@ -97,6 +97,16 @@ Workflow witnesses:
   - matching lightweight CI jobs for the two workflow witnesses
 - `.github/workflows/python3-m3.yml`
   - matching lightweight CI job for the first FEniCS-2019 pytest gate
+- `dev/bin/verify-dolfinx-m4` and `.github/workflows/dolfinx-m4.yml`
+  - frozen M4 prototype witness, kept separate from future direct
+    `src/finmag` port gates
+  - reports the pinned DOLFINx runtime stack and fails on tracked-file
+    mutations; production slices use focused `dolfinx-src-*` tasks [Codex GPT-5]
+- `dev/bin/run-legacy-oracle`
+  - runs a focused argv command in a disposable detached worktree at the
+    immutable Python-3/FEniCS-2019 oracle commit
+  - use `pixi run --locked ...`; diagnostics are on stderr so stdout can hold
+    coordinate-ordered reference JSON [Codex GPT-5]
 
 The repository describes itself as a research prototype developed roughly from 2011 to 2018.
 

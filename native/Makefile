@@ -158,6 +158,10 @@ CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 N_SIMULTANEOUS_JOBS:=$(shell grep -ci processor /proc/cpuinfo)
 
 FINMAGDIST_REVISION ?= HEAD
+# Read-only validation builds need native extensions without rewriting the
+# tracked Python version module. Normal developer builds retain the historical
+# behaviour unless this variable is set to 0. [Codex GPT-5]
+WRITE_FINMAG_VERSION ?= 1
 
 #REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
 REVISION_ID = $(shell git rev-parse ${FINMAGDIST_REVISION})
@@ -168,7 +172,11 @@ REVISION_ID = $(shell git rev-parse ${FINMAGDIST_REVISION})
 add_version: .add_version
 .add_version: $(BUILD_TARGETS)
 	@echo "FINMAG_VERSION: ${REVISION_ID}"
-	@echo '__version__ = "${REVISION_ID}"' > ../src/finmag/__version__.py
+	@if [ "$(WRITE_FINMAG_VERSION)" = "1" ]; then \
+		echo '__version__ = "${REVISION_ID}"' > ../src/finmag/__version__.py; \
+	else \
+		echo "Skipping tracked version-file update (WRITE_FINMAG_VERSION=0)"; \
+	fi
 	touch .add_version
 
 # Builds the whole project

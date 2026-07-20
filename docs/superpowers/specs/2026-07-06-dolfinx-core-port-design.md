@@ -78,6 +78,11 @@ DOLFINx-only module is ported. Preserve its value through:
 - small JSON or NPZ fixtures containing mesh definition, physical parameters,
   coordinate-ordered results, units, tolerances, and oracle commit metadata.
 
+`dev/bin/run-legacy-oracle` implements the detached-worktree command boundary.
+The versioned JSON contract, coordinate-ordering rule, and analytic-evidence
+decision are defined in
+[`legacy-oracle-fixtures.md`](legacy-oracle-fixtures.md). [Codex GPT-5]
+
 The full immutable oracle does not need to run for every DOLFINx source edit.
 Each source slice instead runs its focused differential or analytic contract.
 
@@ -107,6 +112,13 @@ Every direct source slice must pass:
 5. `git diff --check` and a clean-worktree check that ignores only declared test
    artifacts.
 
+The completed M4 suite under `dev/dolfinx` is frozen as a prototype regression
+witness. It runs in a DOLFINx `0.10.*`/Python 3.12 environment with SciPy and
+has its own `dolfinx-prototype-pytest` task. Direct production work uses
+separate `dolfinx-src-*` tasks, and the aggregate prototype verifier rejects
+tracked-file mutations. A machine-readable version report records DOLFINx,
+Python, NumPy, SciPy, PETSc, and MPI before the gate runs. [Codex GPT-5]
+
 ## First Permanent Source Seam
 
 Finmag currently imports most of the application eagerly from
@@ -130,6 +142,22 @@ It must:
 
 The energy package needs the same treatment because its current `__init__`
 eagerly imports demag, DMI, thermal, and other interactions.
+
+The reviewed top-level compatibility inventory is `Simulation`, `sim_with`,
+`Field`, `MacroGeometry`, `NormalModeSimulation`, `normal_mode_simulation`,
+`set_logging_level`, `configuration`, `versions`, `example`, `energies`,
+`timings_report`, `__version__`, `logger`, and `logging`. The last two remain
+public because existing source uses them; command-line parsing, signal-handler
+registration, version-report locals, and imported implementation modules were
+wildcard accidents and are not public exports.
+
+The separate `finmag.energies` inventory is `Demag`, `Demag2D`,
+`MacroGeometry`, `EnergyBase`, `Exchange`, `UniaxialAnisotropy`,
+`CubicAnisotropy`, `Zeeman`, `TimeZeeman`, `DiscreteTimeZeeman`,
+`OscillatingZeeman`, `TimeZeemanPython`, `DMI`, `DMI_interfacial`,
+`ThinFilmDemag`, and `FixedEnergyDW`. These names resolve to their existing
+modules on demand; they are not promoted to the top-level `finmag` namespace.
+[Codex GPT-5.6]
 
 ## Direct Source Slices
 

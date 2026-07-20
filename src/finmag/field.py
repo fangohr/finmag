@@ -11,6 +11,7 @@ duplicate code all over the FinMag code base.
 """
 import logging
 import dolfin as df
+import finmag as _finmag
 import numpy as np
 import numbers
 import os
@@ -26,6 +27,10 @@ except Exception:
     plot_dolfin_function = None
 
 log = logging.getLogger(name="finmag")
+
+# Direct submodule imports bypass the top-level lazy resolver, so retain the
+# legacy degree-of-freedom ordering here until Field itself is ported. [Codex GPT-5.6]
+_finmag._prepare_legacy_dolfin(df)
 
 # DOLFIN 2017 only exposes Expression, while newer paths also expose UserExpression. [Codex GPT-5.4]
 _DOLFIN_EXPRESSION_TYPES = tuple(

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Run the isolated DOLFINx prototype verification lane.
+# Run the frozen, isolated DOLFINx M4 prototype verification lane.
 #
 # This does not port Finmag yet; it verifies that pixi can provide a separate
-# DOLFINx environment and execute the reduced M4/M5 mesh, test, output, and
-# restart examples without disturbing the FEniCS-2019 M2/M3 environment.
-# [Codex gpt-5.5 high]
+# DOLFINx environment and execute the reduced M4 mesh, test, output, and
+# restart examples without disturbing the FEniCS-2019 M2/M3 environment. New
+# direct src/finmag port tests do not belong in this frozen gate. [Codex GPT-5]
 
 set -euo pipefail
 
@@ -20,14 +20,21 @@ export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
 
 cd "${repo_root}"
 
+source "${repo_root}/dev/bin/validation-common.sh"
+install_tracked_files_guard "${repo_root}" \
+    "frozen DOLFINx prototype validation"
+
+echo "==> pixi run -e dolfinx dolfinx-versions"
+pixi run -e dolfinx dolfinx-versions
+
 echo "==> pixi run -e dolfinx dolfinx-import"
 pixi run -e dolfinx dolfinx-import
 
 echo "==> pixi run -e dolfinx dolfinx-smoke"
 pixi run -e dolfinx dolfinx-smoke
 
-echo "==> pixi run -e dolfinx dolfinx-pytest"
-pixi run -e dolfinx dolfinx-pytest
+echo "==> pixi run -e dolfinx dolfinx-prototype-pytest"
+pixi run -e dolfinx dolfinx-prototype-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-example"
 pixi run -e dolfinx dolfinx-example

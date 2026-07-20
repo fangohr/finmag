@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# Run one focused command at the immutable Python-3/FEniCS-2019 oracle.
+
+set -euo pipefail
+
+readonly oracle_commit="ba9280934e188d7f3800e7b9865e70a9422f7687"
+
+usage() {
+    cat >&2 <<'EOF'
+Usage:
+  dev/bin/run-legacy-oracle -- COMMAND [ARG ...]
+
+Examples:
+  dev/bin/run-legacy-oracle -- git rev-parse HEAD
+  dev/bin/run-legacy-oracle -- pixi run --locked import-finmag
+  dev/bin/run-legacy-oracle -- \
+      env PYTHONPATH=src python -c 'from finmag.field import Field; ...'
+
+The command is executed as an argv array, not evaluated as shell text. Invoke
+an explicit `bash -lc '...'` only when shell syntax is genuinely required.
+Diagnostics go to stderr; the child command's stdout is left clean for capture.
+EOF
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+if [[ "${1:-}" != "--" ]]; then
+    echo "ERROR: expected -- before the oracle command." >&2
+    usage
+    exit 2
+fi
+shift
+
+if (( $# == 0 )); then
+    echo "ERROR: no oracle command supplied after --." >&2
+    usage
+    exit 2
+fi
+oracle_command=("$@")
+
+repo_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")/../.." rev-parse --show-toplevel)"
+resolved_commit="$(git -C "${repo_root}" rev-parse "${oracle_commit}^{commit}")"
+if [[ "${resolved_commit}" != "${oracle_commit}" ]]; then
+    echo "ERROR: oracle commit did not resolve exactly: ${resolved_commit}" >&2
+    exit 1
+fi
+
+tmp_parent="${TMPDIR:-/tmp}"
+tmp_root="$(mktemp -d "${tmp_parent%/}/finmag-legacy-oracle.XXXXXX")"
+oracle_checkout="${tmp_root}/checkout"
+active_before="${tmp_root}/active-before.diff"
+active_after="${tmp_root}/active-after.diff"
+worktree_added=0
+
+# Include staged and unstaged tracked changes in the snapshot. This allows the
+# helper to run safely from an intentionally dirty development tree. [Codex GPT-5]
+git -C "${repo_root}" diff --binary --no-ext-diff HEAD -- > "${active_before}"
+
+cleanup() {
+    command_status=$?
+    cleanup_status=0
+    trap - EXIT HUP INT TERM
+
+    if (( worktree_added == 1 )); then
+        if ! git -C "${repo_root}" worktree remove --force \
+            "${oracle_checkout}" >&2; then
+            echo "ERROR: git could not remove oracle worktree ${oracle_checkout}" >&2
+            cleanup_status=1
+        fi
+    fi
+
+    git -C "${repo_root}" diff --binary --no-ext-diff HEAD -- > "${active_after}"
+    if ! cmp -s "${active_before}" "${active_after}"; then
+        echo "ERROR: oracle command changed tracked state in the active checkout." >&2
+        cleanup_status=1
+    fi
+
+    # tmp_root is always the exact directory returned by mktemp above. [Codex GPT-5]
+    if [[ -n "${tmp_root}" && "${tmp_root}" != "/" ]]; then
+        rm -rf -- "${tmp_root}"
+    else
+        echo "ERROR: refusing unsafe temporary-directory cleanup." >&2
+        cleanup_status=1
+    fi
+
+    if (( cleanup_status != 0 )); then
+        exit "${cleanup_status}"
+    fi
+    exit "${command_status}"
+}
+
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+echo "==> creating detached legacy oracle worktree at ${oracle_commit}" >&2
+git -C "${repo_root}" worktree add --quiet --detach \
+    "${oracle_checkout}" "${oracle_commit}"
+worktree_added=1
+
+echo "==> running oracle command: $(printf '%q ' "${oracle_command[@]}")" >&2
+(
+    cd "${oracle_checkout}"
+    # Host activation variables can make the detached checkout import the
+    # active source or the wrong Python installation. Callers that need either
+    # variable must provide it explicitly through `env`. [Codex GPT-5]
+    unset PYTHONPATH PYTHONHOME
+    export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+    export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+    "${oracle_command[@]}"
+)
