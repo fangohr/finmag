@@ -118,6 +118,7 @@ def test_get_ordered_numpy_array_xyz_matches_mesh_vertex_order_scalar():
     ordered = field.get_ordered_numpy_array_xyz()
 
     assert np.allclose(ordered, domain.geometry.x[:, 0])
+    assert np.array_equal(ordered, field.get_ordered_numpy_array_xxx())
 
 
 def test_get_ordered_numpy_array_xyz_matches_mesh_vertex_order_vector():
@@ -129,10 +130,11 @@ def test_get_ordered_numpy_array_xyz_matches_mesh_vertex_order_vector():
 
     ordered = field.get_ordered_numpy_array_xyz()
 
-    assert ordered.shape == (domain.geometry.x.shape[0], 3)
-    assert np.allclose(ordered[:, 0], domain.geometry.x[:, 0])
-    assert np.allclose(ordered[:, 1], domain.geometry.x[:, 1])
-    assert np.allclose(ordered[:, 2], 0.0)
+    assert ordered.shape == (domain.geometry.x.shape[0] * 3,)
+    values = ordered.reshape((-1, 3))
+    assert np.allclose(values[:, 0], domain.geometry.x[:, 0])
+    assert np.allclose(values[:, 1], domain.geometry.x[:, 1])
+    assert np.allclose(values[:, 2], 0.0)
 
 
 def test_set_with_ordered_numpy_array_xyz_round_trips():
@@ -145,9 +147,20 @@ def test_set_with_ordered_numpy_array_xyz_round_trips():
     rng = np.random.default_rng(0)
     ordered_values = rng.uniform(size=(n_vertices, 3))
 
-    field.set_with_ordered_numpy_array_xyz(ordered_values)
+    field.set_with_ordered_numpy_array_xyz(ordered_values.reshape(-1))
 
-    assert np.allclose(field.get_ordered_numpy_array_xyz(), ordered_values)
+    assert np.allclose(
+        field.get_ordered_numpy_array_xyz(), ordered_values.reshape(-1)
+    )
+
+    component_blocked = ordered_values.T.reshape(-1)
+    assert np.allclose(field.get_ordered_numpy_array_xxx(), component_blocked)
+
+    round_trip = DOLFINxField(function_space)
+    round_trip.set_with_ordered_numpy_array_xxx(component_blocked)
+    assert np.allclose(
+        round_trip.get_ordered_numpy_array_xyz(), ordered_values.reshape(-1)
+    )
 
 
 def test_set_with_ordered_numpy_array_xyz_rejects_wrong_shape():

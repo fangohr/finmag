@@ -2575,6 +2575,120 @@ Verified on 2026-07-20:
   =493 passed, 21 skipped, 5 xfailed= count is not restated as a newly measured
   result. [Codex GPT-5.6]
 
+** Field Ownership And Ordering Probe
+
+Task 4's pre-source-edit probe established that DOLFINx =Function.x.array=
+contains owned blocks followed by ghost blocks, unlike the owned-only legacy
+=GenericVector.get_local()= result used by =Field.as_array()=. On a
+=UnitSquareMesh(3, 3)= with 16 global CG1 vertices, the DOLFINx ranks own 7/9
+blocks and store 5/3 additional ghosts; block size three produces owned raw
+lengths 21/27 and full local lengths 36/36. The equivalent legacy run owns
+6/10 scalar dofs (18/30 vector scalar entries) while each rank's mesh exposes
+10 vertices including ghosts.
+
+The accepted compatibility rules before editing production =Field= are:
+
+- raw arrays are flat rank-local owned backend-order values; setting them is
+  followed by =scatter_forward()=;
+- =xyz= is flat coordinate-ordered per-node data and =xxx= is its explicit
+  component-blocked transpose, not a native DOLFINx layout;
+- rank-local coordinate/value and ordered-array exports exclude ghosts;
+- =Field.average()= remains a global volume-weighted FEM integral;
+- the prototype-only nodal summary averages owned nodal blocks once;
+- normalization modifies owned nodes, detects zeros collectively, and then
+  refreshes ghosts.
+
+The old ghost-inclusive nodal reduction returned
+=[1.38888889, 2.37037037, 4]= for the nonuniform two-rank witness instead of
+=[1.38888889, 2.38888889, 4]=. The bounded helper is corrected and the new
+=dev/dolfinx/field_ownership_probe.py= checks the fixed result, raw ownership,
+normalization, flat =xyz=/=xxx= round trips, and a gathered union of 16 unique
+analytic coordinate/value rows.
+
+Verified on 2026-07-20:
+
+- =pixi run -e dolfinx dolfinx-field-ownership-probe= passed with 16 owned
+  blocks and no ghosts on one rank;
+- =pixi run -e dolfinx dolfinx-field-ownership-probe-mpi= passed with 7/9
+  owned and 5/3 ghost blocks;
+- the focused DOLFINx adapter tests reported =31 passed in 1.51s=;
+- the frozen prototype gate remained =105 passed in 2.23s=;
+- the unchanged legacy =field_test.py= and =field_setters_test.py= reported
+  =48 passed, 1 skipped in 126.95s=. [Codex GPT-5.6]
+
+** Direct DOLFINx Field Port
+
+Task 4 now edits =src/finmag/field.py= directly; no second package was built in
+=dev/= and no prototype module was copied into place. The active =Field=
+stores DOLFINx =fem.Function= data and makes the migration contract explicit:
+
+- =as_array()= and =from_array()= use flat rank-local owned backend-order
+  values, and all mutations call =scatter_forward()=;
+- coordinate/value rows are owned rank-local exports; scalar values have shape
+  =(n_owned,)= and vector values =(n_owned, components)=, while =xyz= and
+  =xxx= are flat arrays with =xxx= implemented as the deliberate
+  component-blocked compatibility transpose;
+- constants, DOLFINx =Constant=/=Function= objects, Fields, naturally
+  vectorized callables, and legacy point-at-a-time Python callables are
+  accepted; cross-space Field assignment interpolates;
+- =average(dx=...)= assembles a global FEM volume average using the passed
+  measure, including restricted/subdomain measures;
+- normalization detects a zero on any rank collectively, updates owned nodal
+  blocks, and refreshes ghosts;
+- VTK/PVD and XDMF output use DOLFINx-native writers.
+
+All reductions and ghost-refreshing mutations are documented as collective.
+Scalar detection uses the UFL reference value shape, preserving the distinction
+between a scalar element and a blocked one-component vector. Zero-volume
+rejection is exact rather than tolerance-based so physically valid nanometre-
+scale measures are not rejected.
+
+The independent pre-commit review found and resolved four gaps that the first
+unit-square gate did not expose:
+
+- a tolerance-based zero-volume check rejected valid domains smaller than
+  =1e-8=; an exact-zero check and a =1e-9=-length regression now preserve the
+  scale-independent average;
+- a blocked one-component vector was mistaken for a scalar when inspecting the
+  collapsed DOLFINx storage shape; UFL's reference value shape now distinguishes
+  the two, with normalization and vector averaging tested;
+- =allclose()= could compare unrelated same-shaped local buffers; it is now a
+  documented collective requiring congruent communicators and the same mesh
+  and function-space objects, with both equal and unequal two-rank cases;
+- the production parity matrix now covers mesh dimensions 1/2/3, scalar and
+  1/2/3/4-component fields, underlying mesh/dofmap/vector/PETSc accessors, and
+  normalized ghost values on two ranks. No medium-or-higher finding remained
+  after re-review.
+
+The old =field_test.py= and =field_setters_test.py= remain unchanged as oracle
+history. Focused production tests live in
+=src/finmag/tests/test_field_dolfinx.py=, and the two-rank executable gate is
+=src/finmag/tests/field_dolfinx_mpi_probe.py=. Expression strings,
+=Expression=/=UserExpression=, point probing and point-measure arithmetic,
+legacy plotting, spherical conversion, and =dolfinh5tools= HDF5 now raise
+precise =NotImplementedError=s rather than failing incidentally.
+
+The root =finmag.Field= export now resolves without loading legacy =dolfin=.
+Other public objects such as =Simulation= still cross legacy modules and are
+intentionally deferred; the lazy import test checks their real missing
+dependency in the DOLFINx-only environment. In the legacy-only pixi lane, the
+old downstream public-name resolution check is skipped after this DOLFINx-only
+module cutover, while the package's safe lazy import boundary remains tested.
+
+Verified on 2026-07-20:
+
+- =pixi run -e dolfinx dolfinx-src-field-pytest= reported =26 passed in
+  1.63s=, including mesh dimensions 1/2/3, scalar and 1/2/3/4-component
+  fields, and a =1e-9=-length measure;
+- =pixi run -e dolfinx dolfinx-src-field-mpi= passed with 7/9 owned and 5/3
+  ghost blocks and 16 gathered global vertices, including collective
+  =allclose()= and normalized-ghost checks;
+- =pixi run -e dolfinx dolfinx-src-import-pytest= reported =4 passed, 2
+  skipped in 1.70s=;
+- =pixi run src-import-pytest= reported =3 passed, 3 skipped in 0.91s=;
+- =dev/bin/verify-dolfinx-m4= remained green, including =105 passed in
+  1.94s=. [Codex GPT-5.6]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

@@ -50,14 +50,17 @@ def nodal_vector_values(vector_function):
 
 
 def average_nodal_vector(vector_function):
-    """Return the MPI-reduced average vector over local nodal values.
+    """Return the MPI-reduced average vector over globally owned nodal values.
 
     This is a prototype output helper, not a replacement for volume-averaged
     finite-element integration. It is sufficient for the first M4 JSON example
     because the example uses a spatially uniform magnetisation. [Codex
     gpt-5.5 high]
     """
-    values = nodal_vector_values(vector_function)
+    # DOLFINx local arrays append ghosts; reducing all rows weights shared
+    # vertices once per rank and changes nonuniform averages. [Codex GPT-5.6]
+    owned_blocks = vector_function.function_space.dofmap.index_map.size_local
+    values = nodal_vector_values(vector_function)[:owned_blocks]
     local_sum = np.sum(values, axis=0)
     local_count = np.array([values.shape[0]], dtype=np.float64)
 

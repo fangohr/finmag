@@ -8,8 +8,10 @@ coordinate/value ordering, volume averages, per-node normalisation, constant
 detection, and basic XDMF/VTK file output. It is not a production replacement
 for ``finmag.field.Field`` yet, and several legacy behaviours (Paraview
 plotting, the point-measure-hack arithmetic operators, `dolfinh5tools`-format
-HDF5) are intentionally out of scope; see ``porting_map.md``. [GitHub Copilot
-/ Claude Sonnet 5]
+HDF5) are intentionally out of scope; see ``porting_map.md``. The direct
+production implementation now lives in ``src/finmag/field.py``; this adapter
+remains a frozen witness and is not an alternate package implementation.
+[Codex GPT-5.6]
 """
 
 import numpy as np
@@ -74,8 +76,14 @@ class DOLFINxField:
         return self
 
     def as_array(self):
-        """Return a copy of the underlying DOLFINx local dof array."""
-        return self.f.x.array.copy()
+        """Return a copy of the owned local scalar dofs, excluding ghosts.
+
+        Legacy ``GenericVector.get_local()`` returned the process-owned range.
+        DOLFINx ``Function.x.array`` also appends ghost blocks, so exposing the
+        whole array here would silently change the driver state size on MPI
+        runs. [Codex GPT-5.6]
+        """
+        return self.f.x.array[: self._owned_scalar_dofs()].copy()
 
     def from_function(self, function):
         """Set values directly from a ``dolfinx.fem.Function``.
@@ -90,7 +98,8 @@ class DOLFINxField:
                 "from_function requires a function on the same function "
                 "space; use from_field to interpolate between spaces"
             )
-        self.f.x.array[:] = function.x.array
+        owned = self._owned_scalar_dofs()
+        self.f.x.array[:owned] = function.x.array[:owned]
         self.f.x.scatter_forward()
         return self
 
@@ -104,17 +113,26 @@ class DOLFINxField:
         if not isinstance(field, DOLFINxField):
             raise TypeError("from_field requires another DOLFINxField")
         if field.functionspace == self.functionspace:
-            self.f.x.array[:] = field.f.x.array
+            owned = self._owned_scalar_dofs()
+            self.f.x.array[:owned] = field.f.x.array[:owned]
         else:
             self.f.interpolate(field.f)
         self.f.x.scatter_forward()
         return self
 
     def nodal_values(self):
-        """Return scalar or vector nodal dofs in a shape useful for tests."""
+        """Return owned nodal dofs, excluding ghost copies."""
+        owned = self.as_array()
         if self.is_scalar_field():
-            return self.f.x.array.copy()
-        return self.f.x.array.reshape((-1, self.value_dim())).copy()
+            return owned
+        return owned.reshape((-1, self.value_dim()))
+
+    def local_values_with_ghosts(self):
+        """Return local nodal storage including read-only-style ghost copies."""
+        values = self.f.x.array.copy()
+        if self.is_scalar_field():
+            return values
+        return values.reshape((-1, self.value_dim()))
 
     def average(self):
         """Return the volume average, matching the legacy ``Field.average`` idea."""
@@ -130,13 +148,14 @@ class DOLFINxField:
     def set_random_values(self, vrange=(-1.0, 1.0)):
         """Fill the field with uniform random values, useful for debugging.
 
-        Matches legacy ``Field.set_random_values``: each raw dof is drawn
-        independently and uniformly from ``vrange``. [GitHub Copilot / Claude
-        Sonnet 5]
+        Each owned raw dof is drawn independently and uniformly from
+        ``vrange``; ghosts are then refreshed from their owners. [Codex
+        GPT-5.6]
         """
         low, high = vrange
-        values = np.random.uniform(low, high, size=self.f.x.array.shape)
-        self.f.x.array[:] = values
+        owned = self._owned_scalar_dofs()
+        values = np.random.uniform(low, high, size=owned)
+        self.f.x.array[:owned] = values
         self.f.x.scatter_forward()
         return self
 
@@ -149,8 +168,9 @@ class DOLFINxField:
         """
         self._assert_is_scalar_field()
         domain = self.mesh()
-        local_max = float(np.max(self.f.x.array))
-        local_min = float(np.min(self.f.x.array))
+        owned = self.as_array()
+        local_max = float(np.max(owned)) if owned.size else -np.inf
+        local_min = float(np.min(owned)) if owned.size else np.inf
         global_max = domain.comm.allreduce(local_max, op=MPI.MAX)
         global_min = domain.comm.allreduce(local_min, op=MPI.MIN)
         return (global_max - global_min) < eps
@@ -159,8 +179,9 @@ class DOLFINxField:
         """Return the field's unique constant value, or raise if non-constant."""
         self._assert_is_scalar_field()
         domain = self.mesh()
-        local_max = float(np.max(self.f.x.array))
-        local_min = float(np.min(self.f.x.array))
+        owned = self.as_array()
+        local_max = float(np.max(owned)) if owned.size else -np.inf
+        local_min = float(np.min(owned)) if owned.size else np.inf
         global_max = domain.comm.allreduce(local_max, op=MPI.MAX)
         global_min = domain.comm.allreduce(local_min, op=MPI.MIN)
         if (global_max - global_min) >= eps:
@@ -184,9 +205,12 @@ class DOLFINxField:
         """
         if self.is_scalar_field():
             raise ValueError("normalise() is only defined for vector fields.")
-        values = self.f.x.array.reshape((-1, self.value_dim()))
+        owned = self._owned_scalar_dofs()
+        values = self.f.x.array[:owned].reshape((-1, self.value_dim()))
         norms = np.linalg.norm(values, axis=1)
-        if np.any(norms == 0):
+        local_has_zero = bool(np.any(norms == 0))
+        has_zero = self.mesh().comm.allreduce(local_has_zero, op=MPI.LOR)
+        if has_zero:
             raise ValueError("cannot normalise a zero vector field value")
         values[:] = values / norms[:, None]
         self.f.x.scatter_forward()
@@ -197,25 +221,30 @@ class DOLFINxField:
 
         Matches legacy ``Field.coords_and_values``, restricted to the
         one-dof-per-vertex case already required by
-        ``get_ordered_numpy_array_xyz``. [GitHub Copilot / Claude Sonnet 5]
+        ``get_ordered_numpy_array_xyz``. On MPI ranks it returns owned rows
+        only, so callers can gather without duplicating ghosts. [Codex GPT-5.6]
         """
         permutation = _vertex_order_permutation(self.functionspace)
-        coords = self.mesh().geometry.x.copy()
+        num_owned_vertices = self.mesh().geometry.index_map().size_local
+        geometric_dim = self.mesh().geometry.dim
+        coords = self.mesh().geometry.x[
+            :num_owned_vertices, :geometric_dim
+        ].copy()
         values = self.nodal_values()[permutation]
         return coords, values
 
     def allclose(self, other, rtol=1e-7, atol=0.0):
         """Return whether two fields are element-wise equal within tolerance.
 
-        Matches legacy ``Field.allclose``: this compares local raw dof
-        arrays directly (via ``np.allclose``) without any cross-rank
-        gathering, so, as in legacy, it is only meaningful for
-        single-process/serial comparisons or matching per-rank partitions.
-        [GitHub Copilot / Claude Sonnet 5]
+        Matching owned partitions are compared locally and then reduced with
+        MPI logical-AND, excluding duplicate ghost values. [Codex GPT-5.6]
         """
         if not isinstance(other, DOLFINxField):
             raise TypeError("allclose requires another DOLFINxField")
-        return np.allclose(self.f.x.array, other.f.x.array, rtol=rtol, atol=atol)
+        local_close = np.allclose(
+            self.as_array(), other.as_array(), rtol=rtol, atol=atol
+        )
+        return bool(self.mesh().comm.allreduce(local_close, op=MPI.LAND))
 
     def save_pvd(self, filename, t=0.0):
         """Write the field to a legacy-analogous ``.pvd``/``.vtu`` time series.
@@ -268,25 +297,28 @@ class DOLFINxField:
             del self._xdmf_file
 
     def from_array(self, arr):
-        """Set the raw local dof array directly.
+        """Set the raw owned local dof array directly.
 
         This is the DOLFINx analogue of legacy ``Field.from_array``: it
-        assigns the underlying dof array as-is, without any mesh-vertex
-        reordering. Use ``set_with_ordered_numpy_array_xyz`` if the input is
-        ordered by mesh vertex instead. [GitHub Copilot / Claude Sonnet 5]
+        assigns the process-owned dofs as-is, without any mesh-vertex
+        reordering, then refreshes ghosts. Use
+        ``set_with_ordered_numpy_array_xyz`` if the input is ordered by mesh
+        vertex instead. [Codex GPT-5.6]
         """
         arr = np.asarray(arr, dtype=np.float64)
-        if arr.shape != self.f.x.array.shape:
+        owned = self._owned_scalar_dofs()
+        expected_shape = (owned,)
+        if arr.shape != expected_shape:
             raise ValueError(
-                "from_array expects the raw dof array shape %s, got %s"
-                % (self.f.x.array.shape, arr.shape)
+                "from_array expects the raw dof array (owned) shape %s, got %s"
+                % (expected_shape, arr.shape)
             )
-        self.f.x.array[:] = arr
+        self.f.x.array[:owned] = arr
         self.f.x.scatter_forward()
         return self
 
     def get_ordered_numpy_array_xyz(self):
-        """Return nodal values ordered to match mesh-vertex order.
+        """Return a flat owned-local ``[x1, y1, ..., xN, yN, ...]`` array.
 
         Legacy dolfin's raw vector layout for vector Lagrange spaces is
         component-blocked ("xxx": all x-components, then all y, then all z)
@@ -297,13 +329,23 @@ class DOLFINxField:
         dof numbering is still not guaranteed to match mesh vertex numbering
         (e.g. under dof reordering or in parallel), so this builds the
         permutation explicitly from dof/vertex coordinates rather than
-        assuming index equality. There is no DOLFINx equivalent of legacy's
-        component-blocked "xxx" layout for blocked vector spaces, so that
-        variant is intentionally not provided here. [GitHub Copilot / Claude
-        Sonnet 5]
+        assuming index equality. On MPI ranks this view contains owned mesh
+        vertices only; ghost copies are excluded. [Codex GPT-5.6]
         """
         permutation = _vertex_order_permutation(self.functionspace)
-        return self.nodal_values()[permutation]
+        return self.nodal_values()[permutation].reshape(-1)
+
+    def get_ordered_numpy_array_xxx(self):
+        """Return the legacy flat component-blocked compatibility view.
+
+        ``xxx`` is not a DOLFINx storage layout. It is an explicit conversion
+        from coordinate-ordered ``xyz`` and remains required by the existing
+        LLG, Sundials, and NEB array APIs. [Codex GPT-5.6]
+        """
+        xyz = self.get_ordered_numpy_array_xyz()
+        if self.is_scalar_field():
+            return xyz
+        return xyz.reshape((-1, self.value_dim())).T.reshape(-1)
 
     def set_with_ordered_numpy_array_xyz(self, ordered_array):
         """Set field values from an array ordered to match mesh vertices.
@@ -314,25 +356,41 @@ class DOLFINxField:
         """
         permutation = _vertex_order_permutation(self.functionspace)
         ordered_array = np.asarray(ordered_array, dtype=np.float64)
-        expected_shape = (
-            (permutation.size,)
-            if self.is_scalar_field()
-            else (permutation.size, self.value_dim())
-        )
+        expected_shape = (permutation.size * self.value_dim(),)
         if ordered_array.shape != expected_shape:
             raise ValueError(
                 "set_with_ordered_numpy_array_xyz expects shape %s, got %s"
                 % (expected_shape, ordered_array.shape)
             )
 
-        if self.is_scalar_field():
-            self.f.x.array[permutation] = ordered_array
-        else:
-            self.f.x.array.reshape((-1, self.value_dim()))[permutation] = (
-                ordered_array
-            )
+        owned = self._owned_scalar_dofs()
+        owned_values = self.f.x.array[:owned].reshape(
+            (-1, self.value_dim())
+        )
+        owned_values[permutation] = ordered_array.reshape(
+            (-1, self.value_dim())
+        )
         self.f.x.scatter_forward()
         return self
+
+    def set_with_ordered_numpy_array_xxx(self, ordered_array):
+        """Set owned values from the flat component-blocked compatibility view."""
+        ordered_array = np.asarray(ordered_array, dtype=np.float64)
+        if self.is_scalar_field():
+            xyz = ordered_array
+        else:
+            if ordered_array.size % self.value_dim() != 0:
+                raise ValueError(
+                    "component-blocked array size must be divisible by %d"
+                    % self.value_dim()
+                )
+            xyz = ordered_array.reshape((self.value_dim(), -1)).T.reshape(-1)
+        return self.set_with_ordered_numpy_array_xyz(xyz)
+
+    def _owned_scalar_dofs(self):
+        """Return the number of owned scalar entries in ``Function.x.array``."""
+        dofmap = self.functionspace.dofmap
+        return dofmap.index_map.size_local * dofmap.index_map_bs
 
     def _set_constant(self, value, normalised=False):
         """Interpolate a scalar or vector constant into the wrapped function."""
@@ -405,8 +463,11 @@ def _vertex_order_permutation(function_space):
             )
         dof_index_by_key[key] = dof_index
 
-    vertex_to_dof = np.empty(vertex_coords.shape[0], dtype=np.int64)
-    for vertex_index, point in enumerate(np.round(vertex_coords, decimals=9)):
+    num_owned_vertices = domain.geometry.index_map().size_local
+    num_owned_dofs = function_space.dofmap.index_map.size_local
+    vertex_to_dof = np.empty(num_owned_vertices, dtype=np.int64)
+    owned_vertex_coords = vertex_coords[:num_owned_vertices]
+    for vertex_index, point in enumerate(np.round(owned_vertex_coords, decimals=9)):
         key = tuple(point)
         if key not in dof_index_by_key:
             raise ValueError(
@@ -415,5 +476,10 @@ def _vertex_order_permutation(function_space):
                 "this space"
             )
         vertex_to_dof[vertex_index] = dof_index_by_key[key]
+
+    if np.any(vertex_to_dof >= num_owned_dofs):
+        raise ValueError(
+            "owned mesh vertices do not map exclusively to owned dofs"
+        )
 
     return vertex_to_dof

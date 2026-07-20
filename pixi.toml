@@ -53,7 +53,12 @@ dolfinx-restart-example = "python -m dev.dolfinx.restart_example --output /tmp/f
 # are deliberately not part of the frozen prototype verifier. [Codex GPT-5]
 dolfinx-src-import = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -c \"import finmag\""
 dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py"
-dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/field_test.py src/finmag/field_setters_test.py"
+dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_field_dolfinx.py"
+dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
+# Pre-source-edit evidence for the local owned/ghost Field contract. These are
+# bounded probes, not production-package tests. [Codex GPT-5.6]
+dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"
+dolfinx-field-ownership-probe-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m dev.dolfinx.field_ownership_probe"
 
 [environments]
 dolfinx = { features = ["dolfinx"], no-default-feature = true }

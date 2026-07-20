@@ -28,7 +28,7 @@ logger.extremedebug = lambda message: logger.log(logging.EXTREMEDEBUG, message)
 _LAZY_EXPORTS = {
     "Simulation": ("finmag.sim.sim", "Simulation", True),
     "sim_with": ("finmag.sim.sim", "sim_with", True),
-    "Field": ("finmag.field", "Field", True),
+    "Field": ("finmag.field", "Field", False),
     "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", True),
     "NormalModeSimulation": (
         "finmag.sim.normal_mode_sim",

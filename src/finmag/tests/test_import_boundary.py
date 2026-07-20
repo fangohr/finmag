@@ -108,7 +108,7 @@ def test_unported_public_access_reports_the_real_missing_dependency():
         [
             sys.executable,
             "-c",
-            "import finmag; finmag.Field",
+            "import finmag; finmag.Simulation",
         ],
         cwd=str(REPO_ROOT),
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(SRC_ROOT)},
@@ -121,8 +121,12 @@ def test_unported_public_access_reports_the_real_missing_dependency():
 
 
 @pytest.mark.skipif(
-    importlib.util.find_spec("dolfin") is None,
-    reason="Legacy public-name compatibility requires the FEniCS 2019 environment.",
+    importlib.util.find_spec("dolfin") is None
+    or importlib.util.find_spec("dolfinx") is None,
+    reason=(
+        "Downstream legacy public names cross the now-DOLFINx Field boundary; "
+        "they remain deferred until their direct port tasks."
+    ),
 )
 def test_legacy_public_names_resolve_to_their_defining_modules():
     _run_isolated(
@@ -134,12 +138,11 @@ import finmag
 assert df.parameters["reorder_dofs_serial"] is True
 
 from finmag import (
-    Field, MacroGeometry, NormalModeSimulation, Simulation, configuration,
+    MacroGeometry, NormalModeSimulation, Simulation, configuration,
     example, normal_mode_simulation, set_logging_level, sim_with, versions,
 )
 import finmag.energies as energies
 
-assert Field.__module__ == "finmag.field"
 assert Simulation.__module__ == "finmag.sim.sim"
 assert sim_with.__module__ == "finmag.sim.sim"
 assert MacroGeometry.__module__ == "finmag.energies.demag.fk_demag_pbc"
@@ -181,18 +184,23 @@ assert df.parameters["reorder_dofs_serial"] is False
 
 
 @pytest.mark.skipif(
-    importlib.util.find_spec("dolfin") is None,
-    reason="The direct-submodule compatibility check requires legacy dolfin.",
+    importlib.util.find_spec("dolfin") is None
+    or importlib.util.find_spec("dolfinx") is not None,
+    reason="This check requires the legacy-only FEniCS environment.",
 )
-def test_direct_field_import_preserves_legacy_dof_ordering():
+def test_direct_field_import_is_dolfinx_only_and_has_no_legacy_bridge():
     _run_isolated(
         """
 import dolfin as df
 df.parameters["reorder_dofs_serial"] = True
 
-from finmag.field import Field
+try:
+    from finmag.field import Field
+except ModuleNotFoundError as error:
+    assert error.name == "dolfinx"
+else:
+    raise AssertionError("DOLFINx-only Field unexpectedly loaded without dolfinx")
 
-assert Field.__module__ == "finmag.field"
-assert df.parameters["reorder_dofs_serial"] is False
+assert df.parameters["reorder_dofs_serial"] is True
 """
     )

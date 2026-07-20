@@ -95,30 +95,39 @@ selector or `try dolfin / try dolfinx` implementation branches.
 
 ## Task 4: Port `Field` directly
 
-**Files:** `src/finmag/field.py`, `src/finmag/field_test.py`,
-`src/finmag/field_setters_test.py`.
+**Files:** `src/finmag/field.py`, the preserved legacy oracle tests
+`src/finmag/field_test.py` and `src/finmag/field_setters_test.py`, and focused
+production tests under `src/finmag/tests/`.
+
+The 1,500-line DOLFIN-specific test module remains intact at the immutable
+oracle instead of being mechanically rewritten. Its trustworthy invariants are
+ported into a compact DOLFINx matrix covering mesh dimensions 1/2/3, scalar
+and 1/2/3/4-component fields, setters, ordering, ownership, and accessors.
 
 Dev evidence already available: blocked vector layout, callable interpolation,
 coordinate matching, normalization, volume average, VTK, and XDMF.
 
 Additional probe required before editing:
 
-- [ ] Establish owned/ghost behavior for raw arrays, averages, normalization,
+- [x] Establish owned/ghost behavior for raw arrays, averages, normalization,
   and coordinate/value export on two ranks.
-- [ ] Decide and test the exact compatibility conversion for legacy `xxx`
+- [x] Decide and test the exact compatibility conversion for legacy `xxx`
   component ordering where still required by a driver.
 
 Direct source acceptance:
 
-- [ ] Preserve constants, callables, `set`, `from_array`, `from_field`, and
+- [x] Preserve constants, callables, `set`, `from_array`, `from_field`, and
   `from_function`.
-- [ ] Preserve scalar/vector inspection, raw arrays, coordinate-ordered `xyz`,
+- [x] Preserve scalar/vector inspection, raw arrays, coordinate-ordered `xyz`,
   volume averages, normalization, and the underlying function/space access.
-- [ ] Make every local/global ownership contract explicit in method names or
+- [x] Make every local/global ownership contract explicit in method names or
   documentation.
-- [ ] Port existing trustworthy Field tests in place.
-- [ ] Pass serial and two-rank Field gates.
-- [ ] Mark expression strings, point-measure arithmetic, plotting, spherical
+- [x] Preserve the legacy Field tests as oracle history and port their trusted
+  dimension, setter, accessor, ordering, and normalization invariants into a
+  focused DOLFINx production suite without duplicating the package under
+  `dev/`.
+- [x] Pass serial and two-rank Field gates.
+- [x] Mark expression strings, point-measure arithmetic, plotting, spherical
   conversion, and legacy HDF5 explicitly supported or explicitly unavailable.
 
 ## Task 5: Port the energy foundation and common interactions

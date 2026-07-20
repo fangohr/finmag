@@ -47,17 +47,60 @@ module with its tests.
   `finmag.field.Field` behaviours with DOLFINx, including scalar/vector
   distinction, constants, callables, nodal values, normalisation, and volume
   averages. It also covers raw dof-array access (`from_array`) and
-  mesh-vertex-ordered access (`get/set_with_ordered_numpy_array_xyz`),
+  flat mesh-vertex-ordered access (`get/set_with_ordered_numpy_array_xyz`),
   matching dofs to vertices by coordinate rather than assumed index equality,
   with an explicit guard for spaces that don't have one dof per vertex (e.g.
-  `DG0`). The legacy component-blocked `"xxx"` ordering has no DOLFINx
-  equivalent for blocked vector spaces and is intentionally not provided.
+  `DG0`). The legacy component-blocked `"xxx"` ordering is now provided as an
+  explicit compatibility conversion rather than mistaken for a DOLFINx-native
+  storage layout.
   It further covers `from_field`/`from_function` dispatch through `set()`,
   `set_random_values`, `is_constant`/`as_constant`, `normalise`,
   `coords_and_values`, `allclose`, `mesh_dim`, and basic write-only
   `save_pvd`/`save_xdmf` file output via DOLFINx-native `VTKFile`/`XDMFFile`
   (not the external `dolfinh5tools` format, and with no read-back support in
-  this DOLFINx version). [GitHub Copilot / Claude Sonnet 5]
+  this DOLFINx version).
+
+  The exact array contract established before the direct source edit is:
+
+  - legacy `as_array()`/`get_numpy_array_debug()` use the owned
+    `GenericVector.get_local()` range; on two legacy ranks the scalar owned
+    lengths are 6/10 for 16 global CG1 dofs, while each mesh partition exposes
+    10 local vertices including ghosts;
+  - DOLFINx `Function.x.array` contains owned blocks followed by ghosts. On the
+    same 4-by-4 vertex grid the two ranks own 7/9 blocks, have 5/3 ghosts, and
+    each stores 12 blocks (`36` scalar entries for block size three);
+  - raw compatibility methods therefore expose or accept owned scalar entries
+    only, and every mutation calls `scatter_forward()` to refresh ghosts;
+  - `xyz` is the legacy flat per-node view
+    `[x1, y1, z1, x2, y2, z2, ...]`; `coords_and_values()` alone returns the
+    two-dimensional `(n_owned, components)` value table;
+  - `xxx` is the flat component-blocked view
+    `[x1, x2, ..., y1, y2, ..., z1, z2, ...]`, computed exactly as
+    `xyz.reshape(-1, components).T.reshape(-1)`, with the transpose conversion
+    reversed when setting;
+  - rank-local ordered exports contain owned vertices only. Gathering their
+    coordinate/value rows gives 16 unique global coordinates with analytic
+    values; ghosts never appear twice. A future global ordered API must gather
+    and coordinate-sort owned rows before component blocking, not concatenate
+    per-rank `xxx` arrays. [Codex GPT-5.6]
+
+- Field legacy witnesses: `field_test.py` directly checks construction and the
+  underlying function/space, scalar/vector and value dimensions, mesh access,
+  analytic scalar/vector averages, nodal normalization, coordinate/value
+  shapes, and flat `xyz`/`xxx` values for dimensions one through four.
+  `field_setters_test.py` checks constant, callable/expression, function,
+  generic-vector, same-space Field, and cross-space Field assignment while
+  retaining the wrapped function object. Raw-array ownership is defined by
+  legacy `GenericVector.get_local()` and production consumers rather than a
+  strong dedicated legacy unit test. [Codex GPT-5.6]
+
+- Field `xxx` consumers: `physics/llg.py`, `drivers/llg_integrator.py`, the NEB
+  implementations, and `Field.np` require component-blocked state. DOLFINx's
+  interleaved blocked storage does not remove that API requirement. The SciPy
+  driver currently initializes from raw `as_array()` but calls an LLG setter
+  that interprets its argument as `xxx`; Task 8 should route both directions
+  through the explicit state ordering rather than preserve this ambiguity.
+  Multi-rank stepping remains outside the initial driver slice. [Codex GPT-5.6]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -103,10 +146,14 @@ module with its tests.
   magnetisation values for the default parameter set. Deserialization currently
   drops non-default DMI and cubic-anisotropy parameters, so this is neither a
   complete prototype parameter round trip nor the legacy Finmag restart format.
-- MPI nodal output: `average_nodal_vector` reduces owned and ghost entries
-  together. A two-rank nonuniform-field probe produces a different result from
-  the serial calculation, so production averages and serialized arrays must use
-  explicit owned-dof semantics.
+- MPI nodal output: the previous `average_nodal_vector` reduced owned and ghost
+  entries together; a two-rank nonuniform field returned
+  `[1.38888889, 2.37037037, 4]` instead of
+  `[1.38888889, 2.38888889, 4]`. The bounded helper now reduces owned nodal
+  blocks only. This nodal statistic remains distinct from `Field.average()`,
+  whose FEM form integrates owned cells and performs one MPI reduction.
+  `field_ownership_probe.py` checks both contracts in serial and on two ranks.
+  [Codex GPT-5.6]
 - FK demag baseline: the FEniCS-2019/pixi M3 path still computes the
   Fredkin-Koehler BEM matrix through the compiled `finmag.native.llg`
   extension, using `compute_bem_fk` or the DOLFIN-2019-compatible
@@ -136,13 +183,25 @@ Before editing the matching module in `src/finmag`, check that:
 
 ## Near-Term Gaps
 
-- The DOLFINx-backed `Field` adapter now covers a broader legacy surface
-  (setters, `is_constant`/`normalise`/`coords_and_values`/`allclose`, basic
-  file output), but still does not implement `from_expression` (no DOLFINx
-  `Expression`/`UserExpression` equivalent), the point-measure arithmetic
-  operators, Paraview plotting, `get_spherical`, or integration with
-  `finmag.Simulation`. `save_xdmf` has no read-back support in this DOLFINx
-  version. [GitHub Copilot / Claude Sonnet 5]
+- `src/finmag/field.py` is now the direct DOLFINx production implementation.
+  It covers constant/vectorized/pointwise-callable assignment, Function and
+  Field assignment (including cross-space interpolation), owned raw arrays,
+  flat owned `xyz`/`xxx` views, coordinates, global FEM averages (including
+  passed subdomain measures), collective normalization, scalar constants,
+  random/allclose helpers, and VTK/XDMF output. The focused parity matrix spans
+  mesh dimensions 1/2/3 and scalar plus 1/2/3/4-component fields. Collective
+  participation is required for reductions and ghost-refreshing mutations.
+  The `dev` adapter remains only a frozen witness. [Codex GPT-5.6]
+- Production `Field` explicitly rejects `from_expression` (DOLFINx has no
+  legacy `Expression`/`UserExpression` equivalent), point probing and
+  point-measure arithmetic, legacy plotting, `get_spherical`, and
+  `dolfinh5tools` HDF5. XDMF is write-only here. Integration with the still
+  legacy `finmag.Simulation` is deferred to its direct port task. [Codex
+  GPT-5.6]
+- Ordered arrays and `coords_and_values()` are currently rank-local owned
+  views. A separate collective, globally coordinate-sorted export should be
+  added only for a concrete output/restart consumer; multi-rank ODE state is
+  not claimed by the first Field/driver slices. [Codex GPT-5.6]
 - There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
 - Demag is not covered by the current DOLFINx prototype lane. The production
   DOLFINx port should either reuse/port the array-based native FK BEM routines

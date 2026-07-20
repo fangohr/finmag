@@ -9,6 +9,13 @@ The M4 suite is now a regression witness, not the place where the production
 port grows. New port tests target the existing modules under `src/finmag`
 through separately named `dolfinx-src-*` tasks. [Codex GPT-5]
 
+Task 4 has now replaced `src/finmag/field.py` directly with its DOLFINx
+implementation. The adapter in this directory was extended only to settle the
+pre-source ownership/ordering questions and is frozen at that accepted
+behavioral contract; it was not copied into production and does not own the
+active API. Production Field checks use `dolfinx-src-field-pytest` and
+`dolfinx-src-field-mpi`. [Codex GPT-5.6]
+
 `porting_map.md` records how this exploration lane should be evaluated against
 the existing Finmag API, data structures, and tests before the matching
 production module is edited directly under `src/finmag`.
@@ -46,9 +53,11 @@ or moved into production.
   (`get/set_with_ordered_numpy_array_xyz`) field value access, matching
   legacy `Field`'s coordinate/value ordering methods. Coordinate matching is
   done explicitly (not by assuming dof index equals vertex index) and is
-  only supported for one-dof-per-vertex spaces (e.g. not `DG0`). There is no
-  DOLFINx equivalent of legacy's component-blocked `"xxx"` ordering, so that
-  variant is intentionally not provided. [GitHub Copilot / Claude Sonnet 5]
+  only supported for one-dof-per-vertex spaces (e.g. not `DG0`). The legacy
+  flat component-blocked `"xxx"` view is an explicit transpose of the flat
+  per-node `"xyz"` view; it is retained for driver compatibility rather than
+  treated as a DOLFINx-native storage layout. Rank-local raw and ordered views
+  contain owned dofs only and refresh ghosts after mutation. [Codex GPT-5.6]
 - Energy assembly for exchange, constant-field Zeeman, and constant-axis
   uniaxial anisotropy.
 - Bulk (3D, T-symmetry) DMI energy assembly, matching the legacy
