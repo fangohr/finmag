@@ -134,7 +134,7 @@ def test_ported_energy_exports_bypass_legacy_dolfin():
         """
 import sys
 from finmag.energies import (
-    EnergyBase, Exchange, TimeZeeman, UniaxialAnisotropy, Zeeman,
+    DMI, EnergyBase, Exchange, TimeZeeman, UniaxialAnisotropy, Zeeman,
 )
 
 assert EnergyBase.__module__ == "finmag.energies.energy_base"
@@ -142,6 +142,7 @@ assert Exchange.__module__ == "finmag.energies.exchange"
 assert UniaxialAnisotropy.__module__ == "finmag.energies.anisotropy"
 assert Zeeman.__module__ == "finmag.energies.zeeman"
 assert TimeZeeman.__module__ == "finmag.energies.zeeman"
+assert DMI.__module__ == "finmag.energies.dmi"
 try:
     TimeZeeman((1.0, 0.0, 0.0))
 except NotImplementedError as error:
@@ -162,7 +163,8 @@ def test_unported_energy_access_reports_the_real_missing_dependency():
         pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
 
     result = subprocess.run(
-        [sys.executable, "-c", "import finmag.energies as energies; energies.DMI"],
+        [sys.executable, "-c",
+         "import finmag.energies as energies; energies.CubicAnisotropy"],
         cwd=str(REPO_ROOT),
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(SRC_ROOT)},
         capture_output=True,

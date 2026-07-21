@@ -23,23 +23,25 @@ and documentation updates (plan checkboxes, `transition-notes.org`,
 **Files:** `src/finmag/energies/dmi.py`, its existing tests, lazy energy
 exports, focused DOLFINx tests.
 
-- [ ] Port the `DMI(D, method, name, dmi_type)` constructor semantics with
+- [x] Port the `DMI(D, method, name, dmi_type)` constructor semantics with
   constant scalar `D` first; spatially varying `D` defers by name.
-- [ ] Support the legacy `dmi_type` variants: `'auto'`/3D bulk
+- [x] Support the legacy `dmi_type` variants: `'auto'`/3D bulk
   (`D * inner(m, curl(m))`), `'interfacial'`, and the 1D/2D forms with their
   legacy `unit_length ** (dim - 1)` scaling conventions; any variant not
-  ported must raise by name, not silently fall back.
-- [ ] Box-assemble only, matching the Task 5 energy foundation; matrix/project
+  ported must raise by name, not silently fall back. (The undocumented
+  legacy `'D2D'` variant also raises by name; it is not part of the public
+  `dmi_type` contract documented on the legacy class.)
+- [x] Box-assemble only, matching the Task 5 energy foundation; matrix/project
   methods keep raising precisely.
-- [ ] Analytic checks: helix/spiral energy for bulk DMI where practical, zero
+- [x] Analytic checks: helix/spiral energy for bulk DMI where practical, zero
   for uniform m under bulk DMI, sign convention pinned against the legacy
   form.
-- [ ] Coordinate-ordered legacy oracle fixture for at least one 3D bulk case
+- [x] Coordinate-ordered legacy oracle fixture for at least one 3D bulk case
   and one interfacial case (field + energy), per the fixture schema.
-- [ ] Replace the fail-forward `ModuleNotFoundError` pin for `DMI` with
+- [x] Replace the fail-forward `ModuleNotFoundError` pin for `DMI` with
   curated ported-behavior tests; update `sim_with(D=...)` to construct the
   ported DMI.
-- [ ] Serial + (if the energies pattern has one) two-rank probe coverage;
+- [x] Serial + (if the energies pattern has one) two-rank probe coverage;
   new gate `dolfinx-src-dmi-pytest` folded into `verify-dolfinx-m5`.
 
 ## Task 14: Port cubic anisotropy directly

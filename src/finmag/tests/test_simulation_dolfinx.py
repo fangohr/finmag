@@ -304,6 +304,7 @@ def test_sim_with_builds_ported_interactions():
         K1=1e5,
         K1_axis=(0.0, 0.0, 1.0),
         H_ext=(0.0, 0.0, 1e6),
+        D=5e-3,
         demag_solver=None,
         name="sim_with_test",
     )
@@ -311,6 +312,7 @@ def test_sim_with_builds_ported_interactions():
     assert sim.has_interaction("Exchange")
     assert sim.has_interaction("Zeeman")
     assert sim.has_interaction("Anisotropy")
+    assert sim.has_interaction("DMI")
     assert np.allclose(sim.m_average, [1.0, 0.0, 0.0], atol=1e-12)
 
 
@@ -339,12 +341,16 @@ def test_sim_with_macro_geometry_demag_is_deferred_by_name():
                  demag_solver="FK", nx=2)
 
 
-def test_sim_with_dmi_is_deferred_by_name():
-    with pytest.raises(NotImplementedError, match="DMI"):
-        sim_with(
-            _box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
-            D=1e-3, demag_solver=None,
-        )
+def test_sim_with_dmi_builds_ported_interaction():
+    """Task 13: DMI (``D``, constant scalar, ``dmi_type='auto'``) is now
+    ported, so ``sim_with(D=...)`` adds a working DMI interaction instead of
+    raising by name (was ``test_sim_with_dmi_is_deferred_by_name``)."""
+    sim = sim_with(
+        _box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+        D=1e-3, demag_solver=None,
+    )
+    assert sim.has_interaction("DMI")
+    assert np.isfinite(sim.get_interaction("DMI").compute_energy())
 
 
 # --------------------------------------------------------------------------

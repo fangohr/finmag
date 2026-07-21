@@ -7,7 +7,7 @@ preserves the public core surface -- construction on a DOLFINx mesh with scalar
 (``add``/``get_interaction``/``interactions``/``remove_interaction`` and the
 energy accessors); integrator creation/tolerances/``advance_time``/``run_until``/
 ``reset_time``/``reinit_integrator``; and the ``sim_with`` convenience factory
-for Exchange, Zeeman and uniaxial anisotropy -- all driven through the ported
+for Exchange, Zeeman, uniaxial anisotropy and DMI -- all driven through the ported
 ``LLG``/``EffectiveField``/``Field`` stack and the SciPy integrator. FK demag
 (via the compiled ``finmag.native.bem_arrays`` extension), the coordinate-aware
 v2 ``.npz`` restart format, scheduler-driven ``run_until``, NDT output (via
@@ -50,7 +50,7 @@ from mpi4py import MPI
 from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.drivers.llg_integrator import llg_integrator
-from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
+from finmag.energies import DMI, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.sim import sim_helpers
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.scheduler import scheduler
@@ -674,10 +674,11 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
     """Create a :class:`Simulation` and add the requested ported interactions.
 
     Exchange (``A``), uniaxial anisotropy (``K1`` + ``K1_axis``), Zeeman
-    (``H_ext``) and Fredkin-Koehler demag (``demag_solver='FK'``, default) are
-    ported. DMI (``D``), non-FK demag solvers, and periodic macro-geometry demag
-    (``nx``/``ny``/``spacing_*``) raise ``NotImplementedError`` by name when
-    requested; pass ``demag_solver=None`` to build a demag-free simulation.
+    (``H_ext``), DMI (``D``, constant scalar, ``dmi_type='auto'``) and
+    Fredkin-Koehler demag (``demag_solver='FK'``, default) are ported. Non-FK
+    demag solvers and periodic macro-geometry demag (``nx``/``ny``/
+    ``spacing_*``) raise ``NotImplementedError`` by name when requested; pass
+    ``demag_solver=None`` to build a demag-free simulation.
     """
     sim = sim_class(mesh, Ms, unit_length=unit_length,
                     integrator_backend=integrator_backend, name=name, pbc=pbc)
@@ -697,7 +698,7 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
     if H_ext is not None:
         sim.add(Zeeman(H_ext))
     if D is not None:
-        _deferred("sim_with(D=...)", "DMI")
+        sim.add(DMI(D))
     if demag_solver is not None:
         if demag_solver != "FK":
             _deferred(

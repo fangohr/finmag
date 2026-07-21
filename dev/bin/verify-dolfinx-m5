@@ -20,6 +20,9 @@
 # Task 12 folds in the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
 # scheduler port gate (`dolfinx-src-restart-output-pytest`). [Claude Opus 4.8]
 #
+# Task 13 folds in the direct DOLFINx DMI port gate
+# (`dolfinx-src-dmi-pytest`). [Claude Sonnet 5]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -86,6 +89,9 @@ pixi run -e dolfinx dolfinx-src-demag-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-restart-output-pytest"
 pixi run -e dolfinx dolfinx-src-restart-output-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-dmi-pytest"
+pixi run -e dolfinx dolfinx-src-dmi-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

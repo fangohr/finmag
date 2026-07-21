@@ -204,6 +204,27 @@ module with its tests.
   (`D * inner(m, curl(m))`), with the matching `unit_length ** (dim - 1)`
   scaling convention and a 3D-mesh guard. Interfacial and 1D/2D DMI variants
   are still not covered. [GitHub Copilot / Claude Sonnet 5]
+  Task 13 update: `src/finmag/energies/dmi.py` is now the direct DOLFINx
+  production port of `DMI` (constant scalar `D` only; spatially varying `D`
+  deferred by name), covering `dmi_type='auto'`/`'1d'`/`'2d'`/`'3d'` (bulk,
+  transcribed from `finmag.util.helpers.times_curl`) and `'interfacial'`
+  (transcribed from `finmag.energies.dmi.DMI_interfacial`), each preserving
+  the legacy `unit_length ** (dim - 1)` scaling convention exactly (verified
+  against hand-derived affine fields, not just asserted). The undocumented
+  legacy `dmi_type='D2D'` branch is not ported this slice and raises
+  `NotImplementedError` naming `D2D` explicitly. Chirality/sign convention is
+  pinned two ways: an exact affine "twist" field (transcribed from
+  `finmag.tests.test_dmi_terms`) and a genuine sinusoidal helix, where
+  negating the wavevector is shown to exactly negate the assembled energy as
+  an algebraic FEM-level identity (`E(k) + E(-k) == 0.0` to machine
+  precision), sidestepping the discretisation error a direct comparison to
+  the continuum analytic value would carry. Two coordinate-ordered legacy
+  oracle fixture cases (`bulk_3d`, `interfacial`; schema v1,
+  `src/finmag/tests/fixtures/dmi_oracle.json`/`gen_dmi_oracle.py`) confirm
+  faithful transcription against the frozen legacy class to near machine
+  precision (energy relative error `0.0`/`7.1e-15`; field relative error
+  `~5-8e-16`). `sim_with(D=...)` now constructs the ported `DMI`. Gate:
+  `dolfinx-src-dmi-pytest`. [Claude Sonnet 5]
 - Cubic anisotropy: `cubic_anisotropy_energy` covers the legacy constant-axis,
   constant-`K1`/`K2`/`K3` case from
   `finmag.energies.cubic_anisotropy.CubicAnisotropy`, and its test is checked
@@ -385,6 +406,14 @@ Before editing the matching module in `src/finmag`, check that:
   by-name `NotImplementedError`. The remaining
   `DMI`/`CubicAnisotropy`/`ThinFilmDemag`/`FixedEnergyDW` classes are still the
   documented direct-construction gap. [Claude Opus 4.8]
+  Task 13 update: `DMI` is now `requires_legacy_dolfin=False` and
+  dolfin-clean -- constructing it directly builds the ported DOLFINx `DMI`
+  (see the Task 13 update to the "Bulk DMI" entry above for the full form/
+  scaling/chirality/fixture evidence). The undocumented legacy
+  `dmi_type='D2D'` variant and spatially varying `D` raise curated by-name
+  `NotImplementedError`. The remaining `CubicAnisotropy`/`ThinFilmDemag`/
+  `FixedEnergyDW` classes are still the documented direct-construction gap.
+  [Claude Sonnet 5]
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,

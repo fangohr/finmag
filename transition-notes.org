@@ -3904,3 +3904,163 @@ name. The dolfin-dependent =sim_helpers= helpers (=skyrmion_number=,
 removed so =sim_helpers= is DOLFINx-import-clean. =pixi.lock= was not touched.
 
 [Claude Opus 4.8]
+
+** Direct DOLFINx DMI Port (Task 13)
+
+Task 13 ports =src/finmag/energies/dmi.py= directly, closing the =DMI= entry in
+the Task 10 fail-forward known-gap list (Demag/FK was closed in Task 11b; DMI
+is the second of the =requires_legacy_dolfin=True= optional energies to be
+ported). It follows the Task 5 =EnergyBase=/=Exchange=/=UniaxialAnisotropy=
+pattern exactly: constant-scalar coefficient, ~box-assemble~ only, owned-array
+=compute_field()=.
+
+*** Form transcription (legacy line -> ported line)
+
+Every UFL expression is transcribed verbatim from legacy =dmi.py= and
+=finmag.util.helpers.times_curl= (never re-derived):
+
+- Bulk/auto dispatch: legacy =self.dmi_factor*self.D.f*times_curl(m.f,
+  dmi_dim)= -> =self.dmi_factor * self.D.f * _times_curl(m.f, dmi_dim)=, with
+  =dmi_factor = fem.Constant(mesh, 1.0/unit_length)= matching legacy
+  =df.Constant(1.0/unit_length)= exactly (not the exchange-style
+  =1/unit_length**2=).
+- 3D bulk: legacy =df.inner(v, df.curl(v))= -> UFL's native =inner(m,
+  curl(m))= (identical operator, just the DOLFINx =ufl= namespace).
+- 1D/2D reduced =times_curl=: legacy computes =curlx = dvzdy - dvydz=, =curly
+  = dvxdz - dvzdx=, =curlz = dvydx - dvxdy= with =dvxdz=dvydz=dvzdz=0= always
+  and =dvxdy=dvydy=dvzdy=0= additionally forced for =dim==1=; the port's
+  =_times_curl= keeps exactly this structure (only the always-zero terms are
+  folded away algebraically, e.g. =curly = -dmzdx= since =dvxdz= is always
+  zero -- the *set* of nonzero derivatives kept per dimension is identical).
+- Interfacial: legacy =DMI_interfacial= returns =D*(mx*dmzdx - mz*dmxdx) +
+  D*(my*dmzdy - mz*dmydy)= with =dmxdy=dmydy=dmzdy=0= for =dim==1=, else the
+  real =y=-gradient components -> ported =_dmi_interfacial= returns the
+  identical bracket (the =D= factor is applied by the caller in both cases).
+  The legacy public =DMI_interfacial(m, D, dim)= free function is preserved as
+  a thin wrapper (=D * _dmi_interfacial(m.f, dim)=) for API compatibility,
+  since it is (harmlessly) part of the legacy lazy-export surface and unused
+  elsewhere in the codebase.
+- Legacy =self.dmi_type is '1d'=-style identity comparisons on string
+  literals (a latent legacy bug pattern, only harmless in practice because
+  CPython happens to intern these particular literals) are replaced with
+  plain equality comparisons in the port; the *dispatch table* (which
+  =dmi_type= maps to which dimension/form) is unchanged.
+- The undocumented legacy =dmi_type='D2D'= branch (present in the source but
+  never mentioned in the class docstring's =Options=) is *not* transcribed
+  this slice; it raises =NotImplementedError= naming =D2D= explicitly, rather
+  than being silently absorbed into another branch.
+
+*** Scaling-convention evidence
+
+=EnergyBase.setup= multiplies the assembled mesh-coordinate energy by
+=unit_length**self.dim= where =self.dim = m.mesh_dim()= (the *actual* mesh
+dimension, unaffected by an explicit =dmi_type='1d'=/='2d'=/='3d'= override).
+Combined with the =1/unit_length= factor baked into =dmi_factor=, this
+reproduces the legacy =unit_length**(dim-1)= DMI convention exactly. Measured
+directly against hand-derived affine fields (not just asserted):
+
+- 1D mesh (interval, length 2 mesh units), =m=(0,b,c*x)=: analytic
+  =E = D*(-b*c)*L= with *no* =unit_length= dependence at all (=dim-1=0=,
+  =unit_length**0=1=). Verified at =unit_length in {1, 2, 5}=: all three give
+  =E = -0.0021= exactly (=D=5e-3, b=0.3, c=0.7, L=2=).
+- 2D mesh (unit square), =m=(p,q,c*x+d*y)=: analytic =E = D*(p*d-q*c)*Area*
+  unit_length= (=dim-1=1=). Verified at =unit_length in {1, 3}=: =E= scales
+  exactly linearly (=3.0e-4= then =9.0e-4=, i.e. exactly =3x=).
+- 3D bulk affine twist =m=(-y/2, x/2, c)= on the unit cube: =m.curl(m) = c=
+  everywhere exactly (transcribed straight from
+  =finmag.tests.test_dmi_terms.test_dmi_term3d_matches_analytical_solution=),
+  giving =E = D*c*V=; confirmed to =rel=1e-13=.
+- 3D interfacial affine ramp =mx=a, my=b= constant, =mz=c*x+e*y=: every
+  =mz=-multiplied derivative term vanishes (=mx=/=my= are constant), leaving
+  exactly =E = D*(a*c+b*e)=; confirmed to =rel=1e-12=, and flipping the sign
+  of =(c,e)= flips the sign of =E= exactly.
+
+*** Chirality/sign pin: an exact FEM-level identity, not an approximation
+
+A genuine helix =m=(0,cos(kx),sin(kx))= cannot be captured exactly by a CG1
+interpolant (=cos=/=sin= are not affine), so comparing its assembled energy to
+the *continuum* analytic value =E=-D*k*V= would carry mesh-dependent
+discretisation error unrelated to the sign convention. Instead: replacing =k=
+by =-k= leaves the =y=-component's nodal values *identical* (=cos= is even)
+and *exactly negates* the =z=-component's nodal values (=sin= is odd). For a
+field depending only on =x= with a zero =x=-component, that nodal transform
+is shown algebraically to exactly negate =m.curl(m)= as an identity of the two
+FEM functions themselves (not merely their continuum limit) -- so it holds to
+machine precision regardless of whatever discretisation error each side
+individually carries. Verified numerically on a =create_unit_cube(3,3,3)=
+mesh, =k=3=: =E(k) + E(-k) == 0.0= to machine precision (not just =rel=,
+literal bitwise cancellation), while =E(k) != 0=. This is a stronger, more
+honest pin than an approximate comparison to the continuum helix formula
+would have been, and is confirmed against the frozen legacy class itself (not
+just self-consistency): running the identical uniform-=m= construction at the
+oracle gives energy exactly =0.0= with a *nonzero* field (=max|H|=6.57e7=),
+which is not a porting bug but the well-known DMI boundary/edge-canting
+contribution (the weak-form derivative =D(v.curl(m) + m.curl(v))= need not
+vanish in its second term merely because =curl(m)=0=), identical in both the
+legacy and ported math.
+
+*** Fixture provenance
+
+=src/finmag/tests/fixtures/dmi_oracle.json= (schema v1, two cases:
+=bulk_3d=/=interfacial=) is generated by
+=src/finmag/tests/fixtures/gen_dmi_oracle.py= at the frozen oracle commit
+=ba9280934e188d7f3800e7b9865e70a9422f7687= (byte-identical =dmi.py= at that
+commit, confirmed by direct diff). Mesh:
+=BoxMesh(Point(0,0,0),Point(0.7,0.7,0.7),4,4,4)= (matching DOLFINx
+=create_box= vertex-for-vertex, the same box-mesh trick used for the FK demag
+oracle). Magnetisation =m=(0.6, 0.8*cos(2*pi*x0), 0.8*sin(2*pi*x0))= has exact
+unit norm everywhere. The box extent (0.7, not 1.0) is deliberate: an
+interfacial density of =D*mx*dmz/dx= integrates =cos(2*pi*x0)= over =x0=,
+which is exactly zero over a whole period and would make that case a
+degenerate all-zero regression pin (discovered while first generating the
+fixture over a =UnitCubeMesh=, where the interfacial case came out as
+=-9.2e-37=, i.e. floating-point zero; regenerated over the 0.7-extent box,
+where it is a genuine =-1.12e-21 J=). No iterative linear solve is involved
+(direct box assembly), so declared tolerances (=atol=1e-9*scale=,
+=rtol=1e-9=) reflect floating-point summation-order noise, not solver
+residual; measured agreement is far tighter still (energy relative error
+=0.0= and =7.1e-15= for the two cases; pointwise field relative error
+=~5-8e-16=).
+
+*** TDD evidence
+
+Before this slice, =DMI(1e-3)= raised the raw =ModuleNotFoundError: No module
+named 'dolfin'= (the class still imported legacy =dolfin= at module scope);
+this was the natural RED state (pinned by
+=test_deferred_surfaces_dolfinx.py='s known-gap test). The direct edit to
+=src/finmag/energies/dmi.py= removes that import entirely; the same test is
+updated in place (renamed
+=test_demag_and_dmi_are_ported_and_the_others_remain_a_known_gap=) to assert
+=DMI(1e-3).name == "DMI"= and move the still-genuinely-unported
+=ModuleNotFoundError= pin onto =CubicAnisotropy= instead (the next class in
+the same boundary gap, Task 14).
+
+*** Measured results (2026-07-21, =pixi run -e dolfinx=)
+
+New gate =dolfinx-src-dmi-pytest= (=test_dmi_dolfinx.py=): 28 passed. All
+existing gates remain green with the counts unchanged except as noted: import
+9p/2s (one previously-fail-forward =DMI= reference in
+=test_import_boundary.py= was retargeted to =CubicAnisotropy=, and the ported-
+export test extended to cover =DMI=), field 26, energies 26, effectivefield
+15, llg 19, scipy 19, simulation 31 (extended with
+=test_sim_with_dmi_builds_ported_interaction=, replacing the old by-name
+deferral test), deferred 5 (same count -- one test renamed/rewritten, no
+tests added or removed), native-bem 8, demag 19, restart-output 20. The
+two-rank =dolfinx-src-energies-mpi= probe is extended in place with a DMI
+section (unit_length**-1 field scaling, cross-rank energy agreement,
+ghost/owner field consistency, D-sign flip, =D2D= by-name rejection) rather
+than adding a new MPI task, since DMI fit cheaply into the existing energies
+probe. =dev/bin/verify-dolfinx-m5= passes end-to-end with a clean tracked
+tree; =pixi.lock= untouched.
+
+*** Deferred / deliberate deviations
+
+Spatially varying =D= (=Field=/callable/string) and every non-=box-assemble=
+method (=box-matrix-numpy=/=box-matrix-petsc=/=project=/=direct=) raise
+=NotImplementedError= by name, matching the Task 5 energy foundation exactly.
+The undocumented legacy =dmi_type='D2D'= variant also raises by name and is
+not part of this slice's ported surface (it is not mentioned in the legacy
+class's own documented =Options=). =sim_with(D=...)= now constructs a real
+=DMI= interaction instead of deferring.
+
+[Claude Sonnet 5]

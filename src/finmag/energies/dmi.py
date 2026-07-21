@@ -1,121 +1,174 @@
-import logging
-import dolfin as df
-from aeon import timer
-from finmag.field import Field
-from .energy_base import EnergyBase
-from finmag.util.helpers import times_curl
+"""DOLFINx Dzyaloshinskii-Moriya interaction (DMI)."""
 
-logger = logging.getLogger('finmag')
+import numbers
+
+import numpy as np
+from aeon import timer
+from ufl import curl, grad, inner
+
+from finmag.field import Field
+
+from .energy_base import EnergyBase, _require_cg1_magnetisation
+from dolfinx import fem
+
 
 class DMI(EnergyBase):
-    """
-    Compute the Dzyaloshinskii-Moriya Interaction (DMI) field.
+    """Compute the Dzyaloshinskii-Moriya interaction (DMI) energy and field.
+
     .. math::
         E_{\\text{DMI}} = \\int_\\Omega D \\vec{m} \\cdot
                           (\\nabla \\times \\vec{m}) dx
+
+    This first DOLFINx slice supports a spatially constant scalar ``D`` and
+    the ``box-assemble`` method (matching the Task 5 energy foundation).
+
     *Arguments*
         D
-            the DMI constant
+            the (constant, scalar) DMI constant.
         method
-            See documentation of EnergyBase class for details.
+            only ``'box-assemble'`` is supported; every other legacy method
+            keeps raising ``NotImplementedError`` precisely, exactly as for
+            :class:`~finmag.energies.exchange.Exchange`.
         dmi_type
-            Options are 'auto', '1d', '2d', '3d' and 'interfacial'.
-            Default value is 'auto' which means the dmi is automaticaly
-            selected according to the mesh dimension.
-    *Example of Usage*
-        .. code-block:: python
-            import dolfin as df
-            from finmag.energies.dmi import DMI
-            from finmag.field import Field
-            # Define a mesh representing a cube with edge length L.
-            L = 1e-8  # m
-            n = 5
-            mesh = df.BoxMesh(df.Point(0, L, 0), df.Point(L, 0, L), n, n, n)
-            D = 5e-3  # J/m**2 DMI constant
-            Ms = 0.8e6  # A/m magnetisation saturation
-            # Initial magnetisation
-            S3 = df.VectorFunctionSpace(mesh, 'CG', 1)
-            m = Field(S3, (1, 0, 0))
-            dmi = DMI(D)
-            dmi.setup(m, Ms)
-            # Compute DMI energy.
-            E_dmi = dmi.compute_energy()
-            # Compute DMI effective field.
-            H_dmi = dmi.compute_field()
-            # Using 'box-matrix-numpy' method (fastest for small matrices)
-            dmi_np = DMI(D, method='box-matrix-numpy')
-            dmi_np.setup(m, Ms)
-            H_dmi_np = dmi_np.compute_field()
+            ``'auto'`` (default), ``'1d'``, ``'2d'``, ``'3d'`` or
+            ``'interfacial'``. ``'auto'`` dispatches on the mesh dimension,
+            matching the legacy ``DMI`` class exactly. The legacy ``'D2D'``
+            variant is not ported in this slice and raises
+            ``NotImplementedError`` by name.
     """
 
-    def __init__(self, D, method='box-matrix-petsc', name='DMI',
-                 dmi_type='auto'):
-        self.D_value = D  # Value of D, later converted to a Field object.
+    _bulk_dim_overrides = {"1d": 1, "2d": 2, "3d": 3}
+
+    def __init__(self, D, method="box-assemble", name="DMI", dmi_type="auto"):
+        self.D_value = _constant_scalar_value(D, "D")
         self.name = name
-        self.dmi_type = dmi_type
+        self.dmi_type = _validate_dmi_type(dmi_type)
 
-        super(DMI, self).__init__(method, in_jacobian=True)
-
+        super(DMI, self).__init__(method=method, in_jacobian=True)
 
     @timer.method
-    def setup(self, m, Ms, unit_length=1):
-        # Create an exchange constant Field object A in DG0 function space.
-        dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
-        self.D = Field(dg_functionspace, self.D_value, name='D')
-        del(self.D_value)
+    def setup(self, m, Ms, unit_length=1.0):
+        if not isinstance(m, Field):
+            raise TypeError("m must be a finmag.Field")
+        if m.value_dim() != 3 or m.is_scalar_field():
+            raise ValueError("DMI requires a three-component m Field")
+        _require_cg1_magnetisation(m)
 
-        # Multiplication factor used for dmi energy computation.
-        self.dmi_factor = df.Constant(1.0/unit_length)
+        unit_length = float(unit_length)
+        if not np.isfinite(unit_length) or unit_length <= 0.0:
+            raise ValueError("unit_length must be a positive finite number")
 
-        if self.dmi_type is '1d':
-            dmi_dim = 1
-        elif self.dmi_type is '2d':
-            dmi_dim = 2
-        elif self.dmi_type is '3d':
-            dmi_dim = 3
+        coefficient_space = fem.functionspace(m.mesh(), ("DG", 0))
+        self.D = Field(coefficient_space, self.D_value, name="D")
+
+        # Multiplication factor used for the DMI energy computation, exactly
+        # matching the legacy ``dmi_factor = df.Constant(1.0 / unit_length)``.
+        # Combined with ``EnergyBase``'s ``unit_length**self.dim`` total-energy
+        # scaling (``self.dim`` is the actual mesh dimension), this reproduces
+        # the legacy ``unit_length ** (dim - 1)`` DMI scaling convention.
+        self.dmi_factor = fem.Constant(m.mesh(), 1.0 / unit_length)
+
+        dmi_dim = self._bulk_dim_overrides.get(self.dmi_type, m.mesh_dim())
+
+        if self.dmi_type == "interfacial":
+            integrand = _dmi_interfacial(m.f, dmi_dim)
         else:
-            dmi_dim = m.mesh_dim()
+            integrand = _times_curl(m.f, dmi_dim)
 
-        # Select the right expression for computing the dmi energy.
-        if self.dmi_type is 'interfacial':
-            E_integrand = DMI_interfacial(m, self.dmi_factor*self.D.f,
-                                          dim=dmi_dim)
-        elif self.dmi_type is 'D2D':
-            E_integrand = DMI_D2D(m, self.dmi_factor*self.D.f,
-                                  dim=dmi_dim)
-        else:
-            E_integrand = self.dmi_factor*self.D.f*times_curl(m.f, dmi_dim)
+        E_integrand = self.dmi_factor * self.D.f * integrand
 
         super(DMI, self).setup(E_integrand, m, Ms, unit_length)
+        return self
 
-        if self.method == 'direct':
-            self.__setup_field_direct()
 
-    def __setup_field_direct(self):
-        dofmap = self.m.mesh_dofmap()
-        S3 = df.VectorFunctionSpace(self.m.mesh(), "CG", 1, dim=3,
-                                   constrained_domain=dofmap.constrained_domain)
+def _constant_scalar_value(value, name):
+    if isinstance(value, (Field, fem.Function, str)) or callable(value):
+        raise NotImplementedError(
+            "spatially varying {} is deferred from the first DOLFINx "
+            "DMI slice".format(name)
+        )
+    if isinstance(value, fem.Constant):
+        value = value.value
+    if isinstance(value, numbers.Real):
+        result = float(value)
+    else:
+        array = np.asarray(value)
+        if array.size != 1:
+            raise NotImplementedError(
+                "spatially varying {} is deferred from the first DOLFINx "
+                "DMI slice".format(name)
+            )
+        result = float(array.reshape(-1)[0])
+    if not np.isfinite(result):
+        raise ValueError("{} must be finite".format(name))
+    return result
 
-        u3 = df.TrialFunction(S3)
-        v3 = df.TestFunction(S3)
-        self.g_petsc = df.PETScMatrix()
-        df.assemble(-2*self.dmi_factor*self.D.f*df.inner(v3, df.curl(u3))*df.dx, tensor=self.g_petsc)
-        self.H_petsc = df.PETScVector()
 
-def DMI_interfacial(m, D, dim):
+def _validate_dmi_type(dmi_type):
+    known = ("auto", "1d", "2d", "3d", "interfacial")
+    if dmi_type == "D2D":
+        raise NotImplementedError(
+            "dmi_type='D2D' is not yet ported to DOLFINx; supported values "
+            "are {}".format(known)
+        )
+    if dmi_type not in known:
+        raise ValueError(
+            "unsupported dmi_type {!r}; supported values are {}".format(
+                dmi_type, known
+            )
+        )
+    return dmi_type
+
+
+def _times_curl(m, dim):
+    """Return ``m . curl(m)`` (bulk DMI), transcribed from the legacy
+    ``finmag.util.helpers.times_curl``.
+
+    On a three-dimensional mesh this is UFL's native ``curl``. On one- and
+    two-dimensional meshes ``curl`` is not defined, so the Cartesian
+    expansion is used instead, with derivatives that do not exist on the
+    mesh (``z`` always; ``y`` when ``dim == 1``) set to zero exactly as in
+    the legacy transcription.
     """
-    Input arguments:
-    m is a Field object on a 1d or 2d space,
-    D is the DMI constant
-    dim is the mesh dimension.
-    Returns the form to compute the DMI energy:
-    D(m_x * dm_z/dx - m_z * dm_x/dx) +
-    D(m_y * dm_z/dy - m_z * dm_y/dy) * df.dx
-    References:
-    [1] Rohart, S. and Thiaville A., Phys. Rev. B 88, 184422 (2013)
-    """
+    if dim == 3:
+        return inner(m, curl(m))
 
-    gradm = df.grad(m.f)
+    gradm = grad(m)
+
+    # Derivatives along x exist in both the 1d and 2d cases.
+    dmydx = gradm[1, 0]
+    dmzdx = gradm[2, 0]
+
+    # Derivatives along z do not exist in the 1d/2d cases; set to zero.
+    dmydz = 0
+
+    if dim == 1:
+        # Derivatives along y do not exist in the 1d case; set to zero.
+        dmxdy = 0
+        dmzdy = 0
+    elif dim == 2:
+        dmxdy = gradm[0, 1]
+        dmzdy = gradm[2, 1]
+    else:
+        raise ValueError("times_curl only supports dim in (1, 2, 3)")
+
+    # Components of curl(m).
+    curlx = dmzdy - dmydz
+    curly = -dmzdx
+    curlz = dmydx - dmxdy
+
+    return m[0] * curlx + m[1] * curly + m[2] * curlz
+
+
+def _dmi_interfacial(m, dim):
+    """Return the interfacial-DMI bracket, transcribed from the legacy
+    ``finmag.energies.dmi.DMI_interfacial``::
+
+        (mx * dmzdx - mz * dmxdx) + (my * dmzdy - mz * dmydy)
+
+    References: Rohart, S. and Thiaville A., Phys. Rev. B 88, 184422 (2013).
+    """
+    gradm = grad(m)
 
     dmxdx = gradm[0, 0]
     dmydx = gradm[1, 0]
@@ -126,46 +179,20 @@ def DMI_interfacial(m, D, dim):
         dmydy = 0
         dmzdy = 0
     else:
-        # Works for both 2d mesh or 3d meshes.
+        # Works for both 2d and 3d meshes.
         dmxdy = gradm[0, 1]
         dmydy = gradm[1, 1]
         dmzdy = gradm[2, 1]
 
-    mx = m.f[0]
-    my = m.f[1]
-    mz = m.f[2]
+    mx = m[0]
+    my = m[1]
+    mz = m[2]
 
-    return D*(mx * dmzdx - mz * dmxdx) + D*(my * dmzdy - mz * dmydy)
+    return (mx * dmzdx - mz * dmxdx) + (my * dmzdy - mz * dmydy)
 
-def DMI_D2D(m, D, dim):
-    """
-    D2D type DMI
 
-    w = D (L_xz^y + L_yz^x)
-
-    where L_ij^k = m_i dm_j / dk - m_j dm_i / dk
-
-    Hence:
-
-    w = D [(m_x dm_z / dy - m_z dm_x / dy) +
-           (m_y dm_z / dx - m_z dm_y / dx)]
-
-      = D (m_x dm_z/dy + m_y dm_z/dx - m_z ( dm_x / dy + dm_y / dx))
-
-    """
-
-    if dim != 3:
-        raise ValueError("This DMI Type does not work other than in 3-D.")
-
-    gradm = df.grad(m.f)
-
-    dmxdy = gradm[0, 1]
-    dmydx = gradm[1, 0]
-    dmzdx = gradm[2, 0]
-    dmzdy = gradm[2, 1]
-
-    mx = m.f[0]
-    my = m.f[1]
-    mz = m.f[2]
-
-    return D * (mx * dmzdy + my * dmzdx - mz * ( dmxdy + dmydx))
+def DMI_interfacial(m, D, dim):
+    """Return the interfacial-DMI energy-density UFL form, preserving the
+    legacy public signature (``m`` a :class:`~finmag.field.Field`, ``D`` an
+    already-scaled coefficient expression, ``dim`` the mesh dimension)."""
+    return D * _dmi_interfacial(m.f, dim)

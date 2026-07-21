@@ -6,7 +6,7 @@ import numpy as np
 from dolfinx import fem, mesh
 from mpi4py import MPI
 
-from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
+from finmag.energies import DMI, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
 
@@ -103,6 +103,35 @@ def run_probe():
     global_weighted = np.zeros(3)
     comm.Allreduce(weighted, global_weighted, op=MPI.SUM)
     assert np.allclose(global_weighted, 0.0, atol=1e-8)
+
+    # DMI (Task 13): unit_length**-1 field scaling (not the exchange-style
+    # unit_length**-2), collective energy agreement across ranks, and an
+    # owned/ghost-consistent field, using the same distributed ``m``/``Ms``.
+    dmi_1 = DMI(5.0, dmi_type="auto")
+    dmi_2 = DMI(5.0, dmi_type="auto")
+    dmi_1.setup(m, Ms, unit_length=1.0)
+    dmi_2.setup(m, Ms, unit_length=2.0)
+    H_dmi_1 = dmi_1.compute_field()
+    H_dmi_2 = dmi_2.compute_field()
+    assert np.max(np.abs(H_dmi_1)) > 0.0
+    assert np.allclose(H_dmi_2, H_dmi_1 / 2.0)
+    dmi_energies = comm.allgather(dmi_1.compute_energy())
+    assert np.allclose(dmi_energies, dmi_energies[0])
+    dmi_function = Field(vector_space, H_dmi_1)
+    _assert_function_ghosts_match_owners(dmi_function)
+
+    dmi_reversed = DMI(-5.0, dmi_type="auto")
+    dmi_reversed.setup(m, Ms, unit_length=1.0)
+    assert np.isclose(
+        dmi_reversed.compute_energy(), -dmi_1.compute_energy(), rtol=1e-12
+    )
+
+    try:
+        DMI(1.0, dmi_type="D2D")
+    except NotImplementedError as error:
+        assert "D2D" in str(error)
+    else:
+        raise AssertionError("dmi_type='D2D' was not rejected by name")
 
     anisotropy = UniaxialAnisotropy(4.0, (0.0, 0.0, 1.0), K2=1.5)
     anisotropy.setup(m, Ms)

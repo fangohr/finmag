@@ -38,8 +38,8 @@ _LAZY_EXPORTS = {
         "TimeZeemanPython",
         False,
     ),
-    "DMI": ("finmag.energies.dmi", "DMI", True),
-    "DMI_interfacial": ("finmag.energies.dmi", "DMI_interfacial", True),
+    "DMI": ("finmag.energies.dmi", "DMI", False),
+    "DMI_interfacial": ("finmag.energies.dmi", "DMI_interfacial", False),
     "ThinFilmDemag": (
         "finmag.energies.thin_film_demag",
         "ThinFilmDemag",
