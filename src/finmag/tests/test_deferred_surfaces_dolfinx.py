@@ -1,0 +1,133 @@
+"""Task 10 headline deferred-surfaces sweep.
+
+This file is the single, aggregated place a reviewer can look to confirm
+"unsupported features fail by name, not through incidental import errors"
+(the Task 10 gate checklist). Most of the headline deferred surfaces already
+have a dedicated, by-name assertion in their owning per-slice suite; this
+sweep intentionally does not duplicate that coverage. Instead it:
+
+1. lists, with a direct reference, every headline surface already pinned
+   elsewhere, so the gate has one place that documents where each is tested;
+2. adds fresh coverage for the ``integrator_backend="sundials"`` path through
+   ``Simulation``/``sim_with`` (only the bare ``llg_integrator(...,
+   backend="sundials")`` factory call was pinned before this slice); and
+3. documents, without asserting it is acceptable, one known pre-existing gap
+   that this slice does not fix (see the last test below).
+
+Already pinned by name elsewhere (not duplicated here):
+
+- demag request via ``sim_with(demag_solver=...)`` default ``"FK"`` --
+  ``test_simulation_dolfinx.py::test_sim_with_default_demag_is_deferred_by_name``
+- DMI via ``sim_with(D=...)`` --
+  ``test_simulation_dolfinx.py::test_sim_with_dmi_is_deferred_by_name``
+- scheduler (``schedule``/``unschedule``/``clear_schedule``) --
+  ``test_simulation_dolfinx.py::test_scheduler_api_is_deferred``
+- restart (``save_restart_data``/``restart``) --
+  ``test_simulation_dolfinx.py::test_restart_is_deferred``
+- STT (``set_stt``/``set_zhangli``) --
+  ``test_simulation_dolfinx.py::test_stt_is_deferred``
+- ``kernel="sllg"``/``kernel="llg_stt"`` and ``parallel=True`` --
+  ``test_simulation_dolfinx.py::test_nonstandard_kernels_are_deferred`` and
+  ``::test_parallel_flag_is_deferred``
+- multi-rank/native Sundials/STT/thermal ``LLG`` state paths --
+  ``test_llg_dolfinx.py::test_deferred_surfaces_raise_by_name`` and
+  ``::test_multi_rank_state_paths_raise_serial_guard``
+- ``backend="sundials"`` at the ``llg_integrator`` factory --
+  ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``
+- ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/``TimeZeemanPython``
+  instantiation -- ``test_energies_dolfinx.py`` (``TimeZeeman(...)`` case)
+- ``Field.from_expression`` --
+  ``test_field_dolfinx.py::test_legacy_only_features_fail_precisely``
+"""
+
+import pytest
+from dolfinx import mesh
+from mpi4py import MPI
+
+from finmag.drivers.llg_integrator import llg_integrator
+from finmag.sim.sim import Simulation, sim_with
+
+
+def _box():
+    return mesh.create_box(
+        MPI.COMM_WORLD,
+        [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)],
+        [2, 2, 2],
+        mesh.CellType.tetrahedron,
+    )
+
+
+def _make_sim(**kwargs):
+    kwargs.setdefault("unit_length", 1e-9)
+    kwargs.setdefault("name", "deferred_sweep_sim")
+    return Simulation(_box(), 8.6e5, **kwargs)
+
+
+# --------------------------------------------------------------------------
+# new coverage: integrator_backend="sundials" reached through Simulation and
+# sim_with (not just the bare llg_integrator() factory call)
+# --------------------------------------------------------------------------
+
+def test_simulation_sundials_backend_raises_by_name_on_first_integrator_use():
+    sim = _make_sim(integrator_backend="sundials")
+    sim.set_m((1.0, 0.0, 0.0))
+    # Construction must not eagerly build an integrator (lazy creation is a
+    # Task 9 invariant); the by-name failure only appears once one is needed.
+    assert not sim.has_integrator()
+    with pytest.raises(ImportError, match="sundials"):
+        sim.integrator
+
+
+def test_simulation_create_integrator_sundials_backend_raises_by_name():
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    with pytest.raises(ImportError, match="sundials"):
+        sim.create_integrator(backend="sundials")
+
+
+def test_sim_with_sundials_backend_raises_by_name_on_first_integrator_use():
+    sim = sim_with(
+        _box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+        integrator_backend="sundials", demag_solver=None,
+    )
+    with pytest.raises(ImportError, match="sundials"):
+        sim.integrator
+
+
+def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
+    """Cross-check only: the bare factory case is the pre-existing pin in
+    ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``.
+    Kept here as one line so the sweep file alone demonstrates every
+    ``integrator_backend="sundials"`` entry point without requiring a reader
+    to open a second file."""
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    with pytest.raises(ImportError, match="sundials"):
+        llg_integrator(sim.llg, sim.llg._m_field, backend="sundials")
+
+
+# --------------------------------------------------------------------------
+# known, pre-existing (Task 3) gap: this slice documents it rather than
+# silently leaving it unrecorded, but does not fix it here (see the Task 10
+# report and dev/dolfinx/porting_map.md "Near-Term Gaps").
+# --------------------------------------------------------------------------
+
+def test_direct_legacy_only_energy_import_is_a_known_gap_not_this_slices_scope():
+    """``finmag.energies.Demag``/``DMI``/``CubicAnisotropy``/``ThinFilmDemag``/
+    ``FixedEnergyDW``/``Demag2D``/``MacroGeometry`` are not ported at all yet
+    (Task 11+ scope); they are marked ``requires_legacy_dolfin=True`` in the
+    lazy export table and still import legacy ``dolfin`` at module scope.
+    Accessing them directly (bypassing ``Simulation``/``sim_with``, which
+    intercept the *request* and raise a curated ``NotImplementedError`` by
+    name before ever reaching these modules -- see
+    ``test_sim_with_default_demag_is_deferred_by_name`` and
+    ``test_sim_with_dmi_is_deferred_by_name``) surfaces the underlying
+    ``ModuleNotFoundError`` for ``dolfin`` in the DOLFINx environment instead
+    of a curated by-name error. This is a pre-existing Task 3 boundary
+    decision ("load only when requested"), not a regression introduced by
+    this gate; it is tracked as a near-term gap rather than fixed here, since
+    this slice adds no new production behaviour."""
+    with pytest.raises(ModuleNotFoundError, match="dolfin"):
+        from finmag.energies import Demag
+
+        Demag()

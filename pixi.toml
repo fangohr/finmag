@@ -62,6 +62,10 @@ dolfinx-src-effectivefield-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiex
 dolfinx-src-llg-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_llg_dolfinx.py"
 dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_scipy_driver_dolfinx.py"
 dolfinx-src-simulation-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_simulation_dolfinx.py"
+# Task 10: the aggregated deferred-surfaces sweep and the core Simulation
+# smoke, both new for the first direct-source DOLFINx gate. [Claude Sonnet 5]
+dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_deferred_surfaces_dolfinx.py"
+dolfinx-src-core-smoke = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m finmag.tests.simulation_dolfinx_smoke"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

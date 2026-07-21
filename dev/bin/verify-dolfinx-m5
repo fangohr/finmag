@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#
+# Run the aggregated first direct-source DOLFINx gate (Task 10 / "M5").
+#
+# This is the aggregation/verification slice over the direct-source DOLFINx
+# port completed across Tasks 3-9 (sliceable imports, Field, the common
+# energies, EffectiveField, the deterministic LLG core, the SciPy driver, and
+# the core Simulation/sim_with). It does not port anything new; it runs every
+# focused `dolfinx-src-*` pytest gate and MPI probe plus two new Task 10
+# witnesses (the aggregated deferred-surfaces sweep and the core physical-time
+# smoke) as one reproducible command, mirroring the frozen
+# `dev/bin/verify-dolfinx-m4` prototype-gate structure and the
+# `dev/bin/validation-common.sh` tracked-diff cleanliness guard used by every
+# other verifier in this repository. [Claude Sonnet 5]
+#
+# Usage:
+#   dev/bin/verify-dolfinx-m5
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi global/cache state out of the checkout and writable on restricted
+# runners, matching the other verifiers. [Codex gpt-5.5 high]
+export PIXI_HOME="${PIXI_HOME:-/tmp/pixi-cache}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+source "${repo_root}/dev/bin/validation-common.sh"
+install_tracked_files_guard "${repo_root}" \
+    "first direct-source DOLFINx gate validation"
+
+echo "==> pixi run -e dolfinx dolfinx-versions"
+pixi run -e dolfinx dolfinx-versions
+
+echo "==> pixi run -e dolfinx dolfinx-src-import"
+pixi run -e dolfinx dolfinx-src-import
+
+echo "==> pixi run -e dolfinx dolfinx-src-import-pytest"
+pixi run -e dolfinx dolfinx-src-import-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-field-pytest"
+pixi run -e dolfinx dolfinx-src-field-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-field-mpi"
+pixi run -e dolfinx dolfinx-src-field-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-energies-pytest"
+pixi run -e dolfinx dolfinx-src-energies-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-energies-mpi"
+pixi run -e dolfinx dolfinx-src-energies-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-effectivefield-pytest"
+pixi run -e dolfinx dolfinx-src-effectivefield-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-effectivefield-mpi"
+pixi run -e dolfinx dolfinx-src-effectivefield-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-llg-pytest"
+pixi run -e dolfinx dolfinx-src-llg-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-scipy-pytest"
+pixi run -e dolfinx dolfinx-src-scipy-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-simulation-pytest"
+pixi run -e dolfinx dolfinx-src-simulation-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-deferred-pytest"
+pixi run -e dolfinx dolfinx-src-deferred-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
+pixi run -e dolfinx dolfinx-src-core-smoke

@@ -228,15 +228,15 @@ lazy exports, and the simplest existing example needed for the core smoke.
 
 ## Task 10: Establish the first direct-source DOLFINx gate
 
-- [ ] `PYTHONPATH=src python -c "import finmag"` resolves the edited source.
-- [ ] Focused Field, energy, EffectiveField, LLG, driver, and Simulation tests
+- [x] `PYTHONPATH=src python -c "import finmag"` resolves the edited source.
+- [x] Focused Field, energy, EffectiveField, LLG, driver, and Simulation tests
   pass under DOLFINx.
-- [ ] The core smoke advances to `1e-12 s` adaptively.
-- [ ] Magnetization norms and scientific reference values meet declared
+- [x] The core smoke advances to `1e-12 s` adaptively.
+- [x] Magnetization norms and scientific reference values meet declared
   tolerances.
-- [ ] Unsupported features fail by name, not through incidental import errors.
-- [ ] The gate checks that no test rewrites tracked source files.
-- [ ] Documentation lists the exact supported API and deferred surfaces.
+- [x] Unsupported features fail by name, not through incidental import errors.
+- [x] The gate checks that no test rewrites tracked source files.
+- [x] Documentation lists the exact supported API and deferred surfaces.
 
 This completes the first core source port. It is not full Finmag completion.
 

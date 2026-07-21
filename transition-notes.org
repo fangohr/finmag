@@ -3308,3 +3308,201 @@ inherited from =LLG.solve=/=solve_for= (and =Simulation(parallel=True)= raises
 by name). Demag, DMI, PBC, stochastic kernels, STT, scheduler, restart,
 NDT/VTK output, regions, hysteresis, normal modes, and the native Sundials
 driver remain unported. [Claude Opus 4.8]
+
+** First Direct-Source DOLFINx Gate (Task 10, "M5")
+
+Task 10 is an aggregation/verification slice over Tasks 3-9, not a new porting
+slice. It adds no new production =src/finmag= behaviour -- only a new
+verifier script, two new pixi tasks/test files, and this documentation.
+
+*** Naming decision
+
+The notes above already call the Task 9 core-=Simulation= slice "M5" (see
+"First M5 / DOLFINx Core Simulation Slice" and "Direct DOLFINx Core
+Simulation Port"). The new aggregate verifier is therefore named
+=dev/bin/verify-dolfinx-m5=, following the exact =dev/bin/verify-dolfinx-m4=
+convention (frozen prototype gate) rather than inventing a
+=verify-dolfinx-src-core= name. The CI workflow mirrors this as
+=.github/workflows/dolfinx-m5.yml=, added because =dolfinx-m4.yml= already
+proves the isolated DOLFINx pixi environment runs in this repository's CI (no
+new CI infrastructure was introduced; the workflow only calls the new
+verifier, exactly like the =python3-m2=/=python3-m3=/=dolfinx-m4= workflows
+call their verifiers).
+
+*** What the gate aggregates
+
+=dev/bin/verify-dolfinx-m5= reuses
+=dev/bin/validation-common.sh='s tracked-diff cleanliness guard (the same
+mechanism as every other verifier here) and then runs, in order:
+=dolfinx-versions=; =dolfinx-src-import=; every existing focused
+=dolfinx-src-*-pytest= gate (=import-boundary=, =field=, =energies=,
+=effectivefield=, =llg=, =scipy=, =simulation=); every existing MPI probe
+(=dolfinx-src-field-mpi=, =dolfinx-src-energies-mpi=,
+=dolfinx-src-effectivefield-mpi=); and two new Task 10 witnesses:
+=dolfinx-src-deferred-pytest= and =dolfinx-src-core-smoke=. Because the script
+uses =set -euo pipefail=, any single sub-gate failure stops the run and
+propagates a nonzero exit; this was verified directly (see "Fail-path
+evidence" below) rather than only asserted.
+
+*** New witness 1: the core smoke (=dolfinx-src-core-smoke=)
+
+=src/finmag/tests/simulation_dolfinx_smoke.py= is a new executable-module
+witness (runnable as =python -m finmag.tests.simulation_dolfinx_smoke=,
+matching the existing =*_mpi_probe.py= convention rather than a pytest file).
+It builds the Task 9 end-to-end workflow -- a small 3D tetrahedral box,
+=Ms=8.6e5=, =unit_length=1e-9=, =alpha=0.5=, =m_init=(1,0,0)=, Exchange
+(=A=13e-12=), Zeeman (=H_ext=(0,0,1e6)=), and =UniaxialAnisotropy=
+(=K1=1e5=, axis =(0,0,1)=) on the default SciPy backend -- and calls
+=sim.run_until(1e-12)=. The SciPy/VODE driver steps adaptively; =run_until=
+does not take a fixed =dt=. It prints a short JSON witness and asserts
+=sim.t >= 1e-12= and a nodal unit-norm tolerance before printing, so a failing
+physics/tolerance check exits nonzero (a plain Python =assert=, no
+try/except). Measured witness on 2026-07-21:
+
+#+begin_example
+{"integrator_backend": "scipy", "m_average": [0.9802594013891642,
+0.1766200460318399, 0.08889758054126375], "max_unit_norm_deviation":
+2.957244739087983e-06, "t": 1e-12, "t_target": 1e-12}
+#+end_example
+
+The unit-norm tolerance is =1e-5= (matching the tolerance already accepted in
+=test_simulation_dolfinx.py::test_run_until_relaxes_towards_field= for the
+same integrator/relaxation combination); the measured deviation at this very
+short physical time is =~3e-6=, comfortably inside it.
+
+Observation, not a defect: running this module directly (rather than through
+pytest) makes visible a pre-existing, harmless stdout/stderr side effect --
+=finmag.drivers.llg_integrator= eagerly *attempts* (at import time, not at
+=backend="sundials"= call time) to import
+=finmag.drivers.sundials_integrator=, which triggers the legacy native-module
+Makefile probe; it fails (no CVODE headers in this environment) and the
+build's compiler output is printed by =finmag.util.native_compiler.run_make=
+before the failure is caught and stored as
+=SUNDIALS_INTEGRATOR_IMPORT_ERROR= (Task 8's by-name =ImportError= mechanism).
+Every =dolfinx-src-*-pytest= gate above triggers the identical probe on
+collection; pytest's default output capture just hides it there. Nothing
+observes this noise as a functional problem (exit code stayed =0= throughout),
+so it is not treated as a defect to fix in this aggregation-only slice.
+
+*** New witness 2: the deferred-surfaces sweep (=dolfinx-src-deferred-pytest=)
+
+=src/finmag/tests/test_deferred_surfaces_dolfinx.py= is the single place a
+reviewer can check "unsupported features fail by name, not through incidental
+import errors" (Task 10 checklist item 5) without hunting across five
+per-slice suites. Investigating the brief's headline list first showed every
+item already has a dedicated by-name assertion somewhere:
+
+- demag request via =sim_with(demag_solver=...)= default -- already pinned in
+  =test_simulation_dolfinx.py::test_sim_with_default_demag_is_deferred_by_name=
+- DMI via =sim_with(D=...)= -- already pinned in
+  =::test_sim_with_dmi_is_deferred_by_name=
+- scheduler, restart, STT, =kernel="sllg"=/="llg_stt"=, =parallel=True= --
+  already pinned in =test_simulation_dolfinx.py=
+  (=test_scheduler_api_is_deferred=, =test_restart_is_deferred=,
+  =test_stt_is_deferred=, =test_nonstandard_kernels_are_deferred=,
+  =test_parallel_flag_is_deferred=)
+- native Sundials/STT/thermal/multi-rank =LLG= state paths -- already pinned
+  in =test_llg_dolfinx.py=
+- =TimeZeeman= instantiation -- already pinned in =test_energies_dolfinx.py=
+- =Field.from_expression= -- already pinned in
+  =test_field_dolfinx.py::test_legacy_only_features_fail_precisely=
+- =backend="sundials"= at the bare =llg_integrator(...)= factory -- already
+  pinned in
+  =test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name=
+
+The new sweep file therefore does not duplicate any of those; it documents
+each with a direct cross-reference and adds only genuinely new coverage: the
+=integrator_backend="sundials"= path reached through =Simulation=
+construction/=create_integrator=/=sim_with= (only the bare factory call was
+pinned before), each asserting the same by-name =ImportError= the factory
+already raises.
+
+Investigating this sweep also surfaced one pre-existing, out-of-scope gap,
+which the sweep documents rather than silently omitting or fixing: accessing
+a still-fully-unported optional energy class directly (=finmag.energies.Demag=,
+=DMI=, =CubicAnisotropy=, =ThinFilmDemag=, =FixedEnergyDW=, =Demag2D=,
+=MacroGeometry= -- every =requires_legacy_dolfin=True= lazy export) surfaces
+the raw =ModuleNotFoundError: No module named 'dolfin'= rather than a curated
+message, because these modules still import legacy =dolfin= at module scope
+and are not ported at all yet (Task 11+/"Later Value-Driven Slices" scope).
+This is distinct from -- and does not contradict -- the demag/DMI *request*
+paths above: =Simulation=/=sim_with= intercept those requests and raise a
+curated =NotImplementedError= before ever reaching these modules. The gap is
+a pre-existing Task 3 design point ("load only when requested"), not a
+regression introduced by this gate; =test_deferred_surfaces_dolfinx.py::test_direct_legacy_only_energy_import_is_a_known_gap_not_this_slices_scope=
+pins the current behaviour explicitly instead of leaving it undocumented, and
+=dev/dolfinx/porting_map.md='s Near-Term Gaps section cross-references it.
+No production code changes accompany this slice; per the Task 10 brief's
+global constraints, a real defect found while wiring the gate is reported
+rather than patched here -- this is exactly that case, and it is judged minor
+and pre-existing rather than blocking.
+
+*** Fail-path evidence
+
+The Task 10 verification step requires evidence that the aggregate fails when
+a sub-gate fails, not just an assertion that it would. This was demonstrated
+directly rather than only argued from =set -e= semantics: the core smoke's
+unit-norm tolerance was temporarily edited to an impossible value
+(=UNIT_NORM_TOL = 1e-30=) in the working tree, =dev/bin/verify-dolfinx-m5= was
+re-run and exited =1= with the =AssertionError= surfaced through the failing
+=pixi run -e dolfinx dolfinx-src-core-smoke= step, and the file was then
+restored to its original =1e-5= tolerance (confirmed identical to the
+pre-edit copy by diff) before anything was committed. Every other sub-gate's
+failure path is the same =pixi run= non-zero-exit-under-=set -e= propagation
+already relied on by =verify-dolfinx-m4= and the =verify-python3-*= family; it
+was not separately broken and restored for each one.
+
+*** Supported API surface (this gate)
+
+- =finmag= top-level lazy exports: =Simulation=, =sim_with=, =Field=, version
+  access, plus =finmag.energies.{Exchange, Zeeman, UniaxialAnisotropy,
+  TimeZeeman-and-siblings-as-deferred-stubs}=.
+- =Field=: constants, callables, =set=, =from_array=, =from_field=,
+  =from_function=, scalar/vector inspection, raw arrays, coordinate-ordered
+  =xyz=/=xxx=, volume averages, normalisation, VTK/XDMF output (write-only).
+  Serial and two-rank owned/ghost contracts are tested.
+- =Exchange=/=Zeeman=/=UniaxialAnisotropy=: scalar =A=/=K1=/=K2=/constant
+  axis/constant field only; box-assemble is the only supported energy method.
+- =EffectiveField=: full registry (=add=/=get=/=exists=/=all=/=remove=, total
+  field/energy, time-update callbacks).
+- =LLG=: scalar =Ms=/=alpha=, =gamma=, =set_m=, =solve=/=solve_for=, serial
+  only, pinning retained.
+- Driver: SciPy is the default and only supported DOLFINx backend
+  (=integrator_backend="scipy"=); real reinitialisation from current state.
+- =Simulation=/=sim_with=: construction, scalar =Ms=/=unit_length=/=name=/
+  =alpha=/=gamma=, =set_m=/=m=/=m_field=/=m_average=/=t=/=dmdt=, the
+  interaction registry and energy accessors, integrator
+  creation/tolerances/=advance_time=/=run_until=/=reset_time=/
+  =reinit_integrator=, and =sim_with= for Exchange/Zeeman/UniaxialAnisotropy.
+
+*** Deferred surfaces (this gate)
+
+Pointer to the authoritative lists: =dev/dolfinx/porting_map.md='s "Near-Term
+Gaps" section and the "Judgment-call deferrals"/"Legacy public names removed
+outright" lists in the "Direct DOLFINx Core Simulation Port" section above.
+Headline items, all raising a curated =NotImplementedError=/=ImportError= by
+name (see the sweep above for exact cross-references): demag, DMI, PBC,
+=kernel="sllg"=/="llg_stt"=, =parallel=True=, scheduler, restart, NDT/VTK/plot
+output, regions, hysteresis, normal modes, STT/Zhang-Li, and
+=integrator_backend="sundials"=. Known non-goal documented but not fixed here:
+directly constructing a still-unported optional energy class
+(=Demag=/=DMI=/=CubicAnisotropy=/etc.) surfaces the raw legacy-=dolfin=
+=ModuleNotFoundError= rather than a curated message.
+
+*** Measured results (2026-07-21, =pixi run -e dolfinx=, oracle-equivalent to a
+clean =dev/bin/verify-dolfinx-m5= run)
+
+- =dolfinx-versions=: dolfinx =0.10.0=, python =3.12.13=, numpy =2.4.6=, scipy
+  =1.18.0=, petsc4py =3.25.2=, Open MPI =5.0.10=, mpi4py =4.1.2=.
+- =dolfinx-src-import-pytest= =8 passed, 2 skipped=; =dolfinx-src-field-pytest=
+  =26 passed=; =dolfinx-src-field-mpi= ok (2 ranks, =16= global vertices);
+  =dolfinx-src-energies-pytest= =26 passed=; =dolfinx-src-energies-mpi= ok;
+  =dolfinx-src-effectivefield-pytest= =15 passed=;
+  =dolfinx-src-effectivefield-mpi= ok; =dolfinx-src-llg-pytest= =19 passed=;
+  =dolfinx-src-scipy-pytest= =19 passed=; =dolfinx-src-simulation-pytest=
+  =30 passed=; =dolfinx-src-deferred-pytest= =5 passed= (new);
+  =dolfinx-src-core-smoke= witness printed above, exit =0= (new).
+- =git diff --check= clean; tracked-diff guard reported no tracked-file
+  changes across the full run; only the intended new/edited files changed.
+
+[Claude Sonnet 5]

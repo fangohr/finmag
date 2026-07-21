@@ -1,0 +1,26 @@
+name: dolfinx-m5
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  dolfinx-m5:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    - name: Verify first direct-source DOLFINx gate
+      run: |
+        # Task 10: aggregates the Task 3-9 dolfinx-src-* focused gates plus
+        # the deferred-surfaces sweep and core smoke into one witness. [Claude Sonnet 5]
+        dev/bin/verify-dolfinx-m5

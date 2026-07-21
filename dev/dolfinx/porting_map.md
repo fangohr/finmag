@@ -298,6 +298,32 @@ Before editing the matching module in `src/finmag`, check that:
   (see the Task 9 update above). Demag, PBC, stochastic/STT kernels, the
   scheduler, restart, NDT/VTK output, regions, hysteresis, and normal-mode
   consumers remain unported and fail by name when requested.
+- Task 10 established the first aggregated direct-source DOLFINx gate
+  (`dev/bin/verify-dolfinx-m5`), running every `dolfinx-src-*` focused pytest
+  gate and MPI probe plus a new core physical-time smoke
+  (`dolfinx-src-core-smoke`, `run_until(1e-12)` on the Task 9 workflow) and a
+  new aggregated deferred-surfaces sweep (`dolfinx-src-deferred-pytest`). See
+  `transition-notes.org`'s "First Direct-Source DOLFINx Gate (Task 10, 'M5')"
+  section for the exact command, naming rationale, and measured results. This
+  is an aggregation/verification milestone over Tasks 3-9, not a new porting
+  slice; the underlying deferred-surface list above and the Task 9 update's
+  "Judgment-call deferrals" are still the authoritative content this gate
+  checks.
+- The deferred-surfaces sweep surfaced one pre-existing, out-of-scope gap
+  rather than fixing it: directly constructing a still-fully-unported
+  `requires_legacy_dolfin=True` optional energy class (`Demag`, `DMI`,
+  `CubicAnisotropy`, `ThinFilmDemag`, `FixedEnergyDW`, `Demag2D`,
+  `MacroGeometry`) surfaces the raw `ModuleNotFoundError: No module named
+  'dolfin'` rather than a curated by-name error, because these modules still
+  import legacy `dolfin` at module scope and are not ported at all yet. This
+  is distinct from the `Simulation`/`sim_with`-mediated demag/DMI *request*
+  paths, which already raise a curated `NotImplementedError` before ever
+  reaching these modules. Fixing the direct-construction case (e.g. a curated
+  `NotImplementedError` at each class's `__init__`, or lazily deferring the
+  `import dolfin` past a by-name guard) is left to whichever later slice
+  actually ports or explicitly stubs each class (Task 11 for demag; "Later
+  Value-Driven Slices" item 1 for DMI/cubic anisotropy), rather than being
+  patched incidentally by this aggregation-only gate. [Claude Sonnet 5]
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
