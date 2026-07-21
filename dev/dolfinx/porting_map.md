@@ -159,6 +159,18 @@ module with its tests.
   (`sim_helpers`, `sim_savers`, `hysteresis`, `magnetisation_patterns`, the
   legacy scheduler) are untouched and no longer on the core import graph.
   [Claude Opus 4.8]
+- Task 9 removed-surfaces addendum: a handful of legacy `Simulation` public
+  names were dropped outright rather than deferred by name --
+  `initialise_helix_2D`, `initialise_skyrmions`,
+  `initialise_skyrmion_hexlattice_2D`, `initialise_vortex` (from
+  `magnetisation_patterns`), `skyrmion_number`/
+  `skyrmion_number_density_function` (from `sim_helpers`), `length_scales`/
+  `mesh_info` (from `sim_details`), `profile`, `close_logfile`, and the
+  `instances_*` management family (`instances_list_all`,
+  `instances_delete_all`, `instances_delete_all_others`,
+  `instances_alive_count`) plus `shutdown`. They now raise a plain
+  `AttributeError` rather than a by-name `NotImplementedError`, accepted by
+  review as a judgment-call deferral. [Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.

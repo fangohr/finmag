@@ -3246,6 +3246,18 @@ paths):
 - =pins= callable masks (coordinate->dof mapping) -- the plain owned-index
   array form still delegates to =LLG.pins=.
 
+Legacy public names removed outright, with no stub and no by-name
+=NotImplementedError= (they now raise a plain =AttributeError=, as accepted
+by review): the =magnetisation_patterns=-backed initialisers
+=initialise_helix_2D=, =initialise_skyrmions=,
+=initialise_skyrmion_hexlattice_2D=, =initialise_vortex=; the
+=sim_helpers=-backed =skyrmion_number=/=skyrmion_number_density_function=;
+the =sim_details=-backed =length_scales=/=mesh_info=; =profile= (cProfile
+wrapper); =close_logfile= (per-simulation log handler teardown); and the
+=instances_*= class-level instance-management family (=instances_list_all=,
+=instances_delete_all=, =instances_delete_all_others=,
+=instances_alive_count=) plus =shutdown=. [Claude Sonnet 5]
+
 Dead legacy branches inside the touched core methods were removed rather than
 left half-referencing deleted helpers (the parallel/llg_stt/sllg integrator
 branches, the =import ipdb= double-create branch, the tablewriter-entity

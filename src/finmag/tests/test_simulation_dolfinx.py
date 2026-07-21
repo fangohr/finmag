@@ -155,6 +155,35 @@ def test_effective_field_method():
     assert H.shape == sim.m.shape
 
 
+def test_switch_off_H_ext_default_zeroes_but_keeps_interaction():
+    """Bare ``switch_off_H_ext()`` matches legacy: the Zeeman interaction
+    stays registered with its field/energy zeroed, it is not removed."""
+    sim = _make_sim()
+    sim.set_m((0.0, 0.0, 1.0))
+    ze = Zeeman((0.0, 0.0, 1e6))
+    sim.add(ze)
+    assert sim.compute_energy("Zeeman") != 0.0
+
+    sim.switch_off_H_ext()
+
+    assert sim.has_interaction("Zeeman")
+    assert sim.get_interaction("Zeeman") is ze
+    assert np.count_nonzero(ze.compute_field()) == 0
+    assert sim.compute_energy("Zeeman") == 0.0
+
+
+def test_switch_off_H_ext_remove_interaction_removes_it():
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+
+    sim.switch_off_H_ext(remove_interaction=True)
+
+    assert not sim.has_interaction("Zeeman")
+    with pytest.raises(KeyError):
+        sim.get_interaction("Zeeman")
+
+
 # --------------------------------------------------------------------------
 # integrator lifecycle
 # --------------------------------------------------------------------------

@@ -281,8 +281,8 @@ class Simulation(object):
         else:
             self.add(Zeeman(H_ext))
 
-    def switch_off_H_ext(self, remove_interaction=True):
-        """Convenience: remove or zero the external Zeeman field."""
+    def switch_off_H_ext(self, remove_interaction=False):
+        """Convenience: zero (default) or remove the external Zeeman field."""
         if remove_interaction:
             self.remove_interaction("Zeeman")
         else:

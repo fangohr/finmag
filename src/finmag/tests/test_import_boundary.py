@@ -54,6 +54,31 @@ assert callable(finmag.logger.extremedebug)
     )
 
 
+def test_sim_init_guard_only_skips_bootstrap_when_dolfin_absent(tmp_path):
+    """``finmag.sim``'s legacy ``.init`` bootstrap is skipped by checking
+    ``importlib.util.find_spec("dolfin") is None``, not a bare
+    ``except ImportError: pass``. A genuine breakage inside the bootstrap
+    chain while ``dolfin`` itself is present (i.e. its spec is found) must
+    propagate rather than being silently swallowed. [Claude Sonnet 5]"""
+    fake_root = tmp_path / "fake_dolfin_present"
+    fake_root.mkdir()
+    (fake_root / "dolfin.py").write_text(
+        "raise ImportError('unrelated breakage inside the dolfin package')\n"
+    )
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONPATH"] = str(fake_root) + os.pathsep + str(SRC_ROOT)
+    result = subprocess.run(
+        [sys.executable, "-c", "import finmag.sim"],
+        cwd=str(REPO_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "unrelated breakage inside the dolfin package" in result.stderr
+
+
 @pytest.mark.skipif(
     importlib.util.find_spec("dolfinx") is None,
     reason="This coexistence check requires the DOLFINx environment.",
