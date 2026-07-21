@@ -122,10 +122,34 @@ exports, focused DOLFINx tests.
   `dolfinx-src-varparams-pytest` folded into `verify-dolfinx-m5`; only legacy
   string Expressions and varying cubic axes remain deferred by name.)
 
-## Later phase-2 slices (sketch, sequence after Tasks 13-16)
+## Task 17: Packaging — installable finmag
 
-1. Packaging: `pyproject.toml`, installable `finmag` with native build hook,
-   pixi env alignment; docs/examples refresh for the supported API.
+**Files:** new `pyproject.toml`, `pixi.toml`, `native/Makefile` hook or build
+script, `dev/bin/verify-dolfinx-m5`, install docs.
+
+- [ ] Add a `pyproject.toml` making `src/finmag` an installable package
+  (setuptools or hatchling; src-layout) with the runtime dependency set
+  derived from actual imports, not guesses.
+- [ ] Decide and implement the native-extension story: either a build-backend
+  hook that invokes the `native/Makefile` targets for the DOLFINx lane
+  (`bem_arrays`), or a documented two-step install (`pip install -e .` +
+  `make` task) — prefer the simplest reliable mechanism; record the decision
+  and its trade-offs.
+- [ ] `pixi run -e dolfinx` tasks work against the INSTALLED package
+  (editable) instead of `PYTHONPATH=src`; keep `PYTHONPATH=src` working
+  during the transition (both paths gated).
+- [ ] `import finmag` from a fresh editable install passes the import
+  boundary and version-access checks; `verify-dolfinx-m5` runs green against
+  the installed package.
+- [ ] Do not break the legacy oracle lane (its checkouts predate
+  `pyproject.toml`; `run-legacy-oracle` must stay functional).
+- [ ] Install documentation: a short INSTALL section (README or docs) with
+  the exact commands for the supported DOLFINx environment.
+
+## Later phase-2 slices (sketch, sequence after Task 17)
+
+1. Docs/examples refresh for the supported API (may fold into Task 17 if
+   small).
 2. Native Sundials/CVODE backend (dolfin-free rebuild following the
    `bem_arrays` pattern; LLG `sundials_*` hooks already stubbed by name).
 3. STT (Slonczewski, Zhang-Li) and `llg_stt`.
