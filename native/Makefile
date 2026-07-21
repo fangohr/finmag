@@ -38,11 +38,19 @@ endif
 UFC_INC=$(shell if [ -f /usr/include/ufc.h ]; then echo -I/usr/include; else echo -I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/; fi)
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
+# Detect the DOLFINx pixi environment (Python 3.12, no legacy DOLFIN/SUNDIALS).
+# Its prefix also contains "/.pixi/", so this must be checked before the general
+# pixi branch below. [Claude Opus 4.8]
+IS_DOLFINX_ENV := $(findstring /envs/dolfinx,$(PYTHON_PREFIX))
 # The first pixi probe targets import/construction and SciPy-backed stepping,
 # so build only the native paths needed for the current pixi milestone and
 # fold Sundials back in as that port becomes viable. [Codex GPT-5.4]
 # [Codex GPT-5.4]
-ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
+ifneq ($(IS_DOLFINX_ENV),)
+# DOLFINx env: only the array-only FK BEM surface, which carries no libdolfin,
+# SWIG-DOLFIN, or SUNDIALS dependency (Task 11a). [Claude Opus 4.8]
+MODULES = bem_arrays.so
+else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 MODULES = sundials.so llg.so llb.so
 else
 # The list of extension modules to build
@@ -75,6 +83,11 @@ endif
 $(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/energy.o
 llg_LDFLAGS = -L$(INSTALL_PATH)/lib -ldolfin
 
+# Array-only FK/GCR BEM module for the DOLFINx env: links no libdolfin and no
+# SWIG-DOLFIN converters, only the plain NumPy array helper. [Claude Opus 4.8]
+$(MODULE_DIR)/bem_arrays.so : src/llg/bem_arrays.o src/util/np_array.o
+bem_arrays_LDFLAGS =
+
 $(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/material.o src/llb/llb.o src/llb/sllg.o src/llb/sllg_stt.o src/llb/mt19937.o 
 
 $(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helper.o
@@ -101,7 +114,12 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 # The list of output binary files to link
 BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
-ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
+ifneq ($(IS_DOLFINX_ENV),)
+# Only the array-only BEM kernel and the NumPy array helper compile without
+# libdolfin/SUNDIALS; the SWIG-DOLFIN, LLG, and Sundials units are excluded so
+# nothing pulls dolfin.h or cvode.h in the DOLFINx env. [Claude Opus 4.8]
+SOURCES = src/llg/bem_arrays.cc src/util/np_array.cc
+else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 SOURCES = $(shell find src/llg src/util src/sundials -name \*.cc)
 else
 SOURCES = $(shell find src tests -name \*.cc)
@@ -151,7 +169,13 @@ endif
 # Managed environments such as pixi place third-party headers under the
 # environment prefix instead of /usr/include, so add that include root too. [Codex GPT-5.4]
 CFLAGS_INCLUDE=-I$(abspath src) -I$(PYTHON_PREFIX)/include -I$(NUMPY_INCLUDE_DIR)
-CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
+# In the DOLFINx env neither libdolfin nor SUNDIALS is available, so compile the
+# array-only surface with the umbrella-header guards enabled. This is part of
+# CFLAGS_NOPCH so it also applies to the precompiled header build. [Claude Opus 4.8]
+ifneq ($(IS_DOLFINX_ENV),)
+CFLAGS_NODOLFIN = -DFINMAG_NO_DOLFIN -DFINMAG_NO_SUNDIALS
+endif
+CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE) $(CFLAGS_NODOLFIN)
 CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 
 # The number of make jobs to run in parallel

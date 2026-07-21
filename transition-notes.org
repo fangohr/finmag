@@ -3506,3 +3506,139 @@ clean =dev/bin/verify-dolfinx-m5= run)
   changes across the full run; only the intended new/edited files changed.
 
 [Claude Sonnet 5]
+
+** Native array-only FK BEM for DOLFINx (Task 11a)
+
+Task 11a is the first half of "Port FK demag" (plan items 1-2 only): separate
+the array-only LLG/BEM native bindings from the legacy SWIG-DOLFIN mesh
+converters and the =-ldolfin= link dependency, and rebuild/test that surface on
+Python 3.12 without installing legacy DOLFIN. The remaining items (DOLFINx
+boundary-mesh probes, porting =src/finmag/energies/demag=, oracle BEM
+comparisons, the barmini FK-demag workflow) are Task 11b and are *not* started
+here.
+
+*** The binding-separation problem
+
+The compiled FK BEM lived in =native/src/llg/bem.cc=, registered by the =llg=
+module (=native/src/llg/py_llg_module.cc=), which links =-ldolfin= and calls
+=finmag::util::register_dolfin_swig_converters()=. =bem.cc= contained both the
+legacy DOLFIN =BoundaryMesh= entry points (=compute_bem<>= using
+=df::BoundaryMesh=, =CellIterator=, etc.) and the array-based
+=compute_bem_from_arrays<>= / =compute_lindholm_formula<>= kernels added during
+the M3/FEniCS-2019 work. The array kernels touch only =np_array= and =vector3=,
+but they shared a translation unit and an umbrella header (=finmag_includes.h=,
+which unconditionally =#include <dolfin.h>= and =#include <cvode/cvode.h>=) with
+the DOLFIN-coupled code, so nothing array-only could compile in the =dolfinx=
+env (no libdolfin, no SUNDIALS, Python 3.12).
+
+*** Module/target design
+
+Following the established pixi Boost.Python pattern (how =sundials.so= is handled
+as a conditional pixi module in =native/Makefile=), a *new* module target was
+added rather than mutating the legacy =llg.so= target, so the legacy M3 lane
+keeps building unchanged:
+
+- =native/src/llg/bem_arrays.h= (new): the array-only Lindholm/BEM template
+  kernels (=lindholm_formula<>=, =compute_bem_from_arrays<>=,
+  =compute_lindholm_formula<>=), moved verbatim out of =bem.cc= into a shared,
+  dolfin-free header. Single source of truth; no numerical change.
+- =native/src/llg/bem_arrays.cc= (new): =BOOST_PYTHON_MODULE(bem_arrays)=
+  registering =compute_bem_fk_from_arrays=, =compute_bem_gcr_from_arrays=,
+  =compute_lindholm_L=, =compute_lindholm_K=. No dolfin/SWIG-DOLFIN symbols.
+- =native/src/llg/bem.cc= (edited): now =#include "bem_arrays.h"= and keeps only
+  the DOLFIN =BoundaryMesh= path and the combined =register_bem()=; the legacy
+  =llg= surface is byte-for-byte behaviourally unchanged (verified: it still
+  reproduces the same golden Lindholm/BEM values after the refactor).
+- =native/src/finmag_includes.h= (edited): =#include <dolfin.h>= and
+  =#include <cvode/cvode.h>= are guarded by =FINMAG_NO_DOLFIN= /
+  =FINMAG_NO_SUNDIALS=; when dolfin.h is skipped, the standard headers that used
+  to arrive transitively through it (=<iostream>=, =<vector>=, =<string>=,
+  =<stdexcept>=, =<csignal>=, ...) are pulled in explicitly.
+- =native/src/llg/vector3.h= (edited): the two =dolfin::Vertex= / =dolfin::Point=
+  constructors (used only by the legacy BoundaryMesh path) are guarded by
+  =FINMAG_NO_DOLFIN=.
+- =native/Makefile= (edited): a new =IS_DOLFINX_ENV= branch (matched on
+  =/envs/dolfinx= in the Python prefix, checked *before* the general =/.pixi/=
+  branch) sets =MODULES = bem_arrays.so=, restricts =SOURCES= to
+  =bem_arrays.cc= + =np_array.cc=, and adds
+  =-DFINMAG_NO_DOLFIN -DFINMAG_NO_SUNDIALS= to =CFLAGS_NOPCH= (so it also applies
+  to the precompiled-header build). The =bem_arrays.so= target links only
+  =bem_arrays.o np_array.o= with empty LDFLAGS -- no =-ldolfin=, no
+  =swig_dolfin.o=. The legacy =llg.so=/=sundials.so=/=llb.so= branch is
+  untouched.
+
+*** Toolchain / pixi.lock
+
+The base =dolfinx= feature shipped =gcc= and boost headers but no =g++=, no
+=make=, and no =libboost_python=. Added to =[feature.dolfinx.dependencies]=:
+=cxx-compiler=, =make=, =libboost-python-devel= (provides =libboost_python312.so=
+matching boost 1.88). This regenerated =pixi.lock= (dolfinx env only; the
+default FEniCS-2019 env is unchanged). This is a native-build toolchain
+addition kept off the runtime import path.
+
+Also added =[feature.dolfinx.activation.env] WRITE_FINMAG_VERSION = "0"=: the
+DOLFINx lane can now compile a native surface, and importing finmag can trigger
+that =make= as a side effect, so this keeps implicit builds from rewriting the
+tracked =src/finmag/__version__.py= (the read-only validators already use this
+convention).
+
+*** Import-boundary fix (no native leak on the plain import path)
+
+Making the native build *succeed* in the DOLFINx env exposed a latent coupling:
+=finmag/drivers/llg_integrator.py= eagerly did
+=from finmag.drivers.sundials_integrator import SundialsIntegrator= at module
+scope, which imports =finmag.native=. On HEAD this stayed clean only *by
+accident* -- the native build failed in the DOLFINx env, so Python unwound the
+partial =finmag.native= import. With an array-only surface now buildable, the
+=finmag.native= package =__init__= succeeds (building =bem_arrays.so=) before the
+still-unported =sundials= submodule fails, leaving =finmag.native= in
+=sys.modules= and violating the "plain import loads no native modules" boundary
+asserted by =test_import_boundary= / =test_scipy_driver_dolfinx= /
+=test_deferred_surfaces_dolfinx=.
+
+Fix (=llg_integrator.py=): the sundials availability probe is now lazy. A PEP 562
+module =__getattr__= resolves =SundialsIntegrator= /
+=SUNDIALS_INTEGRATOR_IMPORT_ERROR= on first *access* (so the test sentinels and
+the =backend="sundials"= raise-by-name path are unchanged and still reflect real
+availability), and the plain =import finmag= / =sim_with= path never touches the
+attribute, hence never imports =finmag.native=. When the probe fails, any
+=finmag.native*= modules it added to =sys.modules= are rolled back, reproducing
+HEAD's "graceful sundials absence with no native residue" without depending on a
+build failure. On the legacy stack the probe succeeds and nothing is removed.
+
+*** Test / verification evidence (2026-07-21, =pixi run -e dolfinx=)
+
+New focused test =src/finmag/tests/test_native_bem_arrays_dolfinx.py= + pixi task
+=dolfinx-src-native-bem-pytest= (=WRITE_FINMAG_VERSION=0=). The golden values are
+captured from the known-good compiled =finmag.native.llg= in the FEniCS-2019
+lane (the =dev/bin/native-fk-bem-smoke.py= reference path). Coverage:
+
+- module imports in the dolfinx env with =dolfin not in sys.modules= and no
+  =finmag.native.llg=;
+- =compute_bem_fk_from_arrays= on the =BoundaryMesh(UnitCubeMesh(1,1,1))= arrays
+  (8 vertices, 12 triangles) reproduces the legacy compiled BEM matrix to
+  =atol=1e-14= (exact equivalence), plus finite/shape and =b2g= passthrough;
+- solid-angle identity: FK BEM row sums equal =-1= (=B @ 1 = -1=, the
+  Fredkin-Koehler double-layer-of-a-constant identity) to =atol=1e-12=;
+- diagonal entries are negative (=solid_angle/4pi - 1 < 0=; uniform =-0.875= for
+  the congruent cube corners);
+- =compute_bem_gcr_from_arrays= finite; =compute_lindholm_L= matches the legacy
+  golden and is invariant under a rigid rotation applied to all four points;
+  =compute_lindholm_K= finite.
+
+Result: =dolfinx-src-native-bem-pytest= = =8 passed=. RED evidence: before the
+Makefile/source wiring, the same task failed with
+=ModuleNotFoundError: No module named 'finmag.native.bem_arrays'=.
+
+Regression gates (all green): =dolfinx-src-import-pytest= =8 passed, 2 skipped=;
+full =dev/bin/verify-dolfinx-m5= exit =0= with the tracked-diff guard reporting
+no tracked-file changes; legacy =dev/bin/verify-python3-native-fk-bem-smoke=
+green from a clean native build (=llg.so= with full DOLFIN coupling rebuilds and
+=compute_bem_fk_from_arrays= still returns the expected =(8, 8)= matrix);
+=git diff --check= clean.
+
+The Task 11 plan checkboxes are intentionally left unticked; items 1-2 are
+delivered by 11a and the whole of Task 11 is ticked when 11b completes the FK
+demag capability.
+
+[Claude Opus 4.8]

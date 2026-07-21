@@ -11,8 +11,13 @@ namespace finmag {
             vector3(const double R[3]) { v[0] = R[0]; v[1] = R[1]; v[2] = R[2]; }
             vector3(const vector3 &r1, const vector3 &r2) { v[0] = r1.v[0] - r2.v[0]; v[1] = r1.v[1] - r2.v[1]; v[2] = r1.v[2] - r2.v[2]; }
             vector3(double x, double y, double z) { v[0] = x; v[1] = y; v[2] = z; }
+            // The DOLFIN mesh constructors are only used by the legacy
+            // BoundaryMesh BEM path; the array-only surface (Task 11a) builds
+            // without libdolfin, so guard them out there. [Claude Opus 4.8]
+#ifndef FINMAG_NO_DOLFIN
             vector3(const dolfin::Vertex &dv) { v[0] = dv.x(0); v[1] = dv.x(1); v[2] = dv.x(2); }
             vector3(const dolfin::Point &p) { v[0] = p.x(); v[1] = p.y(); v[2] = p.z(); }
+#endif
 
             double length() const { return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]); }
 

@@ -252,9 +252,21 @@ module with its tests.
   `compute_bem_fk_from_arrays` entry point. The Python/NumPy Magpar code is a
   reference/comparison path, not the production FK BEM implementation. [Codex
   gpt-5.5 high]
-  The current extension still links `libdolfin` and registers SWIG-DOLFIN
-  converters, so its array entry point must be separated from those legacy
-  bindings before the extension can be rebuilt for the DOLFINx environment.
+  Task 11a update: the array entry point is now separated from the legacy
+  bindings. The legacy `finmag.native.llg` module still links `libdolfin` and
+  registers SWIG-DOLFIN converters (unchanged, for the FEniCS-2019 lane), but
+  the array-only Lindholm/BEM kernels now live in a shared, dolfin-free header
+  (`native/src/llg/bem_arrays.h`) reused by a new standalone
+  `finmag.native.bem_arrays` extension. That module exposes
+  `compute_bem_fk_from_arrays`, `compute_bem_gcr_from_arrays`,
+  `compute_lindholm_L`/`_K` with **no** dependency on libdolfin, the
+  SWIG-DOLFIN converters, or dolfin headers (compiled with
+  `-DFINMAG_NO_DOLFIN -DFINMAG_NO_SUNDIALS`). It builds and imports on Python
+  3.12 in the `dolfinx` pixi env without legacy DOLFIN installed, and
+  reproduces the legacy compiled BEM matrix bit-for-bit (gate
+  `dolfinx-src-native-bem-pytest`). The remaining Task 11 work (DOLFINx
+  boundary-mesh probes, porting `src/finmag/energies/demag`, oracle BEM
+  comparisons, barmini FK-demag workflow) is Task 11b. [Claude Opus 4.8]
 
 ## Direct-Edit Readiness Criteria
 

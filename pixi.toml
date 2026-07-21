@@ -37,6 +37,22 @@ fenics-dolfinx = "0.10.*"
 pytest = "*"
 numpy = "*"
 scipy = "*"
+# Task 11a: toolchain to compile the array-only FK BEM native extension
+# (`bem_arrays.so`) in this environment. libboost-python-devel provides the
+# Boost.Python runtime the existing native modules already use; cxx-compiler and
+# make provide g++/make, which the base dolfinx feature does not ship. This is a
+# native-build toolchain addition, kept out of the runtime import path. [Claude Opus 4.8]
+cxx-compiler = "*"
+make = "*"
+libboost-python-devel = "*"
+
+[feature.dolfinx.activation.env]
+# The DOLFINx port lane can now compile an array-only native surface
+# (`bem_arrays.so`), and importing finmag can trigger that native `make` as a
+# side effect. Keep those implicit builds from rewriting the tracked
+# `src/finmag/__version__.py`, matching the WRITE_FINMAG_VERSION=0 convention the
+# read-only validators already use. [Claude Opus 4.8]
+WRITE_FINMAG_VERSION = "0"
 
 [feature.dolfinx.tasks]
 # These tasks are the frozen M4 prototype witness. Keep new production-port
@@ -66,6 +82,10 @@ dolfinx-src-simulation-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python
 # smoke, both new for the first direct-source DOLFINx gate. [Claude Sonnet 5]
 dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_deferred_surfaces_dolfinx.py"
 dolfinx-src-core-smoke = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m finmag.tests.simulation_dolfinx_smoke"
+# Task 11a: the array-only FK BEM native surface, compiled and imported in the
+# DOLFINx env with no legacy dolfin. WRITE_FINMAG_VERSION=0 keeps the native
+# `make` from rewriting the tracked version file. [Claude Opus 4.8]
+dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_native_bem_arrays_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

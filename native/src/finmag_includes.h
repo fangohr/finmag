@@ -15,6 +15,22 @@
 #include <cmath>
 #include <cstdlib>
 
+// The array-only native surface (e.g. the Task 11a FK BEM `bem_arrays` module)
+// is compiled with -DFINMAG_NO_DOLFIN / -DFINMAG_NO_SUNDIALS so it can build in
+// the DOLFINx environment where neither legacy DOLFIN nor SUNDIALS is present.
+// In the legacy build these standard headers arrive transitively through
+// dolfin.h; pull them in explicitly when dolfin.h is skipped. [Claude Opus 4.8]
+#ifdef FINMAG_NO_DOLFIN
+#include <iostream>
+#include <ostream>
+#include <vector>
+#include <string>
+#include <stdexcept>
+#include <utility>
+#include <memory>
+#include <csignal>
+#endif
+
 // OpenMP
 #include <omp.h>
 
@@ -30,8 +46,12 @@
 #endif
 
 // CVODE/Sundials
+#ifndef FINMAG_NO_SUNDIALS
 #include <cvode/cvode.h>
+#endif
 // Dolfin
+#ifndef FINMAG_NO_DOLFIN
 #include <dolfin.h>
+#endif
 
 #endif
