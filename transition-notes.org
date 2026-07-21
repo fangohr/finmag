@@ -4316,4 +4316,212 @@ resulting nonzero torque. The one remaining deliberate deviation is the
 dormant legacy K2 native-field typo documented above (USER ACCEPTANCE
 PENDING: not reproduced under the supported constant-K2 case).
 
+** Direct DOLFINx Time-Zeeman and Hysteresis Port (Task 15)
+
+Task 15 ports the entire legacy time-Zeeman family directly on top of the
+Task 5 static =Zeeman= -- =TimeZeeman=, =DiscreteTimeZeeman=,
+=TimeZeemanPython=, =OscillatingZeeman= and =DipolarField= -- replacing the
+=_DeferredZeeman= curated stubs, and ports =sim.relax=/=hysteresis=/
+=hysteresis_loop= (=src/finmag/sim/sim_relax.py=/=hysteresis.py=, which are
+the *untouched* legacy modules -- verified byte-for-byte identical to the
+frozen oracle checkout before editing).
+
+*** Input-contract decision: =field_expression= as a callable of time
+
+Legacy's =TimeZeeman(field_expression, t_off=None)= accepted a =dolfin=
+=Expression= carrying a mutable =.t= attribute, mutated by =update(t)=
+before re-interpolation, or (as a safety-checked special case) a constant
+3-array (only meaningful together with =t_off=). DOLFINx has no Expression
+equivalent. The ported contract (=_as_time_field_function= in
+=finmag/energies/zeeman.py=) is a plain Python callable
+=field_function(t) -> value=, where =value= is anything
+=finmag.field.Field.set= already accepts -- a constant vector/array, a
+per-point/vectorized callable =g(x)=, a =dolfinx.fem.Function=, or another
+=Field=. This preserves the *full* legacy capability (spatially *and*
+temporally varying fields, via the nested =lambda t: (lambda x: ...)=
+form) without the Expression string mechanism, and composes directly with
+the existing =Field.set=/=Zeeman.set_value= machinery -- no new
+interpolation path was needed. A bare constant 3-array/tuple/list is still
+accepted directly (wrapped into a callable returning that same constant),
+matching legacy's "constant array requires =t_off=" safety check verbatim
+(same =ValueError= condition and message, ported test:
+=test_time_zeeman_init_constant_array_requires_t_off=).
+
+=TimeZeemanPython(H0_value, time_fun, t_off=None)= keeps legacy's
+performance rationale exactly: =H0_value= (any =Field.set=-acceptable
+value) is interpolated *once* in =setup()= into a cached NumPy array
+(=self._H_init=); every =update(t)= only rescales that cached array by
+=float(time_fun(t))= and writes it back via =Field.from_array= -- no
+re-interpolation per step. =compute_field=/=compute_energy=/
+=average_field=/=energy_density=/=energy_density_function= are all
+*inherited unchanged* from =Zeeman= (the class only overrides =setup=,
+=update= and =switch_off=), since after =setup= builds =self.H=/=self.E=/
+=self.S1=/=self.m=/=self.Ms= the exact same way =Zeeman.setup= does, every
+read-only accessor is already correct. The legacy scalar-spatial-envelope-
+with-vector-=time_fun= branch (one shared scalar envelope multiplied
+independently per vector component, e.g. for a rotating field) is *not*
+exercised by any legacy test (=zeeman_test.py= only uses the vector-H0/
+scalar-time_fun path, the same one =OscillatingZeeman= uses) and is out of
+scope for this slice -- a documented, narrow reduction of one class's
+capability, not a stub of the whole class.
+
+=OscillatingZeeman(H0, freq, phase=0, t_off=None)= is a =TimeZeemanPython=
+subclass built from =amplitude(t) = cos(2*pi*freq*t + phase)=, transcribed
+verbatim from the legacy formula (ordinary, not angular, frequency; cosine
+not sine; phase inside the argument so =H(0) = H0*cos(phase)=), pinned
+analytically at 59 sample points against the exact closed form
+(=test_oscillating_zeeman_waveform=, no fixture needed -- the formula is
+transcribed and tested directly).
+
+=DipolarField(pos, m, magnitude=None)= is ported directly as a =Zeeman=
+subclass using the closed-form point-dipole field as a plain Python
+callable -- legacy's own =zeeman.py= already defined this exact closed form
+as =H_fun= but never used it (its constructor called
+=super().__init__(H_expr, ...)= with the =Expression= string version
+instead; the =H_fun= closure is commented out immediately below). DOLFINx
+has no Expression equivalent, so this port uses precisely the closed form
+the legacy author had already written, vectorised over
+=Field='s callable-interpolation contract (handling both the vectorized
+=(gdim, npoints)= and single-point =(gdim,)= calling conventions explicitly,
+rather than relying on the generic vectorized/pointwise exception-driven
+fallback in =Field._interpolation_callable=). Verified against the closed
+form directly (=test_dipolar_field_matches_closed_form=, points near the
+dipole singularity excluded).
+
+*** Two legacy quirks discovered and preserved verbatim
+
+1. *=t_off=0.0= is falsy-disabled.* Legacy's switch-off test is
+   =if self.t_off and t >= self.t_off= (truthiness, not =is not None=), so
+   =t_off=0.0= is silently *never* triggered. Transcribed verbatim (pinned
+   by =test_time_zeeman_t_off_zero_is_falsy_disabled_quirk=); a small
+   positive =t_off= should be used instead if switching off at (near) t=0
+   is the actual intent.
+
+2. *=DiscreteTimeZeeman='s stale energy after an interval update.*
+   =TimeZeeman.update()= refreshes the field via =self.H.set(value)=,
+   *mutating* the existing =H= =Function= in place, so the cached energy
+   form =self.E= (built once in =setup()=, referencing that same Function
+   object) stays valid. =DiscreteTimeZeeman.update()= instead assigns a
+   *brand-new* =Field= object directly to =self.H= (bypassing
+   =set_value()=, which is what rebuilds =self.E=). Consequently
+   =self.E='s UFL form keeps referencing the *original* (setup-time) =H=
+   Function forever, so =compute_energy()= silently returns the
+   setup-time energy value on every call after the first interval update,
+   even though =compute_field()=/=energy_density()= (which read
+   =self.H='s current array directly, not through =self.E=) correctly
+   reflect the updated field. This is a genuine, previously-undocumented
+   legacy defect, discovered while building the oracle fixture (see
+   =timezeeman_oracle.json='s =discrete_time_zeeman= case: =energy= stays
+   exactly the setup-time value across every snapshot even as =H_vertex=
+   visibly changes) and independently reproduced against the frozen oracle
+   itself. It is transcribed verbatim (DELIBERATE PRESERVATION, USER
+   ACCEPTANCE PENDING), not silently fixed -- see
+   =test_discrete_time_zeeman_energy_staleness_quirk=. The interval-timing
+   quirk (=t_last_update= never advances, so once =t= first reaches
+   =dt_update= every later =update(t)= call refreshes the field again) was
+   already visible in the legacy source and is likewise preserved (see
+   =test_discrete_time_zeeman_continuous_after_first_crossing_quirk= and
+   the =discrete_time_zeeman= oracle case, which deliberately samples =t=
+   values that cross =dt_update= more than once to pin it).
+
+*** Important finding: =hysteresis()=/=hysteresis_loop()= do not actually
+    re-relax after the first stage
+
+=src/finmag/sim/sim_relax.py= and =src/finmag/sim/hysteresis.py= are
+untouched legacy modules (diffed byte-for-byte against the frozen oracle
+checkout before any edit); the only change made anywhere in this slice is
+replacing their =from finmag.util.helpers import ...= (legacy
+=dolfin=-backed) import with a local, dolfin-free reimplementation
+(=norm=/=compute_dmdt= added to =finmag.sim.sim_helpers=, matching the
+=clean_filename= precedent from Task 12). =Simulation.relax=/=hysteresis=/
+=hysteresis_loop= are bound exactly the way legacy did
+(=relax = sim_relax.relax=, etc).
+
+While building the tiny-loop oracle fixture, repeated =relax()= calls
+within one =hysteresis()= loop (uniaxial anisotropy, a field reversal well
+past the Stoner-Wohlfarth coercive field) were found to *not* actually
+achieve an independent re-relaxation after the very first stage: the
+magnetisation stays essentially frozen near its stage-1 value for every
+subsequent stage, regardless of how strongly the field reverses. Root
+cause: each =relax()= call's scheduler trigger is registered with
+=after=sim.t= once =sim.t > 1e-14=, so the *first* scheduled tick of stage 2
+onward coincides exactly with the integrator's already-advanced clock
+(=t == integrator.cur_t=); =Scheduler.run()= explicitly skips integrating
+in that case (see the comment in that method and in =Simulation.run_until=)
+to avoid confusing the integrator, so the very first (and, empirically, the
+decisive) trigger evaluation of every stage after the first sees virtually
+no time evolution. This was independently *confirmed against the frozen
+legacy oracle itself*, using the native Sundials backend (the true legacy
+default, not the DOLFINx port's temporary SciPy default) -- the oracle
+reproduces the identical symptom (=gen_hysteresis_oracle.py='s module
+docstring has the full trace). The legacy test suite even documents this
+exact symptom with a wink: =src/finmag/sim/hysteresis_test.py::
+test_hysteresis_loop_and_plotting= asserts
+=np.allclose(m_vals, [1.0]*2N, atol=1e-4)= for a whole field-reversing loop
+with the comment "Check that the magnetisation values are as trivial as we
+expect them to be ;-)". This DOLFINx port reproduces the same (surprising,
+but genuinely legacy, oracle-confirmed) behavior verbatim -- see
+=test_oracle_hysteresis_loop_matches_legacy= (pinning the tiny K1 loop
+against the oracle to ~2e-3 relative, with the stage *times* matching the
+oracle bit-for-bit since the schedule is pure-Python and backend-
+independent) and =test_hysteresis_loop_legacy_trivial_invariant= (porting
+the legacy test's own "trivial" assertion directly). DELIBERATE
+PRESERVATION, USER ACCEPTANCE PENDING: this is a real, if narrow,
+capability gap in the convenience =hysteresis()=/=hysteresis_loop()=
+wrappers as legacy actually implemented them, not a DOLFINx-port
+regression, and not something this slice silently "fixes".
+
+The underlying Stoner-Wohlfarth-like switching *capability* -- the reason
+=relax()=/=hysteresis()= exist -- works correctly and is witnessed
+separately in =test_stoner_wohlfarth_like_loop_witness=, which builds a
+proper hysteresis loop out of *fresh* =Simulation=/=relax()= calls per
+field step (field applied at a slight angle to the easy axis, avoiding both
+the above limitation and the unrelated, much slower, exactly-on-axis
+critical-slowing-down approach to the bifurcation): the macrospin flips
+sign between the two coercive-field steps in each direction and the loop
+closes (first and last point, both at +H_max, agree to within 0.05).
+
+=sim.relax= needed no porting decision beyond the import fix above: it is
+a thin wrapper over the already-ported =scheduler=/=integrator=/
+=EffectiveField= stack (its stopping criterion --
+=dmdt <= stopping_dmdt*ONE_DEGREE_PER_NS=, with the adaptive
+=dt=/divergence-counter logic -- is transcribed verbatim, unedited). One
+more preserved legacy quirk, noted directly in =sim_relax.py=: the module
+imports =ONE_DEGREE_PER_NS= from =finmag.util.consts= (=17453292.52=) and
+then immediately *shadows* it with a local literal (=17453292.5=, missing
+the trailing =2=) -- a pre-existing legacy inconsistency, not introduced or
+fixed by this port.
+
+*** Measured results (2026-07-21, =pixi run -e dolfinx=)
+
+New gate =dolfinx-src-timezeeman-pytest= (=test_timezeeman_dolfinx.py= +
+=test_hysteresis_dolfinx.py=): 27 passed. All existing gates remain green
+with counts unchanged except as noted: import 9p/2s (the previously-fail-
+forward =TimeZeeman((1.0,0.0,0.0))= reference in =test_import_boundary.py=
+now pins the ported constant-array-without-=t_off= =ValueError=), field 26,
+energies 26 (=TimeZeeman((1.0,0.0,0.0))= now pins the same ported
+=ValueError= instead of a by-name deferral), effectivefield 15, llg 19,
+scipy 19, simulation 32 (=test_region_and_hysteresis_are_deferred= split
+into =test_region_is_deferred= and =test_hysteresis_is_ported_not_deferred=
+-- =sim.hysteresis([])= now returns =None= instead of raising), deferred 5
+(docstring updated to point at the new ported coverage; no test added or
+removed), native-bem 8, demag 19, restart-output 20, dmi 28, cubicanis 25.
+=dev/bin/verify-dolfinx-m5= passes end-to-end with a clean tracked tree;
+=pixi.lock= untouched.
+
+*** Deferred / deliberate deviations
+
+- The legacy =TimeZeemanPython= scalar-spatial-envelope-with-vector-
+  =time_fun= branch (not exercised by any legacy test) is not ported.
+- =t_off=0.0= is falsy-disabled (preserved legacy quirk).
+- =DiscreteTimeZeeman='s cached energy form goes stale after the first
+  interval update (preserved legacy quirk, discovered this slice, USER
+  ACCEPTANCE PENDING).
+- =hysteresis()=/=hysteresis_loop()= do not achieve an independent
+  re-relaxation after their first stage (preserved legacy quirk, discovered
+  this slice via the oracle, USER ACCEPTANCE PENDING) -- the underlying
+  =relax()= capability itself is unaffected and independently witnessed.
+- Spatially varying field-valued parameters and regions remain out of scope
+  (Task 16), as before.
+
 [Claude Sonnet 5]; fix round 1 [Claude Opus 4.8]

@@ -106,6 +106,14 @@ dolfinx-src-dmi-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pyt
 # behavior, by-name deferrals, and a coordinate-ordered legacy oracle
 # comparison. [Claude Sonnet 5]
 dolfinx-src-cubicanis-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_cubic_anisotropy_dolfinx.py"
+# Task 15: the direct DOLFINx time-Zeeman (TimeZeeman/DiscreteTimeZeeman/
+# TimeZeemanPython/OscillatingZeeman/DipolarField) and relax/hysteresis/
+# hysteresis_loop port -- update/switch-off semantics (including two
+# preserved legacy quirks), the OscillatingZeeman waveform, coordinate-
+# ordered legacy oracle fixtures, the real-class EffectiveField auto-
+# connection, and the Stoner-Wohlfarth-like switching + loop-closure
+# witness. [Claude Sonnet 5]
+dolfinx-src-timezeeman-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_timezeeman_dolfinx.py src/finmag/tests/test_hysteresis_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

@@ -29,13 +29,15 @@ Deliberate deviations from the legacy module (all documented in
   one just to read the clock.
 - Scheduling, restart, NDT and VTK/XDMF output are ported and supported (see
   ``Simulation.schedule``/``run_until``, ``Simulation.save_restart_data``/
-  ``restart``, and ``Tablewriter``/``FieldSaver``). What remains deferred and
-  raises ``NotImplementedError`` (or ``ImportError`` for the native Sundials
-  case) by name when requested: the PBC/treecode/GCR demag variants, STT
-  (``set_stt``/``set_zhangli``), the ``sllg``/thermal kernel,
-  ``integrator_backend="sundials"``, normal modes, hysteresis, regions/
-  materials, and ``parallel=True`` -- none of these ever break import or the
-  core ``llg`` paths.
+  ``restart``, and ``Tablewriter``/``FieldSaver``). ``relax``, ``hysteresis``
+  and ``hysteresis_loop`` are also ported and supported (Task 15; the
+  untouched legacy ``sim_relax.py``/``hysteresis.py`` modules bound the same
+  way legacy did). What remains deferred and raises ``NotImplementedError``
+  (or ``ImportError`` for the native Sundials case) by name when requested:
+  the PBC/treecode/GCR demag variants, STT (``set_stt``/``set_zhangli``), the
+  ``sllg``/thermal kernel, ``integrator_backend="sundials"``, normal modes,
+  regions/materials, and ``parallel=True`` -- none of these ever break import
+  or the core ``llg`` paths.
 
 [Claude Opus 4.8], [Claude Sonnet 5]
 """
@@ -52,6 +54,9 @@ from finmag.physics.llg import LLG
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import DMI, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.sim import sim_helpers
+from finmag.sim import sim_relax
+from finmag.sim.hysteresis import hysteresis as _hysteresis
+from finmag.sim.hysteresis import hysteresis_loop as _hysteresis_loop
 from finmag.util.fileio import Tablewriter, FieldSaver
 from finmag.scheduler import scheduler
 
@@ -644,14 +649,18 @@ class Simulation(object):
     def probe_field_along_line(self, *args, **kwargs):
         _deferred("probe_field_along_line", "point probing")
 
-    def relax(self, *args, **kwargs):
-        _deferred("relax", "the relaxation driver")
-
-    def hysteresis(self, *args, **kwargs):
-        _deferred("hysteresis", "the hysteresis driver")
-
-    def hysteresis_loop(self, *args, **kwargs):
-        _deferred("hysteresis_loop", "the hysteresis driver")
+    # -- relaxation / hysteresis (Task 15) ---------------------------------
+    #
+    # Bound exactly as the legacy ``Simulation`` did (``relax =
+    # sim_relax.relax``, ``hysteresis = hyst``, ``hysteresis_loop =
+    # hyst_loop``): these are the untouched legacy ``sim_relax.py`` /
+    # ``hysteresis.py`` modules (only their ``finmag.util.helpers`` import was
+    # replaced by a local dolfin-free reimplementation; see those modules'
+    # docstrings), driven through the ported scheduler/integrator/
+    # EffectiveField stack. [Claude Sonnet 5]
+    relax = sim_relax.relax
+    hysteresis = _hysteresis
+    hysteresis_loop = _hysteresis_loop
 
     def run_normal_modes_computation(self, *args, **kwargs):
         _deferred("run_normal_modes_computation", "normal-mode analysis")

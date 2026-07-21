@@ -38,6 +38,7 @@ _LAZY_EXPORTS = {
         "TimeZeemanPython",
         False,
     ),
+    "DipolarField": ("finmag.energies.zeeman", "DipolarField", False),
     "DMI": ("finmag.energies.dmi", "DMI", False),
     "DMI_interfacial": ("finmag.energies.dmi", "DMI_interfacial", False),
     "ThinFilmDemag": (

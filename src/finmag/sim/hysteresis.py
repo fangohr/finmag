@@ -6,7 +6,14 @@ import textwrap
 import fileinput
 import numpy as np
 from finmag.energies import Zeeman
-from finmag.util.helpers import norm
+# Task 15 DOLFINx port note [Claude Sonnet 5]: ``norm`` is imported from
+# ``finmag.sim.sim_helpers`` (a local, dolfin-free reimplementation -- see
+# that module's docstring) rather than the legacy ``dolfin``-backed
+# ``finmag.util.helpers``, so this module stays import-clean in the DOLFINx
+# environment. This is the only change to this file; ``hysteresis``/
+# ``hysteresis_loop`` below are transcribed verbatim from the frozen legacy
+# oracle.
+from finmag.sim.sim_helpers import norm
 
 log = logging.getLogger(name="finmag")
 

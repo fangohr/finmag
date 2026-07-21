@@ -1,0 +1,148 @@
+{
+  "H_vals": [
+    [
+      100000.0,
+      0.0,
+      0.0
+    ],
+    [
+      33333.0,
+      0.0,
+      0.0
+    ],
+    [
+      -33333.0,
+      0.0,
+      0.0
+    ],
+    [
+      -100000.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "mesh": {
+    "parameters": {
+      "nx": 1,
+      "ny": 1,
+      "nz": 1,
+      "x0": [
+        0,
+        0,
+        0
+      ],
+      "x1": [
+        5,
+        5,
+        5
+      ]
+    },
+    "recipe": "dolfin.BoxMesh(Point(0,0,0),Point(5,5,5),1,1,1)"
+  },
+  "note": "Legacy FEniCS-2019 reference for a tiny 4-stage Simulation.hysteresis() run (native Sundials backend, the true legacy default), generated at the frozen oracle commit via dev/bin/run-legacy-oracle. Not coordinate-ordered nodal data (there is only one cell/vertex-set on this tiny mesh, the quantity of interest is the scalar-reduced m_average per stage): 'stages' holds one entry per H_VALS field, each with the simulation clock and volume-averaged magnetisation reached when relax() decided to stop. See this file's module docstring for the important finding that stages after the first do not actually re-relax (a genuine, self-acknowledged legacy limitation of the hysteresis()/relax() interaction, not a DOLFINx-port regression).",
+  "oracle": {
+    "command": [
+      "dev/bin/run-legacy-oracle",
+      "--",
+      "pixi",
+      "run",
+      "--locked",
+      "env",
+      "PYTHONPATH=src",
+      "python",
+      "/home/sam/repos/finmag/src/finmag/tests/fixtures/gen_hysteresis_oracle.py"
+    ],
+    "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+    "generator": "src/finmag/tests/fixtures/gen_hysteresis_oracle.py",
+    "generator_note": "Runs the frozen legacy Simulation.hysteresis() with the native Sundials backend (Simulation's true default) on a single-cell box mesh with uniaxial anisotropy; per-stage m_average and simulation time are recorded via the `fun` callback."
+  },
+  "physical_parameters": {
+    "K1": {
+      "unit": "J/m**3",
+      "value": 10000.0
+    },
+    "Ms": {
+      "unit": "A/m",
+      "value": 860000.0
+    },
+    "alpha": {
+      "unit": "1",
+      "value": 1.0
+    },
+    "easy_axis": {
+      "unit": "1",
+      "value": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "m_init": {
+      "unit": "1",
+      "value": [
+        1.0,
+        0.05,
+        0.0
+      ]
+    },
+    "stopping_dmdt": {
+      "unit": "degree/ns",
+      "value": 1.0
+    },
+    "unit_length": {
+      "unit": "m",
+      "value": 1e-09
+    }
+  },
+  "schema_version": 1,
+  "stages": [
+    {
+      "m_average": [
+        0.9999999812418695,
+        0.00014571398972325277,
+        -0.00012760757799803145
+      ],
+      "t": 4.244548292803764e-10,
+      "tolerances": {
+        "absolute": 0.002,
+        "relative": 0.002
+      }
+    },
+    {
+      "m_average": [
+        0.9999999812440185,
+        0.0001457129483365864,
+        -0.00012759192493317674
+      ],
+      "t": 4.244648292803764e-10,
+      "tolerances": {
+        "absolute": 0.002,
+        "relative": 0.002
+      }
+    },
+    {
+      "m_average": [
+        0.9999999812434038,
+        0.0001457132449064959,
+        -0.00012759640333358756
+      ],
+      "t": 4.244748292803764e-10,
+      "tolerances": {
+        "absolute": 0.002,
+        "relative": 0.002
+      }
+    },
+    {
+      "m_average": [
+        0.9999999812400252,
+        0.00014571486627097135,
+        -0.00012762102855404654
+      ],
+      "t": 4.2448482928037636e-10,
+      "tolerances": {
+        "absolute": 0.002,
+        "relative": 0.002
+      }
+    }
+  ]
+}

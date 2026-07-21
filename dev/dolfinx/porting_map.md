@@ -159,6 +159,13 @@ module with its tests.
   (`sim_helpers`, `sim_savers`, `hysteresis`, `magnetisation_patterns`, the
   legacy scheduler) are untouched and no longer on the core import graph.
   [Claude Opus 4.8]
+  Task 15 update: `relax` and `hysteresis`/`hysteresis_loop` are now ported
+  (`Simulation.relax`/`hysteresis`/`hysteresis_loop` bound directly to the
+  untouched legacy `sim_relax.py`/`hysteresis.py` modules, whose only edit in
+  this slice is a local dolfin-free reimplementation of their
+  `finmag.util.helpers` import). `magnetisation_patterns` and the legacy
+  per-simulation table writer remain untouched/off the core import graph.
+  [Claude Sonnet 5]
 - Task 9 removed-surfaces addendum: a handful of legacy `Simulation` public
   names were dropped outright rather than deferred by name --
   `initialise_helix_2D`, `initialise_skyrmions`,
@@ -200,6 +207,13 @@ module with its tests.
   exports retain the real legacy dependency. The ported modules no longer
   import `finmag.util.meshes`, `finmag.util.helpers`, or `finmag.native`.
   [Codex GPT-5.6]
+  Task 15 update: `TimeZeeman`/`DiscreteTimeZeeman`/`TimeZeemanPython`/
+  `OscillatingZeeman`/`DipolarField` are now `requires_legacy_dolfin=False`
+  and dolfin-clean -- constructing any of them builds the ported DOLFINx
+  class directly (see `transition-notes.org`'s Task 15 section for the
+  `field_function(t)` input-contract deviation and two preserved legacy
+  quirks). No `_DeferredZeeman` names remain in `finmag.energies.zeeman`.
+  [Claude Sonnet 5]
 - Bulk DMI: `dmi_energy` covers the legacy 3D `dmi_type='auto'` case
   (`D * inner(m, curl(m))`), with the matching `unit_length ** (dim - 1)`
   scaling convention and a 3D-mesh guard. Interfacial and 1D/2D DMI variants
@@ -427,6 +441,16 @@ Before editing the matching module in `src/finmag`, check that:
   and supported; PBC, the non-FK demag variants, stochastic/STT kernels,
   regions, hysteresis, and normal-mode consumers remain unported and fail by
   name when requested. [Claude Sonnet 5]
+  Task 15 update: `Simulation.relax`/`hysteresis`/`hysteresis_loop` are now
+  ported (bound exactly the way legacy did, over the untouched legacy
+  `sim_relax.py`/`hysteresis.py` modules -- only their `finmag.util.helpers`
+  import was replaced by a local dolfin-free reimplementation in
+  `sim_helpers.py`). See `transition-notes.org`'s Task 15 section for an
+  important finding: legacy's own `hysteresis()`/`hysteresis_loop()`, when
+  actually exercised (including against the frozen oracle), do not achieve
+  an independent re-relaxation after their first stage -- preserved
+  verbatim, not fixed. PBC, non-FK demag, stochastic/STT kernels, regions,
+  and normal-mode consumers remain unported. [Claude Sonnet 5]
 - Task 10 established the first aggregated direct-source DOLFINx gate
   (`dev/bin/verify-dolfinx-m5`), running every `dolfinx-src-*` focused pytest
   gate and MPI probe plus a new core physical-time smoke
@@ -482,6 +506,12 @@ Before editing the matching module in `src/finmag`, check that:
   direct-use building blocks with DOLFINx `Field`; at the time of this Task 5
   slice, hysteresis, LLB, and normal-mode consumers remained unported
   (`Simulation` itself is ported as of Task 9/11b/12, above). [Codex GPT-5.6]
+  Task 15 update: `DipolarField` and every time-dependent Zeeman variant
+  (`TimeZeeman`/`DiscreteTimeZeeman`/`TimeZeemanPython`/`OscillatingZeeman`)
+  are now ported, and `hysteresis`/`hysteresis_loop`/`relax` are now ported
+  on `Simulation` (see the Task 9/6 updates above). Spatially varying
+  material parameters and regions (Task 16) and LLB/normal-mode consumers
+  remain outside this slice. [Claude Sonnet 5]
 - Task 6: `EffectiveField` is now a direct DOLFINx production module. It keeps
   the exact registry API (`add`/`get`/`exists`/`all`/`remove`, unique-name
   `ValueError`, `UnknownInteraction`), total field/energy accumulation, the
@@ -498,6 +528,13 @@ Before editing the matching module in `src/finmag`, check that:
   time of this Task 6 slice, hysteresis, LLB, and normal-mode consumers
   remained unported (`Simulation` itself is ported as of Task 9/11b/12,
   above). [Claude Sonnet 5]
+  Task 15 update: the auto-connection is now exercised with the *real*
+  `TimeZeeman`/`OscillatingZeeman` classes (`sim.add(OscillatingZeeman(...))`
+  + `run_until`), not only the `FakeTimeZeeman` double used until this slice
+  (`test_timezeeman_dolfinx.py::
+  test_real_timezeeman_field_changes_during_run_until`); `hysteresis` is now
+  ported (see below). LLB and normal-mode consumers remain unported.
+  [Claude Sonnet 5]
 - The production box foundation deliberately requires a blocked
   three-component CG1 magnetisation space. Some higher-order Lagrange row-sum
   lumped weights are non-positive, so accepting arbitrary elements would fail

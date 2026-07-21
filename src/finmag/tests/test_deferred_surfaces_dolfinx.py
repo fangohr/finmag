@@ -42,8 +42,13 @@ Already pinned by name elsewhere (not duplicated here):
   ``::test_multi_rank_state_paths_raise_serial_guard``
 - ``backend="sundials"`` at the ``llg_integrator`` factory --
   ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``
-- ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/``TimeZeemanPython``
-  instantiation -- ``test_energies_dolfinx.py`` (``TimeZeeman(...)`` case)
+- ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/
+  ``TimeZeemanPython``/``DipolarField`` are now PORTED (Task 15) and covered
+  by ``test_timezeeman_dolfinx.py``; they are no longer deferred.
+  ``test_energies_dolfinx.py``'s ``TimeZeeman((1.0, 0.0, 0.0))`` case now
+  pins the ported constant-array-without-``t_off`` ``ValueError`` instead of
+  a by-name deferral. ``sim.relax``/``hysteresis``/``hysteresis_loop`` are
+  also now PORTED (Task 15) and covered by ``test_hysteresis_dolfinx.py``.
 - ``Field.from_expression`` --
   ``test_field_dolfinx.py::test_legacy_only_features_fail_precisely``
 """

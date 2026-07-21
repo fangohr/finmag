@@ -357,7 +357,11 @@ def test_invalid_or_deferred_material_inputs_fail_explicitly():
         UniaxialAnisotropy(1.0, (0.0, 0.0, 0.0))
     with pytest.raises(NotImplementedError, match="native/direct"):
         UniaxialAnisotropy(1.0, (0.0, 0.0, 1.0), assemble=False)
-    with pytest.raises(NotImplementedError, match="deferred"):
+    # Task 15: TimeZeeman is now ported; a constant-array field_expression
+    # with no t_off raises ValueError (no time update would ever happen),
+    # not the old by-name deferral. See test_timezeeman_dolfinx.py for the
+    # full ported-class suite.
+    with pytest.raises(ValueError, match="t_off"):
         TimeZeeman((1.0, 0.0, 0.0))
 
     exchange = Exchange(1.0)

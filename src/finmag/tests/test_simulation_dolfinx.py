@@ -414,9 +414,16 @@ def test_restart_and_output_are_available():
     assert sim.t == 0.0
 
 
-def test_region_and_hysteresis_are_deferred():
+def test_region_is_deferred():
     sim = _make_sim()
     with pytest.raises(NotImplementedError):
         sim.mark_regions(lambda pt: 0)
-    with pytest.raises(NotImplementedError):
-        sim.hysteresis([])
+
+
+def test_hysteresis_is_ported_not_deferred():
+    """Task 15: relax/hysteresis/hysteresis_loop are ported; see the focused
+    ``test_hysteresis_dolfinx.py`` suite for the full behavioral contract.
+    ``hysteresis([])`` returns ``None`` immediately (matching legacy) rather
+    than raising."""
+    sim = _make_sim()
+    assert sim.hysteresis([]) is None

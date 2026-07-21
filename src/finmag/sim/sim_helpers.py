@@ -263,3 +263,36 @@ def eta(sim, when_started):
         log.info("Integrated up to t = {:.4} ns. "
                  "Predicted end in {:0>2}:{:0>2}:{:0>2}.".format(
                      sim.t * 1e9, int(hours), int(minutes), int(seconds)))
+
+
+# -- Task 15: relax()/hysteresis() pure-Python helpers -----------------------
+#
+# Reimplemented locally (identical to their ``finmag.util.helpers``
+# counterparts) so ``sim_relax``/``hysteresis`` do not import the legacy
+# ``dolfin``-backed ``finmag.util.helpers`` module, matching the
+# ``clean_filename`` precedent above. [Claude Sonnet 5]
+
+def norm(vs):
+    """Euclidian norm of one or several 3-vectors.
+
+    When passing an array of vectors, the shape is expected to be
+    ``[[x0, y0, z0], ..., [xn, yn, zn]]``.
+    """
+    if not type(vs) == np.ndarray:
+        vs = np.array(vs)
+    if vs.shape == (3,):
+        return np.linalg.norm(vs)
+    return np.sqrt(np.add.reduce(vs * vs, axis=1))
+
+
+def compute_dmdt(t0, m0, t1, m1):
+    """Maximum of the L2 norm of dm/dt between two magnetisation snapshots.
+
+    Arguments:
+        t0, t1: two points in time (floats)
+        m0, m1: the magnetisation at t0, resp. t1 (np.arrays of shape 3*n)
+    """
+    dm = (m1 - m0).reshape((3, -1))
+    max_dm = np.max(np.sqrt(np.sum(dm ** 2, axis=0)))  # max of L2-norm
+    dt = abs(t1 - t0)
+    return max_dm / dt

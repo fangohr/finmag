@@ -70,19 +70,32 @@ exports, focused DOLFINx tests.
 `DiscreteTimeZeeman`, `TimeZeemanPython`, `OscillatingZeeman`,
 `DipolarField`), `src/finmag/sim/hysteresis.py`, their tests.
 
-- [ ] Port `TimeZeeman` (time-parametrised field with `update(t)`),
+- [x] Port `TimeZeeman` (time-parametrised field with `update(t)`),
   `DiscreteTimeZeeman` (update intervals/switch-off), and `OscillatingZeeman`
   on top of the ported static `Zeeman`; `TimeZeemanPython` and `DipolarField`
-  may defer by name if their legacy dependencies (expressions/point sources)
-  are not portable in this slice — document the decision.
-- [ ] The `EffectiveField.add(..., with_time_update)` auto-connection for
-  `TimeZeeman` (preserved in Task 6) must now be exercised with the real
-  class, including the `switch_off_H_ext` interplay fixed in Task 9.
-- [ ] Port `sim.hysteresis` / `hysteresis_loop` for the ported interactions;
-  oracle or analytic witness for a small loop (e.g. Stoner-Wohlfarth-like
-  single-domain switching qualitative check plus a legacy oracle fixture).
-- [ ] New gate `dolfinx-src-timezeeman-pytest` (naming may merge hysteresis)
-  folded into `verify-dolfinx-m5`.
+  were also PORTED (not deferred) directly on top of `TimeZeeman`/`Zeeman` --
+  the full legacy Expression-based capability translates onto a plain Python
+  `field_function(t)` callable contract (see `transition-notes.org` for the
+  input-type deviation and two discovered/preserved legacy quirks: `t_off=0.0`
+  is falsy-disabled, and `DiscreteTimeZeeman.update()` never rebuilds its
+  cached energy form, so `compute_energy()` goes stale after the first
+  interval update even as `compute_field()` stays current -- DELIBERATE
+  PRESERVATION, USER ACCEPTANCE PENDING).
+- [x] The `EffectiveField.add(..., with_time_update)` auto-connection for
+  `TimeZeeman` (preserved in Task 6) is now exercised with the real class
+  (`sim.add(OscillatingZeeman(...))` + `run_until`), including the
+  `switch_off_H_ext` interplay fixed in Task 9.
+- [x] Port `sim.hysteresis` / `hysteresis_loop` (+ `sim.relax`, needed by
+  `hysteresis`) for the ported interactions; oracle fixture for a tiny loop
+  plus a Stoner-Wohlfarth-like qualitative switching + loop-closure witness
+  (constructed with fresh `Simulation`/`relax()` calls per field step, since
+  legacy's own `hysteresis()`/`hysteresis_loop()` were discovered -- and
+  confirmed against the frozen oracle -- to not actually re-relax
+  independently after the first stage; preserved verbatim, not fixed; see
+  `transition-notes.org`).
+- [x] New gate `dolfinx-src-timezeeman-pytest` (merges hysteresis, runs both
+  `test_timezeeman_dolfinx.py` and `test_hysteresis_dolfinx.py`) folded into
+  `verify-dolfinx-m5`.
 
 ## Task 16: Field-valued material parameters and regions
 

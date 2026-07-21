@@ -111,7 +111,8 @@ import finmag.energies as energies
 expected = {
     "Demag", "Demag2D", "MacroGeometry", "EnergyBase", "Exchange",
     "UniaxialAnisotropy", "CubicAnisotropy", "Zeeman", "TimeZeeman",
-    "DiscreteTimeZeeman", "OscillatingZeeman", "TimeZeemanPython", "DMI",
+    "DiscreteTimeZeeman", "OscillatingZeeman", "TimeZeemanPython",
+    "DipolarField", "DMI",
     "DMI_interfacial", "ThinFilmDemag", "FixedEnergyDW",
 }
 assert expected == set(energies.__all__)
@@ -145,12 +146,17 @@ assert Zeeman.__module__ == "finmag.energies.zeeman"
 assert TimeZeeman.__module__ == "finmag.energies.zeeman"
 assert DMI.__module__ == "finmag.energies.dmi"
 assert CubicAnisotropy.__module__ == "finmag.energies.cubic_anisotropy"
+# Task 15: TimeZeeman is now ported (no longer a by-name deferral). A
+# constant-array field_expression with no t_off raises ValueError (there
+# would be no time update at all), matching the ported input-contract
+# safety check transcribed from legacy.
 try:
     TimeZeeman((1.0, 0.0, 0.0))
-except NotImplementedError as error:
-    assert "deferred" in str(error)
+except ValueError as error:
+    assert "t_off" in str(error)
 else:
-    raise AssertionError("TimeZeeman did not report its explicit deferral")
+    raise AssertionError(
+        "TimeZeeman((1.0, 0.0, 0.0)) without t_off should raise ValueError")
 assert "dolfin" not in sys.modules
 assert not any(
     name == "finmag.native" or name.startswith("finmag.native.")
@@ -303,6 +309,7 @@ expected_energy_modules = {
     "DMI_interfacial": "finmag.energies.dmi",
     "Demag": "finmag.energies.demag",
     "Demag2D": "finmag.energies.demag",
+    "DipolarField": "finmag.energies.zeeman",
     "DiscreteTimeZeeman": "finmag.energies.zeeman",
     "EnergyBase": "finmag.energies.energy_base",
     "Exchange": "finmag.energies.exchange",
