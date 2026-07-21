@@ -132,6 +132,63 @@ def test_restart_rejects_mismatched_mesh(tmpdir):
         other.restart(filename=fname)
 
 
+def test_restart_remap_undoes_nonidentity_coordinate_permutation(tmpdir):
+    """Pins the remap loop in ``apply_restart_magnetisation`` against an
+    index-direction transposition bug (e.g. ``remapped[source_index] =
+    stored_values[target_index]`` instead of the correct
+    ``remapped[target_index] = stored_values[source_index]``).
+
+    Every existing restart test exercises an *identity* coordinate mapping:
+    a same-recipe serial rebuild reproduces the stored vertex/dof ordering
+    exactly, so the row-for-row order of 'coordinates' and 'm' in the stored
+    file already matches the target field's own coordinate order. Such a
+    bug would happily pass the whole suite while silently misassigning any
+    restart file whose stored row order differs from the target's row order.
+
+    This test forces a genuinely non-identity remap: it saves restart data,
+    then rewrites the archive with the SAME permutation applied to both the
+    'coordinates' rows and the corresponding 'm' rows (a fixed seeded
+    shuffle), so the stored per-vertex association (which coordinate goes
+    with which magnetisation value) is preserved but the row order no longer
+    matches the target field's natural order. Loading that permuted file into
+    a fresh same-recipe Simulation must still restore the exact original
+    (unpermuted) nodal magnetisation: the remap has to undo the permutation
+    by matching coordinates, not by matching row position.
+    """
+    sim = _make_sim(name="permute_producer")
+    sim.set_m(lambda pt: (np.sin(pt[0]), np.cos(pt[1]), 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+    sim.run_until(2e-12)
+    m_saved = sim.m.copy()
+    t_saved = sim.t
+
+    fname = str(tmpdir.join("identity.npz"))
+    sim.save_restart_data(filename=fname)
+
+    data = dict(np.load(fname, allow_pickle=True))
+    n = data["coordinates"].shape[0]
+    rng = np.random.RandomState(20260721)  # fixed seed: reproducible shuffle
+    permutation = rng.permutation(n)
+    assert not np.array_equal(permutation, np.arange(n)), (
+        "shuffle must be non-identity for this test to pin anything")
+
+    # Apply the SAME row permutation to coordinates and m, so each
+    # (coordinate, magnetisation) pair stays correctly associated -- only the
+    # row order in the file changes, exactly like a restart file produced by
+    # a differently-ordered (but otherwise identical) mesh rebuild.
+    data["coordinates"] = data["coordinates"][permutation]
+    data["m"] = data["m"][permutation]
+    permuted_fname = str(tmpdir.join("permuted.npz"))
+    np.savez_compressed(permuted_fname, **data)
+
+    sim2 = _make_sim(name="permute_consumer")
+    sim2.set_m((1.0, 0.0, 0.0))
+    sim2.restart(filename=permuted_fname)
+
+    assert np.isclose(sim2.t, t_saved)
+    assert np.allclose(sim2.m, m_saved, atol=1e-12)
+
+
 def test_load_restart_data_by_simulation_uses_canonical_name(tmpdir):
     os.chdir(str(tmpdir))
     sim = _make_sim(name="canon test")
@@ -141,6 +198,56 @@ def test_load_restart_data_by_simulation_uses_canonical_name(tmpdir):
     data = sim_helpers.load_restart_data(sim)
     assert str(data["simname"]) == "canon test"
     assert data["m"].shape[1] == 3
+
+
+def test_load_restart_data_rejects_unsupported_format_by_name(tmpdir):
+    """Both an unsupported restart format_version must be rejected loudly and
+    by name, not fail deep inside ``apply_restart_magnetisation`` with an
+    opaque ``KeyError``:
+
+    1. A legacy v1 raw-dof restart npz (no 'coordinates'/'format_version',
+       just the old raw backend-dof-ordered ``m`` array). Its legacy driver
+       value is ``'cvode'``, which ``Simulation.restart``'s driver gate
+       (``data.get("driver") in ("scipy", "cvode")``) actively accepts -- so
+       without an explicit format check the file would sail past the driver
+       gate and only die deep in the remap with a bare ``KeyError('coordinates')``.
+    2. A future/unknown ``format_version`` value on an otherwise well-formed
+       v2-shaped archive.
+    """
+    # -- 1. legacy v1 raw-dof file -----------------------------------------
+    # Exact keys of the legacy (pre-port) save_restart_data: a raw backend-dof
+    # array 'm', integrator 'stats', 'simtime', 'datetime', 'simname' and
+    # 'driver' -- no 'coordinates', no 'format_version'.
+    legacy_fname = str(tmpdir.join("legacy_v1.npz"))
+    np.savez_compressed(
+        legacy_fname,
+        m=np.zeros(30, dtype=np.float64),  # legacy: raw flat backend-dof array
+        stats={"nsteps": 3},
+        simtime=1.5e-12,
+        datetime=str(np.datetime64("now")),
+        simname="legacy_sim",
+        driver="cvode",
+    )
+
+    with pytest.raises(ValueError, match="legacy v1"):
+        sim_helpers.load_restart_data(legacy_fname)
+
+    # The same rejection must happen through Simulation.restart, before the
+    # driver gate would otherwise wave a 'cvode' file through.
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    with pytest.raises(ValueError, match="legacy v1"):
+        sim.restart(filename=legacy_fname)
+
+    # -- 2. unrecognised future format_version -----------------------------
+    sim.save_restart_data(filename=str(tmpdir.join("future.npz")))
+    data = dict(np.load(str(tmpdir.join("future.npz")), allow_pickle=True))
+    data["format_version"] = 99
+    future_fname = str(tmpdir.join("future_bumped.npz"))
+    np.savez_compressed(future_fname, **data)
+
+    with pytest.raises(ValueError, match="format_version"):
+        sim_helpers.load_restart_data(future_fname)
 
 
 # ==========================================================================

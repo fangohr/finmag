@@ -3,9 +3,9 @@
 This module holds the restart persistence helpers (``save_restart_data`` /
 ``load_restart_data``) plus a handful of pure-Python simulation utilities. It is
 import-clean in the DOLFINx environment: legacy ``dolfin``, ``finmag.native``
-and ``finmag.util.meshes`` are only imported lazily inside the few
-DOLFIN-specific helpers (``skyrmion_number`` etc.) that are not part of the
-ported core ``Simulation`` surface.
+and ``finmag.util.meshes`` are not imported at all -- the DOLFIN-specific
+helpers that used to live here (``skyrmion_number`` etc.) were removed as part
+of this port and are not part of the ported core ``Simulation`` surface.
 
 Restart format decision (deliberate deviation from the legacy npz layout,
 documented in ``transition-notes.org`` and ``dev/dolfinx/porting_map.md``):
@@ -191,6 +191,23 @@ def load_restart_data(filename_or_simulation):
             result[key] = [_decode_legacy_bytes(x) for x in data[key].tolist()]
         else:
             result[key] = data[key]
+
+    if 'format_version' not in result or 'coordinates' not in result:
+        raise ValueError(
+            "'{}' is a legacy v1 raw-dof restart file (no 'format_version' / "
+            "'coordinates' keys): this DOLFINx port only supports the "
+            "coordinate-aware v2 restart format. A v1 file cannot be safely "
+            "remapped by coordinate and is not supported here. Regenerate the "
+            "restart file from a fresh run of this (DOLFINx) code, or re-save "
+            "the legacy state under the legacy finmag codebase and convert it "
+            "before loading.".format(filename))
+    if result['format_version'] != RESTART_FORMAT_VERSION:
+        raise ValueError(
+            "'{}' has restart format_version={!r}, but this DOLFINx port only "
+            "supports format_version={} (the coordinate-aware v2 layout). "
+            "Regenerate the restart file with the current code.".format(
+                filename, result['format_version'], RESTART_FORMAT_VERSION))
+
     return result
 
 
