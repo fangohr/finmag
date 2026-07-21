@@ -246,3 +246,34 @@ every capability not already formally dropped is treated as PORT.
   document); `verify-dolfinx-m5` updated if a new gate is added. Folded into
   `dolfinx-src-energies-pytest` (two new test files added to the same pixi
   command); `verify-dolfinx-m5` unchanged. [Claude Sonnet 5]
+
+## Task 20: Native Sundials/CVODE backend
+
+**Files:** `native/src/sundials/`, `native/src/util/`, `native/Makefile`,
+`src/finmag/drivers/sundials_integrator.py`, `src/finmag/drivers/llg_integrator.py`,
+`src/finmag/physics/llg.py` (`sundials_*` hooks, already stubbed by name).
+
+- [ ] Rebuild the native sundials module dolfin-free for the DOLFINx env,
+  following the proven `bem_arrays` pattern (`-DFINMAG_NO_DOLFIN`, per-env
+  object trees, module set in the dolfinx Makefile branch). The SUNDIALS-7
+  wrapper work from M2/M3 (SUNContext lifecycle, nonlinear-solver attachment,
+  modern linear-solver wiring) is the starting point — audit which parts still
+  touch dolfin/np_array-with-dolfin and separate exactly as 11a did for BEM.
+- [ ] Wire `SundialsIntegrator` on the DOLFINx stack: `llg.sundials_rhs`
+  (+ `jtimes`/`psetup`/`psolve` as legacy wired them), xxx-ordered state
+  consistent with the ported LLG contract, serial-only guard inherited.
+- [ ] Make `backend="sundials"` work while scipy remains available; restore
+  the legacy default-backend semantics (`llg_integrator` default) ONLY if the
+  sundials path passes the full validation below — otherwise keep scipy
+  default and record the decision explicitly.
+- [ ] Validation: the legacy `sundials_ode` test invariants (simple/stiff),
+  analytic macrospin trajectory vs closed form, cross-backend agreement
+  (sundials vs scipy on the Task 9/10 core workflow within declared
+  tolerances), and a `barmini`-class Sim advance mirroring the pixi
+  `barmini-smoke` acceptance slice.
+- [ ] Env: SUNDIALS libraries into the dolfinx pixi feature (pixi.lock change
+  expected — call out); native build hygiene per Task 11b conventions.
+- [ ] New gate `dolfinx-src-sundials-pytest` folded into `verify-dolfinx-m5`;
+  driver/deferred-sweep tests updated (sundials no longer raises by name —
+  fail-forward pins flip to ported-behavior assertions incl. the Task 10 skip
+  guards, which were designed for exactly this moment).
