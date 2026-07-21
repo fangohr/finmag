@@ -263,12 +263,12 @@ PBC/treecode demag remains a separate native slice.
 
 ## Task 12: Port restart and required output
 
-- [ ] Define restart ownership and mesh/parameter metadata before implementation.
-- [ ] Store owned values in a stable coordinate-aware format.
-- [ ] Round-trip magnetization, time, material parameters, and interactions.
-- [ ] Port NDT output needed by accepted workflows.
-- [ ] Port required VTK/XDMF output with explicit read/write capabilities.
-- [ ] Add scheduler integration only after the underlying outputs work directly.
+- [x] Define restart ownership and mesh/parameter metadata before implementation.
+- [x] Store owned values in a stable coordinate-aware format.
+- [x] Round-trip magnetization, time, material parameters, and interactions.
+- [x] Port NDT output needed by accepted workflows.
+- [x] Port required VTK/XDMF output with explicit read/write capabilities.
+- [x] Add scheduler integration only after the underlying outputs work directly.
 
 ## Later Value-Driven Slices
 

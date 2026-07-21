@@ -3786,3 +3786,116 @@ check now runs in a fresh subprocess so it is order-independent once the opt-in
 demag interaction has loaded =finmag.native= elsewhere in the suite.
 
 [Claude Opus 4.8]
+
+** Direct DOLFINx Restart and Output Port (Task 12)
+
+The final core slice ports restart persistence, the required output surfaces
+(NDT tables and VTK/XDMF), and the scheduler directly onto the DOLFINx
+=Simulation=. Everything is wired through the already-ported =Field=/=LLG=/
+=ScipyIntegrator= stack; no legacy =dolfin=, =finmag.native=, or =aeon= enters
+the DOLFINx import graph. Gate: =dolfinx-src-restart-output-pytest=
+(=src/finmag/tests/test_restart_output_dolfinx.py=, 18 tests), folded into
+=dev/bin/verify-dolfinx-m5=.
+
+*** Restart format decision (explicit deviation)
+
+The legacy npz restart archive (=sim_helpers.save_restart_data=) stored the
+magnetisation as =sim.integrator.llg._m_field.get_numpy_array_debug()= -- a
+*raw, backend-dof-ordered* owned array. That layout is only meaningful for the
+identical in-memory function-space dof numbering, so restarting into a
+differently-ordered rebuild of the same mesh silently misassigns nodal values.
+This is exactly the raw/=xxx=/coordinate ambiguity earlier slices resolved
+explicitly.
+
+The DOLFINx port therefore stores a *coordinate-aware* format (=format_version
+= 2=; v1 = the legacy raw-dof layout):
+
+- =coordinates= : owned mesh-vertex coordinates =(n, gdim)=;
+- =m=           : coordinate-ordered magnetisation =(n, 3)=, row-aligned to
+  =coordinates= (from =Field.coords_and_values()=);
+- =mesh_hash=   : sha1 of the sorted/rounded coordinates (mesh identity);
+- =Ms=/=alpha=/=gamma=/=unit_length= : material parameters;
+- =interactions= : sorted interaction names present;
+- =simtime=/=datetime=/=simname=/=driver='scipy'=/=format_version=.
+
+On =restart= the stored values are remapped to the target field *by coordinate*
+(=apply_restart_magnetisation=): a same-recipe rebuild with different vertex/dof
+numbering is correctly restored, and a genuine mesh mismatch raises =ValueError=
+(=restart mesh mismatch: ...=) rather than being silently misassigned. This is a
+deliberate, documented deviation from the legacy raw-dof =m= key; =driver= moves
+from ='cvode'= to ='scipy'= to match the ported default backend. Round-trip
+(save -> mutate -> restart -> identical =m=/=t=/params), =t0= override,
+cross-instance (fresh =Simulation=, same recipe), canonical-name load, and
+loud-rejection are all pinned.
+
+*** NDT fidelity (Tablewriter/Tablereader)
+
+=src/finmag/util/fileio.py= is preserved verbatim as the NDT column/format
+contract, with only two minimal DOLFINx touchpoints:
+
+1. =from aeon import timer= (profiler, absent in the DOLFINx env) is made
+   optional -- a null =timer.method= no-op decorator is used when =aeon= is
+   unavailable, so the legacy FEniCS lane still profiles;
+2. =np.NAN= -> =np.nan= (NumPy 2 removed the =np.NAN= alias) in the dummy
+   integrator-stat get-methods.
+
+The write/read contract is otherwise untouched: comment symbol =# =, header line
+of column names, units line, float format =%18.12g =, string format =%18s =. The
+Tablereader Python-3 line-parsing already in =fileio.py= reads exactly what
+=Tablewriter= writes. This is the same contract the frozen M3 gate
+(=test_writing_data.py=, =barmini_test.ndt.ref=) defines; the port's NDT test
+asserts the header/units/format directly and round-trips =time=/=m_x,y,z= through
+Tablereader against =sim.t=/=sim.m_average=. =Simulation.tablewriter= is created
+lazily (default entities: =time=, =m=, dummy =steps=/=last_step_dt=/=dmdt=),
+=save_averages= (alias =save_ndt=) appends a row.
+
+*** VTK/XDMF and .npy field snapshots
+
+=sim.save_vtk=/=save_field_to_vtk= route through the write-only DOLFINx
+=Field.save_pvd=/=save_xdmf= writers (=.xdmf= dispatched by extension). Read-back
+stays explicitly unavailable by name (=Field.save_hdf5= raises the
+=dolfinh5tools= error; DOLFINx VTK/XDMF has no legacy read-back either).
+=sim.save_field=/=save_m= write =.npy= snapshots via =FieldSaver=, storing the
+stable coordinate-ordered value table (a deviation from the legacy raw
+=get_local()= dump, for the same coordinate-stability reason as restart);
+region-restricted variants defer by name.
+
+*** Scheduler (ported last, thinnest item)
+
+The scheduler core (=finmag.scheduler.scheduler=/=derivedevents=/=timeevent=/
+=event=) is backend-free Python and was already import-clean; it is ported
+*as-is* -- only its =sim.py= callers were rewired. =run_until= now builds the
+integrator, registers a =call_to_end_integration= stop event (=at=t=,
+=at_end=True=), and drives =scheduler.run(integrator, callbacks)=, exactly
+mirroring the legacy loop; =run_until= with no schedule is behaviourally
+identical to the Task 9-11 direct-advance path (explicitly pinned as a
+no-regression test). =schedule= supports callables and the shortcut strings
+=save_ndt=/=save_averages=/=save_vtk=/=save_field=/=save_restart_data=/=eta=;
+unknown shortcut strings raise =KeyError= by name. =unschedule=/=clear_schedule=
+and =reset_time= (now also resetting the scheduler clock) are ported.
+=sim.schedule("save_ndt", every=2e-12)= over =run_until(1e-11)= writes the
+expected 6 rows (=t = 0, 2e-12, ..., 1e-11=).
+
+*** End-to-end witness
+
+=test_end_to_end_all_interactions_with_restart= builds =sim_with(..., A, K1,
+H_ext, demag_solver="FK")= (all four ported interactions incl. compiled FK
+demag), schedules NDT saves, runs to =6e-12=, saves restart, reloads into a
+*fresh* same-recipe =sim_with= simulation, and continues to =1e-11=; continuity
+of =t= and =m= across the reload is asserted (=atol 1e-12=), with nodal unit
+norm preserved (=atol 1e-4=). The Task 10 core smoke and all prior gates
+(import 8p/2s, field 26, energies 26, effectivefield 15, llg 19, scipy 19,
+simulation 31, deferred 5, native-bem 8, demag 19, restart-output 18) remain
+green; =dev/bin/verify-dolfinx-m5= passes end-to-end with a clean tracked tree.
+
+*** Deferred / deliberate deviations
+
+=render_scene=, =plot_dynamics(_3d)=, =plot_mesh=, =snapshot=, region/material
+machinery (=mark_regions=/=save_m_in_region=/=get_submesh=), point probing,
+=relax=/=hysteresis=, normal modes, and STT still raise =NotImplementedError= by
+name. The dolfin-dependent =sim_helpers= helpers (=skyrmion_number=,
+=skyrmion_number_density_function=, =get_submesh=, =run_normal_modes_computation=,
+=plot_relaxation=), already dropped from the ported =Simulation= in Task 9, were
+removed so =sim_helpers= is DOLFINx-import-clean. =pixi.lock= was not touched.
+
+[Claude Opus 4.8]

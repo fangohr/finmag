@@ -367,10 +367,16 @@ def test_nonstandard_kernels_are_deferred(kernel):
         Simulation(_box(), 8.6e5, unit_length=1e-9, kernel=kernel)
 
 
-def test_scheduler_api_is_deferred():
+def test_scheduler_api_is_available():
+    """Task 12: the scheduler is ported. ``schedule`` returns a scheduled item
+    and an unknown shortcut string fails by name with ``KeyError`` (was
+    ``test_scheduler_api_is_deferred``)."""
     sim = _make_sim()
-    with pytest.raises(NotImplementedError, match="schedul"):
-        sim.schedule("save_ndt", every=1e-12)
+    sim.set_m((1.0, 0.0, 0.0))
+    item = sim.schedule("save_ndt", every=1e-12)
+    assert item is not None
+    with pytest.raises(KeyError, match="unknown"):
+        sim.schedule("no_such_action", every=1e-12)
 
 
 def test_stt_is_deferred():
@@ -381,20 +387,25 @@ def test_stt_is_deferred():
         sim.set_zhangli()
 
 
-def test_restart_is_deferred():
-    sim = _make_sim()
-    with pytest.raises(NotImplementedError, match="restart"):
-        sim.save_restart_data()
-    with pytest.raises(NotImplementedError, match="restart"):
-        sim.restart()
+def test_restart_and_output_are_available():
+    """Task 12: restart persistence and NDT/VTK output are ported (was
+    ``test_restart_is_deferred``/``test_output_helpers_are_deferred``). Full
+    behavioural coverage lives in ``test_restart_output_dolfinx.py``; this only
+    asserts the surfaces no longer raise ``NotImplementedError`` by name."""
+    import os
+    import tempfile
 
-
-def test_output_helpers_are_deferred():
     sim = _make_sim()
-    with pytest.raises(NotImplementedError):
-        sim.save_vtk()
-    with pytest.raises(NotImplementedError):
+    sim.set_m((1.0, 0.0, 0.0))
+    with tempfile.TemporaryDirectory() as tmp:
+        restart_file = os.path.join(tmp, "state.npz")
+        sim.ndtfilename = os.path.join(tmp, "state.ndt")
+        sim.save_restart_data(filename=restart_file)
+        sim.restart(filename=restart_file)
         sim.save_ndt()
+        sim.save_vtk(filename=os.path.join(tmp, "m.pvd"))
+        sim.m_field.close_pvd()
+    assert sim.t == 0.0
 
 
 def test_region_and_hysteresis_are_deferred():

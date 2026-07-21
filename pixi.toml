@@ -92,6 +92,11 @@ dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=
 # native `make` (triggered on demag setup) from rewriting the version file.
 # [Claude Opus 4.8]
 dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_fk_demag_dolfinx.py"
+# Task 12: the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
+# scheduler port. WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered by
+# the end-to-end FK demag witness) from rewriting the tracked version file.
+# [Claude Opus 4.8]
+dolfinx-src-restart-output-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_restart_output_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

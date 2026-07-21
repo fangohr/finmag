@@ -2,8 +2,24 @@ import os
 import logging
 import numpy as np
 from glob import glob
-from aeon import timer
+
 logger = logging.getLogger(name='finmag')
+
+# The legacy module used ``from aeon import timer`` and decorated ``save`` with
+# ``@timer.method``. ``aeon`` is not part of the DOLFINx environment, so the
+# NDT port drops that profiling dependency. Import ``aeon`` lazily if present so
+# the legacy FEniCS lane still profiles; otherwise ``method`` is a no-op
+# decorator. This is the only behavioural change to the NDT read/write contract.
+# [Claude Opus 4.8]
+try:
+    from aeon import timer
+except ImportError:  # DOLFINx environment: no aeon profiler available
+    class _NullTimer(object):
+        @staticmethod
+        def method(func):
+            return func
+
+    timer = _NullTimer()
 
 try:
     StringType = basestring
@@ -69,19 +85,19 @@ class Tablewriter(object):
             self.add_entity('steps',  {
                 'unit': '<1>',
                 #'get': lambda sim: sim.integrator.stats()['nsteps'],
-                'get': lambda sim: np.NAN,
+                'get': lambda sim: np.nan,
                 'header': 'steps'})
 
             self.add_entity('last_step_dt', {
                 'unit': '<1>',
                 #'get': lambda sim: sim.integrator.stats()['hlast'],
-                'get': lambda sim: np.NAN,
+                'get': lambda sim: np.nan,
                 'header': 'last_step_dt'})
 
             self.add_entity('dmdt', {
                 'unit': '<A/ms>',
                 #'get': lambda sim: sim.dmdt_max,
-                'get': lambda sim: np.array([np.NAN, np.NAN, np.NAN]),
+                'get': lambda sim: np.array([np.nan, np.nan, np.nan]),
                 'header': ('dmdt_x', 'dmdt_y', 'dmdt_z')})
 
         else:
@@ -169,7 +185,7 @@ class Tablewriter(object):
         logger.debug("'Deleting' get method for {} in TableWriter(name={})".format(
             name, self.filename))
 
-        self._entities[name]['get'] = lambda sim: np.NAN
+        self._entities[name]['get'] = lambda sim: np.nan
 
     def delete_entity_get_methods(self):
         """Method to delete all get_methods. 

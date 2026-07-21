@@ -22,10 +22,10 @@ Already pinned by name elsewhere (not duplicated here):
   ``"FK"`` path is now ported: ``::test_sim_with_default_demag_builds_fk_demag``)
 - DMI via ``sim_with(D=...)`` --
   ``test_simulation_dolfinx.py::test_sim_with_dmi_is_deferred_by_name``
-- scheduler (``schedule``/``unschedule``/``clear_schedule``) --
-  ``test_simulation_dolfinx.py::test_scheduler_api_is_deferred``
-- restart (``save_restart_data``/``restart``) --
-  ``test_simulation_dolfinx.py::test_restart_is_deferred``
+- scheduler, restart and NDT/VTK output are now PORTED (Task 12) and covered by
+  ``test_restart_output_dolfinx.py`` and
+  ``test_simulation_dolfinx.py::test_scheduler_api_is_available`` /
+  ``::test_restart_and_output_are_available``; they are no longer deferred.
 - STT (``set_stt``/``set_zhangli``) --
   ``test_simulation_dolfinx.py::test_stt_is_deferred``
 - ``kernel="sllg"``/``kernel="llg_stt"`` and ``parallel=True`` --

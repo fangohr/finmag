@@ -44,6 +44,9 @@ from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
+from finmag.sim import sim_helpers
+from finmag.util.fileio import Tablewriter, FieldSaver
+from finmag.scheduler import scheduler
 
 log = logging.getLogger(name="finmag")
 
@@ -94,11 +97,30 @@ class Simulation(object):
             )
 
         self.name = name
+        self.sanitized_name = sim_helpers.clean_filename(name)
+        self.ndtfilename = self.sanitized_name + ".ndt"
         self.mesh = mesh
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
         self.pbc = None
         self._integrator = None
+
+        # Output / scheduling state (Task 12). The table writer is created
+        # lazily on first NDT save so a simulation that never writes an .ndt
+        # file does not touch the filesystem. [Claude Opus 4.8]
+        self._tablewriter = None
+        self.field_savers = {}
+        self.scheduler = scheduler.Scheduler()
+        self.callbacks_at_scheduler_events = []
+        self.scheduler_shortcuts = {
+            "save_averages": sim_helpers.save_ndt,
+            "save_ndt": sim_helpers.save_ndt,
+            "save_restart_data": sim_helpers.save_restart_data,
+            "save_vtk": None,  # handled specially in schedule()
+            "save_field": None,  # handled specially in schedule()
+            "eta": sim_helpers.eta,
+            "ETA": sim_helpers.eta,
+        }
 
         # instance booking (no cyclic references retained)
         self.instance_id = Simulation.instance_counter_max
@@ -353,12 +375,27 @@ class Simulation(object):
     def run_until(self, t):
         """Run the simulation until physical time ``t`` is reached.
 
-        Scheduler integration is Task 12 scope; this advances physical time
-        directly through the integrator without any scheduler features.
+        Any scheduled actions (see :meth:`schedule`) registered on this
+        simulation are triggered at their scheduled times as the integrator
+        advances through them, matching the legacy scheduler-driven loop. With
+        no schedule this reduces to advancing the integrator directly to ``t``.
         """
         log.info("Simulation will run until t = {:.2g} s.".format(t))
         self.t_max = t
-        self.integrator.advance_time(t)
+
+        # Ensure the integrator exists before the scheduler drives it.
+        self.integrator
+
+        # A stop event terminates the scheduler loop at t. ``at_end=True`` is
+        # required because ``t`` can be zero (treated as falsey by ``add``).
+        def call_to_end_integration():
+            return False
+
+        self.scheduler.add(call_to_end_integration, at=t, at_end=True)
+        self.scheduler.run(self.integrator, self.callbacks_at_scheduler_events)
+
+        # The time integrator may slightly overshoot the requested end time;
+        # pin the fields to exactly t.
         self.llg.effective_field.update(t)
         log.info("Simulation has reached time t = {:.2g} s.".format(self.t))
 
@@ -379,6 +416,7 @@ class Simulation(object):
         integrator.ode.set_initial_value(
             self.llg._m_field.get_ordered_numpy_array_xxx(), t0)
         self._integrator = integrator
+        self.scheduler.reset(t0)
         assert self.t == t0
 
     def reinit_integrator(self):
@@ -388,44 +426,186 @@ class Simulation(object):
         else:
             log.warning("Integrator reinit requested, but none is present.")
 
+    # -- restart persistence (Task 12) -------------------------------------
+
+    def save_restart_data(self, filename=None):
+        """Save the current magnetisation, time and metadata to a restart file.
+
+        The magnetisation is stored in the coordinate-aware format defined in
+        :mod:`finmag.sim.sim_helpers` (a deliberate deviation from the legacy
+        raw-dof npz layout; see that module's docstring).
+        """
+        sim_helpers.save_restart_data(self, filename)
+
+    def restart(self, filename=None, t0=None):
+        """Reload magnetisation and time from a restart file.
+
+        With no ``filename`` the canonical ``<name>-restart.npz`` is used. The
+        magnetisation is remapped onto the current mesh by coordinate; a mesh
+        mismatch raises ``ValueError`` rather than silently misassigning. The
+        restart time is taken from the file unless ``t0`` overrides it.
+        """
+        if filename is None:
+            filename = sim_helpers.canonical_restart_filename(self)
+        log.debug("Loading restart data from {}.".format(filename))
+
+        data = sim_helpers.load_restart_data(filename)
+        if data.get("driver") not in ("scipy", "cvode"):
+            raise NotImplementedError(
+                "Unknown driver {!r} for restarting.".format(data.get("driver")))
+
+        sim_helpers.apply_restart_magnetisation(self.llg._m_field, data)
+        self.reset_time(data["simtime"] if t0 is None else t0)
+        log.info("Reloaded m (<m>=%s) and time=%s from %s." % (
+            self.llg.m_average, self.t, filename))
+
+    # -- NDT table output (Task 12) ----------------------------------------
+
+    @property
+    def tablewriter(self):
+        """The lazily-created NDT :class:`~finmag.util.fileio.Tablewriter`."""
+        if self._tablewriter is None:
+            self._tablewriter = Tablewriter(
+                self.ndtfilename, self, override=True)
+        return self._tablewriter
+
+    def save_averages(self, *args, **kwargs):
+        """Save the spatial averages (magnetisation etc.) to the .ndt file."""
+        sim_helpers.save_ndt(self)
+
+    # ``save_ndt`` is the historical alias of ``save_averages``.
+    save_ndt = save_averages
+
+    # -- field snapshot output (.npy) (Task 12) ----------------------------
+
+    def _get_field_saver(self, field_name, filename=None, overwrite=False,
+                         incremental=False):
+        if filename is None:
+            filename = "{}_{}.npy".format(
+                self.sanitized_name, field_name.lower())
+        if not filename.endswith(".npy"):
+            filename += ".npy"
+        saver = self.field_savers.get(filename)
+        if saver is not None and saver.incremental == incremental:
+            return saver
+        saver = FieldSaver(filename, overwrite=overwrite, incremental=incremental)
+        self.field_savers[filename] = saver
+        return saver
+
+    def save_field(self, field_name, filename=None, incremental=False,
+                   overwrite=False, region=None):
+        """Save a field ('m' or an interaction) to a .npy file.
+
+        The saved array is the stable coordinate-ordered ``xyz`` view (a
+        deliberate deviation from the legacy raw-dof ``get_local()`` layout,
+        for the same coordinate-stability reason as restart).
+        """
+        if region is not None:
+            _deferred("save_field", "region-restricted field snapshots")
+        if field_name == "m":
+            _coords, values = self.llg._m_field.coords_and_values()
+        else:
+            fld = Field(
+                self.S3,
+                self.llg.effective_field.get_dolfin_function(field_name))
+            _coords, values = fld.coords_and_values()
+        saver = self._get_field_saver(
+            field_name, filename, incremental=incremental, overwrite=overwrite)
+        saver.save(np.asarray(values))
+
+    def save_m(self, filename=None, incremental=False, overwrite=False):
+        """Convenience wrapper: save the magnetisation to a .npy file."""
+        self.save_field(
+            "m", filename=filename, incremental=incremental, overwrite=overwrite)
+
+    # -- VTK / XDMF output (Task 12) ---------------------------------------
+    #
+    # These route through the ported, write-only ``Field`` VTK/XDMF writers.
+    # Read-back is explicitly unavailable (``Field.save_hdf5``/read paths raise
+    # by name); DOLFINx VTK/XDMF output has no legacy read-back either.
+
+    def save_vtk(self, filename=None, overwrite=False, region=None):
+        """Append the magnetisation to a VTK/PVD (or XDMF) time series."""
+        self.save_field_to_vtk(
+            "m", filename=filename, overwrite=overwrite, region=region)
+
+    def save_field_to_vtk(self, field_name, filename=None, overwrite=False,
+                          region=None):
+        """Append the named field to a VTK/PVD (or XDMF) time series."""
+        if region is not None:
+            _deferred("save_field_to_vtk", "region-restricted VTK output")
+        if filename is None:
+            filename = self.sanitized_name + ".pvd"
+        if field_name == "m":
+            fld = self.llg._m_field
+        else:
+            fld = Field(
+                self.S3,
+                self.llg.effective_field.get_dolfin_function(field_name),
+                name=field_name)
+        if filename.endswith(".xdmf"):
+            fld.save_xdmf(filename, self.t)
+        else:
+            fld.save_pvd(filename, self.t)
+
+    # -- scheduler (Task 12) -----------------------------------------------
+
+    def schedule(self, func, *args, **kwargs):
+        """Register an action to be called during ``run_until``.
+
+        ``func`` may be a callable ``func(sim, *args)`` or one of the supported
+        shortcut strings: ``'save_ndt'``/``'save_averages'``, ``'save_vtk'``,
+        ``'save_field'``, ``'save_restart_data'``, ``'eta'``/``'ETA'``. Use the
+        ``at``/``every``/``after``/``at_end`` keywords to place the action in
+        time (see :class:`finmag.scheduler.scheduler.Scheduler`). Unknown
+        shortcut strings raise ``KeyError`` by name.
+        """
+        if isinstance(func, str):
+            if func not in self.scheduler_shortcuts:
+                raise KeyError(
+                    "Scheduling keyword '{}' unknown. Known values are {}".format(
+                        func, sorted(self.scheduler_shortcuts.keys())))
+            if func == "save_vtk":
+                filename = kwargs.pop("filename", None)
+                overwrite = kwargs.pop("overwrite", False)
+                func = lambda sim: sim.save_field_to_vtk(
+                    "m", filename=filename, overwrite=overwrite)
+            elif func == "save_field":
+                func = lambda sim, *a, **kw: sim.save_field(
+                    *a, incremental=True, **kw)
+            elif func in ("eta", "ETA"):
+                import time as _time
+
+                eta_fn = self.scheduler_shortcuts[func]
+                started = _time.time()
+                func = lambda sim: eta_fn(sim, when_started=started)
+            else:
+                func = self.scheduler_shortcuts[func]
+
+        at = kwargs.pop("at", None)
+        every = kwargs.pop("every", None)
+        after = kwargs.pop("after", self.t if every is not None else None)
+        at_end = kwargs.pop("at_end", False)
+        realtime = kwargs.pop("realtime", False)
+
+        return self.scheduler.add(
+            func, [self] + list(args), kwargs, at=at, at_end=at_end,
+            every=every, after=after, realtime=realtime)
+
+    def unschedule(self, item):
+        """Remove a previously scheduled item (as returned by ``schedule``)."""
+        self.scheduler._remove(item)
+
+    def clear_schedule(self):
+        """Remove all scheduled actions and reset the scheduler clock."""
+        self.scheduler.clear()
+        self.scheduler.reset(self.t)
+
     # -- explicitly deferred surfaces --------------------------------------
     #
     # These preserve the legacy public names but fail by name when requested,
     # so the core import graph stays clean and callers get a clear error
     # instead of a NameError or a silent no-op.
-
-    def schedule(self, *args, **kwargs):
-        _deferred("schedule", "the scheduler API (Task 12)")
-
-    def unschedule(self, *args, **kwargs):
-        _deferred("unschedule", "the scheduler API (Task 12)")
-
-    def clear_schedule(self, *args, **kwargs):
-        _deferred("clear_schedule", "the scheduler API (Task 12)")
-
-    def save_restart_data(self, *args, **kwargs):
-        _deferred("save_restart_data", "restart persistence (Task 12)")
-
-    def restart(self, *args, **kwargs):
-        _deferred("restart", "restart loading (Task 12)")
-
-    def save_averages(self, *args, **kwargs):
-        _deferred("save_averages", "NDT table output")
-
-    def save_ndt(self, *args, **kwargs):
-        _deferred("save_ndt", "NDT table output")
-
-    def save_m(self, *args, **kwargs):
-        _deferred("save_m", "field snapshot output")
-
-    def save_field(self, *args, **kwargs):
-        _deferred("save_field", "field snapshot output")
-
-    def save_vtk(self, *args, **kwargs):
-        _deferred("save_vtk", "VTK output")
-
-    def save_field_to_vtk(self, *args, **kwargs):
-        _deferred("save_field_to_vtk", "VTK output")
 
     def snapshot(self, *args, **kwargs):
         _deferred("snapshot", "VTK output (use save_vtk)")

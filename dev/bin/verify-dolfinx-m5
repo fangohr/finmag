@@ -17,6 +17,9 @@
 # (`dolfinx-src-native-bem-pytest`) and the direct DOLFINx FK demag port gate
 # (`dolfinx-src-demag-pytest`). [Claude Opus 4.8]
 #
+# Task 12 folds in the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
+# scheduler port gate (`dolfinx-src-restart-output-pytest`). [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -80,6 +83,9 @@ pixi run -e dolfinx dolfinx-src-native-bem-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-demag-pytest"
 pixi run -e dolfinx dolfinx-src-demag-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-restart-output-pytest"
+pixi run -e dolfinx dolfinx-src-restart-output-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

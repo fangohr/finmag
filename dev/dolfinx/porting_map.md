@@ -424,3 +424,27 @@ Before editing the matching module in `src/finmag`, check that:
 - The current traces and restart states are useful witnesses, but they are not
   replacements for Finmag's NDT, VTK/XDMF, and restart conventions. [Codex
   gpt-5.5 high]
+- Task 12 update: restart, NDT, VTK/XDMF, and the scheduler are now ported
+  directly to DOLFINx. `src/finmag/sim/sim.py` gains real `save_restart_data`/
+  `restart`, `save_averages`/`save_ndt`, `save_field`/`save_m`, `save_vtk`/
+  `save_field_to_vtk`, and `schedule`/`unschedule`/`clear_schedule`, with
+  `run_until` now driving the ported `finmag.scheduler.Scheduler` event loop
+  (unchanged, backend-free Python; only its `sim.py` callers were rewired).
+  `run_until` with no schedule is behaviourally identical to the Task 9-11
+  direct-advance path. `src/finmag/util/fileio.py` is preserved as the NDT
+  read/write contract with two minimal DOLFINx touchpoints: the `aeon` profiler
+  dependency is made optional and `np.NAN` -> `np.nan` for NumPy 2. Restart
+  format decision (deliberate deviation, documented in `sim_helpers.py` and
+  transition-notes): the legacy npz stored the magnetisation as a raw
+  backend-dof-ordered owned array (`get_numpy_array_debug()`), which silently
+  misassigns on a reordered rebuild of the same mesh; the port instead stores a
+  coordinate-aware v2 layout (owned vertex coordinates + coordinate-ordered
+  values + mesh hash + `Ms`/`alpha`/`gamma`/`unit_length` + interaction list +
+  `simtime`/`driver='scipy'`) and remaps by coordinate on load, correctly
+  restoring a same-recipe rebuild and loudly rejecting a genuine mesh mismatch
+  with `ValueError`. VTK/XDMF route through the write-only `Field.save_pvd`/
+  `save_xdmf`; read-back stays unavailable by name (`Field.save_hdf5` raises).
+  `sim_helpers.py` is now DOLFINx-import-clean (the dolfin-dependent
+  skyrmion/submesh/normal-mode helpers, already dropped from the ported
+  `Simulation` in Task 9, were removed). Gate:
+  `dolfinx-src-restart-output-pytest`. [Claude Opus 4.8]
