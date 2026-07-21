@@ -226,15 +226,23 @@ every capability not already formally dropped is treated as PORT.
 **Files:** `src/finmag/energies/thin_film_demag.py`,
 `src/finmag/energies/dw_fixed_energy.py`, `src/finmag/energies/__init__.py`.
 
-- [ ] Port `ThinFilmDemag` directly (the last legacy-tested energy still
+- [x] Port `ThinFilmDemag` directly (the last legacy-tested energy still
   importing `dolfin` at module scope): preserve constructor semantics and the
   legacy thin-film approximation exactly; validate against the legacy
   `thin_film_demag_test.py` invariants plus a legacy oracle fixture.
-- [ ] `FixedEnergyDW` (`dw_fixed_energy.py`): untested even on master. Port
+  [Claude Sonnet 5]
+- [x] `FixedEnergyDW` (`dw_fixed_energy.py`): untested even on master. Port
   faithfully if the module is self-contained on the ported stack; otherwise
   convert to a curated by-name deferral with documentation (Task 29 review
-  item) — do not leave the raw dolfin import either way.
-- [ ] Update the deferred-surfaces sweep and lazy exports; energies
-  `__init__` raw-import flags flipped for whatever is ported.
-- [ ] New gate or fold into `dolfinx-src-energies-pytest` (your call,
-  document); `verify-dolfinx-m5` updated if a new gate is added.
+  item) — do not leave the raw dolfin import either way. DECISION: curated
+  by-name deferral (untested even on legacy master, legacy's own todo notes
+  call it broken, and it depends on the already-deferred Treecode demag
+  solver). [Claude Sonnet 5]
+- [x] Update the deferred-surfaces sweep and lazy exports; energies
+  `__init__` raw-import flags flipped for whatever is ported. Both
+  `ThinFilmDemag` and `FixedEnergyDW` are now `requires_legacy_dolfin=False`;
+  zero optional energies remain `True`. [Claude Sonnet 5]
+- [x] New gate or fold into `dolfinx-src-energies-pytest` (your call,
+  document); `verify-dolfinx-m5` updated if a new gate is added. Folded into
+  `dolfinx-src-energies-pytest` (two new test files added to the same pixi
+  command); `verify-dolfinx-m5` unchanged. [Claude Sonnet 5]

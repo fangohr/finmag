@@ -51,6 +51,12 @@ Already pinned by name elsewhere (not duplicated here):
   also now PORTED (Task 15) and covered by ``test_hysteresis_dolfinx.py``.
 - ``Field.from_expression`` --
   ``test_field_dolfinx.py::test_legacy_only_features_fail_precisely``
+- ``ThinFilmDemag`` is now PORTED (Task 19) and covered by
+  ``test_thin_film_demag_dolfinx.py``; it is no longer deferred.
+  ``FixedEnergyDW`` is now a curated by-name ``NotImplementedError``
+  deferral (Task 19, Task 29 review item) -- covered by
+  ``test_dw_fixed_energy_dolfinx.py``; it no longer surfaces the raw
+  ``ModuleNotFoundError`` for ``dolfin`` either.
 """
 
 import pytest
@@ -128,12 +134,13 @@ def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
 
 
 # --------------------------------------------------------------------------
-# known, pre-existing (Task 3) gap: this slice documents it rather than
-# silently leaving it unrecorded, but does not fix it here (see the Task 10
-# report and dev/dolfinx/porting_map.md "Near-Term Gaps").
+# historical Task 3 boundary gap, now fully resolved as of Task 19: every
+# finmag.energies public name is either ported directly or a curated by-name
+# NotImplementedError deferral -- none surfaces the raw legacy
+# ModuleNotFoundError('dolfin') any more (see dev/dolfinx/porting_map.md).
 # --------------------------------------------------------------------------
 
-def test_demag_dmi_and_cubic_anisotropy_are_ported_and_the_others_remain_a_known_gap():
+def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_deferrals():
     """State at HEAD (kept accurate by the whole-branch review -- this file is
     the designated aggregated reviewer reference; see item 2 of the Tier 1
     review). Task 11b ports the FK demag surface, so ``finmag.energies.Demag``
@@ -166,21 +173,31 @@ def test_demag_dmi_and_cubic_anisotropy_are_ported_and_the_others_remain_a_known
     this makes LIVE). Only spatially varying ``u1``/``u2`` axes remain
     curated by-name ``NotImplementedError``.
 
-    The still-unported ``requires_legacy_dolfin=True`` optional energy classes
-    (``ThinFilmDemag``/``FixedEnergyDW``) remain a known Task 3 boundary gap:
-    constructed directly they still surface the raw ``ModuleNotFoundError``
-    for ``dolfin`` (their module still imports legacy ``dolfin`` at module
-    scope). This is tracked as a near-term gap for their owning later slice,
-    not fixed by the FK demag/DMI/cubic-anisotropy ports."""
-    from finmag.energies import DMI, CubicAnisotropy, Demag
+    Task 19 update: the previously-still-unported ``requires_legacy_dolfin=
+    True`` optional energy classes are now resolved -- no boundary gap
+    remains here. ``ThinFilmDemag`` (the last legacy-tested energy that
+    still imported raw ``dolfin`` at module scope) is now PORTED directly
+    (see ``test_thin_film_demag_dolfinx.py``); constructing it directly now
+    works instead of surfacing the legacy ``ModuleNotFoundError``.
+    ``FixedEnergyDW`` -- untested even on legacy master, and depending on the
+    already-deferred Treecode demag solver -- is converted to a curated
+    by-name ``NotImplementedError`` deferral (Task 29 review item; see
+    ``test_dw_fixed_energy_dolfinx.py`` and the module docstring in
+    ``finmag/energies/dw_fixed_energy.py``) rather than a raw import error.
+    No ``finmag.energies`` public name is ``requires_legacy_dolfin=True``
+    any more (``test_import_boundary.py::
+    test_no_unported_optional_energies_remain`` pins this directly)."""
+    from finmag.energies import CubicAnisotropy, DMI, Demag, FixedEnergyDW, ThinFilmDemag
     from finmag.energies.demag.fk_demag import FKDemag
 
     assert isinstance(Demag(), FKDemag)
     assert DMI(1e-3).name == "DMI"
     assert CubicAnisotropy((1, 0, 0), (0, 1, 0), 1.0).name == "CubicAnisotropy"
 
-    # still-unported optional energies remain the documented gap
-    with pytest.raises(ModuleNotFoundError, match="dolfin"):
-        from finmag.energies import ThinFilmDemag
+    # Task 19: ThinFilmDemag is ported directly; no more ModuleNotFoundError.
+    assert ThinFilmDemag().name == "ThinFilmDemag"
 
-        ThinFilmDemag()
+    # Task 19: FixedEnergyDW is a curated by-name NotImplementedError
+    # deferral, not a raw ModuleNotFoundError (Task 29 review item).
+    with pytest.raises(NotImplementedError, match="FixedEnergyDW"):
+        FixedEnergyDW()

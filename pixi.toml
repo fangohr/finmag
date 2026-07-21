@@ -78,7 +78,7 @@ dolfinx-src-import = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -c \"impor
 dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py"
 dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_field_dolfinx.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
-dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_energies_dolfinx.py"
+dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_energies_dolfinx.py src/finmag/tests/test_thin_film_demag_dolfinx.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
 dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.energies_dolfinx_mpi_probe"
 dolfinx-src-effectivefield-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_effective_field_dolfinx.py"
 dolfinx-src-effectivefield-mpi = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src mpiexec -n 2 python -m finmag.tests.effective_field_dolfinx_mpi_probe"

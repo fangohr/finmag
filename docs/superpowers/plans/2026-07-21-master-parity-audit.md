@@ -121,7 +121,7 @@ authoritative from `transition-notes.org`.
 ## 4. Prioritised Phase-3 plan (Tasks 18+)
 
 Continues the numbering from the existing `2026-07-21-dolfinx-full-parity.md` (Tasks
-13-16 done; Task 17 packaging paused). Ordered in dependency order. Each task names the
+13-16, 18, 19 done; Task 17 packaging paused). Ordered in dependency order. Each task names the
 Layer-1/Layer-2 register items it closes. Validation prefers: legacy oracle fixture
 (`dev/bin/run-legacy-oracle`, ≤3 uses budget) → analytic result → pixi-tip reference run
 (`barmini-suite`).

@@ -135,8 +135,8 @@ def test_ported_energy_exports_bypass_legacy_dolfin():
         """
 import sys
 from finmag.energies import (
-    DMI, CubicAnisotropy, EnergyBase, Exchange, TimeZeeman,
-    UniaxialAnisotropy, Zeeman,
+    DMI, CubicAnisotropy, EnergyBase, Exchange, FixedEnergyDW, TimeZeeman,
+    ThinFilmDemag, UniaxialAnisotropy, Zeeman,
 )
 
 assert EnergyBase.__module__ == "finmag.energies.energy_base"
@@ -146,6 +146,8 @@ assert Zeeman.__module__ == "finmag.energies.zeeman"
 assert TimeZeeman.__module__ == "finmag.energies.zeeman"
 assert DMI.__module__ == "finmag.energies.dmi"
 assert CubicAnisotropy.__module__ == "finmag.energies.cubic_anisotropy"
+assert ThinFilmDemag.__module__ == "finmag.energies.thin_film_demag"
+assert FixedEnergyDW.__module__ == "finmag.energies.dw_fixed_energy"
 # Task 15: TimeZeeman is now ported (no longer a by-name deferral). A
 # constant-array field_expression with no t_off raises ValueError (there
 # would be no time update at all), matching the ported input-contract
@@ -157,6 +159,15 @@ except ValueError as error:
 else:
     raise AssertionError(
         "TimeZeeman((1.0, 0.0, 0.0)) without t_off should raise ValueError")
+# Task 19: ThinFilmDemag is now ported directly; FixedEnergyDW is a curated
+# by-name NotImplementedError deferral (not a raw ModuleNotFoundError).
+assert hasattr(ThinFilmDemag(), "name")
+try:
+    FixedEnergyDW()
+except NotImplementedError as error:
+    assert "FixedEnergyDW" in str(error)
+else:
+    raise AssertionError("FixedEnergyDW() should raise NotImplementedError")
 assert "dolfin" not in sys.modules
 assert not any(
     name == "finmag.native" or name.startswith("finmag.native.")
@@ -166,21 +177,20 @@ assert not any(
     )
 
 
-def test_unported_energy_access_reports_the_real_missing_dependency():
-    if importlib.util.find_spec("dolfin") is not None:
-        pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
+def test_no_unported_optional_energies_remain():
+    """Historical note: before Task 19, ``energies.ThinFilmDemag`` was the
+    last ``requires_legacy_dolfin=True`` optional energy, and accessing it
+    without legacy ``dolfin`` installed surfaced the raw
+    ``ModuleNotFoundError`` for 'dolfin' (see this test's previous version in
+    git history for that exact probe). Task 19 ports ``ThinFilmDemag``
+    directly and converts ``FixedEnergyDW`` to a curated by-name
+    ``NotImplementedError`` deferral (not a raw import error) -- so no
+    optional energy class remains ``requires_legacy_dolfin=True`` any more.
+    This test asserts that fact directly instead of probing a
+    ``ModuleNotFoundError`` that no longer occurs. [Claude Sonnet 5]"""
+    from finmag.energies import _LAZY_EXPORTS
 
-    result = subprocess.run(
-        [sys.executable, "-c",
-         "import finmag.energies as energies; energies.ThinFilmDemag"],
-        cwd=str(REPO_ROOT),
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(SRC_ROOT)},
-        capture_output=True,
-        text=True,
-    )
-
-    assert result.returncode != 0
-    assert "No module named 'dolfin'" in result.stderr
+    assert not any(flag for (_module, _attr, flag) in _LAZY_EXPORTS.values())
 
 
 def test_unported_public_access_reports_the_real_missing_dependency():

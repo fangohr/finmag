@@ -44,9 +44,9 @@ _LAZY_EXPORTS = {
     "ThinFilmDemag": (
         "finmag.energies.thin_film_demag",
         "ThinFilmDemag",
-        True,
+        False,
     ),
-    "FixedEnergyDW": ("finmag.energies.dw_fixed_energy", "FixedEnergyDW", True),
+    "FixedEnergyDW": ("finmag.energies.dw_fixed_energy", "FixedEnergyDW", False),
 }
 
 __all__ = list(_LAZY_EXPORTS)
