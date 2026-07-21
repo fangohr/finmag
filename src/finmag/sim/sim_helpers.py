@@ -135,9 +135,17 @@ def save_restart_data(sim, filename=None):
         coordinates=np.asarray(coordinates, dtype=np.float64),
         m=np.asarray(values, dtype=np.float64),
         mesh_hash=mesh_coordinate_hash(coordinates),
+        # ``Ms``/``alpha`` are lumped to a single representative scalar here
+        # (``Ms_av`` is already a volume average; ``sim.alpha`` is a float
+        # when uniform, else a per-node array, so ``mean()`` collapses a
+        # spatially varying field to one number). Both are informational
+        # restart metadata only: ``load_restart_data``/
+        # ``apply_restart_magnetisation`` never validate or reapply them
+        # against the loaded simulation (only ``m`` is actually restored;
+        # see the Task 12 review's accepted behaviour and
+        # ``transition-notes.org``'s Task 12 restart section). [Claude
+        # Sonnet 5]
         Ms=float(sim.llg.Ms_av),
-        # ``sim.alpha`` is a float when uniform, else a per-node array; store a
-        # representative scalar (mean) so the metadata stays a plain number.
         alpha=float(np.mean(np.atleast_1d(sim.alpha))),
         gamma=float(sim.gamma),
         unit_length=float(sim.unit_length),

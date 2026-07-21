@@ -72,6 +72,26 @@ class CubicAnisotropy(EnergyBase):
     against the spatially-varying-K2 oracle fixture. Energy is box-assembled
     (it never uses the native field path) and matches legacy. See
     ``transition-notes.org``/``dev/dolfinx/porting_map.md`` Tasks 14 & 16.
+
+    Spatially varying ``Ms`` (fix round 1, Finding 1): the native analytic
+    field now uses ``Ms`` node-for-node (``_ms_per_node``), matching legacy's
+    own ``self.Ms.get_numpy_array_debug()`` usage in
+    ``__compute_field_directly``, instead of requiring a single constant
+    value. A spatially uniform ``Ms`` (any function space) still takes the
+    cheap global-value path. A spatially varying ``Ms`` must be defined on a
+    scalar space with the same per-node (CG1) layout as ``m`` -- exactly the
+    requirement the legacy native routine's ``Ms_arr.check_shape(nodes, ...)``
+    imposed, and which legacy's own tests/oracle generators satisfied by
+    passing ``Ms`` on ``m``'s CG1 space directly. A varying ``Ms`` on a
+    mismatched space (e.g. the DG0 space ``finmag.sim.sim.Simulation``/
+    ``finmag.physics.llg.LLG`` always use) raises a documented
+    :class:`ValueError` rather than silently misindexing or letting a
+    confusing NumPy broadcast error surface, reproducing -- not silently
+    dropping -- legacy's own limitation (verified: legacy raises
+    ``ValueError: compute_cubic_field: Ms: Expected array of shape (nodes),
+    got (cells)`` in exactly this scenario). See
+    ``test_variable_params_dolfinx.py`` for the varying-Ms tests and
+    ``cubic_varying_ms_native_oracle.json`` for the quantitative pin.
     """
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
@@ -160,7 +180,7 @@ class CubicAnisotropy(EnergyBase):
         ``EnergyBase.compute_field`` so it is a drop-in replacement.
         """
         m_nodes = self.m.as_array().reshape(-1, self.m.value_dim())
-        Ms = self.Ms.as_constant()
+        Ms = self._ms_per_node(m_nodes.shape[0])
 
         u1 = self.u1_value
         u2 = self.u2_value
@@ -185,6 +205,58 @@ class CubicAnisotropy(EnergyBase):
         dEdm = g1[:, None] * u1 + g2[:, None] * u2 + g3[:, None] * u3
         H = -(1.0 / (mu0 * Ms)) * dEdm
         return H.reshape(-1)
+
+    def _ms_per_node(self, n_nodes):
+        """Per-node ``Ms`` for the native analytic field (fix round 1, Finding 1).
+
+        Legacy's own ``assemble=False`` path (``cubic_anisotropy.py: self.Ms =
+        self.Ms.get_numpy_array_debug()``) fed the compiled
+        ``compute_cubic_field`` the *raw* (not mass-lumped) nodal array of
+        whatever ``Ms`` ``Field`` the caller passed to ``setup``, and the
+        native routine hard-requires that array to have exactly as many
+        entries as ``m`` has nodes (``native/src/llg/energy.cc``:
+        ``Ms_arr.check_shape(nodes, ...)``). Legacy's own working usage (e.g.
+        ``cubic_anisotropy_test.py``, and the ``gen_cubic_*_native_oracle.py``
+        fixture generators) always passed ``Ms`` on the CG1 scalar space
+        matching ``m`` for this reason. Verified empirically against the
+        oracle: routing a constant *DG0* ``Ms`` (the space
+        ``finmag.sim.sim.Simulation``/``LLG`` always use) through
+        ``Simulation.effective_field()`` with ``assemble=False`` cubic
+        anisotropy raises ``ValueError: compute_cubic_field: Ms: Expected
+        array of shape (nodes), got (cells)`` in legacy -- i.e. legacy itself
+        does not support an arbitrary-space ``Ms`` here, constant or varying.
+
+        This port mirrors that exactly: a spatially uniform ``Ms`` (any
+        space) still takes the cheap global-value fast path (matching the
+        constant-``Ms`` behaviour every existing ``assemble=False`` test,
+        including through ``Simulation``, already relies on); a spatially
+        *varying* ``Ms`` is used node-for-node via ``Ms.as_array()`` --
+        raising a clear, documented error (rather than a confusing NumPy
+        broadcast failure or silently-wrong values) if its array length does
+        not match the number of ``m`` nodes, reproducing legacy's own
+        DG0-vs-CG1 limitation rather than silently dropping it. [Claude
+        Sonnet 5]
+        """
+        if self.Ms.is_constant():
+            return self.Ms.as_constant()
+        ms_nodal = self.Ms.as_array()
+        if ms_nodal.shape[0] != n_nodes:
+            raise ValueError(
+                "CubicAnisotropy(assemble=False) with a spatially varying "
+                "Ms requires Ms's per-node array to align with m's per-node "
+                "(CG1) layout, exactly as legacy's native routine required "
+                "(native/src/llg/energy.cc: "
+                "Ms_arr.check_shape(nodes, ...)); got {} Ms values for {} m "
+                "nodes. A DG0 Ms Field (e.g. from finmag.sim.sim.Simulation "
+                "or finmag.physics.llg.LLG, which always place Ms in DG0) "
+                "has one value per cell, not per node, and hits exactly this "
+                "mismatch in legacy too. Pass Ms on a CG1 scalar space "
+                "matching m (as finmag.energies.cubic_anisotropy_test.py's "
+                "own legacy usage does), or use assemble=True for the "
+                "box-assembled field, which supports any positive scalar Ms "
+                "placement.".format(ms_nodal.shape[0], n_nodes)
+            )
+        return ms_nodal[:, None]
 
 
 def _constant_cubic_axis(value, name):

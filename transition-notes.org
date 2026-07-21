@@ -3833,6 +3833,15 @@ from ='cvode'= to ='scipy'= to match the ported default backend. Round-trip
 cross-instance (fresh =Simulation=, same recipe), canonical-name load, and
 loud-rejection are all pinned.
 
+Note (Task 16 fix round 1): once spatially varying =alpha= is supported,
+=save_restart_data= lumps it (and the already-averaged =Ms=) to a single
+representative scalar (=mean(alpha)=/=Ms_av=) rather than erroring the way
+legacy would have on =float(varying)= -- graceful, but it silently collapses a
+field to one number; both =Ms=/=alpha= are informational metadata only
+(=load_restart_data=/=apply_restart_magnetisation= never validate or reapply
+them -- only =m= is actually restored on load), which is the accepted
+behaviour from the Task 12 review. [Claude Sonnet 5]
+
 *** NDT fidelity (Tablewriter/Tablereader)
 
 =src/finmag/util/fileio.py= is preserved verbatim as the NDT column/format
@@ -4555,7 +4564,9 @@ slice only relaxes the per-class by-name gates to route spatially varying
 values (callable / =Field= / =dolfinx.fem.Function=) through =Field.set= into
 those same spaces. Legacy *string* =Expression= coefficients raise
 =NotImplementedError= by name (DOLFINx has no =Expression=; pass a callable) --
-a documented deviation shared with the rest of the port.
+a documented deviation shared with the rest of the port. (=Field.from_function=
+now interpolates on a space mismatch instead of erroring -- a tested superset
+of the legacy contract; see =dev/dolfinx/porting_map.md='s Field entry.)
 
 *** Spatially varying alpha (per-node in gamma_LL AND damping)
 
@@ -4605,16 +4616,73 @@ The box-assembled *energy* never uses the native field path (verified: it
 assembles =E_integrand= with the CG1 K2 field) and matches legacy. The port
 ships the corrected =hz=; USER ACCEPTANCE PENDING.
 
+*** Fix round 1 (Finding 1): per-node Ms in the native analytic field
+
+The =assemble=False= (legacy-default) cubic-anisotropy native field originally
+used =self.Ms.as_constant()=, silently dropping legacy's support for a
+spatially varying =Ms= there and raising a generic =RuntimeError= instead of a
+documented one. Legacy evidence
+(=dev/bin/run-legacy-oracle -- cat src/finmag/energies/cubic_anisotropy.py=):
+=__compute_field_directly= sets =self.Ms = self.Ms.get_numpy_array_debug()= --
+the *raw* (not mass-lumped) nodal array of whatever =Ms= =Field= the caller
+passed to =setup= -- and feeds it straight to the compiled
+=native_llg.compute_cubic_field=, whose C++ implementation
+(=native/src/llg/energy.cc=) hard-requires
+=Ms_arr.check_shape(nodes, ...)=: exactly as many entries as =m= has nodes.
+Legacy's own working usage (=cubic_anisotropy_test.py=, and every
+=gen_cubic_*_native_oracle.py= fixture generator) always placed =Ms= on the
+CG1 scalar space matching =m= for this reason.
+
+This matters because =finmag.sim.sim.Simulation=/=finmag.physics.llg.LLG=
+*always* place =Ms= in DG0 (`self._Ms_dg = Field(self.DG, ...)` in both the
+port and the legacy =sim.py=), which has a different dof count than CG1
+nodes for any non-degenerate mesh. Verified empirically against the oracle:
+constructing a legacy =Simulation= with =CubicAnisotropy(assemble=False)= and
+calling =effective_field()= raises
+=ValueError: compute_cubic_field: Ms: Expected array of shape (42), got (40)=
+on a 20x1 =RectangleMesh= (42 CG1 vertices, 40 cells) -- i.e. legacy itself
+does not support the DG0 =Ms= Simulation always builds through this native
+path, constant or varying; it only ever worked because the constant-=Ms=
+oracle/unit tests happened to pass =Ms= on the CG1 space directly (never
+through =Simulation=, and never actually invoking =compute_field()= when a
+DG0 =Ms= was used).
+
+The port (=CubicAnisotropy._ms_per_node=) now: (1) keeps the cheap
+global-value fast path for spatially uniform =Ms= in *any* space (preserving
+every existing =assemble=False= test, including through =Simulation=, whose
+constant DG0 =Ms= never hit the size mismatch because =as_constant()= only
+checks value uniformity); (2) for a genuinely varying =Ms=, uses
+=Ms.as_array()= node-for-node, raising a clear documented =ValueError=
+(mentioning the CG1-vs-DG0 requirement and =assemble=True= as an alternative)
+if the array length does not match the number of =m= nodes, reproducing --
+not silently dropping -- legacy's own DG0-vs-CG1 limitation.
+
+New oracle fixture =cubic_varying_ms_oracle.json=
+(=gen_cubic_varying_ms_oracle.py=, generated at the frozen oracle commit):
+=K1=-8608726=, =K3=1100269=, =K2=0= (deliberately, to sidestep the K2[2]
+typo per the Task 16 review note), =Ms=876626*(1+0.35 x0/0.7)= (spatially
+varying), same mesh/axes/=m= as the constant-Ms native oracle. The port's
+field matches the legacy native field at the same tolerance as the other
+native-oracle per-term cases (=rtol=1e-11=); the generator additionally
+verifies its own =H_vertex= against an independent NumPy analytic derivation
+with the same per-node =Ms= before serialising (=rtol=1e-9=), as a
+self-consistency check. New tests in =test_variable_params_dolfinx.py=:
+the oracle pin, a finite-and-nonzero direct check, an =EffectiveField=-driven
+dynamics check (per-node =Ms= actually enters =LLG.solve='s right-hand side,
+built directly against =LLG=/=EffectiveField= since =Simulation=/=LLG= force
+DG0 =Ms=), and the documented-error check for a varying DG0 =Ms= through
+=Simulation=. [Claude Sonnet 5]
+
 *** Verification
 
-New gate =dolfinx-src-varparams-pytest= (28 tests) folded into
-=verify-dolfinx-m5=; all prior gates unchanged and green (import 9p/2s, field
-26, energies 26 -- the =test_invalid_or_deferred_material_inputs= case now
-pins the string-Expression deferral instead of spatially-varying deferrals --,
-effectivefield 15, llg 19, scipy 19, simulation 32, deferred 5, native-bem 8,
-demag 19, restart-output 20, dmi 28, cubicanis 25, timezeeman 27).
-=verify-dolfinx-m5= passes end-to-end with a clean tracked tree; =pixi.lock=
-untouched.
+New gate =dolfinx-src-varparams-pytest=: 28 tests at the initial Task 16
+slice, now 32 (fix round 1 above adds 4). All prior gates unchanged and green
+(import 9p/2s, field 26, energies 26 -- the
+=test_invalid_or_deferred_material_inputs= case now pins the string-Expression
+deferral instead of spatially-varying deferrals --, effectivefield 15, llg 19,
+scipy 19, simulation 32, deferred 5, native-bem 8, demag 19, restart-output 20,
+dmi 28, cubicanis 25, timezeeman 27). =verify-dolfinx-m5= passes end-to-end
+with a clean tracked tree; =pixi.lock= untouched.
 
 *** Deferred / deliberate deviations
 
@@ -4624,5 +4692,10 @@ untouched.
 - Region-restricted submesh field output (=save_m_in_region=/=get_submesh=/
   =get_field_as_dolfin_function(region=...)=).
 - K2 native-typo hz divergence for varying K2 (LIVE, USER ACCEPTANCE PENDING).
+- A varying =Ms= for =assemble=False= cubic anisotropy must be on a scalar
+  space with the same per-node (CG1) layout as =m=; a mismatched space (e.g.
+  the DG0 space =Simulation=/=LLG= always use) raises a documented
+  =ValueError= rather than being supported, reproducing legacy's own
+  limitation there (fix round 1, Finding 1, above).
 
-[Claude Opus 4.8]
+[Claude Opus 4.8]; fix round 1 (per-node =Ms=, doc updates) [Claude Sonnet 5]

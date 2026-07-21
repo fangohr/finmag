@@ -36,6 +36,7 @@ import finmag.util.consts as consts
 from finmag.energies import CubicAnisotropy, DMI, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
+from finmag.physics.effective_field import EffectiveField
 from finmag.physics.llg import LLG
 from finmag.sim.sim import Simulation
 
@@ -44,6 +45,8 @@ VP = json.load(open(os.path.join(_FIX, "variable_params_oracle.json")))["cases"]
 ALPHA_FIX = json.load(open(os.path.join(_FIX, "spatially_varying_alpha_rhs.json")))
 K2_FIX = json.load(
     open(os.path.join(_FIX, "cubic_k2_varying_oracle.json")))["cases"]["k2_varying"]
+MS_FIX = json.load(
+    open(os.path.join(_FIX, "cubic_varying_ms_oracle.json")))["cases"]["ms_varying"]
 
 
 # -- shared callables (vectorized, matching the oracle Expression strings) --
@@ -416,6 +419,112 @@ def test_k2_varying_diverges_from_legacy_native_in_hz_only():
     # v* is a genuine node whose K2 is used everywhere (K2 varies -> divergence)
     assert K2_nodal.min() <= K2_star <= K2_nodal.max()
     assert K2_nodal.max() - K2_nodal.min() > 1e5  # K2 really does vary
+
+
+# --------------------------------------------------------------------------
+# cubic assemble=False: per-node Ms (fix round 1, Finding 1)
+# --------------------------------------------------------------------------
+
+def _cubic_varying_ms_setup():
+    """Ms on the CG1 scalar space matching m's nodes -- the placement
+    legacy's own native routine requires (see
+    ``CubicAnisotropy._ms_per_node``); K2=0 sidesteps the documented
+    ``energy.cc:116`` ``K2[2]`` typo so this isolates Ms handling."""
+    physical = MS_FIX["physical_parameters"]
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (0.7, 0.7, 0.7)], [4, 4, 4],
+        mesh.CellType.tetrahedron)
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    S1 = fem.functionspace(domain, ("Lagrange", 1))
+    m = Field(S3, lambda x: np.vstack(
+        (0.6 * np.ones(x.shape[1]), 0.8 * np.cos(2 * np.pi * x[0]),
+         0.8 * np.sin(2 * np.pi * x[0]))), name="m")
+    Ms = Field(S1, lambda x: 876626.0 * (1.0 + 0.35 * x[0] / 0.7), name="Ms")
+    ca = CubicAnisotropy(
+        physical["u1"]["value"], physical["u2"]["value"],
+        K1=physical["K1"]["value"], K2=physical["K2"]["value"],
+        K3=physical["K3"]["value"])  # assemble=False default
+    ca.setup(m, Ms, unit_length=physical["unit_length"]["value"])
+    coords = S3.tabulate_dof_coordinates()
+    order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
+    return ca, S3, order
+
+
+def test_cubic_varying_ms_matches_native_oracle():
+    """Quantitative pin (Finding 1, fix round 1): the ported native analytic
+    field for a spatially varying Ms must reproduce the legacy native
+    ``compute_cubic_field`` output node-for-node, at the same tolerance as
+    the other native-oracle per-term cases."""
+    ca, S3, order = _cubic_varying_ms_setup()
+    H_port = ca.compute_field().reshape(-1, 3)[order]
+    H_q = _quantity(MS_FIX, "H_vertex")
+    ref_H = np.asarray(H_q["values"])
+    np.testing.assert_allclose(
+        H_port, ref_H, atol=H_q["tolerances"]["absolute"],
+        rtol=H_q["tolerances"]["relative"])
+
+    e_q = _scalar(MS_FIX, "energy")
+    np.testing.assert_allclose(
+        ca.compute_energy(), e_q["value"], rtol=e_q["tolerances"]["relative"],
+        atol=1e-25)
+
+
+def test_cubic_varying_ms_field_is_finite_and_nonzero():
+    ca, _, _ = _cubic_varying_ms_setup()
+    H = ca.compute_field()
+    assert np.all(np.isfinite(H))
+    assert np.max(np.abs(H)) > 0.0
+
+
+def test_cubic_varying_ms_participates_in_dynamics():
+    """Finding 1(a): a spatially varying Ms with the legacy-default
+    ``assemble=False`` constructor must actually drive the LLG right-hand
+    side, not merely compute a finite field in isolation. Ms lives on the
+    CG1 space matching ``m`` (``Simulation``/``LLG`` always place ``Ms`` in
+    DG0, which ``CubicAnisotropy._ms_per_node`` documents as unsupported for
+    a *varying* Ms -- see
+    ``test_cubic_varying_ms_on_dg0_space_raises_documented_error`` below), so
+    the ``EffectiveField`` registry is built directly against ``LLG``'s
+    internals rather than through ``Simulation``."""
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)], [2, 2, 2],
+        mesh.CellType.tetrahedron)
+    S1, S3 = _alpha_spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    m0 = np.array((1.0, 0.3, 0.1))
+    m0 /= np.linalg.norm(m0)
+    llg.set_m(tuple(m0))
+    llg.set_alpha(0.5)
+
+    Ms_varying = Field(S1, lambda x: 8.6e5 * (1.0 + 0.2 * x[0] / 5.0), name="Ms")
+    llg.effective_field = EffectiveField(llg._m_field, Ms_varying, 1e-9)
+    llg.effective_field.add(
+        CubicAnisotropy((1, 0, 0), (0, 1, 0), 1.0e4))  # assemble=False default
+
+    dmdt = llg.solve(0.0)
+    assert np.all(np.isfinite(dmdt))
+    assert np.max(np.abs(dmdt)) > 0.0
+
+
+def test_cubic_varying_ms_on_dg0_space_raises_documented_error():
+    """A varying Ms on a space that does not align node-for-node with m (e.g.
+    the DG0 space ``Simulation``/``LLG`` always use for Ms) cannot be used by
+    the native analytic path -- exactly as legacy's own native routine
+    requires (``Ms_arr.check_shape(nodes, ...)``; verified empirically
+    against the oracle: legacy raises ``ValueError: compute_cubic_field: Ms:
+    Expected array of shape (nodes), got (cells)`` in this scenario). The
+    port raises a clear, documented error instead of silently misindexing or
+    surfacing a confusing NumPy broadcast failure."""
+    box = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)], [2, 2, 2],
+        mesh.CellType.tetrahedron)
+    sim = Simulation(
+        box, lambda x: 8.6e5 * (1.0 + 0.1 * x[0] / 5.0), unit_length=1e-9,
+        name="cubic_ms_dg0_mismatch")
+    sim.set_m((0.3, 0.4, np.sqrt(1 - 0.09 - 0.16)))
+    sim.add(CubicAnisotropy((1, 0, 0), (0, 1, 0), 1.0e4))  # assemble=False default
+    with pytest.raises(ValueError, match="per-node"):
+        sim.effective_field()
 
 
 # --------------------------------------------------------------------------

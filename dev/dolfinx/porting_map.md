@@ -435,6 +435,19 @@ Before editing the matching module in `src/finmag`, check that:
   `dolfinh5tools` HDF5. XDMF is write-only here. Integration with the still
   legacy `finmag.Simulation` is deferred to its direct port task. [Codex
   GPT-5.6]
+  Task 16 update: `Field.from_function` now *interpolates* a `dolfinx.fem.
+  Function` into this Field's space when the two spaces differ, instead of
+  only supporting an identical-space dof-for-dof copy (mirroring `from_field`,
+  which already interpolated between compatible spaces). Legacy raised a hard
+  error on any space/size mismatch (no interpolation path existed for a raw
+  `Function` argument); same-space assignment is unchanged (still a
+  dof-for-dof copy), so this is a *tested superset* of the legacy contract,
+  not a behaviour change to any previously working call -- it only newly
+  accepts calls legacy rejected (e.g. placing a DG0-valued coefficient
+  `Function` into a CG1 `Field`). The cross-space case is the same code path
+  `test_from_field_interpolates_between_compatible_spaces`
+  (`test_field_dolfinx.py`) exercises for `from_field`; no existing test
+  relied on the old hard error. [Claude Sonnet 5]
 - Ordered arrays and `coords_and_values()` are currently rank-local owned
   views. A separate collective, globally coordinate-sorted export should be
   added only for a concrete output/restart consumer; multi-rank ODE state is
