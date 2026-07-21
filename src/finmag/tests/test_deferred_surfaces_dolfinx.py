@@ -44,7 +44,7 @@ import pytest
 from dolfinx import mesh
 from mpi4py import MPI
 
-from finmag.drivers.llg_integrator import llg_integrator
+from finmag.drivers.llg_integrator import llg_integrator, SundialsIntegrator
 from finmag.sim.sim import Simulation, sim_with
 
 
@@ -69,6 +69,8 @@ def _make_sim(**kwargs):
 # --------------------------------------------------------------------------
 
 def test_simulation_sundials_backend_raises_by_name_on_first_integrator_use():
+    if SundialsIntegrator is not None:
+        pytest.skip("native sundials extension is available in this environment")
     sim = _make_sim(integrator_backend="sundials")
     sim.set_m((1.0, 0.0, 0.0))
     # Construction must not eagerly build an integrator (lazy creation is a
@@ -79,6 +81,8 @@ def test_simulation_sundials_backend_raises_by_name_on_first_integrator_use():
 
 
 def test_simulation_create_integrator_sundials_backend_raises_by_name():
+    if SundialsIntegrator is not None:
+        pytest.skip("native sundials extension is available in this environment")
     sim = _make_sim()
     sim.set_m((1.0, 0.0, 0.0))
     with pytest.raises(ImportError, match="sundials"):
@@ -86,6 +90,8 @@ def test_simulation_create_integrator_sundials_backend_raises_by_name():
 
 
 def test_sim_with_sundials_backend_raises_by_name_on_first_integrator_use():
+    if SundialsIntegrator is not None:
+        pytest.skip("native sundials extension is available in this environment")
     sim = sim_with(
         _box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
         integrator_backend="sundials", demag_solver=None,
@@ -100,6 +106,8 @@ def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
     Kept here as one line so the sweep file alone demonstrates every
     ``integrator_backend="sundials"`` entry point without requiring a reader
     to open a second file."""
+    if SundialsIntegrator is not None:
+        pytest.skip("native sundials extension is available in this environment")
     sim = _make_sim()
     sim.set_m((1.0, 0.0, 0.0))
     with pytest.raises(ImportError, match="sundials"):
