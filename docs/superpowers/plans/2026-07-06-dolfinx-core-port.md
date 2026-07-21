@@ -179,14 +179,16 @@ Direct source acceptance:
 
 **Files:** `src/finmag/physics/llg.py` and focused LLG/equation tests.
 
-- [ ] Generate coordinate-ordered legacy RHS references for one macrospin and
-  one nonuniform field case.
-- [ ] Port scalar `Ms`, scalar `alpha`, `gamma`, `set_m`, `solve`, and
+- [x] Generate coordinate-ordered legacy RHS references for one macrospin and
+  one nonuniform field case. (Macrospin uses the closed-form LL RHS; the
+  nonuniform case uses an oracle fixture on a 1D interval mesh,
+  `src/finmag/tests/fixtures/llg_rhs_nonuniform.json`.)
+- [x] Port scalar `Ms`, scalar `alpha`, `gamma`, `set_m`, `solve`, and
   `solve_for` directly.
-- [ ] Drive every RHS evaluation from the complete `EffectiveField` registry.
-- [ ] Verify precession sign, damping direction, physical time scale, pinning if
-  retained, and unit-length invariance after accepted steps.
-- [ ] Keep native Sundials, STT, thermal dynamics, and multi-rank stepping out of
+- [x] Drive every RHS evaluation from the complete `EffectiveField` registry.
+- [x] Verify precession sign, damping direction, physical time scale, pinning
+  (retained, serial), and unit-length invariance after accepted steps.
+- [x] Keep native Sundials, STT, thermal dynamics, and multi-rank stepping out of
   this slice with explicit availability errors.
 
 ## Task 8: Reuse the SciPy driver

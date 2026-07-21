@@ -1,126 +1,129 @@
+"""Deterministic Landau-Lifshitz-Gilbert core, ported directly to DOLFINx.
+
+This is the direct DOLFINx port of the legacy ``finmag.physics.llg.LLG``. It
+solves the Landau-Lifshitz form of the LLG equation
+
+.. math::
+
+    \\frac{d\\vec{m}}{dt} = -\\gamma_{LL}\\, \\vec{m}\\times\\vec{H}
+        - \\alpha\\gamma_{LL}\\, \\vec{m}\\times(\\vec{m}\\times\\vec{H})
+        + c\\,(1 - |\\vec{m}|^2)\\,\\vec{m}
+
+where :math:`\\gamma_{LL} = \\gamma / (1 + \\alpha^2)`. The final term is the
+legacy numerical norm-relaxation correction (``relaxation_i`` in
+``native/src/llg/llg.cc``, with coefficient ``0.1/char_time == self.c``); it
+holds :math:`|\\vec{m}|` at unit length during integration and vanishes when
+:math:`|\\vec{m}| = 1`. The precession and damping terms are transcribed
+node-for-node from ``calc_llg_dmdt`` (``native/src/llg/llg.cc``); no compiled
+extension is used.
+
+Scope of this slice: scalar ``Ms``, scalar ``alpha``, ``gamma``, ``set_m``,
+``solve`` and ``solve_for``, driven entirely from the ported ``EffectiveField``
+registry. The state vector for ``solve``/``solve_for``/``m`` setters is the
+component-blocked, coordinate-ordered ``xxx`` array (rank-local owned dofs);
+``H_eff`` is routed into the identical ordering before the node-local update.
+Native Sundials/CVODE preconditioning and Jacobian paths, spin-transfer torque
+(Slonczewski, Zhang-Li), thermal dynamics, and multi-rank ODE state are out of
+scope and raise ``NotImplementedError`` by name when requested.
+"""
+
 import logging
+
 import numpy as np
-import dolfin as df
+from dolfinx import fem
+
 import finmag.util.consts as consts
-from aeon import timer
 from finmag.field import Field
 from finmag.physics.effective_field import EffectiveField
-from finmag.native import llg as native_llg
-from finmag.util import helpers
-from finmag.util.meshes import nodal_volume
-
 
 # default settings for logger 'finmag' set in __init__.py
-# getting access to logger here
-logger = logging.getLogger(name='finmag')
-
-# used for parallel testing
-#from finmag.native import cvode_petsc, llg_petsc
-
-
-def _dolfin_vector_array(vector):
-    if hasattr(vector, "get_local"):
-        return vector.get_local()
-    return vector.array()
+logger = logging.getLogger(name="finmag")
 
 
 class LLG(object):
+    """Solves the Landau-Lifshitz-Gilbert equation (deterministic core)."""
 
-    """
-    Solves the Landau-Lifshitz-Gilbert equation.
-
-    The equation reads
-
-    .. math::
-
-        \\frac{d\\vec{M}}{dt} = -\\gamma_{LL} (\\vec{M} \\times \\vec{H}) - \\alpha \\gamma_{LL} (\\vec{M} \\times [ \\vec{M} \\times \\vec{H}])
-
-    where :math:`\\gamma_{LL} = \\frac{\\gamma}{1+\\alpha^2}`. In our code
-    :math:`-\\gamma_{LL}` is referred to as *precession coefficient* and
-    :math:`-\\alpha\\gamma_{LL}` as *damping coefficient*.
-
-    """
-    @timer.method
     def __init__(self, S1, S3, do_precession=True, average=False, unit_length=1):
-        """
-        S1 and S3 are df.FunctionSpace and df.VectorFunctionSpace objects,
-        and the boolean do_precession controls whether the precession of the
-        magnetisation around the effective field is computed or not.
-
+        """*S1* and *S3* are DOLFINx scalar and 3-component vector CG1
+        function spaces (``dolfinx.fem.FunctionSpace``). ``do_precession``
+        controls whether the precession term is computed. ``average`` is
+        accepted for legacy signature compatibility but is unused, exactly as
+        in the legacy implementation.
         """
         logger.debug("Creating LLG object.")
+        del average  # accepted for signature compatibility only (legacy: unused)
         self.S1 = S1
         self.S3 = S3
-        self.mesh = S1.mesh()
-        self.DG = df.FunctionSpace(self.mesh, "DG", 0)
+        self.mesh = S3.mesh
+        self.comm = self.mesh.comm
+        self.DG = fem.functionspace(self.mesh, ("DG", 0))
 
         self.set_default_values()
         self.do_precession = do_precession
         self.unit_length = unit_length
-        self.do_slonczewski = False
-        self.do_zhangli = False
-        self.effective_field = EffectiveField(self._m_field,
-                                              self.Ms, self.unit_length)
+        self.effective_field = EffectiveField(
+            self._m_field, self.Ms, self.unit_length
+        )
         # will be computed on demand, and carries volume of the mesh
         self.Volume = None
 
-        self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = helpers.build_maps(S3)
-        self.v2d_scale, self.d2v_scale = helpers.build_maps(S1, dim=1, scalar=True)
-
     def set_default_values(self):
-        self.alpha = df.Function(self.S1)
-        self.alpha.assign(df.Constant(0.5))
-        self.alpha.rename('alpha', 'Gilbert damping constant')
+        self.alpha = 0.5  # scalar Gilbert damping constant
 
         self.gamma = consts.gamma
-        self.c = 1e11  # 1/s numerical scaling correction \
+        self.c = 1e11  # 1/s numerical scaling correction
         #               0.1e12 1/s is the value used by default in nmag 0.2
-        self._Ms_dg = Field(self.DG)
+        self._Ms_dg = Field(self.DG, name="Saturation magnetisation")
         self.Ms = 8.6e5  # A/m saturation magnetisation
-        self._m_field = Field(self.S3, name='m')
-        self.pins = []  # nodes where the magnetisation gets pinned
+        self._m_field = Field(self.S3, name="m")
+        self._dmdt = Field(self.S3, name="dmdt")
+        self._pins = np.array([], dtype="int")
 
-        self._dmdt = df.Function(self.S3)
-
-        # used for parallel stuff.
-        #self.field = df.Function(self.S3)
-        #self.h_petsc = df.as_backend_type(self.field.vector()).vec()
+    # -- pinning ------------------------------------------------------------
 
     def set_pins(self, nodes):
-        """
-        Hold the magnetisation constant for certain nodes in the mesh.
+        """Hold the magnetisation constant at the given owned node indices.
 
-        Pass the indices of the pinned sites as *nodes*. Any type of sequence
-        is fine, as long as the indices are between 0 (inclusive) and the highest index.
-        This means you CANNOT use python style indexing with negative offsets counting
-        backwards.
-
+        Indices refer to coordinate-ordered owned nodes (the ``xxx`` state
+        ordering), between 0 (inclusive) and the number of owned nodes
+        (exclusive). Pinning is retained for serial use only; the multi-rank
+        guard on ``solve`` rejects distributed state.
         """
-        if len(nodes) > 0:
-            nb_nodes_mesh = len(self._m_field.get_ordered_numpy_array_xxx()) / 3
-            if min(nodes) >= 0 and max(nodes) < nb_nodes_mesh:
-                self._pins = np.array(nodes, dtype="int")
-            else:
-                logger.error("Indices of pinned nodes should be in [0, {}), were [{}, {}].".format(
-                    nb_nodes_mesh, min(nodes), max(nodes)))
+        nodes = np.asarray(list(nodes), dtype="int")
+        if nodes.size > 0:
+            nb_nodes_mesh = self._m_field.get_ordered_numpy_array_xxx().size // 3
+            if nodes.min() < 0 or nodes.max() >= nb_nodes_mesh:
+                logger.error(
+                    "Indices of pinned nodes should be in [0, {}), were "
+                    "[{}, {}].".format(nb_nodes_mesh, nodes.min(), nodes.max())
+                )
+                raise ValueError(
+                    "pinned node indices out of range [0, {})".format(nb_nodes_mesh)
+                )
+            self._pins = nodes
         else:
             self._pins = np.array([], dtype="int")
 
     def pins(self):
         return self._pins
+
     pins = property(pins, set_pins)
 
+    # -- damping ------------------------------------------------------------
+
     def set_alpha(self, value):
-        """
-        Set the damping constant :math:`\\alpha`.
+        """Set the scalar Gilbert damping constant :math:`\\alpha`.
 
-        The parameter `value` can have any of the types accepted by the
-        function :py:func:`finmag.util.helpers.scalar_valued_function` (see its
-        docstring for details).
-
+        Only spatially uniform (scalar) damping is supported in this slice.
         """
-        self.alpha = helpers.scalar_valued_function(value, self.S1)
-        self.alpha.rename('alpha', 'Gilbert damping constant')
+        if not np.isscalar(value):
+            raise NotImplementedError(
+                "spatially varying alpha is deferred from the deterministic "
+                "DOLFINx LLG slice; pass a scalar"
+            )
+        self.alpha = float(value)
+
+    # -- saturation magnetisation ------------------------------------------
 
     @property
     def Ms(self):
@@ -128,447 +131,190 @@ class LLG(object):
 
     @Ms.setter
     def Ms(self, value):
-        # XXX TODO: Rename _Ms_dg to _Ms because it is not a DG0 function!!!
-        # We need a DG function here, so we should use
-        # scalar_valued_dg_function
-        dg_fun = Field(self.DG, value)#helpers.scalar_valued_dg_function(value, self.DG)
-        self._Ms_dg.vector().set_local(dg_fun.vector().get_local())
-        # FIXME: change back to DG space.
-        #self._Ms_dg=helpers.scalar_valued_function(value, self.S1)
-        self._Ms_dg.name = 'Saturation magnetisation'
-        self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
-        Ms = df.assemble(self._Ms_dg.f * df.TestFunction(self.S1) * df.dx)
-        Ms = _dolfin_vector_array(Ms) / _dolfin_vector_array(self.volumes)
-        self._Ms = Ms.copy()
-        self.Ms_av = np.average(_dolfin_vector_array(self._Ms_dg.vector()))
+        self._Ms_dg.set(value)
+        self._Ms_dg.name = "Saturation magnetisation"
+        self._Ms = self._Ms_dg.as_array().copy()
+        self.Ms_av = float(np.average(self._Ms)) if self._Ms.size else float("nan")
 
-    @property
-    def M(self):
-        """The magnetisation, with length Ms."""
-        # FIXME:error here
-        m = self.m.view().reshape((3, -1))
-        Ms = _dolfin_vector_array(self.Ms.vector()) if isinstance(
-            self.Ms, df.Function) else self.Ms
-        M = Ms * m
-        return M.ravel()
-
-    @property
-    def M_average(self):
-        """The average magnetisation, computed with m_average()."""
-        volume_Ms = df.assemble(self._Ms_dg * df.dx)
-        volume = df.assemble(self._Ms_dg * df.dx)
-        return self.m_average * volume_Ms / volume
-
-    @property
-    def m(self):
-        """The unit magnetisation."""
-        raise RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")
+    # -- magnetisation accessors -------------------------------------------
 
     @property
     def m_field(self):
-        """The unit magnetisation."""
+        """The unit magnetisation Field."""
         return self._m_field
 
     @property
     def m_numpy(self):
-        """
-        Return the magnetisation as a numpy.array. This is not recommended and
-        should only be used for debugging!
-        """
+        """The magnetisation as a component-blocked ``xxx`` NumPy array."""
         return self._m_field.get_ordered_numpy_array_xxx()
-
-    # @m.setter
-    # def m(self, value):
-    # Not enforcing unit length here, as that is better done
-    # once at the initialisation of m.
-    #     self._m.vector().set_local(value)
 
     @property
     def dmdt(self):
-        """ dmdt values for all mesh nodes """
-        return _dolfin_vector_array(self._dmdt.vector())
+        """Owned rank-local dm/dt dof values (backend order)."""
+        return self._dmdt.as_array()
 
     @property
     def sundials_m(self):
-        """The unit magnetisation."""
+        """The unit magnetisation as the ``xxx`` state vector."""
         return self._m_field.get_ordered_numpy_array_xxx()
 
     @sundials_m.setter
     def sundials_m(self, value):
-        # used to copy back from sundials cvode
+        self._require_serial("state-vector assignment")
         self._m_field.set_with_ordered_numpy_array_xxx(value)
 
-    def m_average_fun(self, dx=df.dx):
-        """
-        Compute and return the average polarisation according to the formula
-        :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
-
-        """
-
-        # mx = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
-        # my = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
-        # mz = df.assemble(self._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
-        # volume = df.assemble(self._Ms_dg * dx)
-        #
-        # return np.array([mx, my, mz]) / volume
+    def m_average_fun(self, dx=None):
+        """Volume-averaged magnetisation, :math:`\\frac{1}{V}\\int m\\,dV`."""
+        if dx is None:
+            return self._m_field.average()
         return self._m_field.average(dx=dx)
+
     m_average = property(m_average_fun)
 
     def set_m(self, value, normalise=True, **kwargs):
+        """Set the magnetisation, normalising to unit length by default.
+
+        ``value`` may be a constant tuple/list, a callable ``x -> values``, a
+        :class:`~finmag.field.Field`, a ``dolfinx.fem.Function``, or a flat
+        NumPy array. A NumPy array is interpreted as the component-blocked
+        coordinate-ordered ``xxx`` state vector (matching ``solve_for``), not
+        as raw backend dofs. Legacy string ``Expression`` values are not
+        supported; pass a callable instead.
         """
-        Set the magnetisation (if `normalise` is True, it is automatically
-        normalised to unit length).
+        if kwargs:
+            raise NotImplementedError(
+                "legacy Expression keyword parameters are not supported; "
+                "pass a callable"
+            )
+        if isinstance(value, np.ndarray):
+            m0 = np.asarray(value, dtype=np.float64).reshape(-1)
+            if np.any(np.isnan(m0)):
+                raise ValueError("Attempting to initialise m with NaN(s)")
+            self._m_field.set_with_ordered_numpy_array_xxx(m0)
+            if normalise:
+                self._m_field.normalise()
+        else:
+            self._m_field.set(value, normalised=normalise)
+        return self
 
-        `value` can have any of the forms accepted by the function
-        'finmag.util.helpers.vector_valued_function' (see its
-        docstring for details).
-
-        You can call this method anytime during the simulation. However, when
-        providing a numpy array during time integration, the use of
-        the attribute m instead of this method is advised for performance
-        reasons and because the attribute m doesn't normalise the vector.
-
-        """
-        m0 = _dolfin_vector_array(
-            helpers.vector_valued_function(value, self.S3, normalise=False, **kwargs).vector()
-        )[self.v2d_xxx]
-
-        if np.any(np.isnan(m0)):
-            raise ValueError("Attempting to initialise m with NaN(s)")
-
-        if normalise:
-            m0 = helpers.fnormalise(m0)
-        self._m_field.set_with_ordered_numpy_array_xxx(m0)
+    # -- right-hand side ----------------------------------------------------
 
     def solve_for(self, m, t):
+        """Set the ``xxx`` state ``m`` and return dm/dt in the same ordering."""
+        self._require_serial("solve_for")
         self._m_field.set_with_ordered_numpy_array_xxx(m)
-        value = self.solve(t)
-        return value
+        return self.solve(t)
 
     def solve(self, t):
-        # we don't use self.effective_field.compute(t) for performance reasons
+        """Return dm/dt (component-blocked ``xxx`` order) at time ``t``.
+
+        Every field contribution is taken from the complete ``EffectiveField``
+        registry; there is no bypass path.
+        """
+        self._require_serial("solve")
+
+        # Accumulate the total effective field from the registry, then route it
+        # into the same coordinate-ordered component-blocked layout as m so the
+        # node-local update below is unambiguous.
         self.effective_field.update(t)
-        H_eff = self.effective_field.H_eff[self.v2d_xxx]  # alias (for readability)
-        H_eff.shape = (3, -1)
+        H_eff_field = Field(self.S3)
+        H_eff_field.from_array(self.effective_field.H_eff)
 
-        timer.start("solve", self.__class__.__name__)
-        # Use the same characteristic time as defined by c
-        char_time = 0.1 / self.c
-        # Prepare the arrays in the correct shape
-        m = self._m_field.get_ordered_numpy_array_xxx()
-        m.shape = (3, -1)
+        m = self._m_field.get_ordered_numpy_array_xxx().reshape((3, -1))
+        H = H_eff_field.get_ordered_numpy_array_xxx().reshape((3, -1))
 
-        dmdt = np.zeros(m.shape)
-        alpha__ = _dolfin_vector_array(self.alpha.vector())[self.v2d_scale]
-        # Calculate dm/dt
-        if self.do_slonczewski:
-            if self.fun_slonczewski_time_update != None:
-                J_new = self.fun_slonczewski_time_update(t)
-                self.J[:] = J_new
-            native_llg.calc_llg_slonczewski_dmdt(
-                m, H_eff, t, dmdt, self.pins,
-                self.gamma, alpha__,
-                char_time,
-                self.Lambda, self.epsilonprime,
-                self.J, self.P, self.d, self._Ms, self.p)
-        elif self.do_zhangli:
-            if self.fun_zhangli_time_update != None:
-                J_profile = self.fun_zhangli_time_update(t)
-                self._J = helpers.vector_valued_function(J_profile, self.S3)
-                self.J = _dolfin_vector_array(self._J.vector())
-                self.compute_gradient_matrix()
+        dmdt = self._dmdt_numpy(m, H)
 
-            H_gradm = self.compute_gradient_field()
-            H_gradm.shape = (3, -1)
-            native_llg.calc_llg_zhang_li_dmdt(
-                m, H_eff, H_gradm, t, dmdt, self.pins,
-                self.gamma, alpha__,
-                char_time,
-                self.u0, self.beta, self._Ms)
-            H_gradm.shape = (-1,)
-        else:
-            native_llg.calc_llg_dmdt(m, H_eff, t, dmdt, self.pins,
-                                     self.gamma, alpha__,
-                                     char_time, self.do_precession)
-        dmdt.shape = (-1,)
-        H_eff.shape = (-1,)
+        if self._pins.size:
+            dmdt[:, self._pins] = 0.0
 
-        timer.stop("solve", self.__class__.__name__)
-
-        self._dmdt.vector().set_local(dmdt[self.d2v_xxx])
-
+        dmdt = dmdt.reshape(-1)
+        self._dmdt.set_with_ordered_numpy_array_xxx(dmdt)
         return dmdt
 
-    # Computes the dm/dt right hand side ODE term, as used by SUNDIALS CVODE
+    def _dmdt_numpy(self, m, H):
+        """Node-local LLG right-hand side; transcribed from ``calc_llg_dmdt``.
+
+        ``m`` and ``H`` are ``(3, N)`` component-blocked owned nodal arrays.
+        Returns a fresh ``(3, N)`` dm/dt array.
+        """
+        alpha = self.alpha
+        gamma_LL = self.gamma / (1.0 + alpha * alpha)
+
+        m0, m1, m2 = m[0], m[1], m[2]
+        h0, h1, h2 = H[0], H[1], H[2]
+
+        mh = m0 * h0 + m1 * h1 + m2 * h2
+        mm = m0 * m0 + m1 * m1 + m2 * m2
+
+        # damping: -alpha * gamma_LL * (m x (m x H)) = damping_coeff*(m*mh - H*mm)
+        damping_coeff = -alpha * gamma_LL
+        dm0 = damping_coeff * (m0 * mh - h0 * mm)
+        dm1 = damping_coeff * (m1 * mh - h1 * mm)
+        dm2 = damping_coeff * (m2 * mh - h2 * mm)
+
+        # numerical norm relaxation: c * (1 - |m|^2) * m  (coeff 0.1/char_time)
+        relax_coeff = self.c * (1.0 - mm)
+        dm0 += relax_coeff * m0
+        dm1 += relax_coeff * m1
+        dm2 += relax_coeff * m2
+
+        # precession: -gamma_LL * (m x H)
+        if self.do_precession:
+            dm0 += -gamma_LL * (m1 * h2 - m2 * h1)
+            dm1 += -gamma_LL * (m2 * h0 - m0 * h2)
+            dm2 += -gamma_LL * (m0 * h1 - m1 * h0)
+
+        return np.vstack((dm0, dm1, dm2))
+
+    # -- generic ODE adapter (backend-neutral) ------------------------------
+
     def sundials_rhs(self, t, y, ydot):
+        """Deterministic dm/dt adapter, ``ydot[:] = solve_for(y, t)``.
+
+        This is backend-neutral (it does not touch native CVODE); the SciPy
+        driver slice can reuse it. The CVODE-specific preconditioner and
+        Jacobian-times-vector callbacks below remain unported.
+        """
         ydot[:] = self.solve_for(y, t)
         return 0
 
-    def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
-        # Note that some of the arguments are deliberately ignored, but they
-        # need to be present because the function must have the correct signature
-        # when it is passed to set_spils_preconditioner() in the cvode class.
-        if not jok:
-            self._m_field.set_with_ordered_numpy_array_xxx(m)
-            self._reuse_jacobean = True
-
-        return 0, not jok
-
-    def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
-        # Note that some of the arguments are deliberately ignored, but they
-        # need to be present because the function must have the correct signature
-        # when it is passed to set_spils_preconditioner() in the cvode class.
-        z[:] = r
-        return 0
-
-    """
-    def sundials_rhs_petsc(self, t, y, ydot):
-        #only for the testing of parallel stuff, will delete later.
-
-        self.effective_field.update(t)
-        self.field.vector().set_local(self.effective_field.H_eff)
-
-        #this is not ideal, will change it after we make use of Field class for damping.
-        alpha_petsc = df.as_backend_type(self.alpha.vector()).vec()
-
-        llg_petsc.compute_dm_dt(y,
-                                self.h_petsc,
-                                ydot,
-                                alpha_petsc,
-                                self.gamma,
-                                self.do_precession,
-                                self.c)
-
-        return 0
-    """
-
-    # Computes the Jacobian-times-vector product, as used by SUNDIALS CVODE
-    @timer.method
-    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
-        """
-        The time integration problem we need to solve is of type
-
-        .. math::
-
-                 \\frac{d y}{d t} = f(y,t)
-
-        where y is the state vector (such as the magnetisation components for
-        all sites), t is the time, and f(y,t) is the LLG equation.
-
-        For the implicite integration schemes, sundials' cvode solver
-        needs to know the Jacobian J, which is the derivative of the
-        (vector-valued) function f(y,t) with respect to the (components
-        of the vector) y. The Jacobian is a matrix.
-
-        For a magnetic system N sites, the state vector y has 3N entries
-        (because every site has 3 components). The Jacobian matrix J would
-        thus have a size of 3N*3N. In general, this is too big to store.
-
-        Fortunately, cvode only needs the result of the multiplication of some
-        vector y' (provided by cvode) with the Jacobian. We can thus store
-        the Jacobian in our own way (in particular as a sparse matrix
-        if we leave out the demag field), and carry out the multiplication of
-        J with y' when required, and that is what this function does.
-
-        In more detail: We use the variable name mp to represent m' (i.e. mprime) which
-        is just a notation to distinguish m' from m (and not any derivative).
-
-        Our equation is:
-
-        .. math::
-
-             \\frac{dm}{dt} = LLG(m, H)
-
-        And we're interested in computing the Jacobian (J) times vector (m') product
-
-        .. math::
-
-             J m' = [\\frac{dLLG(m, H)}{dm}] m'.
-
-        However, the H field itself depends on m, so the total derivative J m'
-        will have two terms
-
-        .. math::
-
-             \\frac{d LLG(m, H)}{dm} = \\frac{\\partial LLG(m, H)}{\\partial m} + [\\frac{\\partial LLG(m, H)}{\\partial H}] [\\frac{\\partial H(m)}{\\partial m}].
-
-
-        This is a matrix identity, so to make the derivations easier (and since we don't need the full Jacobian matrix) we can write the Jacobian-times-vector product as a directional derivative:
-
-        .. math::
-
-             J m' = \\frac{d LLG(m + a m',H(m + a m'))}{d a}|_{a=0}
-
-
-        The code to compute this derivative is in ``llg.cc`` but you can see that the derivative will depend
-        on m, m', H(m), and dH(m+a m')/da [which is labelled H' in the code].
-
-        Most of the components of the effective field are linear in m; if that's the case,
-        the directional derivative H' is just H(m')
-
-        .. math::
-
-             H' = \\frac{d H(m+a m')}{da} = H(m')
-
-
-        The actual implementation of the jacobian-times-vector product is in src/llg/llg.cc,
-        function calc_llg_jtimes(...), which in turn makes use of CVSpilsJacTimesVecFn in CVODE.
-        """
-        assert m.shape == self._m_field.get_ordered_numpy_array_xxx().shape
-        assert mp.shape == m.shape
-        assert tmp.shape == m.shape
-
-        # First, compute the derivative H' = dH_eff/dt
-        self._m_field.set_with_ordered_numpy_array_xxx(mp)
-        Hp = tmp.view()
-        Hp[:] = self.effective_field.compute_jacobian_only(t)[self.v2d_xxx]
-
-        if not hasattr(self, '_reuse_jacobean') or not self._reuse_jacobean:
-            # If the field m has changed, recompute H_eff as well
-            if not np.array_equal(self.m_numpy, m):
-                self.m_field.set_with_ordered_numpy_array_xxx(m)
-                self.effective_field.update(t)
-            else:
-                pass
-                # print "This actually happened."
-                #import sys; sys.exit()
-
-        m.shape = (3, -1)
-        mp.shape = (3, -1)
-        Hp.shape = (3, -1)
-        J_mp.shape = (3, -1)
-        # Use the same characteristic time as defined by c
-        char_time = 0.1 / self.c
-        Heff2 = self.effective_field.H_eff[self.v2d_xxx]
-        native_llg.calc_llg_jtimes(m, Heff2.reshape((3, -1)), mp, Hp, t, J_mp, self.gamma,
-                                   _dolfin_vector_array(self.alpha.vector())[self.v2d_scale], char_time, self.do_precession, self.pins)
-        J_mp.shape = (-1, )
-        m.shape = (-1,)
-        mp.shape = (-1,)
-        tmp.shape = (-1,)
-
-        # Nonnegative exit code indicates success
-        return 0
-
-    def use_slonczewski(self, J, P, d, p, Lambda=2, epsilonprime=0.0, with_time_update=None):
-        """
-        Activates the computation of the Slonczewski spin-torque term in the LLG.
-
-        *Arguments*
-
-        J is the current density in A/m^2 as a number, dolfin function,
-          dolfin expression or Python function. In the last case the
-          current density is assumed to be spatially constant but can
-          vary with time. Thus J=J(t) should be a function expecting a
-          single variable t (the simulation time) and return a number.
-
-          Note that a time-dependent current density can also be given
-          as a dolfin Expression, but a python function should be much
-          more efficient.
-
-        P is the polarisation (between 0 and 1). It is defined as P = (x-y)/(x+y),
-        where x and y are the fractions of spin up/down electrons).
-
-        d is the thickness of the free layer in m.
-
-        p is the direction of the polarisation as a triple (is automatically normalised to unit length).
-
-        - Lambda: the Lambda parameter in the Slonczewski/Xiao spin-torque term
-
-        - epsilonprime: the strength of the secondary spin transfer term
-
-        - with_time_update:
-
-             A function of the form J(t), which accepts a time step `t`
-             as its only argument and returns the new current density.
-
-             N.B.: For efficiency reasons, the return value is currently
-                   assumed to be a number, i.e. J is assumed to be spatially
-                   constant (and only varying with time).
-
-        """
-        self.do_slonczewski = True
-        self.fun_slonczewski_time_update = with_time_update
-
-        self.Lambda = Lambda
-        self.epsilonprime = epsilonprime
-        if isinstance(J, df.Expression):
-            J = df.interpolate(J, self.S1)
-        if not isinstance(J, df.Function):
-            func = df.Function(self.S1)
-            func.assign(df.Constant(J))
-            J = func
-        self.J = _dolfin_vector_array(J.vector())
-        assert P >= 0.0 and P <= 1.0
-        self.P = P
-        self.d = d
-        polarisation = df.Function(self.S3)
-        polarisation.assign(df.Constant((p)))
-        # we use fnormalise to ensure that p has unit length
-        self.p = helpers.fnormalise(
-            _dolfin_vector_array(polarisation.vector())).reshape((3, -1))
-
-    def compute_gradient_matrix(self):
-        """
-        compute (J nabla) m , we hope we can use a matrix M such that M*m = (J nabla)m.
-
-        """
-        tau = df.TrialFunction(self.S3)
-        sigma = df.TestFunction(self.S3)
-
-        self.nodal_volume_S3 = nodal_volume(self.S3) * self.unit_length
-
-        dim = self.S3.mesh().topology().dim()
-
-        ty = tz = 0
-
-        tx = self._J[0] * df.dot(df.grad(tau)[:, 0], sigma)
-
-        if dim >= 2:
-            ty = self._J[1] * df.dot(df.grad(tau)[:, 1], sigma)
-
-        if dim >= 3:
-            tz = self._J[2] * df.dot(df.grad(tau)[:, 2], sigma)
-
-        self.gradM = df.assemble((tx + ty + tz) * df.dx)
-
-        #self.gradM = df.assemble(df.dot(df.dot(self._J, df.nabla_grad(tau)),sigma)*df.dx)
-
-    def compute_gradient_field(self):
-
-        self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
-
-        return _dolfin_vector_array(self.H_gradm) / self.nodal_volume_S3
-
-    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
-        """
-        if using_u0 = True, the factor of 1/(1+beta^2) will be dropped.
-
-        With with_time_update should be a function like:
-        def f(t):
-            return (0, 0, J*g(t))
-
-        We do not use a position dependent function for performance reasons.
-        """
-
-        self.do_zhangli = True
-        self.fun_zhangli_time_update = with_time_update
-        self._J = helpers.vector_valued_function(J_profile, self.S3)
-        self.J = _dolfin_vector_array(self._J.vector())
-        self.compute_gradient_matrix()
-        self.H_gradm = df.PETScVector()
-
-        const_e = 1.602176565e-19
-        # elementary charge in As
-        mu_B = 9.27400968e-24
-        # Bohr magneton
-
-        self.P = P
-        self.beta = beta
-
-        u0 = P * mu_B / const_e  # P g mu_B/(2 e Ms) and g=2 for electrons
-
-        if using_u0:
-            self.u0 = u0
-        else:
-            self.u0 = u0 / (1 + beta ** 2)
+    # -- explicitly deferred surfaces --------------------------------------
+
+    def sundials_jtimes(self, *args, **kwargs):
+        raise NotImplementedError(
+            "native Sundials/CVODE Jacobian-times-vector (calc_llg_jtimes) is "
+            "not ported to the deterministic DOLFINx LLG slice"
+        )
+
+    def sundials_psetup(self, *args, **kwargs):
+        raise NotImplementedError(
+            "native Sundials/CVODE preconditioner setup is not ported to the "
+            "deterministic DOLFINx LLG slice"
+        )
+
+    def sundials_psolve(self, *args, **kwargs):
+        raise NotImplementedError(
+            "native Sundials/CVODE preconditioner solve is not ported to the "
+            "deterministic DOLFINx LLG slice"
+        )
+
+    def use_slonczewski(self, *args, **kwargs):
+        raise NotImplementedError(
+            "Slonczewski spin-transfer torque is out of scope for the "
+            "deterministic DOLFINx LLG slice"
+        )
+
+    def use_zhangli(self, *args, **kwargs):
+        raise NotImplementedError(
+            "Zhang-Li spin-transfer torque is out of scope for the "
+            "deterministic DOLFINx LLG slice"
+        )
+
+    def _require_serial(self, what):
+        if self.comm.size > 1:
+            raise NotImplementedError(
+                "{}: multi-rank ODE state is not claimed by the deterministic "
+                "DOLFINx LLG slice; the xxx state vector is rank-local "
+                "owned-only. Run serially (comm size 1).".format(what)
+            )

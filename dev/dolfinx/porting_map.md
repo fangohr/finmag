@@ -94,13 +94,28 @@ module with its tests.
   legacy `GenericVector.get_local()` and production consumers rather than a
   strong dedicated legacy unit test. [Codex GPT-5.6]
 
-- Field `xxx` consumers: `physics/llg.py`, `drivers/llg_integrator.py`, the NEB
+- Field `xxx` consumers: `drivers/llg_integrator.py`, the NEB
   implementations, and `Field.np` require component-blocked state. DOLFINx's
   interleaved blocked storage does not remove that API requirement. The SciPy
   driver currently initializes from raw `as_array()` but calls an LLG setter
   that interprets its argument as `xxx`; Task 8 should route both directions
   through the explicit state ordering rather than preserve this ambiguity.
   Multi-rank stepping remains outside the initial driver slice. [Codex GPT-5.6]
+- Task 7 update: `physics/llg.py` is no longer an unported `xxx` consumer. The
+  direct DOLFINx port makes `solve`/`solve_for` and the `m` setters
+  unambiguously component-blocked coordinate-ordered `xxx`, and routes the
+  registry's raw owned-order `H_eff` through `Field.from_array` +
+  `get_ordered_numpy_array_xxx()` into the same ordering before the node-local
+  update, so the raw/`xxx` ambiguity is resolved on the LLG side (Task 8 should
+  match it from the driver). Deferred surfaces raising `NotImplementedError` by
+  name: Slonczewski/Zhang-Li STT (`use_slonczewski`/`use_zhangli`), native
+  CVODE `sundials_jtimes`/`sundials_psetup`/`sundials_psolve`, spatially varying
+  `alpha`, and multi-rank ODE state (serial-only guard on `solve`/`solve_for`/
+  `sundials_m` when `comm.size > 1`, matching the note above that multi-rank
+  stepping is not claimed). `sundials_rhs` is kept as a backend-neutral
+  `solve_for` adapter. The deterministic dm/dt is transcribed from the native
+  `calc_llg_dmdt` (`native/src/llg/llg.cc`), including the `c*(1-|m|^2)*m` norm-
+  relaxation term. [Claude Opus 4.8]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
