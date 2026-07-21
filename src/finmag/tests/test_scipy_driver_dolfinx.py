@@ -64,8 +64,18 @@ def _nonuniform_llg(Hz=1.0e5, alpha=0.1, Ms=8.6e5):
 
 def test_scipy_driver_does_not_load_legacy_dolfin_or_native():
     assert ScipyIntegrator.__module__ == "finmag.drivers.scipy_integrator"
+    # Legacy dolfin must never load on the DOLFINx stack, regardless of backend.
     assert "dolfin" not in sys.modules
-    assert not any(name.startswith("finmag.native") for name in sys.modules)
+    # Task 20: this test module imports ``SundialsIntegrator`` at top level,
+    # which runs the lazy availability probe. When the native extension is now
+    # BUILT (DOLFINx env post-Task-20), that probe legitimately imports
+    # ``finmag.native.sundials`` and leaves it loaded -- so the native-free
+    # assertion only applies where the sundials backend is genuinely absent
+    # (the probe rolls back its residue on failure). The scipy path itself never
+    # imports native; that is pinned by the ScipyIntegrator.__module__ check
+    # above and by test_import_boundary.py's plain-import contract. [Claude Opus 4.8]
+    if SundialsIntegrator is None:
+        assert not any(name.startswith("finmag.native") for name in sys.modules)
 
 
 # --------------------------------------------------------------------------

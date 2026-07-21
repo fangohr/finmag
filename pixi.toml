@@ -45,6 +45,15 @@ scipy = "*"
 cxx-compiler = "*"
 make = "*"
 libboost-python-devel = "*"
+# Task 20: native Sundials/CVODE backend. conda-forge `sundials` provides the
+# CVODE/SUNLINSOL/SUNMATRIX/core shared libraries and SUNDIALS-7 headers the
+# modernized native wrapper (`native/src/sundials/sundials_cvode_impl.h`)
+# targets. Pinned to the 7.x major to match the legacy default env (7.2.1) that
+# the wrapper's SUNContext/SUNNonlinSol/CVodeSetLinearSolver wiring was written
+# against. The `sundials.so` module is dolfin-free (`-DFINMAG_NO_DOLFIN`,
+# `bem_arrays` precedent) so this adds no libdolfin to the DOLFINx lane. [Claude
+# Opus 4.8]
+sundials = ">=7,<8"
 # Task 18: mesh-tooling bridge. `gmsh`/`python-gmsh` provide the Gmsh Python API
 # used by the ported mesh generators (`finmag.util.meshes`/`mesh_templates`),
 # converted to `dolfinx.mesh` in-memory via `dolfinx.io.gmsh.model_to_mesh`
@@ -135,6 +144,14 @@ dolfinx-src-varparams-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python 
 # keeps the native `make` (triggered by the demag smoke) from rewriting the
 # tracked version file. [Claude Opus 4.8]
 dolfinx-src-meshes-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_meshes_dolfinx.py"
+# Task 20: the dolfin-free native Sundials/CVODE backend -- the modernized
+# SUNDIALS-7 wrapper rebuilt for the DOLFINx env (bem_arrays precedent, no
+# libdolfin), the SundialsIntegrator driver wired against the ported LLG
+# (analytic jtimes + identity preconditioner default path), ported legacy ODE /
+# reinit / nsteps invariants, and scipy-vs-sundials cross-backend agreement.
+# WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered on first native
+# import) from rewriting the tracked version file. [Claude Opus 4.8]
+dolfinx-src-sundials-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_sundials_driver_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

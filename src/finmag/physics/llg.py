@@ -302,32 +302,123 @@ class LLG(object):
     def sundials_rhs(self, t, y, ydot):
         """Deterministic dm/dt adapter, ``ydot[:] = solve_for(y, t)``.
 
-        This is backend-neutral (it does not touch native CVODE); the SciPy
-        driver slice can reuse it. The CVODE-specific preconditioner and
-        Jacobian-times-vector callbacks below remain unported.
+        This is backend-neutral (it does not touch native CVODE); both the SciPy
+        driver slice and the native CVODE ``SundialsIntegrator`` reuse it. ``y``
+        and ``ydot`` are the component-blocked coordinate-ordered ``xxx`` state.
         """
         ydot[:] = self.solve_for(y, t)
         return 0
 
-    # -- explicitly deferred surfaces --------------------------------------
+    # -- native CVODE preconditioner / Jacobian-times-vector hooks ----------
+    #
+    # These reproduce the legacy ``bdf_gmres_prec_id`` default path exactly
+    # (see ``finmag.drivers.sundials_integrator``): CVODE with SPGMR + a
+    # left identity preconditioner and an analytic Jacobian-times-vector
+    # product. ``psetup`` records the linearisation state, ``psolve`` applies
+    # the identity preconditioner (``z = r``), and ``jtimes`` is the exact
+    # directional derivative of the LLG right-hand side. The three per-node
+    # derivative kernels are transcribed from native ``calc_llg_jtimes``
+    # (``native/src/llg/llg.cc``: ``dm_precession_i`` / ``dm_damping_i`` /
+    # ``dm_relaxation_i``), the same way ``_dmdt_numpy`` transcribes
+    # ``calc_llg_dmdt``. [Claude Opus 4.8]
 
-    def sundials_jtimes(self, *args, **kwargs):
-        raise NotImplementedError(
-            "native Sundials/CVODE Jacobian-times-vector (calc_llg_jtimes) is "
-            "not ported to the deterministic DOLFINx LLG slice"
-        )
+    def sundials_psetup(self, t, m, fy, jok, gamma, tmp1, tmp2, tmp3):
+        # Some arguments are unused but must be present so the callback matches
+        # the signature CVODE's preconditioner-setup expects. When ``jok`` is
+        # false CVODE requests a fresh linearisation, so record the state and
+        # signal that the "Jacobian" data was rebuilt (identity here). Returns
+        # ``(retval, jcurPtr)`` mirroring the legacy wrapper. [Claude Opus 4.8]
+        if not jok:
+            self._m_field.set_with_ordered_numpy_array_xxx(m)
+            self._reuse_jacobian = True
+        return 0, (not jok)
 
-    def sundials_psetup(self, *args, **kwargs):
-        raise NotImplementedError(
-            "native Sundials/CVODE preconditioner setup is not ported to the "
-            "deterministic DOLFINx LLG slice"
-        )
+    def sundials_psolve(self, t, y, fy, r, z, gamma, delta, lr, tmp):
+        # Identity (left) preconditioner: solve ``P z = r`` with ``P = I``,
+        # exactly as the legacy default ``bdf_gmres_prec_id`` path did.
+        z[:] = r
+        return 0
 
-    def sundials_psolve(self, *args, **kwargs):
-        raise NotImplementedError(
-            "native Sundials/CVODE preconditioner solve is not ported to the "
-            "deterministic DOLFINx LLG slice"
-        )
+    def sundials_jtimes(self, mp, J_mp, t, m, fy, tmp):
+        """Analytic Jacobian-times-vector product ``J(m,t) mp`` in ``xxx`` order.
+
+        ``J mp = d/da rhs(m + a mp, H(m + a mp))|_{a=0}``. For the linear
+        effective-field contributions the directional field derivative is
+        ``H' = H(mp)``, obtained from ``EffectiveField.compute_jacobian_only``.
+        The node-local Jacobian kernels are the exact derivatives of the
+        precession, damping, and relaxation terms in ``_dmdt_numpy``.
+        """
+        self._require_serial("sundials_jtimes")
+        m = np.asarray(m, dtype=np.float64).reshape(-1)
+        mp = np.asarray(mp, dtype=np.float64).reshape(-1)
+
+        # H' = dH_eff/da in the direction mp (linear interactions -> H(mp)).
+        self._m_field.set_with_ordered_numpy_array_xxx(mp)
+        Hp_field = Field(self.S3)
+        Hp_field.from_array(self.effective_field.compute_jacobian_only(t))
+        Hp = Hp_field.get_ordered_numpy_array_xxx()
+
+        # Restore the linearisation state m and its effective field H(m, t).
+        self._m_field.set_with_ordered_numpy_array_xxx(m)
+        self.effective_field.update(t)
+        H_field = Field(self.S3)
+        H_field.from_array(self.effective_field.H_eff)
+        H = H_field.get_ordered_numpy_array_xxx()
+
+        jt = self._jtimes_numpy(
+            m.reshape((3, -1)), H.reshape((3, -1)),
+            mp.reshape((3, -1)), Hp.reshape((3, -1)))
+
+        if self._pins.size:
+            jt[:, self._pins] = 0.0
+
+        J_mp[:] = jt.reshape(-1)
+        return 0
+
+    def _jtimes_numpy(self, m, H, mp, Hp):
+        """Node-local LLG Jacobian-times-vector kernel; transcribed from the
+        native ``dm_precession_i`` / ``dm_damping_i`` / ``dm_relaxation_i``.
+
+        All inputs are ``(3, N)`` component-blocked owned nodal arrays. Returns
+        a fresh ``(3, N)`` array ``J mp``. ``alpha`` is per node exactly as in
+        ``_dmdt_numpy``.
+        """
+        alpha = self._alpha_node
+        gamma_LL = self.gamma / (1.0 + alpha * alpha)
+
+        m0, m1, m2 = m[0], m[1], m[2]
+        mp0, mp1, mp2 = mp[0], mp[1], mp[2]
+        h0, h1, h2 = H[0], H[1], H[2]
+        hp0, hp1, hp2 = Hp[0], Hp[1], Hp[2]
+
+        jt0 = np.zeros_like(m0)
+        jt1 = np.zeros_like(m0)
+        jt2 = np.zeros_like(m0)
+
+        # precession derivative: d(m x H) = mp x H + m x Hp
+        if self.do_precession:
+            jt0 += -gamma_LL * ((mp1 * h2 - mp2 * h1) + (m1 * hp2 - m2 * hp1))
+            jt1 += -gamma_LL * ((mp2 * h0 - mp0 * h2) + (m2 * hp0 - m0 * hp2))
+            jt2 += -gamma_LL * ((mp0 * h1 - mp1 * h0) + (m0 * hp1 - m1 * hp0))
+
+        # damping derivative: d[(m*H)m - (m*m)H]
+        mph_mhp = (mp0 * h0 + mp1 * h1 + mp2 * h2
+                   + m0 * hp0 + m1 * hp1 + m2 * hp2)
+        mh = m0 * h0 + m1 * h1 + m2 * h2
+        mm = m0 * m0 + m1 * m1 + m2 * m2
+        mmp = m0 * mp0 + m1 * mp1 + m2 * mp2
+        damping_coeff = -alpha * gamma_LL
+        jt0 += damping_coeff * (mph_mhp * m0 + mh * mp0 - 2 * mmp * h0 - mm * hp0)
+        jt1 += damping_coeff * (mph_mhp * m1 + mh * mp1 - 2 * mmp * h1 - mm * hp1)
+        jt2 += damping_coeff * (mph_mhp * m2 + mh * mp2 - 2 * mmp * h2 - mm * hp2)
+
+        # relaxation derivative: d[(1 - m*m) m]; native relax_coeff = 0.1/char_time = c
+        relax_coeff = self.c
+        jt0 += relax_coeff * (-2 * mmp * m0 + (1.0 - mm) * mp0)
+        jt1 += relax_coeff * (-2 * mmp * m1 + (1.0 - mm) * mp1)
+        jt2 += relax_coeff * (-2 * mmp * m2 + (1.0 - mm) * mp2)
+
+        return np.vstack((jt0, jt1, jt2))
 
     def use_slonczewski(self, *args, **kwargs):
         raise NotImplementedError(

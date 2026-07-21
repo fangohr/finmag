@@ -39,6 +39,14 @@
 # Netgen-CSG hashing/naming and XDMF caching contracts, and an
 # FK-demag-on-a-generated-sphere physics smoke. [Claude Opus 4.8]
 #
+# Task 20 folds in the dolfin-free native Sundials/CVODE backend gate
+# (`dolfinx-src-sundials-pytest`): the SUNDIALS-7 wrapper rebuilt for the
+# DOLFINx env (bem_arrays precedent, no libdolfin), the SundialsIntegrator
+# driver wired against the ported LLG (analytic jtimes + identity
+# preconditioner default path), ported legacy ODE/reinit/nsteps invariants, and
+# scipy-vs-sundials cross-backend agreement. scipy remains the DOLFINx default
+# backend; sundials is a fully validated opt-in. [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -120,6 +128,9 @@ pixi run -e dolfinx dolfinx-src-varparams-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-meshes-pytest"
 pixi run -e dolfinx dolfinx-src-meshes-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-sundials-pytest"
+pixi run -e dolfinx dolfinx-src-sundials-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

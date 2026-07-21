@@ -216,13 +216,35 @@ def test_solve_for_sets_state_and_returns_matching_rhs():
 # deferred surfaces
 # --------------------------------------------------------------------------
 
-@pytest.mark.parametrize("method", ["use_slonczewski", "use_zhangli",
-                                     "sundials_jtimes", "sundials_psetup",
-                                     "sundials_psolve"])
+# Task 20: sundials_jtimes / sundials_psetup / sundials_psolve are no longer
+# by-name deferrals -- the native Sundials/CVODE backend is ported, so these are
+# real implementations (analytic Jacobian-times-vector + identity
+# preconditioner). Their behaviour is validated in
+# test_sundials_driver_dolfinx.py. Only the spin-transfer-torque surfaces remain
+# out of scope for the deterministic DOLFINx LLG slice. [Claude Opus 4.8]
+@pytest.mark.parametrize("method", ["use_slonczewski", "use_zhangli"])
 def test_deferred_surfaces_raise_by_name(method):
     llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
     with pytest.raises(NotImplementedError):
         getattr(llg, method)()
+
+
+def test_sundials_cvode_hooks_are_ported_not_deferred():
+    """The CVODE preconditioner/Jacobian hooks are implemented (Task 20)."""
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    m = llg.sundials_m.copy()
+    # psolve is the identity preconditioner z = r.
+    r = np.arange(m.size, dtype=np.float64)
+    z = np.zeros_like(r)
+    assert llg.sundials_psolve(0.0, m, m, r, z, 0.0, 0.0, 1, m) == 0
+    assert np.array_equal(z, r)
+    # psetup records the linearisation state and reports (retval, jcur).
+    assert llg.sundials_psetup(0.0, m, m, False, 0.0, m, m, m) == (0, True)
+    # jtimes returns a finite same-shape Jacobian-times-vector product.
+    J_mp = np.zeros_like(m)
+    assert llg.sundials_jtimes(m.copy(), J_mp, 0.0, m.copy(),
+                               np.zeros_like(m), np.zeros_like(m)) == 0
+    assert J_mp.shape == m.shape and np.all(np.isfinite(J_mp))
 
 
 def test_multi_rank_state_paths_raise_serial_guard():

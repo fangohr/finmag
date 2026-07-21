@@ -55,9 +55,12 @@ IS_DOLFINX_ENV := $(findstring /envs/dolfinx,$(PYTHON_PREFIX))
 # fold Sundials back in as that port becomes viable. [Codex GPT-5.4]
 # [Codex GPT-5.4]
 ifneq ($(IS_DOLFINX_ENV),)
-# DOLFINx env: only the array-only FK BEM surface, which carries no libdolfin,
-# SWIG-DOLFIN, or SUNDIALS dependency (Task 11a). [Claude Opus 4.8]
-MODULES = bem_arrays.so
+# DOLFINx env: the array-only FK BEM surface (Task 11a) plus the dolfin-free
+# native Sundials/CVODE wrapper (Task 20). Neither carries libdolfin or
+# SWIG-DOLFIN; the sundials module is the array/callback CVODE wrapper compiled
+# with -DFINMAG_NO_DOLFIN, linking only conda-forge SUNDIALS-7 (no -ldolfin).
+# [Claude Opus 4.8]
+MODULES = bem_arrays.so sundials.so
 else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 MODULES = sundials.so llg.so llb.so
 else
@@ -123,10 +126,16 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
 ifneq ($(IS_DOLFINX_ENV),)
-# Only the array-only BEM kernel and the NumPy array helper compile without
-# libdolfin/SUNDIALS; the SWIG-DOLFIN, LLG, and Sundials units are excluded so
-# nothing pulls dolfin.h or cvode.h in the DOLFINx env. [Claude Opus 4.8]
-SOURCES = src/llg/bem_arrays.cc src/util/np_array.cc
+# DOLFINx env: the array-only BEM kernel, the NumPy array helper, and the
+# dolfin-free native Sundials/CVODE wrapper (Task 20). None of these units pull
+# dolfin.h (they are compiled with -DFINMAG_NO_DOLFIN); the sundials wrapper and
+# numpy_malloc do pull the conda-forge SUNDIALS-7 headers, so -DFINMAG_NO_SUNDIALS
+# is NOT set here. The SWIG-DOLFIN, LLG, LLB, and NEB units remain excluded so
+# nothing pulls dolfin.h. The Boost.Test `sundials_tests.cc` unit is excluded --
+# it belongs to the legacy run_ci_tests.bin target, not the module set. [Claude
+# Opus 4.8]
+SOURCES = src/llg/bem_arrays.cc src/util/np_array.cc \
+          src/sundials/py_sundials_module.cc src/sundials/numpy_malloc.cc
 else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 # bem_arrays.cc is the DOLFINx-only array surface; it is compiled but never
 # linked into any legacy module, so exclude it here to avoid ABI noise. [Claude
@@ -180,11 +189,15 @@ endif
 # Managed environments such as pixi place third-party headers under the
 # environment prefix instead of /usr/include, so add that include root too. [Codex GPT-5.4]
 CFLAGS_INCLUDE=-I$(abspath src) -I$(PYTHON_PREFIX)/include -I$(NUMPY_INCLUDE_DIR)
-# In the DOLFINx env neither libdolfin nor SUNDIALS is available, so compile the
-# array-only surface with the umbrella-header guards enabled. This is part of
-# CFLAGS_NOPCH so it also applies to the precompiled header build. [Claude Opus 4.8]
+# In the DOLFINx env libdolfin is unavailable, so compile with -DFINMAG_NO_DOLFIN
+# to keep the umbrella header (finmag_includes.h) from pulling dolfin.h. SUNDIALS
+# *is* available in this env (Task 20 added conda-forge sundials to the dolfinx
+# feature), so -DFINMAG_NO_SUNDIALS is deliberately NOT set: the native CVODE
+# wrapper (sundials.so) needs cvode.h, and the array-only bem_arrays unit is
+# unaffected by cvode.h merely being included. This is part of CFLAGS_NOPCH so it
+# also applies to the precompiled header build. [Claude Opus 4.8]
 ifneq ($(IS_DOLFINX_ENV),)
-CFLAGS_NODOLFIN = -DFINMAG_NO_DOLFIN -DFINMAG_NO_SUNDIALS
+CFLAGS_NODOLFIN = -DFINMAG_NO_DOLFIN
 endif
 CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE) $(CFLAGS_NODOLFIN)
 CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
