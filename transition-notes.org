@@ -3000,6 +3000,120 @@ remain unported. [Claude Opus 4.8]
   silently keeping stale pins on a bad index is a latent correctness trap --
   and is covered by =test_out_of_range_pins_raise=. [Claude Sonnet 5]
 
+** Direct DOLFINx SciPy Driver
+
+Task 8 ports =src/finmag/drivers/scipy_integrator.py= and updates
+=src/finmag/drivers/llg_integrator.py= to reuse SciPy's =scipy.integrate.ode=
+(VODE, methods =bdf=/=adams=) directly against the Task 7 deterministic
+=LLG=. SciPy (=1.18.0=) was already pinned in the =dolfinx= pixi environment by
+Task 1; this slice only verifies it (=pixi run -e dolfinx python -c "import
+scipy; print(scipy.__version__)"= reports =1.18.0=) rather than re-adding it.
+
+The recorded raw/=xxx= ambiguity is resolved, not preserved: the porting map's
+"Field =xxx= consumers" note flagged that the legacy driver seeded the ODE
+state from =m_field.as_array()= (raw backend dof order) while =rhs= passed
+that same array straight into =llg.solve_for=, which has always interpreted
+its argument as the component-blocked =xxx= state vector. On DOLFINx's
+interleaved blocked dof layout the two orderings are genuinely different
+(not just occasionally coincident, as on some legacy meshes), so this port
+routes both directions -- the initial seed and every write-back after
+=advance_time= -- through =Field.get_ordered_numpy_array_xxx()= /
+=set_with_ordered_numpy_array_xxx()=. A dedicated regression test
+(=test_scipy_integrator_seeds_ode_state_with_xxx_not_raw_array=) asserts the
+ODE's initial state equals the =xxx= array and differs from the raw array on
+a multi-vertex fixture mesh where the two are provably different; a second
+test (=test_feeding_raw_order_into_solve_for_gives_wrong_physics=) shows that
+feeding the raw array into =solve_for= as if it were =xxx= changes the
+computed dm/dt, i.e. reintroducing the legacy conflation would silently
+change the physics.
+
+=advance_time='s public interface and tolerance keywords are unchanged:
+=ScipyIntegrator(llg, m0, reltol=1e-6, abstol=1e-6, nsteps=10000,
+method="bdf", tablewriter=None, **kwargs)=, the =t == 0= first-call no-op
+(matching Sundials, since re-integrating to =t=0= from =t=0= is rejected by
+the underlying solver), and =n_rhs_evals= all behave exactly as before.
+Two behavioural gaps are closed rather than carried forward:
+
+- =advance_time(t)= with =t < self.cur_t= now raises =ValueError= by name
+  before touching =scipy.integrate.ode=, instead of only surfacing as a
+  =vode= "Illegal input" warning followed by a bare, optimisable-away
+  =assert=.
+- an unsuccessful =ode.integrate(t)= call now raises =RuntimeError= (naming
+  the method and target time) instead of =assert self.ode.successful()=,
+  which =python -O= would silently compile out.
+
+=reinit()= previously only logged "This integrator doesn't support
+reinitialisation." It now does real work, mirroring what the Sundials reinit
+contract exists to serve (see =sundials_reinit_test.py=): it rebuilds the
+underlying =scipy.integrate.ode= object and reseeds it from
+=self.m_field.get_ordered_numpy_array_xxx()= at the current =cur_t=
+(preserved unchanged), so an external modification to the field (e.g. a
+changed applied field between =reinit()= calls) actually takes effect on the
+next =advance_time=. Without =reinit()=, =advance_time= only ever reads from
+=scipy='s own internal solver state, so an external field mutation is
+silently overwritten by the stale continuation on the very next step; a
+paired test demonstrates both sides of this (with vs. without =reinit()=,
+=test_reinit_makes_external_field_modification_take_effect=). =n_rhs_evals=
+is deliberately left as a lifetime total across =reinit()= calls (its
+docstring never claimed "since last reinit"), unlike the native Sundials
+counter, which is an implementation detail of the compiled CVode object, not
+part of the documented public contract.
+
+A small stiff-ODE probe (=test_vode_bdf_stiff_probe_matches_analytic_solution=)
+confirms the installed =vode=/=bdf= path directly against
+=scipy.integrate.ode=, independent of =LLG=: for =y' = lam(y - cos t) - sin
+t= with =lam = -1000=, the closed-form solution =y(t) = cos(t) + (y0 - 1)
+exp(lam t)= is matched to =1e-6= at =t=1=, confirming the classic
+Sundials-era stiff-solver path still behaves correctly under the modern
+pinned SciPy.
+
+Backend selection (checklist item 6): =llg_integrator(llg, m0,
+backend="scipy", **kwargs)= keeps exactly the same public shape and
+=backend= argument (no new selection mechanism); only the *default value*
+changes, from =backend="sundials"= to =backend="scipy"=. The native Sundials
+extension remains unported to the modern conda-forge/DOLFINx stack, so an
+explicit =backend="sundials"= request keeps raising =ImportError= by name
+(unchanged pre-existing code path), while callers who omit =backend=
+entirely now get the working =ScipyIntegrator= instead of an import failure.
+This only changes behaviour for callers that relied on the bare default:
+every automated legacy oracle test and =finmag.sim.sim.Simulation= /
+=sim_with= already pass =backend= explicitly (=integrator_backend="sundials"=
+by their own separate default), so none of them are affected; only a couple
+of unexercised example/=__main__= scripts (e.g.
+=compute_domain_wall_cobalt()= in =domain_wall_cobalt.py=) rely on the bare
+factory default, and are out of scope for this slice's gates.
+
+New focused tests (=src/finmag/tests/test_scipy_driver_dolfinx.py=, 19 cases)
+cover: the import boundary; the stiff VODE/BDF probe; constructor defaults
+and the =t=0= no-op; =cur_t=/=m_field= updates and =n_rhs_evals= growth after
+=advance_time=; macrospin relaxation towards an applied field within a
+damping-time-scaled physical duration; the resolved raw/=xxx= ordering
+contract (three tests, including the "would fail under raw ordering"
+regression above); backward-time and unsuccessful-integration rejection;
+=reinit()= taking effect (and preserving =cur_t=); and the
+=llg_integrator= default/explicit/=sundials=/unknown-backend behaviour.
+
+Verified on 2026-07-21:
+
+- =pixi run -e dolfinx python -c "import scipy; print(scipy.__version__)"=
+  reported =1.18.0=;
+- =pixi run -e dolfinx dolfinx-src-scipy-pytest= reported =19 passed= with
+  pristine output (only the pre-existing =finmag/util/plot.py=
+  =SyntaxWarning=s appear; the expected =vode= "Excess work done" warning
+  from the unsuccessful-integration test is asserted with
+  =pytest.warns(...)= rather than left as loose noise);
+- regressions unchanged: =dolfinx-src-import-pytest= =6 passed, 2 skipped=,
+  =dolfinx-src-field-pytest= =26 passed=, =dolfinx-src-energies-pytest= =26
+  passed=, =dolfinx-src-effectivefield-pytest= =15 passed=,
+  =dolfinx-src-llg-pytest= =19 passed=, =dolfinx-prototype-pytest= =105
+  passed=.
+
+The new =dolfinx-src-scipy-pytest= pixi task follows the established
+convention of a separate focused production-port gate. No MPI gate is added;
+the serial-only guard is inherited unchanged from =LLG.solve=/=solve_for=.
+=Simulation= and the native Sundials driver remain unported; =solve_ivp= is
+deliberately not introduced (out of scope per the plan). [Claude Sonnet 5]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

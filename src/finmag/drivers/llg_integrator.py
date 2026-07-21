@@ -1,3 +1,15 @@
+"""Backend-selecting integrator factory (unchanged public API).
+
+Task 8: the native Sundials/CVODE extension is not yet ported to DOLFINx, so
+``backend="sundials"`` keeps raising ``ImportError`` by name (unchanged
+behaviour, see the ``sundials`` branch below). Instead of adding a new
+selection mechanism, the ``backend`` keyword's *default value* is changed
+from ``"sundials"`` to ``"scipy"``, making the ported ``ScipyIntegrator`` the
+temporary supported/default DOLFINx backend while every legacy caller that
+still explicitly passes ``backend="sundials"`` (e.g. ``finmag.sim.sim.Simulation``)
+is unaffected. [Claude Sonnet 5]
+"""
+
 import logging
 from finmag.field import Field
 try:
@@ -16,7 +28,7 @@ except Exception as error:
 log = logging.getLogger(name='finmag')
 
 
-def llg_integrator(llg, m0, backend="sundials", **kwargs):
+def llg_integrator(llg, m0, backend="scipy", **kwargs):
     # XXX TODO: Passing the tablewriter argument on like this is a
     #           complete hack and this should be refactored. The same
     #           is true with saving snapshots. Neither saving average

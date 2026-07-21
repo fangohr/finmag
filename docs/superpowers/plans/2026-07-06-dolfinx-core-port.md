@@ -196,12 +196,12 @@ Direct source acceptance:
 **Files:** `src/finmag/drivers/scipy_integrator.py`, `llg_integrator.py`, and
 existing driver tests.
 
-- [ ] Add SciPy to the DOLFINx environment before touching source.
-- [ ] Confirm the installed VODE/BDF path against a small stiff ODE probe.
-- [ ] Preserve the existing `advance_time` and tolerance interface.
-- [ ] Implement real reinitialization from the current field state.
-- [ ] Reject backward integration and unsuccessful integration explicitly.
-- [ ] Make SciPy the temporary supported/default DOLFINx backend without
+- [x] Add SciPy to the DOLFINx environment before touching source.
+- [x] Confirm the installed VODE/BDF path against a small stiff ODE probe.
+- [x] Preserve the existing `advance_time` and tolerance interface.
+- [x] Implement real reinitialization from the current field state.
+- [x] Reject backward integration and unsuccessful integration explicitly.
+- [x] Make SciPy the temporary supported/default DOLFINx backend without
   changing the public backend-selection API.
 
 Do not replace the integrator API or introduce `solve_ivp` merely as migration

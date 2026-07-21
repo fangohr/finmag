@@ -97,10 +97,24 @@ module with its tests.
 - Field `xxx` consumers: `drivers/llg_integrator.py`, the NEB
   implementations, and `Field.np` require component-blocked state. DOLFINx's
   interleaved blocked storage does not remove that API requirement. The SciPy
-  driver currently initializes from raw `as_array()` but calls an LLG setter
-  that interprets its argument as `xxx`; Task 8 should route both directions
-  through the explicit state ordering rather than preserve this ambiguity.
-  Multi-rank stepping remains outside the initial driver slice. [Codex GPT-5.6]
+  driver used to initialize from raw `as_array()` but call an LLG setter
+  that interprets its argument as `xxx`. Multi-rank stepping remains outside
+  the initial driver slice. [Codex GPT-5.6]
+- Task 8 update: `drivers/scipy_integrator.py` is now the direct DOLFINx
+  production `ScipyIntegrator`. It resolves the raw/`xxx` ambiguity noted
+  above by seeding and writing back the ODE state exclusively through
+  `Field.get_ordered_numpy_array_xxx()`/`set_with_ordered_numpy_array_xxx()`
+  in both directions, matching what `llg.solve_for` has always expected.
+  `advance_time` now rejects `t < cur_t` with `ValueError` and an
+  unsuccessful `scipy.integrate.ode` step with `RuntimeError` (replacing a
+  bare `assert`), and `reinit()` does real work: it rebuilds the underlying
+  VODE integrator seeded from the current field state at the current time,
+  mirroring the Sundials reinit contract instead of only logging
+  "not supported". `drivers/llg_integrator.py`'s public `backend=` argument
+  and shape are unchanged; only its default value changes from
+  `"sundials"` to `"scipy"`, making the ported driver the working default
+  while an explicit `backend="sundials"` request keeps raising `ImportError`
+  by name (native Sundials/CVODE remains unported). [Claude Sonnet 5]
 - Task 7 update: `physics/llg.py` is no longer an unported `xxx` consumer. The
   direct DOLFINx port makes `solve`/`solve_for` and the `m` setters
   unambiguously component-blocked coordinate-ordered `xxx`, and routes the
