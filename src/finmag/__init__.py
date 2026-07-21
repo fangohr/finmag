@@ -26,8 +26,10 @@ logger.extremedebug = lambda message: logger.log(logging.EXTREMEDEBUG, message)
 # These are intentional compatibility exports, rather than every incidental
 # name that the historical wildcard initializer happened to expose. [Codex GPT-5.6]
 _LAZY_EXPORTS = {
-    "Simulation": ("finmag.sim.sim", "Simulation", True),
-    "sim_with": ("finmag.sim.sim", "sim_with", True),
+    # The core Simulation/sim_with are now the direct DOLFINx port and no
+    # longer need the legacy dolfin bridge. [Claude Opus 4.8]
+    "Simulation": ("finmag.sim.sim", "Simulation", False),
+    "sim_with": ("finmag.sim.sim", "sim_with", False),
     "Field": ("finmag.field", "Field", False),
     "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", True),
     "NormalModeSimulation": (

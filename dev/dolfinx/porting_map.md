@@ -135,6 +135,30 @@ module with its tests.
   unchanged; the ported `set_pins` instead raises `ValueError` for the same
   condition, a deliberate fail-fast deviation covered by
   `test_out_of_range_pins_raise`. [Claude Sonnet 5]
+- Task 9 update: `src/finmag/sim/sim.py` is now the direct DOLFINx port of the
+  core `Simulation`. It preserves the core public surface (construction on a
+  DOLFINx mesh with scalar `Ms`/`unit_length`/`name`/scalar `alpha`/`gamma`;
+  `set_m`/`m`/`m_field`/`m_average`/`t`/`dmdt`; the interaction registry and
+  energy accessors; lazy integrator creation, `set_tol`, `advance_time`,
+  `run_until`, `reset_time`, `reinit_integrator`; and `sim_with` for Exchange /
+  Zeeman / UniaxialAnisotropy) driven through the ported
+  `LLG`/`EffectiveField`/`Field`/`ScipyIntegrator` stack, with no legacy
+  `dolfin`, `finmag.native`, scheduler, table writer, or per-simulation log
+  file. `finmag.__init__` marks `Simulation`/`sim_with` as no longer requiring
+  the legacy dolfin bridge, and `finmag/sim/__init__.py`'s legacy `.init`
+  logging bootstrap is guarded so the package imports in the DOLFINx
+  environment. Deliberate deviations: `integrator_backend` defaults to
+  `"scipy"`; `m`/`dmdt` return component-blocked `xxx` arrays; `t` reports
+  `0.0` until an integrator exists (no lazy-create-to-read-clock); `set_tol`
+  reinits the SciPy driver; `reset_time` reseeds it (no `t0` kwarg); `Volume`
+  uses a DOLFINx assemble. Deferred by name when requested (import and core
+  paths stay clean): PBC, `parallel=True`, `sllg`/`llg_stt` kernels, `sim_with`
+  demag (default `"FK"`, pass `demag_solver=None`) and DMI (`D`), STT,
+  scheduler, restart, NDT/VTK/field output, regions, point probing, `relax`,
+  hysteresis, normal modes, and callable `pins` masks. Long-tail modules
+  (`sim_helpers`, `sim_savers`, `hysteresis`, `magnetisation_patterns`, the
+  legacy scheduler) are untouched and no longer on the core import graph.
+  [Claude Opus 4.8]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -258,7 +282,10 @@ Before editing the matching module in `src/finmag`, check that:
   views. A separate collective, globally coordinate-sorted export should be
   added only for a concrete output/restart consumer; multi-rank ODE state is
   not claimed by the first Field/driver slices. [Codex GPT-5.6]
-- There is no DOLFINx-backed `finmag.Simulation` compatibility path yet.
+- Task 9 delivered the DOLFINx-backed core `finmag.Simulation`/`sim_with`
+  (see the Task 9 update above). Demag, PBC, stochastic/STT kernels, the
+  scheduler, restart, NDT/VTK output, regions, hysteresis, and normal-mode
+  consumers remain unported and fail by name when requested.
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,

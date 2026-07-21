@@ -212,18 +212,18 @@ cleanup; that can be evaluated separately after scientific parity.
 **Files:** `src/finmag/sim/sim.py`, focused existing simulation tests, top-level
 lazy exports, and the simplest existing example needed for the core smoke.
 
-- [ ] Port construction, scalar `Ms`, `unit_length`, name, scalar `alpha`, and
+- [x] Port construction, scalar `Ms`, `unit_length`, name, scalar `alpha`, and
   scalar `gamma`.
-- [ ] Port `set_m`, `m`, `m_field`, `m_average`, `t`, and `dmdt`.
-- [ ] Port interaction add/get/list/remove and energy methods.
-- [ ] Port integrator creation, tolerances, `advance_time`, `run_until`, reset,
+- [x] Port `set_m`, `m`, `m_field`, `m_average`, `t`, and `dmdt`.
+- [x] Port interaction add/get/list/remove and energy methods.
+- [x] Port integrator creation, tolerances, `advance_time`, `run_until`, reset,
   and reinitialization.
-- [ ] Port `sim_with` for Exchange, Zeeman, and uniaxial anisotropy.
-- [ ] Make demag, PBC, stochastic kernels, STT, scheduler, restart, and unported
+- [x] Port `sim_with` for Exchange, Zeeman, and uniaxial anisotropy.
+- [x] Make demag, PBC, stochastic kernels, STT, scheduler, restart, and unported
   output fail explicitly when requested.
-- [ ] Remove touched dead legacy branches rather than leaving NameErrors behind.
+- [x] Remove touched dead legacy branches rather than leaving NameErrors behind.
   Leave unrelated long-tail modules unchanged outside the active import graph.
-- [ ] Run an end-to-end physical-time workflow using all configured interaction
+- [x] Run an end-to-end physical-time workflow using all configured interaction
   fields.
 
 ## Task 10: Establish the first direct-source DOLFINx gate

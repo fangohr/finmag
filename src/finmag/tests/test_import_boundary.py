@@ -152,11 +152,15 @@ def test_unported_public_access_reports_the_real_missing_dependency():
     if importlib.util.find_spec("dolfin") is not None:
         pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
 
+    # NormalModeSimulation is still a legacy-dolfin surface (unported), so
+    # accessing it in the DOLFINx environment still reports the real missing
+    # dependency. (The core Simulation/sim_with are now DOLFINx-native and are
+    # covered by test_ported_public_names_bypass_legacy_dolfin below.) [Claude Opus 4.8]
     result = subprocess.run(
         [
             sys.executable,
             "-c",
-            "import finmag; finmag.Simulation",
+            "import finmag; finmag.NormalModeSimulation",
         ],
         cwd=str(REPO_ROOT),
         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": str(SRC_ROOT)},
@@ -166,6 +170,27 @@ def test_unported_public_access_reports_the_real_missing_dependency():
 
     assert result.returncode != 0
     assert "No module named 'dolfin'" in result.stderr
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("dolfinx") is None,
+    reason="The ported Simulation export check requires the DOLFINx environment.",
+)
+def test_ported_public_names_bypass_legacy_dolfin():
+    _run_isolated(
+        """
+import sys
+from finmag import Simulation, sim_with
+
+assert Simulation.__module__ == "finmag.sim.sim"
+assert sim_with.__module__ == "finmag.sim.sim"
+assert "dolfin" not in sys.modules
+assert not any(
+    name == "finmag.native" or name.startswith("finmag.native.")
+    for name in sys.modules
+)
+"""
+    )
 
 
 @pytest.mark.skipif(

@@ -3159,3 +3159,140 @@ prototype exchange and anisotropy energy helpers now return =0.0= before form
 assembly when their constants are zero, avoiding missing-domain errors for
 degenerate UFL forms. Local verification: =51 passed= for =pixi run -e dolfinx
 dolfinx-pytest=. [Codex gpt-5.5 high]
+
+** Direct DOLFINx Core Simulation Port
+
+Task 9 ports =src/finmag/sim/sim.py= directly to DOLFINx. The core
+=Simulation= public surface -- construction on a DOLFINx mesh with scalar
+=Ms=/=unit_length=/=name=/scalar =alpha=/scalar =gamma=; =set_m=, =m=,
+=m_field=, =m_average=, =t=, =dmdt=; the interaction registry (=add=,
+=get_interaction=, =interactions=/=get_interaction_list=,
+=remove_interaction=, =has_interaction=, =total_energy=, =compute_energy=,
+=effective_field=); integrator creation (lazy, on first =sim.integrator=
+access), =set_tol=, =advance_time=, =run_until=, =reset_time=,
+=reinit_integrator=; and the =sim_with= convenience factory for Exchange,
+Zeeman and uniaxial anisotropy -- is preserved and driven entirely through the
+already-ported =LLG=/=EffectiveField=/=Field=/=ScipyIntegrator= stack. No
+compiled =finmag.native= extension, legacy =dolfin=, scheduler, table writer,
+or per-simulation log file is imported; the module-scope imports are
+=finmag.field=, =finmag.physics.llg=, =finmag.drivers.llg_integrator=, and the
+ported =finmag.energies= Exchange/Zeeman/UniaxialAnisotropy.
+
+The lazy export seam is updated: =finmag.__init__._LAZY_EXPORTS= now marks
+=Simulation= and =sim_with= as =requires_legacy_dolfin=False=, so
+=from finmag import Simulation, sim_with= resolves cleanly in the DOLFINx
+environment without the legacy dolfin bridge. =finmag/sim/__init__.py='s
+=from .init import *= (which imports legacy =dolfin=/=ffc= for console/file
+logging setup) is wrapped in =try/except ImportError= so the package -- and
+therefore =finmag.sim.sim= -- imports in the DOLFINx environment; when legacy
+=dolfin= is present (the FEniCS environment) the bootstrap runs unchanged.
+
+Deliberate deviations from the legacy module (all preserve the public names):
+
+- =integrator_backend= defaults to ="scipy"= (was ="sundials"=) on both
+  =Simulation= and =sim_with=, because the native Sundials/CVODE extension is
+  unported; an explicit ="sundials"= request still raises =ImportError= by
+  name via =llg_integrator=. This matches the Task 8 factory default change.
+- =m= and =dmdt= return the component-blocked coordinate-ordered =xxx= arrays
+  (matching the =LLG= state-vector contract and =sim.set_m='s numpy-array
+  input), not raw backend dofs. On the legacy reorder-disabled DOLFIN meshes
+  the two coincided; on DOLFINx's blocked layout they differ, so =xxx= is the
+  faithful port. =dmdt= is read from =llg._dmdt= re-exported as =xxx= so its
+  reshape((3, -1)) (and =dmdt_max=) stays component-consistent with =m=.
+- =t= reports =0.0= until an integrator exists rather than the legacy
+  =hasattr(self, "integrator")= path, which -- because =integrator= is a
+  property that lazily *creates* the integrator -- silently built an
+  integrator just to read the clock. The port guards on =has_integrator()=.
+- =set_tol= updates the live integrator's =reltol=/=abstol= and calls
+  =reinit()= so the new tolerances take effect; the SciPy driver has no
+  in-place =set_scalar_tolerances= counterpart to the native one.
+- =reset_time(t0)= rebuilds the integrator and reseeds =cur_t= and the VODE
+  initial value at =t0= directly, because =ScipyIntegrator= takes no =t0=
+  constructor kwarg.
+- =reinit_integrator()= calls =integrator.reinit()= with no arguments; the
+  legacy =debug= flag (also accepted and ignored by =set_m=) has no SciPy
+  counterpart.
+- =Ms= getter returns =llg.Ms= (the DG0 Field the EffectiveField and
+  interactions already reference in place), and the setter delegates to
+  =llg.Ms=, so an Ms update propagates to registered interactions without a
+  duplicate Field.
+- =Volume= is computed with a DOLFINx =assemble_scalar(Constant*dx)= MPI
+  all-reduce instead of =finmag.util.meshes.mesh_volume=.
+- No table writer / scheduler / per-simulation log file. =add= and
+  =remove_interaction= are pure registry pass-throughs (no NDT-entity
+  bookkeeping). =run_until= advances physical time straight through the
+  integrator with no scheduler (scheduler integration is Task 12 scope).
+
+Judgment-call deferrals (legacy public names retained but raising an explicit
+by-name =NotImplementedError= when requested; none break import or the core
+paths):
+
+- construction options: =pbc='1d'/'2d'= (periodic boundaries), =parallel=True=
+  (multi-rank), =kernel='sllg'= and =kernel='llg_stt'=;
+- =sim_with= demag (=demag_solver=, default ="FK"= kept for signature fidelity
+  but now raising -- pass =demag_solver=None= for a demag-free simulation) and
+  DMI (=D=);
+- STT: =set_stt=, =toggle_stt=, =set_zhangli=;
+- scheduler: =schedule=, =unschedule=, =clear_schedule=;
+- restart: =save_restart_data=, =restart= (Task 12 scope);
+- output: =save_ndt=/=save_averages=, =save_m=, =save_field=, =save_vtk=,
+  =save_field_to_vtk=, =snapshot=, =render_scene=, =plot_dynamics=(=_3d=),
+  =plot_mesh=;
+- region/material machinery: =mark_regions=, =save_m_in_region=,
+  =get_submesh=, region-restricted =get_field_as_dolfin_function=;
+- point probing: =probe_field=, =probe_field_along_line=;
+- drivers/analyses: =relax=, =hysteresis=, =hysteresis_loop=,
+  =run_normal_modes_computation=;
+- =pins= callable masks (coordinate->dof mapping) -- the plain owned-index
+  array form still delegates to =LLG.pins=.
+
+Dead legacy branches inside the touched core methods were removed rather than
+left half-referencing deleted helpers (the parallel/llg_stt/sllg integrator
+branches, the =import ipdb= double-create branch, the tablewriter-entity
+registration in =add=/=remove_interaction=/=save_m_in_region=, the instance
+=shutdown=/cyclic-reference machinery, and the =dt=/=T= sllg-only properties).
+Lightweight instance accounting (=instance_id=, =instances=) is retained with
+no cyclic references. Long-tail modules outside the core import graph
+(=sim_helpers=, =sim_savers=, =hysteresis=, =magnetisation_patterns=, the
+legacy scheduler) are left untouched; the core =sim.py= no longer imports
+them.
+
+New focused tests (=src/finmag/tests/test_simulation_dolfinx.py=, 28 cases)
+cover the import boundary; construction and core state (mesh, scalar Ms
+average, unit_length, name, default alpha/gamma, Volume); scalar alpha/gamma
+round-trip and the spatially-varying-alpha rejection; =set_m= (constant and
+callable) with =m=/=m_field=/=m_average= accessors and node-wise unit norm;
+=t=-before-integration (asserting no silent integrator creation); =dmdt=
+shape; the interaction registry pass-through and energy accessors; lazy
+integrator creation, =set_tol=, =advance_time=, =reset_time=, and
+=reinit_integrator=-without-integrator; the end-to-end =run_until(1e-11)=
+relaxation with Exchange + Zeeman + UniaxialAnisotropy on a small 3D box
+(asserting node-wise unit norm to 1e-5, a directional tilt of =<m>= toward the
++z field/easy axis, and a physical average magnitude); =sim_with= building the
+three ported interactions; and every deferral above (pbc, parallel,
+sllg/llg_stt kernels, scheduler, STT, restart, output, regions, hysteresis,
+sim_with demag/DMI).
+
+The import-boundary suite is extended: =finmag.Simulation= no longer reports a
+missing =dolfin= in the DOLFINx environment (that assertion moved to the still
+unported =finmag.NormalModeSimulation=), and a new
+=test_ported_public_names_bypass_legacy_dolfin= asserts =Simulation= and
+=sim_with= import with no =dolfin=/=finmag.native= in =sys.modules=.
+
+Verified on 2026-07-21 (=pixi run -e dolfinx=):
+
+- =dolfinx-src-simulation-pytest= reported =28 passed=;
+- regressions unchanged/green: =dolfinx-src-import-pytest= =7 passed, 2
+  skipped= (was 6/2 before the added ported-export test),
+  =dolfinx-src-field-pytest= =26 passed=, =dolfinx-src-energies-pytest= =26
+  passed=, =dolfinx-src-effectivefield-pytest= =15 passed=,
+  =dolfinx-src-llg-pytest= =19 passed=, =dolfinx-src-scipy-pytest= =19
+  passed=, =dolfinx-prototype-pytest= =105 passed=;
+- =git diff --check= clean; only intended files changed.
+
+The new =dolfinx-src-simulation-pytest= pixi task follows the established
+focused-source-gate convention. No MPI gate is added; the serial-only guard is
+inherited from =LLG.solve=/=solve_for= (and =Simulation(parallel=True)= raises
+by name). Demag, DMI, PBC, stochastic kernels, STT, scheduler, restart,
+NDT/VTK output, regions, hysteresis, normal modes, and the native Sundials
+driver remain unported. [Claude Opus 4.8]
