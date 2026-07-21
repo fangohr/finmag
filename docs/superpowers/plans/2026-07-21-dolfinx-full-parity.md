@@ -174,3 +174,40 @@ script, `dev/bin/verify-dolfinx-m5`, install docs.
   file-by-file (tracked in porting_map).
 - [ ] `verify-dolfinx-m5` (or its successor) covers all ported capabilities.
 - [ ] Packaging allows installation and use without `PYTHONPATH=src`.
+
+## Phase 3: full master parity (Tasks 18-29)
+
+Approved 2026-07-21. The authoritative register and per-task detail live in
+`2026-07-21-master-parity-audit.md`; tasks execute in the audited order
+18→19→20→21(packaging, resumes Task 17)→22→23→24→25→26→27→28→29. All
+accept-drop decisions are DEFERRED to Task 29 by user instruction — until then
+every capability not already formally dropped is treated as PORT.
+
+## Task 18: Mesh tooling bridge (Netgen/Gmsh → DOLFINx)
+
+**Files:** `src/finmag/util/meshes.py`, `src/finmag/util/mesh_templates.py`,
+`src/finmag/util/nmesh_to_dolfin.py`, pixi env deps if needed.
+
+- [ ] Establish the legacy mesh-generation surface from the pixi tip: the
+  generator functions in `util/meshes.py` (box/cylinder/sphere/ellipsoid/
+  elliptical cylinder/nanodisk etc. via `mesh_templates.py` CSG), the
+  gmsh/netgen invocation paths, and the md5-keyed mesh-file caching contract.
+- [ ] Port the Gmsh path first: drive Gmsh via its Python API and convert to
+  `dolfinx.mesh` via `dolfinx.io.gmshio` (investigate and use the supported
+  bridge; no dolfin XML intermediates). Preserve the public generator
+  signatures and the caching contract (cache format may change — document).
+- [ ] Port `mesh_templates.py` CSG template classes on top of the Gmsh path,
+  preserving template names/parameters and `csg()`/hash semantics where
+  practical (documented deviations otherwise).
+- [ ] Netgen path: port if the conda-forge netgen in the DOLFINx env supports
+  the legacy workflow cleanly; otherwise defer by name with documentation
+  (decision recorded for Task 29 review, not silently narrowed).
+- [ ] `nmesh_to_dolfin.py`: assess against the nsim reference-data usage;
+  port the reader if it feeds checked-in Nmag comparisons, else defer by name.
+- [ ] Validation: analytic volume/surface checks per template (legacy
+  `mesh_templates_test.py` invariants), vertex/cell-count sanity vs the pixi
+  tip where deterministic, and one FK-demag-on-generated-mesh smoke proving
+  the bridge feeds real physics.
+- [ ] New gate `dolfinx-src-meshes-pytest` folded into `verify-dolfinx-m5`;
+  env deps called out if `gmsh`/`python-gmsh`/`netgen` must be added to the
+  dolfinx feature (pixi.lock change expected — call out).
