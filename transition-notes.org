@@ -2812,6 +2812,93 @@ Verified on 2026-07-20:
   reported =28 passed in 185.89s=; the oracle worktree integrity guard also
   completed successfully. [Codex GPT-5.6]
 
+** Direct DOLFINx EffectiveField Port
+
+Task 6 ports =src/finmag/physics/effective_field.py= directly. The registry
+API is unchanged: =add=/=get=/=exists=/=all=/=remove=, the unique-name
+=ValueError= on duplicate =add=, =UnknownInteraction= on missing =get=/
+=remove=, =compute=/=compute_jacobian_only=/=total_energy=, and the
+=with_time_update= callback contract including the "some interactions
+require a time update, but no time step was given" error when =t= is omitted.
+
+Three legacy surfaces were replaced:
+
+- =self.m_field.f.vector().local_size()= (legacy dolfin) is now
+  =self.m_field.as_array().size=, i.e. the DOLFINx =Field='s flat rank-local
+  owned-dof count -- the same owned-array contract every ported interaction's
+  =compute_field()= already returns, so =H_eff= accumulation stays
+  shape-consistent.
+- =get_dolfin_function= no longer imports
+  =finmag.util.helpers.vector_valued_function= (which pulls in legacy
+  =dolfin= at module import time). It is reimplemented directly using the
+  ported =Field=: =Field(self.m_field.functionspace,
+  interaction.compute_field()).f= builds a fresh DOLFINx =Function= on m's
+  space from the interaction's owned field array, matching the legacy
+  contract of returning a bare Function (mirroring how
+  =Simulation.llg._m_field.f= already returns one for ~m~ itself). The
+  historical =region= parameter was already unused by the old
+  implementation's call to =vector_valued_function=; rather than preserve
+  that silent no-op, the DOLFINx port raises an explicit
+  =NotImplementedError= naming region-restriction as deferred instead of
+  quietly ignoring the argument.
+- =from finmag.energies import TimeZeeman= is preserved unchanged. Task 5
+  already made =TimeZeeman= resolve to an explicit deferred stub
+  (=_DeferredZeeman= subclass) without requiring legacy =dolfin=, so this
+  import and the =isinstance(interaction, TimeZeeman)= auto-connection check
+  both work exactly as before; only actually constructing a =TimeZeeman=
+  still raises its documented deferral. The new test suite exercises the
+  auto-connection with a plain-Python subclass double that overrides
+  =__init__= (so =isinstance= still succeeds without triggering the raise),
+  confirming =with_time_update= is wired to =interaction.update= exactly as
+  the legacy behavior intended.
+
+=src/finmag/physics/__init__.py= is empty, so importing
+=finmag.physics.effective_field= directly never pulled in unrelated legacy
+subsystems; no import-boundary change was needed there.
+
+New focused tests (=src/finmag/tests/test_effective_field_dolfinx.py=) cover:
+registry behavior against plain-Python interaction doubles independent of
+FEM assembly (add/get/exists/all/remove, duplicate-name rejection,
+=UnknownInteraction=); total field and total energy summed across real
+=Exchange=, =Zeeman=, and =UniaxialAnisotropy= instances on a small
+DOLFINx mesh; the legacy compute()-returns-a-copy regression (mutating a
+returned array must not corrupt the next =compute()= result); the
+time-update callback contract including the "no t given" =ValueError=; the
+=TimeZeeman= auto-connection double described above; and that removing an
+interaction changes the accumulated field array itself (not only the
+reported energy), verified against the removed interaction's own
+=compute_energy()= delta. A two-rank probe
+(=src/finmag/tests/effective_field_dolfinx_mpi_probe.py=) checks the same
+total-field/total-energy consistency, the copy contract, and the
+remove-changes-field behavior collectively, with total energy independently
+confirmed equal across both ranks.
+
+=Simulation=, hysteresis, LLB, and normal-mode consumers of
+=EffectiveField= remain unported.
+
+Verified on 2026-07-21:
+
+- =pixi run -e dolfinx dolfinx-src-effectivefield-pytest= reported =15
+  passed=;
+- =pixi run -e dolfinx dolfinx-src-effectivefield-mpi= passed with 7/9 owned
+  and 5/3 ghost blocks;
+- =pixi run -e dolfinx dolfinx-src-import-pytest= reported =6 passed, 2
+  skipped= (unchanged);
+- =pixi run -e dolfinx dolfinx-src-field-pytest= reported =26 passed=
+  (unchanged);
+- =pixi run -e dolfinx dolfinx-src-energies-pytest= reported =26 passed=
+  (unchanged);
+- =dev/bin/verify-dolfinx-m4= remained green, including =105 passed= for
+  =dolfinx-prototype-pytest=.
+
+The new =dolfinx-src-effectivefield-pytest=/=dolfinx-src-effectivefield-mpi=
+pixi tasks were deliberately *not* added to =dev/bin/verify-dolfinx-m4=: that
+script is the frozen M4 prototype gate, and the existing convention (recorded
+above under "Lazy Source Import Boundary" and followed by every
+=dolfinx-src-*= task since) is that direct production-port gates stay
+separate, focused tasks rather than being folded into the frozen aggregate
+verifier. [Claude Sonnet 5]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

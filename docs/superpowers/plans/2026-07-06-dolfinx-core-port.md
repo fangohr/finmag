@@ -167,12 +167,12 @@ Direct source acceptance:
 
 **Files:** `src/finmag/physics/effective_field.py` and its existing tests.
 
-- [ ] Preserve unique-name enforcement and the existing interaction lifecycle.
-- [ ] Preserve `add`, `get`, `exists`, `all`, `remove`, total field, total energy,
+- [x] Preserve unique-name enforcement and the existing interaction lifecycle.
+- [x] Preserve `add`, `get`, `exists`, `all`, `remove`, total field, total energy,
   and time-update callbacks.
-- [ ] Test registry behavior with interaction doubles independently of FEM.
-- [ ] Test total field and energy with all three ported interactions.
-- [ ] Test that removing or replacing an interaction changes dynamics, not only
+- [x] Test registry behavior with interaction doubles independently of FEM.
+- [x] Test total field and energy with all three ported interactions.
+- [x] Test that removing or replacing an interaction changes dynamics, not only
   reported energy.
 
 ## Task 7: Port the deterministic LLG core

@@ -230,9 +230,23 @@ Before editing the matching module in `src/finmag`, check that:
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
   region/PBC interaction behavior, `DipolarField`, and time-dependent Zeeman
   variants remain outside this slice. The ported interactions are currently
-  direct-use building blocks with DOLFINx `Field`; `EffectiveField`,
+  direct-use building blocks with DOLFINx `Field`; `Simulation`, hysteresis,
+  LLB, and normal-mode consumers remain unported. [Codex GPT-5.6]
+- Task 6: `EffectiveField` is now a direct DOLFINx production module. It keeps
+  the exact registry API (`add`/`get`/`exists`/`all`/`remove`, unique-name
+  `ValueError`, `UnknownInteraction`), total field/energy accumulation, the
+  `with_time_update` callback contract (including the "no t given" error), and
+  the automatic `TimeZeeman.update` auto-connection (`isinstance` still works
+  against the deferred `TimeZeeman` stub without constructing one). `H_eff` is
+  now sized from `Field.as_array().size` instead of the legacy
+  `vector().local_size()`, matching every ported interaction's owned-array
+  contract. `get_dolfin_function` no longer imports
+  `finmag.util.helpers.vector_valued_function` (which pulls in legacy
+  `dolfin`); it is reimplemented directly with `Field(m.functionspace,
+  interaction.compute_field()).f` and explicitly rejects the historical
+  (already-unused) `region` argument rather than silently ignoring it.
   `Simulation`, hysteresis, LLB, and normal-mode consumers remain unported.
-  [Codex GPT-5.6]
+  [Claude Sonnet 5]
 - The production box foundation deliberately requires a blocked
   three-component CG1 magnetisation space. Some higher-order Lagrange row-sum
   lumped weights are non-positive, so accepting arbitrary elements would fail
