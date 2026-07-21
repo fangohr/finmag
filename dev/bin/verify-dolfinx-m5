@@ -23,6 +23,9 @@
 # Task 13 folds in the direct DOLFINx DMI port gate
 # (`dolfinx-src-dmi-pytest`). [Claude Sonnet 5]
 #
+# Task 14 folds in the direct DOLFINx cubic-anisotropy port gate
+# (`dolfinx-src-cubicanis-pytest`). [Claude Sonnet 5]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -92,6 +95,9 @@ pixi run -e dolfinx dolfinx-src-restart-output-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-dmi-pytest"
 pixi run -e dolfinx dolfinx-src-dmi-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-cubicanis-pytest"
+pixi run -e dolfinx dolfinx-src-cubicanis-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

@@ -101,6 +101,11 @@ dolfinx-src-restart-output-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTEC
 # chirality/scaling pins, and coordinate-ordered legacy oracle comparisons
 # (bulk 3D + interfacial). [Claude Sonnet 5]
 dolfinx-src-dmi-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_dmi_dolfinx.py"
+# Task 14: the direct DOLFINx cubic-anisotropy port -- legacy analytic
+# reference values, cubic-symmetry easy/hard-axis ordering, axis-handling
+# behavior, by-name deferrals, and a coordinate-ordered legacy oracle
+# comparison. [Claude Sonnet 5]
+dolfinx-src-cubicanis-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_cubic_anisotropy_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

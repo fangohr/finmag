@@ -4063,4 +4063,187 @@ not part of this slice's ported surface (it is not mentioned in the legacy
 class's own documented =Options=). =sim_with(D=...)= now constructs a real
 =DMI= interaction instead of deferring.
 
+** Direct DOLFINx Cubic Anisotropy Port (Task 14)
+
+Task 14 ports =src/finmag/energies/cubic_anisotropy.py= directly, closing the
+=CubicAnisotropy= entry in the Task 10 fail-forward known-gap list (Demag/FK
+in Task 11b, DMI in Task 13; only =ThinFilmDemag=/=FixedEnergyDW= remain). It
+follows the same =EnergyBase=/=UniaxialAnisotropy=/=DMI= pattern: constant
+scalar/axis coefficients, ~box-assemble~ only, owned-array =compute_field()=.
+
+*** Form transcription (legacy line -> ported line)
+
+With =a = u1.m=, =b = u2.m=, =c = u3.m= and =u3 = u1 x u2=, the legacy energy
+density
+
+#+begin_example
+E_term1 = K1*(u1msq*u2msq + u2msq*u3msq + u3msq*u1msq)   # K1*(a^2 b^2 + b^2 c^2 + c^2 a^2)
+E_term2 = K2*(u1msq*u2msq*u3msq)                          # K2*(a^2 b^2 c^2)
+E_term3 = K3*(u1msq**2*u2msq**2 + u2msq**2*u3msq**2 + u3msq**2*u1msq**2)  # K3*(a^4 b^4 + b^4 c^4 + c^4 a^4)
+#+end_example
+
+is transcribed verbatim into
+
+#+begin_example
+a = inner(u1.f, m.f); b = inner(u2.f, m.f); c = inner(u3.f, m.f)
+E = K1.f*(a**2*b**2 + b**2*c**2 + c**2*a**2)
+E += K2.f*(a**2*b**2*c**2)
+E += K3.f*(a**4*b**4 + b**4*c**4 + c**4*a**4)
+#+end_example
+
+Legacy's conditional inclusion of the =K2=/=K3= terms only when
+=K2_value != 0=/=K3_value != 0= is a pure optimisation (a zero-valued
+constant coefficient contributes an algebraically identical zero either way);
+the port always includes all three terms unconditionally, which is simpler
+and numerically identical. There is no =method= constructor parameter on the
+legacy class at all (unlike =DMI=/=UniaxialAnisotropy=): the energy is
+*always* box-assembled, both in legacy and here.
+
+*** Axis-handling investigation (the escalation-worthy question, resolved)
+
+The legacy constructor stores =self.u1_value = u1= and =self.u2_value = u2=
+completely unchanged -- no =np.asarray=, no normalisation, no orthogonality
+check anywhere in the class. =self.u3_value = np.cross(u1, u2)= is the *only*
+derived quantity. This is confirmed three ways, not assumed:
+1. direct reading of the frozen legacy source (identical at the oracle
+   commit =ba9280934e188d7f3800e7b9865e70a9422f7687= and at HEAD, verified by
+   diff);
+2. the legacy module's own =cubic_anisotropy_test.py= uses
+   =u1=(0,-0.7071,0.7071)=, =u2=(0,0.7071,0.7071)= -- neither exactly unit
+   (=0.7071**2*2 = 0.99980082 != 1=) nor (by construction, since they are not
+   unit) exactly orthonormal to full precision -- and the test still passes
+   to =rel<1e-10=, i.e. the legacy class runs unmodified with these axes;
+3. =dev/dolfinx/prototype.py::cubic_anisotropy_energy=, the M4 probe witness,
+   independently documents the same finding ("Unlike
+   =uniaxial_anisotropy_energy=, u1/u2 are used as given and not renormalised,
+   matching the legacy class, which documents them as should be unit vectors
+   but does not enforce it").
+
+The port therefore stores =u1=/=u2= exactly as given (only shape-=(3,)=/
+finite validation is added, since legacy's own =np.cross= would otherwise
+fail unhelpfully on malformed input) and computes =u3 = np.cross(u1, u2)=
+identically. No normalisation, no orthogonality error. This is exercised by
+=test_non_orthogonal_non_unit_axes_are_silently_accepted= (deliberately
+non-orthogonal, non-unit axes still produce a finite, unmodified energy) and
+=test_u3_is_cross_product_of_u1_and_u2=.
+
+*** The =assemble= flag: what it actually gates, and the port's decision
+
+Both legacy =CubicAnisotropy= and =UniaxialAnisotropy= always box-assemble
+the *energy* (=E_integrand*dx=) regardless of =self.assemble=; the flag only
+selects which algorithm computes the *field*: =assemble=True= uses the same
+box-assemble weak-form derivative =EnergyBase= already provides;
+=assemble=False= overrides =compute_field= with a separate native/compiled
+routine (=finmag.native.llg.compute_cubic_field=) that is not part of the
+DOLFINx port (mirroring the already-established precedent for
+=UniaxialAnisotropy=, whose ported =assemble=False= path also raises).
+
+The wrinkle specific to =CubicAnisotropy= is that its *legacy default* is
+=assemble=False= (=UniaxialAnisotropy='s legacy default is =True=), and the
+legacy oracle test itself calls =CubicAnisotropy(u1, u2, K1, K2, K3)= with
+that default -- exercising only =compute_energy()=, never =compute_field()=.
+Eagerly rejecting =assemble=False= in =__init__= (as =UniaxialAnisotropy=
+does) would therefore break the legacy class's own most common, exactly
+transcribed invocation before energy is ever computed. The port instead defers
+the by-name rejection to =compute_field()= itself: construction and
+=compute_energy()= work identically regardless of =assemble= (preserving the
+legacy default call exactly); only =compute_field()= -- and anything built on
+it, e.g. =EffectiveField=/dynamics -- raises
+=NotImplementedError("...construct CubicAnisotropy(..., assemble=True)...")=
+under the (default) unported native path. This is exercised by
+=test_default_assemble_false_computes_energy_but_defers_field= and
+=test_cubic_anisotropy_default_assemble_defers_effective_field_by_name=
+(through =Simulation=).
+
+*** Cubic-symmetry easy/hard-axis ordering (verified, not assumed)
+
+For the standard orthonormal axes =u1=(1,0,0)=, =u2=(0,1,0)= (so
+=u3=(0,0,1)=) and =K1>0=, with =a=m.u1=, =b=m.u2=, =c=m.u3=:
+- =m=[100]=: =(a,b,c)=(1,0,0)= so =a^2 b^2 = b^2 c^2 = c^2 a^2 = 0= -> =E=0=.
+- =m=[110]=: =a=b=1/sqrt(2)=, =c=0= -> =a^2 b^2 = 1/4=, others =0= ->
+  =E = K1/4 * V=.
+- =m=[111]=: =a=b=c=1/sqrt(3)= -> each of the three products is =1/9=,
+  summing to =1/3= -> =E = K1/3 * V=.
+Measured directly (=K1=1e4=, unit cube, =assemble=True=):
+=E([100])=0.0=, =E([110])-E([100])=2500.0000000000145= (expected =2500.0=),
+=E([111])-E([100])=3333.33333333332= (expected =3333.33...=) -- confirming
+the brief's algebra rather than trusting it, and pinning =<100>= easy,
+=<111>= hard for =K1>0=, exactly as cubic anisotropy theory predicts.
+
+*** Fixture provenance
+
+=src/finmag/tests/fixtures/cubic_anisotropy_oracle.json= (schema v1, one case
+=cubic_3d=) is generated by
+=src/finmag/tests/fixtures/gen_cubic_anisotropy_oracle.py= at the frozen
+oracle commit =ba9280934e188d7f3800e7b9865e70a9422f7687= (byte-identical
+=cubic_anisotropy.py= at that commit, confirmed by direct diff). Constants
+and axes are the exact =K1=-8608726=, =K2=-13744132=, =K3=1100269=,
+=u1=(0,-0.7071,0.7071)=, =u2=(0,0.7071,0.7071)= used by
+=cubic_anisotropy_test.py=; mesh =BoxMesh(Point(0,0,0),Point(0.7,0.7,0.7),
+4,4,4)= and magnetisation =m=(0.6, 0.8*cos(2*pi*x0), 0.8*sin(2*pi*x0))=
+(exact unit norm) match the Task 13 DMI oracle for consistency. The legacy
+class is constructed with =assemble=True= so the recorded =H_vertex= is the
+box-assemble field the DOLFINx port actually reproduces (the energy is
+identical to the legacy default regardless of =assemble=). A quartic
+(=a^4 b^4=) term over a non-polynomial (=cos=/=sin=) magnetisation expression
+made FFC's automatic quadrature-degree estimate large enough to print a
+"number of integration points" warning directly to the OS-level stdout file
+descriptor (bypassing Python's logging and =sys.stdout=, which would have
+corrupted the JSON emitted on stdout); the generator redirects file
+descriptor 1 to =/dev/null= for the assembly calls only, leaving the physics
+untouched. Measured agreement between the ported DOLFINx computation and this
+oracle: energy relative error =8.3e-14=, field relative error =1.4e-15= --
+both far tighter than the declared fixture tolerances (=rtol=1e-9=), so
+observed disagreement is floating-point summation-order noise, not a solver
+residual or a transcription error.
+
+*** TDD evidence
+
+Before this slice, =CubicAnisotropy(...)= raised the raw
+=ModuleNotFoundError: No module named 'dolfin'= (the class still imported
+legacy =dolfin= at module scope) -- the natural RED state, pinned by
+=test_deferred_surfaces_dolfinx.py='s known-gap test (which Task 13 had
+already retargeted from =DMI= onto =CubicAnisotropy=). The direct edit to
+=src/finmag/energies/cubic_anisotropy.py= removes that import entirely; the
+same test is renamed
+(=test_demag_dmi_and_cubic_anisotropy_are_ported_and_the_others_remain_a_known_gap=)
+to assert =CubicAnisotropy(...).name == "CubicAnisotropy"= and move the
+still-genuinely-unported =ModuleNotFoundError= pin onto =ThinFilmDemag=
+instead (one of the two remaining classes in the same boundary gap).
+=test_import_boundary.py='s equivalent fail-forward reference is retargeted
+the same way, and its ported-exports check is extended to cover
+=CubicAnisotropy=.
+
+*** Measured results (2026-07-21, =pixi run -e dolfinx=)
+
+New gate =dolfinx-src-cubicanis-pytest= (=test_cubic_anisotropy_dolfinx.py=):
+17 passed. All existing gates remain green with the counts unchanged except
+as noted: import 9p/2s (the previously-fail-forward =CubicAnisotropy=
+reference in =test_import_boundary.py= was retargeted to =ThinFilmDemag=, and
+the ported-export test extended to cover =CubicAnisotropy=), field 26,
+energies 26, effectivefield 15, llg 19, scipy 19, simulation 31, deferred 5
+(same count -- one test renamed/rewritten, no tests added or removed),
+native-bem 8, demag 19, restart-output 20, dmi 28. The two-rank
+=dolfinx-src-energies-mpi= probe is extended in place with a
+=CubicAnisotropy= section (cross-rank energy agreement, ghost/owner field
+consistency under =assemble=True=, and the by-name =assemble=False=
+=compute_field()= rejection) rather than adding a new MPI task, following the
+Task 13 precedent. =dev/bin/verify-dolfinx-m5= passes end-to-end with a clean
+tracked tree; =pixi.lock= untouched.
+
+*** Deferred / deliberate deviations
+
+Spatially varying =K1=/=K2=/=K3= (=Field=/callable/string) and spatially
+varying =u1=/=u2= axes (=Field=/callable/string-tuple) raise
+=NotImplementedError= by name (Task 16). The legacy-default
+=assemble=False= native/direct field-computation path raises
+=NotImplementedError= by name on =compute_field()= only (construction and
+=compute_energy()= work identically to legacy regardless of =assemble=, see
+above). Legacy's own =sim_with= never had cubic-anisotropy parameters, so
+there is no =sim_with= wiring gap to close; =Simulation.add(CubicAnisotropy(
+..., assemble=True))= is the full integration surface, exercised together
+with a genuine dynamics effect (a low-symmetry initial =m= precesses/relaxes
+under the resulting nonzero torque) in
+=test_cubic_anisotropy_affects_dynamics=.
+
 [Claude Sonnet 5]

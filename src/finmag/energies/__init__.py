@@ -19,7 +19,7 @@ _LAZY_EXPORTS = {
     "CubicAnisotropy": (
         "finmag.energies.cubic_anisotropy",
         "CubicAnisotropy",
-        True,
+        False,
     ),
     "Zeeman": ("finmag.energies.zeeman", "Zeeman", False),
     "TimeZeeman": ("finmag.energies.zeeman", "TimeZeeman", False),

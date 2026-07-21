@@ -48,14 +48,14 @@ exports, focused DOLFINx tests.
 
 **Files:** `src/finmag/energies/cubic_anisotropy.py`, its tests, exports.
 
-- [ ] Port `CubicAnisotropy(u1, u2, K1, K2=0, K3=0, name, assemble=False)`
+- [x] Port `CubicAnisotropy(u1, u2, K1, K2=0, K3=0, name, assemble=False)`
   with constant axes/constants; spatially varying coefficients defer by name.
-- [ ] Preserve the legacy u3 = u1 x u2 convention and axis normalisation
+- [x] Preserve the legacy u3 = u1 x u2 convention and axis normalisation
   behavior exactly; validate non-orthogonal axes the way legacy did (check
   the oracle, do not guess).
-- [ ] Check against the module's own analytic reference values (same
+- [x] Check against the module's own analytic reference values (same
   constants/axes as `cubic_anisotropy_test.py`) and a legacy oracle fixture.
-- [ ] Replace the fail-forward pin; new gate `dolfinx-src-cubicanis-pytest`
+- [x] Replace the fail-forward pin; new gate `dolfinx-src-cubicanis-pytest`
   folded into `verify-dolfinx-m5`.
 
 ## Task 15: Port time-dependent Zeeman and hysteresis

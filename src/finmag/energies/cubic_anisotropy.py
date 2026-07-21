@@ -1,117 +1,151 @@
-import logging
-import numpy as np
-import dolfin as df
-from aeon import timer
-from finmag.field import Field
-from .energy_base import EnergyBase
-from finmag.util import helpers
-from finmag.util.consts import mu0
-from finmag.native import llg as native_llg
+"""DOLFINx cubic-anisotropy interaction."""
 
-logger = logging.getLogger('finmag')
+import numbers
+
+import numpy as np
+from aeon import timer
+from dolfinx import fem
+from ufl import inner
+
+from finmag.field import Field
+
+from .energy_base import EnergyBase, _require_cg1_magnetisation
 
 
 class CubicAnisotropy(EnergyBase):
+    """Constant-coefficient cubic anisotropy using box assembly.
 
+    With ``a = u1 . m``, ``b = u2 . m``, ``c = u3 . m`` and
+    ``u3 = u1 x u2`` (formed exactly as in the legacy class), the energy
+    density is
+
+    ``K1*(a**2*b**2 + b**2*c**2 + c**2*a**2) + K2*(a**2*b**2*c**2)
+      + K3*(a**4*b**4 + b**4*c**4 + c**4*a**4)``.
+
+    Matching the legacy class exactly, ``u1``/``u2`` are used *as given*:
+    they are not renormalised and their orthogonality is not checked (the
+    legacy docstring only says they "should be unit vectors"). Only constant
+    scalar ``K1``/``K2``/``K3`` and constant ``u1``/``u2`` axes are supported
+    in this slice; spatially varying coefficients/axes raise
+    ``NotImplementedError`` by name (deferred to a later slice).
+
+    The legacy ``assemble`` flag chose between two different *field*
+    computation algorithms; the total *energy* is always box-assembled, in
+    both the legacy class and here. ``assemble=True`` used the very same
+    box-assemble weak-form derivative this port always uses for
+    ``compute_field()``. ``assemble=False`` (the legacy default) used a
+    separate native/compiled direct computation
+    (``finmag.native.llg.compute_cubic_field``) that is not part of the
+    DOLFINx port. Construction and ``compute_energy()`` therefore work
+    identically regardless of ``assemble`` (matching the legacy default
+    constructor call exactly); ``compute_field()`` -- and anything built on
+    it, e.g. ``EffectiveField``/dynamics -- requires ``assemble=True`` and
+    raises ``NotImplementedError`` by name otherwise.
     """
-    Compute the cubic anisotropy field.
 
-    *Arguments*
-        K1, K2, K3
-            The anisotropy constants.
-        u1, u2, u3
-            The anisotropy axes. Should be unit vectors.
+    def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
+                 assemble=False):
+        self.u1_value = _constant_axis(u1, "u1")
+        self.u2_value = _constant_axis(u2, "u2")
+        self.u3_value = np.cross(self.u1_value, self.u2_value)
 
-    *Example of Usage*
-            Refer to the UniaxialAnisotropy class.
-
-    """
-
-    def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy', assemble=False):
-        """
-        Define a cubic anisotropy with anisotropy constants
-        `K1`, `K2`, `K3` (in J/m^3) and corresponding axes
-        `u1`, `u2` and `u3`.
-
-        if assemble = True, the box-assemble will be used, seems that box-assemble 
-        method has introduced extra error!!!
-
-        """
-
-        self.u1_value = u1
-        self.u2_value = u2
-        self.u3_value = np.cross(u1, u2)  # u3 perpendicular to u1 and u2
-
-        self.K1_value = K1
-        self.K2_value = K2
-        self.K3_value = K3
-
-        self.uv = 1.0 * np.array([self.u1_value, self.u2_value, self.u3_value])
-        self.uv.shape = (-1,)
+        self.K1_value = _constant_scalar_value(K1, "K1")
+        self.K2_value = _constant_scalar_value(K2, "K2")
+        self.K3_value = _constant_scalar_value(K3, "K3")
 
         self.name = name
+        self.assemble = bool(assemble)
         super(CubicAnisotropy, self).__init__("box-assemble", in_jacobian=True)
 
-        self.assemble = assemble
-
     @timer.method
-    def setup(self, m, Ms, unit_length=1):
-        dofmap = m.functionspace.dofmap()
-        cg_scalar_functionspace = df.FunctionSpace(
-            m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
+    def setup(self, m, Ms, unit_length=1.0):
+        if not isinstance(m, Field):
+            raise TypeError("m must be a finmag.Field")
+        if m.value_dim() != 3 or m.is_scalar_field():
+            raise ValueError(
+                "CubicAnisotropy requires a three-component m Field")
+        _require_cg1_magnetisation(m)
 
-        cg_vector_functionspace = df.VectorFunctionSpace(
-            m.mesh(), "Lagrange", 1, 3, constrained_domain=dofmap.constrained_domain)
+        coefficient_space = fem.functionspace(m.mesh(), ("Lagrange", 1))
+        vector_space = fem.functionspace(m.mesh(), ("Lagrange", 1, (3,)))
 
-        self.K1_field = Field(cg_scalar_functionspace, self.K1_value, name='K1')
-        self.K2_field = Field(cg_scalar_functionspace, self.K2_value, name='K2')
-        self.K3_field = Field(cg_scalar_functionspace, self.K3_value, name='K3')
+        self.K1 = Field(coefficient_space, self.K1_value, name="K1")
+        self.K2 = Field(coefficient_space, self.K2_value, name="K2")
+        self.K3 = Field(coefficient_space, self.K3_value, name="K3")
 
-        self.u1_field = Field(cg_vector_functionspace, self.u1_value, name='u1')
-        self.u2_field = Field(cg_vector_functionspace, self.u2_value, name='u2')
-        self.u3_field = Field(cg_vector_functionspace, self.u3_value, name='u3')
-        
-        self.volumes = df.assemble(df.TestFunction(cg_scalar_functionspace) * df.dx)
-        self.K1 = df.assemble(
-            self.K1_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes
-        self.K2 = df.assemble(
-            self.K2_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes
-        self.K3 = df.assemble(
-            self.K3_field.f * df.TestFunction(cg_scalar_functionspace) * df.dx).get_local() / self.volumes  # DOLFIN 2019 vectors expose assembled coefficients via get_local(). [Codex GPT-5.4]
+        self.u1 = Field(vector_space, self.u1_value, name="u1")
+        self.u2 = Field(vector_space, self.u2_value, name="u2")
+        self.u3 = Field(vector_space, self.u3_value, name="u3")
 
-        u1msq = df.dot(self.u1_field.f, m.f) ** 2
-        u2msq = df.dot(self.u2_field.f, m.f) ** 2
-        u3msq = df.dot(self.u3_field.f, m.f) ** 2
+        a = inner(self.u1.f, m.f)
+        b = inner(self.u2.f, m.f)
+        c = inner(self.u3.f, m.f)
 
-        E_term1 = self.K1_field.f * (u1msq * u2msq + u2msq * u3msq + u3msq * u1msq)
-        E_term2 = self.K2_field.f * (u1msq * u2msq * u3msq)
-        E_term3 = self.K3_field.f * (u1msq ** 2 * u2msq ** 2 + u2msq ** \
-                                     2 * u3msq ** 2 + u3msq ** 2 * u1msq ** 2)
-
-        E_integrand = E_term1
-
-        if self.K2_value != 0:
-            E_integrand += E_term2
-
-        if self.K3_value != 0:
-            E_integrand += E_term3
+        E_integrand = self.K1.f * (a**2 * b**2 + b**2 * c**2 + c**2 * a**2)
+        E_integrand += self.K2.f * (a**2 * b**2 * c**2)
+        E_integrand += self.K3.f * (
+            a**4 * b**4 + b**4 * c**4 + c**4 * a**4)
 
         super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
 
         if not self.assemble:
-            self.H = self.m.get_numpy_array_debug()
-            self.Ms = self.Ms.get_numpy_array_debug()
-            self.compute_field = self.__compute_field_directly
+            self.compute_field = self._compute_field_not_ported
+        return self
 
-    def __compute_field_directly(self):
+    def _compute_field_not_ported(self):
+        raise NotImplementedError(
+            "the legacy native/direct cubic-anisotropy field computation "
+            "(assemble=False, the default) is not ported to DOLFINx; "
+            "construct CubicAnisotropy(..., assemble=True) to use box "
+            "assembly for compute_field()"
+        )
 
-        m = self.m.get_numpy_array_debug()
 
-        m.shape = (3, -1)
-        self.H.shape = (3, -1)
-        native_llg.compute_cubic_field(
-            m, self.Ms, self.H, self.uv, self.K1, self.K2, self.K3)
-        m.shape = (-1,)
-        self.H.shape = (-1,)
+def _constant_scalar_value(value, name):
+    if isinstance(value, (Field, fem.Function, str)) or callable(value):
+        raise NotImplementedError(
+            "spatially varying {} is deferred from the first DOLFINx "
+            "cubic-anisotropy slice".format(name)
+        )
+    if isinstance(value, fem.Constant):
+        value = value.value
+    if isinstance(value, numbers.Real):
+        result = float(value)
+    else:
+        array = np.asarray(value)
+        if array.size != 1:
+            raise NotImplementedError(
+                "spatially varying {} is deferred from the first DOLFINx "
+                "cubic-anisotropy slice".format(name)
+            )
+        result = float(array.reshape(-1)[0])
+    if not np.isfinite(result):
+        raise ValueError("{} must be finite".format(name))
+    return result
 
-        return self.H
+
+def _constant_axis(value, name):
+    is_string_expression = isinstance(value, str) or (
+        isinstance(value, (tuple, list))
+        and any(isinstance(component, str) for component in value)
+    )
+    if (
+        isinstance(value, (Field, fem.Function))
+        or callable(value)
+        or is_string_expression
+    ):
+        raise NotImplementedError(
+            "spatially varying {} is deferred from the first DOLFINx "
+            "cubic-anisotropy slice".format(name)
+        )
+    if isinstance(value, fem.Constant):
+        value = value.value
+    array = np.asarray(value, dtype=np.float64)
+    if array.shape != (3,):
+        raise ValueError("{} must be a three-component vector".format(name))
+    if not np.all(np.isfinite(array)):
+        raise ValueError("{} must contain finite values".format(name))
+    # Deliberately *not* normalised and *not* checked for orthogonality: the
+    # legacy class stores u1/u2 exactly as given (see
+    # dev/dolfinx/porting_map.md for the axis-handling investigation).
+    return array

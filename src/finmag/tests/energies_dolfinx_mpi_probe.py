@@ -6,7 +6,7 @@ import numpy as np
 from dolfinx import fem, mesh
 from mpi4py import MPI
 
-from finmag.energies import DMI, Exchange, UniaxialAnisotropy, Zeeman
+from finmag.energies import DMI, CubicAnisotropy, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
 
@@ -146,6 +146,33 @@ def run_probe():
     )
     anisotropy_function = Field(vector_space, anisotropy.compute_field())
     _assert_function_ghosts_match_owners(anisotropy_function)
+
+    # Cubic anisotropy (Task 14): collective energy agreement across ranks,
+    # an owned/ghost-consistent field under assemble=True, and the by-name
+    # deferral of the legacy-default assemble=False field path -- exercised
+    # here with the same distributed m/Ms already used above.
+    cubic = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0, K2=1.0,
+                            assemble=True)
+    cubic.setup(m, Ms)
+    H_cubic = cubic.compute_field()
+    assert np.max(np.abs(H_cubic)) > 0.0
+    cubic_energies = comm.allgather(cubic.compute_energy())
+    assert np.allclose(cubic_energies, cubic_energies[0])
+    cubic_function = Field(vector_space, H_cubic)
+    _assert_function_ghosts_match_owners(cubic_function)
+
+    cubic_default = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0)
+    cubic_default.setup(m, Ms)
+    assert np.isfinite(cubic_default.compute_energy())
+    try:
+        cubic_default.compute_field()
+    except NotImplementedError as error:
+        assert "assemble=True" in str(error)
+    else:
+        raise AssertionError(
+            "assemble=False cubic-anisotropy compute_field() was not "
+            "rejected by name"
+        )
 
     invalid_ms = Field(scalar_space, 2.5)
     if comm.rank == 0:

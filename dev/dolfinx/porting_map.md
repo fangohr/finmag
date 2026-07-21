@@ -232,6 +232,34 @@ module with its tests.
   constants/axes as `cubic_anisotropy_test.py`), not just a self-derived case.
   Spatially varying cubic-anisotropy `Field` coefficients are not covered.
   [GitHub Copilot / Claude Sonnet 5]
+  Task 14 update: `src/finmag/energies/cubic_anisotropy.py` is now the direct
+  DOLFINx production port of `CubicAnisotropy` (constant scalar
+  `K1`/`K2`/`K3` and constant `u1`/`u2` axes only; spatially varying
+  coefficients/axes deferred to Task 16). `u3 = u1 x u2` and the legacy
+  non-normalisation/non-orthogonality-checking of `u1`/`u2` are preserved
+  exactly (confirmed against the frozen legacy source, the legacy module's
+  own not-quite-unit/not-quite-orthogonal test axes, and this file's own
+  prior probe note above -- not guessed). The legacy `assemble` flag only
+  ever gated *field* computation (energy is always box-assembled in both
+  legacy and here): `assemble=True` reuses the same box-assemble weak-form
+  derivative `EnergyBase` already provides; the legacy-default
+  `assemble=False` native/compiled direct-field path is not part of the
+  DOLFINx port and raises `NotImplementedError` by name, but only when
+  `compute_field()` is actually called -- construction and
+  `compute_energy()` keep working under the legacy default exactly as
+  `cubic_anisotropy_test.py` itself exercises. Legacy's own `sim_with` never
+  had cubic-anisotropy parameters, so `Simulation.add(CubicAnisotropy(...,
+  assemble=True))` is the full integration surface. Cubic-symmetry
+  easy/hard-axis ordering for `K1>0` (`<100>` easy, `<111>` hard, exact
+  `K1/4`/`K1/3` energy differences from `<100>`) is verified directly from
+  the transcribed form, not assumed. One coordinate-ordered legacy oracle
+  fixture case (`cubic_3d`; schema v1,
+  `src/finmag/tests/fixtures/cubic_anisotropy_oracle.json`/
+  `gen_cubic_anisotropy_oracle.py`, using the exact
+  `cubic_anisotropy_test.py` constants/axes plus a nonuniform unit-norm `m`)
+  confirms faithful transcription against the frozen legacy class to near
+  machine precision (energy relative error `8.3e-14`; field relative error
+  `1.4e-15`). Gate: `dolfinx-src-cubicanis-pytest`. [Claude Sonnet 5]
 - Wiring: `RelaxationParameters`/`PrototypeSimulation.energy_terms()` now
   include `dmi_constant` and `cubic_anisotropy_K1`/`K2`/`K3`/`u1`/`u2`
   fields, both defaulting to inert values. `dmi_energy` requires a 3D mesh, and
@@ -414,6 +442,13 @@ Before editing the matching module in `src/finmag`, check that:
   `NotImplementedError`. The remaining `CubicAnisotropy`/`ThinFilmDemag`/
   `FixedEnergyDW` classes are still the documented direct-construction gap.
   [Claude Sonnet 5]
+  Task 14 update: `CubicAnisotropy` is now `requires_legacy_dolfin=False` and
+  dolfin-clean -- constructing it directly builds the ported DOLFINx
+  `CubicAnisotropy` (see the Task 14 update to the "Cubic anisotropy" entry
+  above for the full form/axis-handling/assemble-flag/fixture evidence).
+  Spatially varying `K1`/`K2`/`K3`/`u1`/`u2` raise curated by-name
+  `NotImplementedError`. Only `ThinFilmDemag`/`FixedEnergyDW` remain the
+  documented direct-construction gap. [Claude Sonnet 5]
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,

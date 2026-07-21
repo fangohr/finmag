@@ -23,6 +23,11 @@ Already pinned by name elsewhere (not duplicated here):
 - DMI via ``sim_with(D=...)`` is now PORTED (Task 13) and covered by
   ``test_simulation_dolfinx.py::test_sim_with_dmi_builds_ported_interaction``
   and ``test_dmi_dolfinx.py``; it is no longer deferred.
+- Cubic anisotropy is now PORTED (Task 14) and covered by
+  ``test_cubic_anisotropy_dolfinx.py``; it is no longer deferred. (Legacy
+  ``sim_with`` never had cubic-anisotropy parameters, so there is no
+  ``sim_with`` wiring to test; ``Simulation.add(CubicAnisotropy(...))``
+  coverage is the full integration surface.)
 - scheduler, restart and NDT/VTK output are now PORTED (Task 12) and covered by
   ``test_restart_output_dolfinx.py`` and
   ``test_simulation_dolfinx.py::test_scheduler_api_is_available`` /
@@ -123,7 +128,7 @@ def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
 # report and dev/dolfinx/porting_map.md "Near-Term Gaps").
 # --------------------------------------------------------------------------
 
-def test_demag_and_dmi_are_ported_and_the_others_remain_a_known_gap():
+def test_demag_dmi_and_cubic_anisotropy_are_ported_and_the_others_remain_a_known_gap():
     """Task 11b ports the FK demag surface, so ``finmag.energies.Demag`` now
     constructs a working DOLFINx ``FKDemag`` (it no longer surfaces the legacy
     ``ModuleNotFoundError`` for ``dolfin``). ``Demag2D``/``MacroGeometry`` are
@@ -136,20 +141,30 @@ def test_demag_and_dmi_are_ported_and_the_others_remain_a_known_gap():
     the focused DMI suite). ``dmi_type='D2D'`` and spatially varying ``D``
     are curated by-name ``NotImplementedError`` (not ported this slice).
 
+    Task 14 ports ``CubicAnisotropy`` directly (constant scalar
+    ``K1``/``K2``/``K3`` and constant ``u1``/``u2`` axes, with
+    ``u3 = u1 x u2``); constructing it directly now works too (see
+    ``test_cubic_anisotropy_dolfinx.py`` for the focused suite). Spatially
+    varying coefficients/axes are curated by-name ``NotImplementedError``,
+    and the legacy-default ``assemble=False`` native/direct field path is
+    curated by-name ``NotImplementedError`` on ``compute_field()`` (energy
+    still works under the default, matching the legacy class exactly).
+
     The still-unported ``requires_legacy_dolfin=True`` optional energy classes
-    (``CubicAnisotropy``/``ThinFilmDemag``/``FixedEnergyDW``) remain a known
-    Task 3 boundary gap: constructed directly they still surface the raw
-    ``ModuleNotFoundError`` for ``dolfin`` (their module still imports legacy
-    ``dolfin`` at module scope). This is tracked as a near-term gap for their
-    owning later slice, not fixed by the FK demag/DMI ports."""
-    from finmag.energies import DMI, Demag
+    (``ThinFilmDemag``/``FixedEnergyDW``) remain a known Task 3 boundary gap:
+    constructed directly they still surface the raw ``ModuleNotFoundError``
+    for ``dolfin`` (their module still imports legacy ``dolfin`` at module
+    scope). This is tracked as a near-term gap for their owning later slice,
+    not fixed by the FK demag/DMI/cubic-anisotropy ports."""
+    from finmag.energies import DMI, CubicAnisotropy, Demag
     from finmag.energies.demag.fk_demag import FKDemag
 
     assert isinstance(Demag(), FKDemag)
     assert DMI(1e-3).name == "DMI"
+    assert CubicAnisotropy((1, 0, 0), (0, 1, 0), 1.0).name == "CubicAnisotropy"
 
     # still-unported optional energies remain the documented gap
     with pytest.raises(ModuleNotFoundError, match="dolfin"):
-        from finmag.energies import CubicAnisotropy
+        from finmag.energies import ThinFilmDemag
 
-        CubicAnisotropy(1.0, 1.0, 1.0, (1, 0, 0), (0, 1, 0))
+        ThinFilmDemag()
