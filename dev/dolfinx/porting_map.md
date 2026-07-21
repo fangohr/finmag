@@ -283,11 +283,27 @@ module with its tests.
   reordering. This is pinned bit-for-bit (atol 1e-13) against the 11a golden
   matrix through both the explicit Kuhn cube and `create_unit_cube`. Field and
   energy are validated against coordinate-ordered frozen-oracle references (cube
-  energy rel 4.7e-8, barmini rel 2.3e-9; pointwise ~5e-6, the Krylov tolerance)
-  plus the analytic cube demag factor (avg H = -Ms/3, E = mu0 Ms^2 V/6).
+  energy rel 4.7e-8, barmini rel 2.3e-9; pointwise ~5e-6 at the standard 1e-6
+  Krylov tolerance on both sides) plus the analytic cube demag factor (avg H =
+  -Ms/3, E = mu0 Ms^2 V/6).
   `solver_type='LU'`, `MacroGeometry`/`Demag2D`/`Treecode`/`GCR` raise
   `NotImplementedError` by name. PBC/treecode demag remains the separate native
   slice. Gate: `dolfinx-src-demag-pytest`. [Claude Opus 4.8]
+
+  Review round 1, Finding 1 (2026-07-21): the ~5e-6 residual above was
+  *demonstrated*, not merely asserted, to be the oracle fixture's own frozen
+  1e-6 Krylov tolerance rather than a systematic method difference.
+  Tightening only the port's KSP rtol to 1e-12 left the pointwise gap
+  unchanged at 6.4e-6 (energy 4.7e-8 -> 3.3e-9), falsifying the original
+  "Krylov solver tolerance" wording as stated. Regenerating the cube datum
+  at the oracle with *both* legacy Krylov solves tightened to 1e-12 and
+  comparing against the port at the same tightened tolerance collapses the
+  pointwise gap to ~1.4e-12 and the energy gap to ~5.5e-14 (fixture case
+  `cube_tight_tolerance`, `gen_fk_demag_oracle.py`,
+  `test_oracle_cube_tight_tolerance_isolates_krylov_residual`). The fixture
+  is now schema-v1 conforming (`docs/superpowers/specs/legacy-oracle-fixtures.md`)
+  with a real, checked-in generator and per-quantity tolerances stored in the
+  fixture. [Claude Sonnet 5]
 
 ## Direct-Edit Readiness Criteria
 

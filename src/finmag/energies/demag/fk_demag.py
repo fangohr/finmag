@@ -45,6 +45,7 @@ from mpi4py import MPI
 from petsc4py import PETSc
 
 from finmag.field import Field, associated_scalar_space
+from finmag.util.configuration import get_config_option
 
 logger = logging.getLogger("finmag")
 
@@ -191,10 +192,32 @@ class FKDemag(object):
                 else:
                     self.parameters[k] = v
 
-        if solver_type is not None and str(solver_type).lower() == "lu":
+        # Mirror the legacy behaviour of falling back to the '.finmagrc'
+        # 'demag'/'solver_type' option when the kwarg is not given, so a user
+        # config requesting a non-default solver is never silently ignored;
+        # a config option other than 'Krylov'/'None' fails loudly by name,
+        # exactly like the explicit kwarg path below. [Claude Sonnet 5]
+        effective_solver_type = solver_type
+        if effective_solver_type is None:
+            effective_solver_type = get_config_option(
+                'demag', 'solver_type', 'Krylov')
+            if effective_solver_type == 'None':
+                # A literal 'solver_type = None' in .finmagrc is read back as
+                # the string 'None' by configparser; the legacy module treats
+                # that the same as not setting it at all.
+                effective_solver_type = 'Krylov'
+
+        if str(effective_solver_type).lower() == "lu":
             raise NotImplementedError(
                 "FKDemag solver_type='LU' is deferred in the DOLFINx port; "
                 "use the Krylov solver (solver_type=None or 'Krylov')"
+            )
+        if str(effective_solver_type).lower() != "krylov":
+            raise NotImplementedError(
+                "FKDemag solver_type={!r} (from explicit kwarg or the "
+                "'demag'/'solver_type' .finmagrc option) is not implemented "
+                "in the DOLFINx port; only the Krylov solver is ported "
+                "(solver_type=None or 'Krylov')".format(effective_solver_type)
             )
         self.solver_type = solver_type
 

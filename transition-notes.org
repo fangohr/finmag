@@ -3728,7 +3728,21 @@ DOLFINx =create_box=/=create_unit_cube= reproduce the legacy =BoxMesh=/
 - barmini (2x2x4): energy rel diff =2.3e-9=; average-field rel diff ~=1e-7=;
   pointwise = =4.7e-6=.
 
-The residual ~5e-6 is the Krylov tolerance (=1e-6=), not the method. Declared
+The residual ~5e-6 was *suspected* to be the Krylov tolerance (=1e-6=), not the
+method -- but simply tightening the port's own KSP rtol to =1e-12= alone left
+the pointwise gap unchanged at =6.4e-6= (review round 1, Finding 1), which
+falsified that claim as originally stated. The actual cause was demonstrated
+empirically instead of asserted: the *oracle fixture itself* is frozen at the
+legacy default =1e-6= Krylov tolerance. Regenerating the cube datum at the
+oracle with both legacy Krylov solves (=phi_1=, =phi_2=) tightened to =1e-12=
+and comparing it against the port at the same tightened KSP tolerance collapses
+the pointwise gap to ~=1.4e-12= and the energy gap to ~=5.5e-14= -- see
+=cube_tight_tolerance= in the regenerated
+=src/finmag/tests/fixtures/fk_demag_oracle.json= (schema v1,
+=gen_fk_demag_oracle.py=) and
+=test_oracle_cube_tight_tolerance_isolates_krylov_residual=. This proves the
+standard-tolerance residual is the oracle's own frozen 1e-6 solves, not a
+systematic difference between the port and the legacy formulation. Declared
 gate tolerances: energy rel =1e-5=, average rel =1e-3=, pointwise/|H|max =1e-4=,
 BEM golden =1e-13=. The barmini =sim_with(..., demag_solver="FK")= workflow
 builds, computes demag energy =9.99e-21 J=, and integrates
