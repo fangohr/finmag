@@ -114,6 +114,13 @@ dolfinx-src-cubicanis-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python 
 # connection, and the Stoner-Wohlfarth-like switching + loop-closure
 # witness. [Claude Sonnet 5]
 dolfinx-src-timezeeman-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_timezeeman_dolfinx.py src/finmag/tests/test_hysteresis_dolfinx.py"
+# Task 16: field-valued material parameters (spatially varying Ms/A/K1/axis/D
+# and cubic K1/K2/K3), spatially varying Gilbert alpha (per-node in the damping
+# term and gamma_LL), and region energy/magnetisation accounting
+# (mark_regions). Coordinate-ordered legacy oracle fixtures pin the DG0-vs-CG1
+# coefficient placement and the varying-alpha RHS; a divergence pin makes the
+# now-LIVE K2 native-typo deviation executable evidence. [Claude Opus 4.8]
+dolfinx-src-varparams-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_variable_params_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

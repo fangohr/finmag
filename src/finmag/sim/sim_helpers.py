@@ -136,7 +136,9 @@ def save_restart_data(sim, filename=None):
         m=np.asarray(values, dtype=np.float64),
         mesh_hash=mesh_coordinate_hash(coordinates),
         Ms=float(sim.llg.Ms_av),
-        alpha=float(sim.alpha),
+        # ``sim.alpha`` is a float when uniform, else a per-node array; store a
+        # representative scalar (mean) so the metadata stays a plain number.
+        alpha=float(np.mean(np.atleast_1d(sim.alpha))),
         gamma=float(sim.gamma),
         unit_length=float(sim.unit_length),
         interactions=np.array(sim.interactions(), dtype=object),

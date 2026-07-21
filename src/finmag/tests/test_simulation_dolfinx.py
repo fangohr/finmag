@@ -93,10 +93,14 @@ def test_scalar_alpha_and_gamma_roundtrip():
     assert np.isclose(sim.gamma, 2.0e5)
 
 
-def test_spatially_varying_alpha_is_rejected():
+def test_spatially_varying_alpha_is_supported():
+    """Task 16: spatially varying alpha (callable) is accepted via the sim
+    property; see test_variable_params_dolfinx.py for the oracle-pinned RHS."""
     sim = _make_sim()
-    with pytest.raises(NotImplementedError):
-        sim.alpha = np.array([0.1, 0.2, 0.3])
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.alpha = lambda x: 0.1 + 0.02 * x[0]
+    assert isinstance(sim.alpha, np.ndarray)
+    assert np.all(sim.alpha > 0.0)
 
 
 # --------------------------------------------------------------------------
@@ -414,10 +418,16 @@ def test_restart_and_output_are_available():
     assert sim.t == 0.0
 
 
-def test_region_is_deferred():
+def test_regions_are_ported_not_deferred():
+    """Task 16: mark_regions + per-region energy/magnetisation accounting are
+    ported (see test_variable_params_dolfinx.py). Region-restricted submesh
+    field output remains deferred by name."""
     sim = _make_sim()
-    with pytest.raises(NotImplementedError):
-        sim.mark_regions(lambda pt: 0)
+    sim.set_m((1.0, 0.0, 0.0))
+    ids = sim.mark_regions(lambda pt: 1 if pt[0] < 2.5 else 2)
+    assert set(ids) == {1, 2}
+    with pytest.raises(NotImplementedError, match="save_m_in_region"):
+        sim.save_m_in_region(1)
 
 
 def test_hysteresis_is_ported_not_deferred():

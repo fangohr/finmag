@@ -67,11 +67,8 @@ class Zeeman:
         )
         if m.mesh().comm.allreduce(local_invalid_ms, op=MPI.LOR):
             raise ValueError("Ms must be positive")
-        if not Ms.is_constant():
-            raise NotImplementedError(
-                "spatially varying Ms is deferred from the first DOLFINx "
-                "energy slice"
-            )
+        # Spatially varying Ms supported (Task 16): Ms.f enters the energy
+        # density verbatim, exactly as legacy used it.
 
         self.m = m
         self.Ms = Ms
@@ -121,7 +118,15 @@ class Zeeman:
 
     def energy_density(self):
         """Collectively return legacy pointwise nodal density as a Field."""
-        values = -mu0 * self.Ms.as_constant() * np.sum(
+        if self.Ms.is_constant():
+            ms_nodal = self.Ms.as_constant()
+        else:
+            # Interpolate a (possibly DG0) Ms onto the CG1 nodal S1 space so
+            # the pointwise density has one Ms per magnetisation node.
+            ms_field = Field(self.S1)
+            ms_field.from_field(self.Ms)
+            ms_nodal = ms_field.as_array()
+        values = -mu0 * ms_nodal * np.sum(
             self.m.as_array().reshape((-1, 3))
             * self.H.as_array().reshape((-1, 3)),
             axis=1,
@@ -177,11 +182,7 @@ def _bind_zeeman_fields(interaction, m, Ms, unit_length):
     )
     if m.mesh().comm.allreduce(local_invalid_ms, op=MPI.LOR):
         raise ValueError("Ms must be positive")
-    if not Ms.is_constant():
-        raise NotImplementedError(
-            "spatially varying Ms is deferred from the first DOLFINx "
-            "energy slice"
-        )
+    # Spatially varying Ms supported (Task 16); Ms.f used verbatim.
 
     interaction.m = m
     interaction.Ms = Ms

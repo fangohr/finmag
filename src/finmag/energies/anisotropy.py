@@ -1,27 +1,32 @@
 """DOLFINx uniaxial-anisotropy interaction."""
 
-import numbers
-
-import numpy as np
 from aeon import timer
 from dolfinx import fem
 from ufl import inner
 
 from finmag.field import Field
 
-from .energy_base import EnergyBase, _require_cg1_magnetisation
+from .energy_base import (
+    EnergyBase,
+    _require_cg1_magnetisation,
+    axis_coefficient,
+    scalar_coefficient,
+)
 
 
 class UniaxialAnisotropy(EnergyBase):
-    """Constant-coefficient uniaxial anisotropy using box assembly.
+    """Uniaxial anisotropy using box assembly.
 
     The energy-density convention is retained exactly as
 
     ``K1 * (1 - (axis . m)**2) - K2 * (axis . m)**4``.
 
-    A non-zero constant axis is normalised during construction, restoring the
-    intended legacy contract that the dot product represents an angle cosine.
-    Spatially varying coefficients and axes are deferred.
+    Constant scalar ``K1``/``K2`` or spatially varying ones (callable, Field or
+    Function) are supported and placed -- as legacy did -- into a **CG1**
+    (nodal) scalar space; the axis into a **CG1** vector space. A non-zero
+    *constant* axis is normalised during construction, restoring the intended
+    legacy contract that the dot product represents an angle cosine; a
+    spatially varying axis is used as given (legacy did not renormalise it).
     """
 
     def __init__(
@@ -38,9 +43,9 @@ class UniaxialAnisotropy(EnergyBase):
                 "the legacy native/direct anisotropy path is not ported; "
                 "use box assembly"
             )
-        self.K1_value = _constant_scalar_value(K1, "K1")
-        self.K2_value = _constant_scalar_value(K2, "K2")
-        self.axis_value = _constant_axis(axis)
+        self.K1_value = scalar_coefficient(K1, "K1")
+        self.K2_value = scalar_coefficient(K2, "K2")
+        self.axis_value = axis_coefficient(axis, "anisotropy axis")
         self.name = name
         self.assemble = True
         super().__init__(method=method, in_jacobian=True)
@@ -67,53 +72,3 @@ class UniaxialAnisotropy(EnergyBase):
 
         super().setup(E_integrand, m, Ms, unit_length)
         return self
-
-
-def _constant_scalar_value(value, name):
-    if isinstance(value, (Field, fem.Function, str)) or callable(value):
-        raise NotImplementedError(
-            "spatially varying {} is deferred from the first DOLFINx "
-            "anisotropy slice".format(name)
-        )
-    if isinstance(value, fem.Constant):
-        value = value.value
-    if isinstance(value, numbers.Real):
-        result = float(value)
-    else:
-        array = np.asarray(value)
-        if array.size != 1:
-            raise NotImplementedError(
-                "spatially varying {} is deferred from the first DOLFINx "
-                "anisotropy slice".format(name)
-            )
-        result = float(array.reshape(-1)[0])
-    if not np.isfinite(result):
-        raise ValueError("{} must be finite".format(name))
-    return result
-
-
-def _constant_axis(axis):
-    is_string_expression = isinstance(axis, str) or (
-        isinstance(axis, (tuple, list))
-        and any(isinstance(component, str) for component in axis)
-    )
-    if (
-        isinstance(axis, (Field, fem.Function))
-        or callable(axis)
-        or is_string_expression
-    ):
-        raise NotImplementedError(
-            "spatially varying anisotropy axes are deferred from the first "
-            "DOLFINx anisotropy slice"
-        )
-    if isinstance(axis, fem.Constant):
-        axis = axis.value
-    value = np.asarray(axis, dtype=np.float64)
-    if value.shape != (3,):
-        raise ValueError("anisotropy axis must be a three-component vector")
-    if not np.all(np.isfinite(value)):
-        raise ValueError("anisotropy axis must contain finite values")
-    norm = np.linalg.norm(value)
-    if norm == 0.0:
-        raise ValueError("anisotropy axis must be non-zero")
-    return value / norm

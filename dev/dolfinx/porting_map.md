@@ -295,10 +295,14 @@ module with its tests.
   for the constant K2 this slice supports (uniform nodal K2 array so
   `K2[2] == K2[i]`; the `k2_only` oracle matches the *correct* derivation to
   2.7e-15), so the legacy K2 native-field bug is not reproduced. The port
-  implements the correct per-node field unconditionally and would diverge
-  from legacy only under spatially varying K2 (deferred by name). See
-  `transition-notes.org` Task 14 "assemble flag" section for the full
-  derivation, C++ comparison, and per-case numbers.
+  implements the correct per-node field unconditionally. NOW LIVE (Task 16):
+  spatially varying K2 is supported, so this deviation is active -- the port's
+  correct `hz` diverges from the legacy native `K2[2]` field by up to ~2.59e5
+  A/m while `hx`/`hy` and the energy match; pinned executably in
+  `test_variable_params_dolfinx.py::test_k2_varying_diverges_from_legacy_native_in_hz_only`
+  against `cubic_k2_varying_oracle.json` (still USER ACCEPTANCE PENDING). See
+  `transition-notes.org` Task 14 "assemble flag" and Task 16 sections for the
+  full derivation, C++ comparison, and per-case numbers.
 - Wiring: `RelaxationParameters`/`PrototypeSimulation.energy_terms()` now
   include `dmi_constant` and `cubic_anisotropy_K1`/`K2`/`K3`/`u1`/`u2`
   fields, both defaulting to inert values. `dmi_energy` requires a 3D mesh, and
@@ -491,6 +495,9 @@ Before editing the matching module in `src/finmag`, check that:
   `NotImplementedError`. The remaining `CubicAnisotropy`/`ThinFilmDemag`/
   `FixedEnergyDW` classes are still the documented direct-construction gap.
   [Claude Sonnet 5]
+  Task 16 update: spatially varying `D` is now SUPPORTED (callable/Field/
+  Function, placed in DG0 as legacy did); only the `dmi_type='D2D'` variant and
+  legacy string Expressions remain deferred by name. [Claude Opus 4.8]
   Task 14 update: `CubicAnisotropy` is now `requires_legacy_dolfin=False` and
   dolfin-clean -- constructing it directly builds the ported DOLFINx
   `CubicAnisotropy` (see the Task 14 update to the "Cubic anisotropy" entry
@@ -498,6 +505,11 @@ Before editing the matching module in `src/finmag`, check that:
   Spatially varying `K1`/`K2`/`K3`/`u1`/`u2` raise curated by-name
   `NotImplementedError`. Only `ThinFilmDemag`/`FixedEnergyDW` remain the
   documented direct-construction gap. [Claude Sonnet 5]
+  Task 16 update: spatially varying cubic `K1`/`K2`/`K3` are now SUPPORTED
+  (CG1-placed; the analytic assemble=False path uses per-node mass-lumped K
+  arrays exactly as legacy fed the native routine, which makes the K2 native
+  typo LIVE -- see the "Cubic anisotropy" K2 deviation note above). Spatially
+  varying cubic axes `u1`/`u2` remain deferred by name. [Claude Opus 4.8]
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
@@ -512,6 +524,17 @@ Before editing the matching module in `src/finmag`, check that:
   on `Simulation` (see the Task 9/6 updates above). Spatially varying
   material parameters and regions (Task 16) and LLB/normal-mode consumers
   remain outside this slice. [Claude Sonnet 5]
+  Task 16 update: spatially varying `A`/`K1`/`K2`/anisotropy axis/`Ms` are now
+  SUPPORTED with the established DG0 (A) / CG1 (K1/K2/axis) / caller-space (Ms)
+  placement; spatially varying LLG `alpha` is per-node in the damping term and
+  `gamma_LL`; `sim.mark_regions` + per-region `compute_energy(dx=...)` /
+  `m_average_in_region` are ported (region-restricted submesh field output
+  stays deferred). Gate: `dolfinx-src-varparams-pytest`
+  (`test_variable_params_dolfinx.py`, oracle fixtures
+  `variable_params_oracle.json`/`spatially_varying_alpha_rhs.json`/
+  `cubic_k2_varying_oracle.json`). Only legacy string Expressions, varying
+  cubic axes, and matrix/project/direct energy methods remain deferred by
+  name; LLB/normal-mode consumers remain outside. [Claude Opus 4.8]
 - Task 6: `EffectiveField` is now a direct DOLFINx production module. It keeps
   the exact registry API (`add`/`get`/`exists`/`all`/`remove`, unique-name
   `ValueError`, `UnknownInteraction`), total field/energy accumulation, the

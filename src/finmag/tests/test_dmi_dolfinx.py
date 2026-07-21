@@ -104,17 +104,22 @@ def test_d2d_dmi_type_is_deferred_by_name():
         DMI(1e-3, dmi_type="D2D")
 
 
-def test_spatially_varying_d_is_deferred_by_name():
+def test_spatially_varying_d_is_supported_string_expression_deferred():
+    """Task 16: spatially varying D (callable/Field/Function, placed in DG0) is
+    now supported; only legacy string Expressions remain deferred by name."""
     domain = _cube()
     scalar_space = fem.functionspace(domain, ("DG", 0))
     spatial = Field(scalar_space, 1.0)
+    Ms = Field(scalar_space, 8.0e5)
+    m = Field(fem.functionspace(domain, ("Lagrange", 1, (3,))), (0.0, 0.0, 1.0))
 
-    with pytest.raises(NotImplementedError, match="spatially varying D"):
-        DMI(spatial)
-    with pytest.raises(NotImplementedError, match="spatially varying D"):
+    for value in (spatial, lambda x: 1.0e-3 + x[0]):
+        dmi = DMI(value)
+        dmi.setup(m, Ms, unit_length=1e-9)
+        assert np.all(np.isfinite(dmi.compute_field()))
+
+    with pytest.raises(NotImplementedError, match="string Expression"):
         DMI("x[0]")
-    with pytest.raises(NotImplementedError, match="spatially varying D"):
-        DMI(lambda x: 1.0 + x[0])
 
 
 def test_dmi_requires_three_component_field():

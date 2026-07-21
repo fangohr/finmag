@@ -1,15 +1,20 @@
 """DOLFINx cubic-anisotropy interaction."""
 
-import numbers
-
 import numpy as np
 from aeon import timer
 from dolfinx import fem
-from ufl import inner
+from ufl import TestFunction, dx, inner
 
 from finmag.field import Field
 
-from .energy_base import EnergyBase, _require_cg1_magnetisation, mu0
+from .energy_base import (
+    EnergyBase,
+    _assemble_vector_owned,
+    _require_cg1_magnetisation,
+    axis_coefficient,
+    mu0,
+    scalar_coefficient,
+)
 
 
 class CubicAnisotropy(EnergyBase):
@@ -24,10 +29,10 @@ class CubicAnisotropy(EnergyBase):
 
     Matching the legacy class exactly, ``u1``/``u2`` are used *as given*:
     they are not renormalised and their orthogonality is not checked (the
-    legacy docstring only says they "should be unit vectors"). Only constant
-    scalar ``K1``/``K2``/``K3`` and constant ``u1``/``u2`` axes are supported
-    in this slice; spatially varying coefficients/axes raise
-    ``NotImplementedError`` by name (deferred to a later slice).
+    legacy docstring only says they "should be unit vectors"). Constant scalar
+    ``K1``/``K2``/``K3`` *and* spatially varying ones (callable/Field/Function,
+    placed into a CG1 nodal space exactly as legacy did) are supported.
+    Spatially varying ``u1``/``u2`` axes remain deferred by name.
 
     The legacy ``assemble`` flag chose between two different *field*
     computation algorithms; the total *energy* is always box-assembled, in
@@ -58,20 +63,26 @@ class CubicAnisotropy(EnergyBase):
     ``K2[2] == K2[i]`` and the typo is numerically dormant: the native oracle
     reproduces the correct analytic field to ~1e-12 (see
     ``test_native_oracle_*`` and the K2 fixture). This port implements the
-    *correct* per-node field unconditionally; it would only diverge from the
-    legacy native output under spatially varying ``K2``, which is deferred by
-    name. See ``transition-notes.org``/``dev/dolfinx/porting_map.md`` Task 14.
+    *correct* per-node field unconditionally. Task 16 makes spatially varying
+    ``K2`` supported, so this deviation is now LIVE (still USER ACCEPTANCE
+    PENDING): the port's ``hz`` field diverges from the legacy native output by
+    exactly ``-2/(mu0 Ms) (K2[v*] - K2[i]) termz[i]`` (``v*`` = native array
+    index 2), pinned in
+    ``test_variable_params_dolfinx.py::test_k2_varying_diverges_from_legacy_native_in_hz_only``
+    against the spatially-varying-K2 oracle fixture. Energy is box-assembled
+    (it never uses the native field path) and matches legacy. See
+    ``transition-notes.org``/``dev/dolfinx/porting_map.md`` Tasks 14 & 16.
     """
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
                  assemble=False):
-        self.u1_value = _constant_axis(u1, "u1")
-        self.u2_value = _constant_axis(u2, "u2")
+        self.u1_value = _constant_cubic_axis(u1, "u1")
+        self.u2_value = _constant_cubic_axis(u2, "u2")
         self.u3_value = np.cross(self.u1_value, self.u2_value)
 
-        self.K1_value = _constant_scalar_value(K1, "K1")
-        self.K2_value = _constant_scalar_value(K2, "K2")
-        self.K3_value = _constant_scalar_value(K3, "K3")
+        self.K1_value = scalar_coefficient(K1, "K1")
+        self.K2_value = scalar_coefficient(K2, "K2")
+        self.K3_value = scalar_coefficient(K3, "K3")
 
         self.name = name
         self.assemble = bool(assemble)
@@ -109,6 +120,26 @@ class CubicAnisotropy(EnergyBase):
         super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
 
         if not self.assemble:
+            # Legacy native path feeds the compiled ``compute_cubic_field`` a
+            # per-node K array obtained by a mass-lumped assemble of the CG1 K
+            # field (``assemble(K_field.f * v * dx).get_local() / volumes``);
+            # this reproduces exactly that placement so spatially varying K's
+            # match the legacy native field node-for-node (except the
+            # deliberately-fixed K2 hz typo). For constant K it equals the
+            # scalar, preserving the constant-K native oracle to ~1e-11.
+            scalar_test = TestFunction(self.S1)
+            self._K1_nodal = (
+                _assemble_vector_owned(self.K1.f * scalar_test * dx, self.S1)
+                / self.nodal_volume_S1
+            )
+            self._K2_nodal = (
+                _assemble_vector_owned(self.K2.f * scalar_test * dx, self.S1)
+                / self.nodal_volume_S1
+            )
+            self._K3_nodal = (
+                _assemble_vector_owned(self.K3.f * scalar_test * dx, self.S1)
+                / self.nodal_volume_S1
+            )
             self.compute_field = self._compute_field_analytic
         return self
 
@@ -138,9 +169,12 @@ class CubicAnisotropy(EnergyBase):
         b = m_nodes @ u2
         c = m_nodes @ u3
 
-        K1 = self.K1_value
-        K2 = self.K2_value
-        K3 = self.K3_value
+        # Per-node mass-lumped K arrays (aligned with ``m_nodes`` rows: the S1
+        # scalar and S3 blocked-vector CG1 spaces enumerate vertices
+        # identically). For constant K these are uniform.
+        K1 = self._K1_nodal
+        K2 = self._K2_nodal
+        K3 = self._K3_nodal
         # dE/da, dE/db, dE/dc, then dE/dm = (dE/da) u1 + (dE/db) u2 + (dE/dc) u3.
         g1 = (2 * K1 * a * (b**2 + c**2) + 2 * K2 * a * b**2 * c**2
               + 4 * K3 * a**3 * (b**4 + c**4))
@@ -153,51 +187,25 @@ class CubicAnisotropy(EnergyBase):
         return H.reshape(-1)
 
 
-def _constant_scalar_value(value, name):
-    if isinstance(value, (Field, fem.Function, str)) or callable(value):
-        raise NotImplementedError(
-            "spatially varying {} is deferred from the first DOLFINx "
-            "cubic-anisotropy slice".format(name)
-        )
-    if isinstance(value, fem.Constant):
-        value = value.value
-    if isinstance(value, numbers.Real):
-        result = float(value)
-    else:
-        array = np.asarray(value)
-        if array.size != 1:
-            raise NotImplementedError(
-                "spatially varying {} is deferred from the first DOLFINx "
-                "cubic-anisotropy slice".format(name)
-            )
-        result = float(array.reshape(-1)[0])
-    if not np.isfinite(result):
-        raise ValueError("{} must be finite".format(name))
-    return result
+def _constant_cubic_axis(value, name):
+    """Validate a constant cubic-anisotropy axis (u1/u2).
 
-
-def _constant_axis(value, name):
-    is_string_expression = isinstance(value, str) or (
-        isinstance(value, (tuple, list))
-        and any(isinstance(component, str) for component in value)
-    )
+    Spatially varying cubic axes remain deferred by name in this slice (there
+    is no legacy oracle for them and the ``u3 = u1 x u2`` cross product would
+    need a per-node evaluation); spatially varying cubic *K*'s are supported.
+    The axis is stored exactly as given -- deliberately *not* normalised and
+    *not* checked for orthogonality, matching the legacy class.
+    """
     if (
         isinstance(value, (Field, fem.Function))
         or callable(value)
-        or is_string_expression
+        or (isinstance(value, str))
+        or (isinstance(value, (tuple, list))
+            and any(isinstance(component, str) for component in value))
     ):
         raise NotImplementedError(
-            "spatially varying {} is deferred from the first DOLFINx "
-            "cubic-anisotropy slice".format(name)
+            "spatially varying cubic-anisotropy {} is deferred; pass a "
+            "constant 3-vector (spatially varying cubic K1/K2/K3 are "
+            "supported)".format(name)
         )
-    if isinstance(value, fem.Constant):
-        value = value.value
-    array = np.asarray(value, dtype=np.float64)
-    if array.shape != (3,):
-        raise ValueError("{} must be a three-component vector".format(name))
-    if not np.all(np.isfinite(array)):
-        raise ValueError("{} must contain finite values".format(name))
-    # Deliberately *not* normalised and *not* checked for orthogonality: the
-    # legacy class stores u1/u2 exactly as given (see
-    # dev/dolfinx/porting_map.md for the axis-handling investigation).
-    return array
+    return axis_coefficient(value, name, normalise=False)

@@ -4525,3 +4525,104 @@ removed), native-bem 8, demag 19, restart-output 20, dmi 28, cubicanis 25.
   (Task 16), as before.
 
 [Claude Sonnet 5]; fix round 1 [Claude Opus 4.8]
+
+** Field-Valued Parameters and Regions (Task 16)
+
+Extends every ported box-energy, the LLG damping, and the Simulation region
+machinery to accept spatially varying material parameters, with the DG0-vs-CG1
+placement of each coefficient established from the frozen oracle (not assumed)
+and pinned node-for-node on 1D interval meshes (identical connectivity in
+dolfin and dolfinx).
+
+*** Per-parameter placement (legacy evidence, oracle commit ba92809)
+
+Placement is exactly the function space each legacy energy class built its
+coefficient =Field= in (legacy interpolates -- never Galerkin-projects --
+callables/expressions into that space, so DG0 samples cell midpoints and CG1
+samples vertices):
+
+- =A= (exchange): *DG0* (=FunctionSpace(mesh,'DG',0)=).
+- =D= (DMI): *DG0*.
+- =K1=/=K2=/axis (uniaxial): *CG1* scalar / *CG1* vector.
+- cubic =K1=/=K2=/=K3=: *CG1* scalar; =u1=/=u2=/=u3=: *CG1* vector.
+- =Ms=: whatever space the caller built it in -- =EnergyBase= uses =Ms.f=
+  verbatim in the =E_integrand/Ms.f= derivative (Simulation supplies DG0).
+- =alpha= (LLG): *CG1* scalar =Function= (legacy
+  =helpers.scalar_valued_function(value, S1)=).
+
+The DOLFINx port's coefficient spaces already matched legacy exactly, so this
+slice only relaxes the per-class by-name gates to route spatially varying
+values (callable / =Field= / =dolfinx.fem.Function=) through =Field.set= into
+those same spaces. Legacy *string* =Expression= coefficients raise
+=NotImplementedError= by name (DOLFINx has no =Expression=; pass a callable) --
+a documented deviation shared with the rest of the port.
+
+*** Spatially varying alpha (per-node in gamma_LL AND damping)
+
+Evidence: native =calc_llg_dmdt= (=native/src/llg/llg.cc=) loops over nodes
+passing =*alpha[i]= into both =damping_i= (=gamma_LL = gamma/(1+alpha*alpha)=,
+=damping_coeff = -alpha*gamma_LL=) and =precession_i= (same per-node
+=gamma_LL=). The port's =LLG._dmdt_numpy= now uses a per-node alpha array
+(=self._alpha_node=, coordinate-ordered to align with the =(3,N)= m/H columns)
+in exactly those two places. =LLG.alpha= returns a =float= when uniform
+(preserving the scalar contract and =float(sim.alpha)= restart metadata) and
+the per-node array otherwise. The =test_spatially_varying_alpha= invariant
+(scalar =1= -> uniform nodal vector of ones) is ported; the varying-alpha RHS
+is pinned against =spatially_varying_alpha_rhs.json=.
+
+*** Regions
+
+Legacy exposed NO region-scoped =set_alpha= / per-region material-parameter
+setter (the task premise was wrong on this point). Region support is:
+=mark_regions(fun)= (a =fun(pt)->id= partition, built into contiguous
+=region_ids=, per-cell =MeshTags= and a subdomain-restricted measure) plus
+per-region energy via =compute_energy(dx=measure)= (legacy =Zeeman= already had
+this; extended consistently to =EnergyBase=) and region =m_average=. The
+=test_energies_in_regions= additivity invariant (region energies sum to the
+whole-mesh energy, rtol=1e-12/atol=1e-18) is ported and oracle-pinned
+(=two_region_zeeman=). Region-restricted submesh *field output*
+(=save_m_in_region=/=get_submesh=/=get_field_as_dolfin_function(region=...)=)
+stays deferred by name. Serial only.
+
+*** DELIBERATE DEVIATION now LIVE (USER ACCEPTANCE PENDING): K2 native typo
+
+The Task 14 K2 native-typo deviation (=native/src/llg/energy.cc:116=
+=hz[i] += K2[2]*(...)= -- a fixed node index =2= where every other line uses
+per-node =K2[i]=) is now LIVE: this slice supports spatially varying =K2=, for
+which the nodal =K2= array is non-uniform. The port implements the *correct*
+per-node =hz=; the legacy native =hz= uses =K2= at the single fixed index =2=
+(=v*=). The =k2_only= divergence is pinned executably
+(=test_k2_varying_diverges_from_legacy_native_in_hz_only=) against
+=cubic_k2_varying_oracle.json=:
+
+- measured =hx=/=hy=: port == legacy native to ~1e-9 (max ~1.2e-9 A/m);
+- measured =hz=: diverges by up to ~2.59e5 A/m (predicted
+  =-2/(mu0 Ms)(K2[v*]-K2[i]) termz[i]=);
+- the implied per-node K2 reproducing the legacy =hz= is a single constant
+  =K2[v*] = -1.5925e7= (std ~4e-9), confirming the fixed-index typo signature.
+
+The box-assembled *energy* never uses the native field path (verified: it
+assembles =E_integrand= with the CG1 K2 field) and matches legacy. The port
+ships the corrected =hz=; USER ACCEPTANCE PENDING.
+
+*** Verification
+
+New gate =dolfinx-src-varparams-pytest= (28 tests) folded into
+=verify-dolfinx-m5=; all prior gates unchanged and green (import 9p/2s, field
+26, energies 26 -- the =test_invalid_or_deferred_material_inputs= case now
+pins the string-Expression deferral instead of spatially-varying deferrals --,
+effectivefield 15, llg 19, scipy 19, simulation 32, deferred 5, native-bem 8,
+demag 19, restart-output 20, dmi 28, cubicanis 25, timezeeman 27).
+=verify-dolfinx-m5= passes end-to-end with a clean tracked tree; =pixi.lock=
+untouched.
+
+*** Deferred / deliberate deviations
+
+- Legacy string =Expression= coefficients (pass a callable).
+- Spatially varying cubic =u1=/=u2= axes (no oracle; =u3=u1 x u2= would need
+  per-node evaluation) -- spatially varying cubic =K='s are supported.
+- Region-restricted submesh field output (=save_m_in_region=/=get_submesh=/
+  =get_field_as_dolfin_function(region=...)=).
+- K2 native-typo hz divergence for varying K2 (LIVE, USER ACCEPTANCE PENDING).
+
+[Claude Opus 4.8]

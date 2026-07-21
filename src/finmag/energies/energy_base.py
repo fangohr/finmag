@@ -1,5 +1,11 @@
-"""DOLFINx energy-interaction foundation using lumped box assembly."""
+"""DOLFINx energy-interaction foundation using lumped box assembly.
 
+Task 16 adds spatially varying material coefficients (``scalar_coefficient`` /
+``axis_coefficient`` accept callables/Fields/Functions), spatially varying
+``Ms``, and an optional region measure on ``compute_energy``. [Claude Opus 4.8]
+"""
+
+import numbers
 from math import pi
 
 import numpy as np
@@ -76,11 +82,10 @@ class EnergyBase:
         invalid_ms = m.mesh().comm.allreduce(local_invalid_ms, op=MPI.LOR)
         if invalid_ms:
             raise ValueError("Ms must be positive")
-        if not Ms.is_constant():
-            raise NotImplementedError(
-                "spatially varying Ms is deferred from the first DOLFINx "
-                "energy slice"
-            )
+        # Spatially varying Ms is supported (Task 16): legacy ``EnergyBase``
+        # used ``Ms.f`` verbatim in the UFL derivative regardless of its
+        # function space, so any positive scalar Ms Field (DG0 or CG1) is
+        # accepted here and enters through ``E_integrand / Ms.f`` below.
         if hasattr(self, "E_density_function"):
             del self.E_density_function
 
@@ -106,9 +111,21 @@ class EnergyBase:
         return self
 
     @timer.method
-    def compute_energy(self):
-        """Collectively return total energy in joules."""
-        mesh_energy = _assemble_scalar(self.m.mesh(), self.E)
+    def compute_energy(self, dx=None):
+        """Collectively return total energy in joules.
+
+        With ``dx=None`` (default) the energy is integrated over the whole
+        mesh. A restricted UFL measure (e.g. ``sim.region_measure(region_id)``)
+        integrates only that region; region energies sum to the whole-mesh
+        energy. This mirrors the legacy ``Zeeman.compute_energy(dx=...)``
+        region-accounting contract, extended consistently to every box-energy
+        (``test_energies_in_regions`` is the behavioral invariant).
+        """
+        if dx is None:
+            form = self.E
+        else:
+            form = self.E_integrand * dx
+        mesh_energy = _assemble_scalar(self.m.mesh(), form)
         return mesh_energy * self.unit_length**self.dim
 
     @timer.method
@@ -181,6 +198,83 @@ def _nodal_volume_owned(function_space):
 def _owned_scalar_dofs(function_space):
     dofmap = function_space.dofmap
     return dofmap.index_map.size_local * dofmap.index_map_bs
+
+
+def _is_string_expression(value):
+    return isinstance(value, str) or (
+        isinstance(value, (tuple, list))
+        and any(isinstance(item, str) for item in value)
+    )
+
+
+def scalar_coefficient(value, name):
+    """Normalise a scalar material coefficient for a coefficient Field.
+
+    Accepts (Task 16) a plain finite number, a ``dolfinx.fem.Constant``, a
+    length-1 array, OR a spatially varying coefficient: a Python callable, a
+    :class:`~finmag.field.Field`, or a ``dolfinx.fem.Function``. Constant
+    numbers are validated finite and returned as ``float``; spatially varying
+    values are returned unchanged for :meth:`finmag.field.Field.set` to place
+    into the coefficient's function space (DG0 or CG1, per the owning class).
+
+    Legacy string ``Expression`` coefficients raise ``NotImplementedError`` by
+    name -- DOLFINx has no ``Expression`` object, so pass a callable instead
+    (a documented deviation shared with the rest of the port).
+    """
+    if _is_string_expression(value):
+        raise NotImplementedError(
+            "legacy string Expression {} is not supported; pass a "
+            "callable".format(name)
+        )
+    if isinstance(value, (Field, fem.Function)) or callable(value):
+        return value
+    if isinstance(value, fem.Constant):
+        value = value.value
+    if isinstance(value, numbers.Real):
+        result = float(value)
+    else:
+        array = np.asarray(value)
+        if array.size != 1:
+            raise ValueError(
+                "{} constant array must have a single element; pass a "
+                "callable/Field for a spatially varying value".format(name)
+            )
+        result = float(array.reshape(-1)[0])
+    if not np.isfinite(result):
+        raise ValueError("{} must be finite".format(name))
+    return result
+
+
+def axis_coefficient(value, name, normalise=True):
+    """Normalise a 3-vector axis coefficient for a coefficient Field.
+
+    A constant axis (3-tuple/list/array of numbers) is validated finite and,
+    when ``normalise`` is true, returned as a unit vector (restoring the legacy
+    cosine contract). A spatially varying axis -- a callable, ``Field`` or
+    ``dolfinx.fem.Function`` -- is returned unchanged (legacy interpolated the
+    axis field as given, without renormalising it). Legacy string Expressions
+    raise ``NotImplementedError`` by name.
+    """
+    if _is_string_expression(value):
+        raise NotImplementedError(
+            "legacy string Expression {} is not supported; pass a "
+            "callable".format(name)
+        )
+    if isinstance(value, (Field, fem.Function)) or callable(value):
+        return value
+    if isinstance(value, fem.Constant):
+        value = value.value
+    array = np.asarray(value, dtype=np.float64)
+    if array.shape != (3,):
+        raise ValueError("{} must be a three-component vector".format(name))
+    if not np.all(np.isfinite(array)):
+        raise ValueError("{} must contain finite values".format(name))
+    if not normalise:
+        return array
+    norm = np.linalg.norm(array)
+    if norm == 0.0:
+        raise ValueError("{} must be non-zero".format(name))
+    return array / norm
 
 
 def _require_cg1_magnetisation(m):

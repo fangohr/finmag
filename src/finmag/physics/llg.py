@@ -17,7 +17,8 @@ holds :math:`|\\vec{m}|` at unit length during integration and vanishes when
 node-for-node from ``calc_llg_dmdt`` (``native/src/llg/llg.cc``); no compiled
 extension is used.
 
-Scope of this slice: scalar ``Ms``, scalar ``alpha``, ``gamma``, ``set_m``,
+Scope of this slice: scalar ``Ms``, scalar or spatially varying ``alpha``
+(per-node in both the damping term and ``gamma_LL``), ``gamma``, ``set_m``,
 ``solve`` and ``solve_for``, driven entirely from the ported ``EffectiveField``
 registry. The state vector for ``solve``/``solve_for``/``m`` setters is the
 component-blocked, coordinate-ordered ``xxx`` array (rank-local owned dofs);
@@ -25,6 +26,9 @@ component-blocked, coordinate-ordered ``xxx`` array (rank-local owned dofs);
 Native Sundials/CVODE preconditioning and Jacobian paths, spin-transfer torque
 (Slonczewski, Zhang-Li), thermal dynamics, and multi-rank ODE state are out of
 scope and raise ``NotImplementedError`` by name when requested.
+
+Task 16 adds spatially varying Gilbert damping ``alpha`` (per-node in both the
+damping term and ``gamma_LL``). [Claude Opus 4.8]
 """
 
 import logging
@@ -68,7 +72,12 @@ class LLG(object):
         self.Volume = None
 
     def set_default_values(self):
-        self.alpha = 0.5  # scalar Gilbert damping constant
+        # Gilbert damping lives in a scalar CG1 Field (matching legacy, which
+        # stored alpha as a ``df.Function`` on S1), so spatially varying alpha
+        # is a per-node array; ``set_alpha`` also caches the node-ordered array
+        # used by the RHS. Default is spatially uniform 0.5.
+        self._alpha_field = Field(self.S1, name="alpha")
+        self.set_alpha(0.5)
 
         self.gamma = consts.gamma
         self.c = 1e11  # 1/s numerical scaling correction
@@ -111,17 +120,36 @@ class LLG(object):
 
     # -- damping ------------------------------------------------------------
 
-    def set_alpha(self, value):
-        """Set the scalar Gilbert damping constant :math:`\\alpha`.
+    @property
+    def alpha(self):
+        """Gilbert damping :math:`\\alpha`.
 
-        Only spatially uniform (scalar) damping is supported in this slice.
+        Returns a plain ``float`` when spatially uniform (the common case,
+        preserving the scalar contract), otherwise the per-node coordinate-
+        ordered array of nodal values.
         """
-        if not np.isscalar(value):
-            raise NotImplementedError(
-                "spatially varying alpha is deferred from the deterministic "
-                "DOLFINx LLG slice; pass a scalar"
-            )
-        self.alpha = float(value)
+        if self._alpha_field.is_constant():
+            return float(self._alpha_field.as_constant())
+        return self._alpha_field.get_ordered_numpy_array()
+
+    def set_alpha(self, value):
+        """Set the Gilbert damping :math:`\\alpha`.
+
+        Accepts (Task 16) a scalar, a per-node NumPy array/list, a Python
+        callable ``x -> alpha``, a :class:`~finmag.field.Field`, or a
+        ``dolfinx.fem.Function`` -- everything the legacy
+        ``helpers.scalar_valued_function(value, S1)`` accepted, placed into the
+        scalar CG1 space. Alpha then enters the node-local RHS per node in both
+        the damping term and ``gamma_LL = gamma / (1 + alpha**2)`` (precession
+        and damping), exactly as the native ``calc_llg_dmdt`` did.
+        """
+        if np.isscalar(value):
+            self._alpha_field.set(float(value))
+        else:
+            self._alpha_field.set(value)
+        # Cache the node-ordered (xyz) array aligned with the m/H columns used
+        # by ``_dmdt_numpy`` (a ``(3, N)`` component-blocked layout).
+        self._alpha_node = self._alpha_field.get_ordered_numpy_array()
 
     # -- saturation magnetisation ------------------------------------------
 
@@ -236,9 +264,11 @@ class LLG(object):
         """Node-local LLG right-hand side; transcribed from ``calc_llg_dmdt``.
 
         ``m`` and ``H`` are ``(3, N)`` component-blocked owned nodal arrays.
-        Returns a fresh ``(3, N)`` dm/dt array.
+        Returns a fresh ``(3, N)`` dm/dt array. ``alpha`` is per node (a length-
+        ``N`` array aligned with the node columns), so ``gamma_LL`` and the
+        damping coefficient are per node, exactly as native ``calc_llg_dmdt``.
         """
-        alpha = self.alpha
+        alpha = self._alpha_node
         gamma_LL = self.gamma / (1.0 + alpha * alpha)
 
         m0, m1, m2 = m[0], m[1], m[2]

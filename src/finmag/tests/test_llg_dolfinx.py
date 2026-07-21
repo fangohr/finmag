@@ -234,10 +234,17 @@ def test_multi_rank_state_paths_raise_serial_guard():
         llg.solve_for(llg.sundials_m, 0.0)
 
 
-def test_spatially_varying_alpha_deferred():
+def test_spatially_varying_alpha_is_supported():
+    """Task 16: spatially varying alpha is now supported (see
+    test_variable_params_dolfinx.py for the oracle-pinned behaviour). A per-node
+    array sets the nodal alpha field; a scalar stays a float."""
     llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
-    with pytest.raises(NotImplementedError, match="alpha"):
-        llg.set_alpha(np.array([0.1, 0.2, 0.3]))
+    n = llg._alpha_field.as_array().size
+    llg.set_alpha(np.linspace(0.1, 0.3, n))
+    assert isinstance(llg.alpha, np.ndarray)
+    assert llg.alpha.shape == (n,)
+    llg.set_alpha(0.2)
+    assert llg.alpha == 0.2
 
 
 # --------------------------------------------------------------------------

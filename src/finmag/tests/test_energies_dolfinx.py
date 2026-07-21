@@ -328,31 +328,16 @@ def test_anisotropy_density_integrates_to_energy_and_refreshes():
 
 def test_invalid_or_deferred_material_inputs_fail_explicitly():
     domain, m, Ms = _fields()
-    scalar_space = fem.functionspace(domain, ("DG", 0))
-    spatial = Field(scalar_space, 1.0)
 
-    with pytest.raises(NotImplementedError, match="spatially varying A"):
-        Exchange(spatial)
-    with pytest.raises(NotImplementedError, match="spatially varying A"):
+    # Task 16: spatially varying A/K1/K2/axis/Ms are now SUPPORTED (see
+    # test_variable_params_dolfinx.py). Only legacy string Expressions remain
+    # deferred by name (DOLFINx has no Expression object; pass a callable).
+    with pytest.raises(NotImplementedError, match="string Expression"):
         Exchange("x[0]")
-    with pytest.raises(NotImplementedError, match="spatially varying A"):
-        Exchange(lambda x: 1.0 + x[0])
-    with pytest.raises(NotImplementedError, match="spatially varying K1"):
-        UniaxialAnisotropy(spatial, (0.0, 0.0, 1.0))
-    with pytest.raises(NotImplementedError, match="spatially varying K1"):
+    with pytest.raises(NotImplementedError, match="string Expression"):
         UniaxialAnisotropy("x[0]", (0.0, 0.0, 1.0))
-    with pytest.raises(NotImplementedError, match="spatially varying K2"):
-        UniaxialAnisotropy(1.0, (0.0, 0.0, 1.0), K2=lambda x: x[0])
-    with pytest.raises(NotImplementedError, match="spatially varying anisotropy"):
-        UniaxialAnisotropy(1.0, lambda x: (0.0, 0.0, 1.0))
-    with pytest.raises(NotImplementedError, match="spatially varying anisotropy"):
+    with pytest.raises(NotImplementedError, match="string Expression"):
         UniaxialAnisotropy(1.0, ("0", "0", "1"))
-    varying_ms_space = fem.functionspace(domain, ("Lagrange", 1))
-    varying_ms = Field(varying_ms_space, lambda x: 1.0 + x[0])
-    with pytest.raises(NotImplementedError, match="spatially varying Ms"):
-        Exchange(1.0).setup(m, varying_ms)
-    with pytest.raises(NotImplementedError, match="spatially varying Ms"):
-        Zeeman((1.0, 0.0, 0.0)).setup(m, varying_ms)
     with pytest.raises(ValueError, match="non-zero"):
         UniaxialAnisotropy(1.0, (0.0, 0.0, 0.0))
     with pytest.raises(NotImplementedError, match="native/direct"):

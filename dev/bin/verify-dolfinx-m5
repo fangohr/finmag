@@ -29,6 +29,10 @@
 # Task 15 folds in the direct DOLFINx time-Zeeman + relax/hysteresis port
 # gate (`dolfinx-src-timezeeman-pytest`). [Claude Sonnet 5]
 #
+# Task 16 folds in the direct DOLFINx field-valued material parameters,
+# spatially varying alpha, and region-accounting port gate
+# (`dolfinx-src-varparams-pytest`). [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -104,6 +108,9 @@ pixi run -e dolfinx dolfinx-src-cubicanis-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-timezeeman-pytest"
 pixi run -e dolfinx dolfinx-src-timezeeman-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-varparams-pytest"
+pixi run -e dolfinx dolfinx-src-varparams-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

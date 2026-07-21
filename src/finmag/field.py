@@ -126,16 +126,21 @@ class Field:
         return self
 
     def from_function(self, function):
-        """Copy an existing DOLFINx Function on the same function space."""
+        """Copy a DOLFINx Function, interpolating if it is on another space.
+
+        A Function on the identical function space is copied dof-for-dof
+        (matching the legacy same-space contract); a Function on a *different*
+        space is interpolated into this Field's space (mirroring
+        :meth:`from_field`), so a coefficient handed in on, say, a DG0 space
+        can be placed into a CG1 coefficient space.
+        """
         if not isinstance(function, fem.Function):
             raise TypeError("from_function requires a dolfinx.fem.Function")
-        if function.function_space != self.functionspace:
-            raise ValueError(
-                "from_function requires the same function space; use from_field "
-                "for interpolation"
-            )
-        owned = self._owned_scalar_dofs()
-        self.f.x.array[:owned] = function.x.array[:owned]
+        if function.function_space == self.functionspace:
+            owned = self._owned_scalar_dofs()
+            self.f.x.array[:owned] = function.x.array[:owned]
+        else:
+            self.f.interpolate(function)
         self.f.x.scatter_forward()
         return self
 

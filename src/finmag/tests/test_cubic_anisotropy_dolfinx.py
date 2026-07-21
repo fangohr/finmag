@@ -255,23 +255,26 @@ def test_axis_must_be_three_component_vector():
 # by-name deferrals
 # --------------------------------------------------------------------------
 
-def test_spatially_varying_k1_k2_k3_are_deferred_by_name():
+def test_spatially_varying_k1_k2_k3_are_supported():
+    """Task 16: spatially varying cubic K1/K2/K3 (callable/Field/Function,
+    placed in CG1) are now supported; the K2 varying case's native-typo
+    divergence is pinned in test_variable_params_dolfinx.py. Only legacy string
+    Expressions remain deferred by name."""
     domain = _cube()
     scalar_space = fem.functionspace(domain, ("DG", 0))
-    spatial = Field(scalar_space, 1.0)
+    spatial = Field(scalar_space, 1.0e4)
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    m = Field(S3, (0.3, 0.4, np.sqrt(1 - 0.09 - 0.16)))
+    Ms = Field(scalar_space, 8.0e5)
 
-    for name, kwargs in (
-        ("K1", dict(K1=spatial)),
-        ("K2", dict(K1=1.0, K2=spatial)),
-        ("K3", dict(K1=1.0, K3=spatial)),
-    ):
-        with pytest.raises(NotImplementedError, match="spatially varying"):
-            CubicAnisotropy((1, 0, 0), (0, 1, 0), **kwargs)
+    for kwargs in (dict(K1=spatial), dict(K1=1.0, K2=lambda x: 1.0e4 + x[0]),
+                   dict(K1=1.0, K3=spatial)):
+        ca = CubicAnisotropy((1, 0, 0), (0, 1, 0), **kwargs)
+        ca.setup(m, Ms, unit_length=1e-9)
+        assert np.all(np.isfinite(ca.compute_field()))
 
-    with pytest.raises(NotImplementedError, match="spatially varying K1"):
+    with pytest.raises(NotImplementedError, match="string Expression"):
         CubicAnisotropy((1, 0, 0), (0, 1, 0), "1.0 + x[0]")
-    with pytest.raises(NotImplementedError, match="spatially varying K1"):
-        CubicAnisotropy((1, 0, 0), (0, 1, 0), lambda x: 1.0 + x[0])
 
 
 def test_spatially_varying_axes_are_deferred_by_name():
@@ -279,13 +282,13 @@ def test_spatially_varying_axes_are_deferred_by_name():
     vector_space = fem.functionspace(domain, ("Lagrange", 1, (3,)))
     spatial_axis = Field(vector_space, (1.0, 0.0, 0.0))
 
-    with pytest.raises(NotImplementedError, match="spatially varying u1"):
+    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
         CubicAnisotropy(spatial_axis, (0, 1, 0), 1.0e4)
-    with pytest.raises(NotImplementedError, match="spatially varying u2"):
+    with pytest.raises(NotImplementedError, match="cubic-anisotropy u2"):
         CubicAnisotropy((1, 0, 0), spatial_axis, 1.0e4)
-    with pytest.raises(NotImplementedError, match="spatially varying u1"):
+    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
         CubicAnisotropy(lambda x: x, (0, 1, 0), 1.0e4)
-    with pytest.raises(NotImplementedError, match="spatially varying u1"):
+    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
         CubicAnisotropy(("1.0", "0.0", "0.0"), (0, 1, 0), 1.0e4)
 
 

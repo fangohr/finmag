@@ -1,14 +1,12 @@
 """DOLFINx Dzyaloshinskii-Moriya interaction (DMI)."""
 
-import numbers
-
 import numpy as np
 from aeon import timer
 from ufl import curl, grad, inner
 
 from finmag.field import Field
 
-from .energy_base import EnergyBase, _require_cg1_magnetisation
+from .energy_base import EnergyBase, _require_cg1_magnetisation, scalar_coefficient
 from dolfinx import fem
 
 
@@ -19,12 +17,15 @@ class DMI(EnergyBase):
         E_{\\text{DMI}} = \\int_\\Omega D \\vec{m} \\cdot
                           (\\nabla \\times \\vec{m}) dx
 
-    This first DOLFINx slice supports a spatially constant scalar ``D`` and
-    the ``box-assemble`` method (matching the Task 5 energy foundation).
+    Supports a constant scalar ``D`` or a spatially varying ``D`` (callable,
+    :class:`~finmag.field.Field` or ``dolfinx.fem.Function``), placed -- as
+    legacy did -- into a **DG0** (cellwise-constant) coefficient space, and the
+    ``box-assemble`` method (matching the Task 5 energy foundation).
 
     *Arguments*
         D
-            the (constant, scalar) DMI constant.
+            the DMI constant: a constant scalar, or a spatially varying
+            callable/Field/Function.
         method
             only ``'box-assemble'`` is supported; every other legacy method
             keeps raising ``NotImplementedError`` precisely, exactly as for
@@ -40,7 +41,7 @@ class DMI(EnergyBase):
     _bulk_dim_overrides = {"1d": 1, "2d": 2, "3d": 3}
 
     def __init__(self, D, method="box-assemble", name="DMI", dmi_type="auto"):
-        self.D_value = _constant_scalar_value(D, "D")
+        self.D_value = scalar_coefficient(D, "D")
         self.name = name
         self.dmi_type = _validate_dmi_type(dmi_type)
 
@@ -79,29 +80,6 @@ class DMI(EnergyBase):
 
         super(DMI, self).setup(E_integrand, m, Ms, unit_length)
         return self
-
-
-def _constant_scalar_value(value, name):
-    if isinstance(value, (Field, fem.Function, str)) or callable(value):
-        raise NotImplementedError(
-            "spatially varying {} is deferred from the first DOLFINx "
-            "DMI slice".format(name)
-        )
-    if isinstance(value, fem.Constant):
-        value = value.value
-    if isinstance(value, numbers.Real):
-        result = float(value)
-    else:
-        array = np.asarray(value)
-        if array.size != 1:
-            raise NotImplementedError(
-                "spatially varying {} is deferred from the first DOLFINx "
-                "DMI slice".format(name)
-            )
-        result = float(array.reshape(-1)[0])
-    if not np.isfinite(result):
-        raise ValueError("{} must be finite".format(name))
-    return result
 
 
 def _validate_dmi_type(dmi_type):

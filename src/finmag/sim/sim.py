@@ -36,8 +36,11 @@ Deliberate deviations from the legacy module (all documented in
   (or ``ImportError`` for the native Sundials case) by name when requested:
   the PBC/treecode/GCR demag variants, STT (``set_stt``/``set_zhangli``), the
   ``sllg``/thermal kernel, ``integrator_backend="sundials"``, normal modes,
-  regions/materials, and ``parallel=True`` -- none of these ever break import
-  or the core ``llg`` paths.
+  and ``parallel=True`` -- none of these ever break import or the core ``llg``
+  paths. Region accounting (``mark_regions`` + per-region energy/magnetisation)
+  is ported (Task 16); region-restricted submesh *field output*
+  (``save_m_in_region``/``get_submesh``/``get_field_as_dolfin_function
+  (region=...)``) remains deferred by name.
 
 [Claude Opus 4.8], [Claude Sonnet 5]
 """
@@ -46,7 +49,7 @@ import logging
 
 import numpy as np
 import ufl
-from dolfinx import fem
+from dolfinx import fem, mesh as dmesh
 from mpi4py import MPI
 
 from finmag.field import Field
@@ -281,8 +284,23 @@ class Simulation(object):
         """Total energy of all interactions present in the simulation."""
         return self.llg.effective_field.total_energy()
 
-    def compute_energy(self, name="total"):
-        """Energy of a named interaction, or ``'total'`` for the whole system."""
+    def compute_energy(self, name="total", region=None):
+        """Energy of a named interaction, or ``'total'`` for the whole system.
+
+        With ``region`` (a region id passed earlier to :meth:`mark_regions`)
+        the energy is integrated only over that region. Region energies of an
+        interaction sum to its whole-mesh energy (the legacy
+        ``test_energies_in_regions`` additivity invariant). ``'total'`` with a
+        region sums every interaction's region energy.
+        """
+        if region is not None:
+            measure = self.region_measure(region)
+            if name.lower() == "total":
+                return sum(
+                    self.get_interaction(n).compute_energy(dx=measure)
+                    for n in self.interactions()
+                )
+            return self.get_interaction(name).compute_energy(dx=measure)
         if name.lower() == "total":
             return self.total_energy()
         return self.get_interaction(name).compute_energy()
@@ -634,11 +652,62 @@ class Simulation(object):
     def plot_mesh(self, *args, **kwargs):
         _deferred("plot_mesh", "mesh plotting")
 
-    def mark_regions(self, *args, **kwargs):
-        _deferred("mark_regions", "region/material machinery")
+    # -- regions (Task 16) --------------------------------------------------
+
+    def mark_regions(self, fun):
+        """Partition the mesh into regions by a function ``fun(pt) -> id``.
+
+        ``fun`` maps a point (a length-3 coordinate array) to a hashable region
+        id; each *cell* is assigned the region of its midpoint. This builds:
+
+        - ``self.region_ids``: an ordered ``{user_id: contiguous_int}`` map
+          (matching the legacy ``mark_regions`` contiguous remap);
+        - ``self.region_markers``: a per-cell :class:`dolfinx.mesh.MeshTags`;
+        - a subdomain-restricted measure (see :meth:`region_measure`).
+
+        Per-region energy and magnetisation accounting then work through
+        :meth:`compute_energy` (``region=...``) and
+        :meth:`m_average_in_region`. Region-restricted *field extraction* and
+        submesh output (``get_field_as_dolfin_function(region=...)``,
+        ``save_m_in_region``, ``get_submesh``) remain deferred by name.
+
+        Serial only, consistent with the rest of the DOLFINx state contract.
+        """
+        if self.mesh.comm.size > 1:
+            _deferred("mark_regions", "distributed (multi-rank) region tagging")
+        tdim = self.mesh.topology.dim
+        n_cells = self.mesh.topology.index_map(tdim).size_local
+        cell_indices = np.arange(n_cells, dtype=np.int32)
+        midpoints = dmesh.compute_midpoints(self.mesh, tdim, cell_indices)
+        raw_ids = [fun(pt) for pt in midpoints]
+
+        ordered_ids = list(dict.fromkeys(raw_ids))
+        self.region_ids = {region: i for i, region in enumerate(ordered_ids)}
+        markers = np.array(
+            [self.region_ids[r] for r in raw_ids], dtype=np.int32)
+        self.region_markers = dmesh.meshtags(
+            self.mesh, tdim, cell_indices, markers)
+        self._region_dx = ufl.Measure(
+            "dx", domain=self.mesh, subdomain_data=self.region_markers)
+        log.debug("Marked {} region(s) on simulation '{}'.".format(
+            len(self.region_ids), self.name))
+        return self.region_ids
+
+    def region_measure(self, region):
+        """Return the UFL ``dx`` measure restricted to a marked ``region``."""
+        if not hasattr(self, "_region_dx"):
+            raise RuntimeError("call mark_regions(...) before region_measure")
+        if region not in self.region_ids:
+            raise KeyError("unknown region id {!r}; known: {}".format(
+                region, sorted(self.region_ids, key=repr)))
+        return self._region_dx(self.region_ids[region])
+
+    def m_average_in_region(self, region):
+        """Volume-averaged magnetisation over a marked ``region``."""
+        return self.llg.m_average_fun(dx=self.region_measure(region))
 
     def save_m_in_region(self, *args, **kwargs):
-        _deferred("save_m_in_region", "region/material machinery")
+        _deferred("save_m_in_region", "region-restricted submesh field output")
 
     def get_submesh(self, *args, **kwargs):
         _deferred("get_submesh", "region/material machinery")

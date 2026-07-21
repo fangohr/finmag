@@ -103,15 +103,24 @@ exports, focused DOLFINx tests.
 `cubic_anisotropy.py`, `physics/llg.py` (alpha), `sim/sim.py`
 (`mark_regions`, region-resolved parameters), their tests.
 
-- [ ] Accept `Field`/callable spatially varying `Ms`, `A`, `K1`, axes, `D`,
+- [x] Accept `Field`/callable spatially varying `Ms`, `A`, `K1`, axes, `D`,
   and `alpha` where legacy did, with the legacy broadcasting/DG0-vs-CG1
-  placement semantics established from the oracle, not assumed.
-- [ ] Port `sim.mark_regions` and region-scoped parameter assignment /
-  energies-in-regions accounting for the ported interactions.
-- [ ] Oracle fixtures for at least one spatially-varying-`Ms` and one
+  placement semantics established from the oracle, not assumed. (Established:
+  A/D -> DG0, K1/K2/axis/cubic K -> CG1, alpha -> CG1 nodal per-node in the
+  damping term *and* `gamma_LL`; the port's spaces already matched legacy.)
+- [x] Port `sim.mark_regions` and region-scoped parameter assignment /
+  energies-in-regions accounting for the ported interactions. (Legacy had NO
+  region-scoped `set_alpha`/param setter; region support = `mark_regions` +
+  per-region `compute_energy(dx=...)` + region `m_average`. Region-restricted
+  submesh field output stays deferred by name.)
+- [x] Oracle fixtures for at least one spatially-varying-`Ms` and one
   two-region case; the legacy `test_spatially_varying_anisotropy` and
-  `test_energies_in_regions` invariants are the behavioral contract.
-- [ ] Remove the corresponding by-name deferrals; extend gates.
+  `test_energies_in_regions` invariants are the behavioral contract. (Also:
+  nonuniform-A, varying-alpha RHS, and a spatially-varying-K2 native-typo
+  divergence pin.)
+- [x] Remove the corresponding by-name deferrals; extend gates. (New gate
+  `dolfinx-src-varparams-pytest` folded into `verify-dolfinx-m5`; only legacy
+  string Expressions and varying cubic axes remain deferred by name.)
 
 ## Later phase-2 slices (sketch, sequence after Tasks 13-16)
 

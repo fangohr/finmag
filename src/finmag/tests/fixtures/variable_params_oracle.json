@@ -1,0 +1,904 @@
+{
+  "cases": {
+    "nonuniform_A_exchange": {
+      "coordinates": {
+        "ordering": "lexicographic_xyz",
+        "unit": "mesh_coordinate",
+        "values": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.0,
+            0.0,
+            0.0
+          ],
+          [
+            3.0,
+            0.0,
+            0.0
+          ],
+          [
+            4.0,
+            0.0,
+            0.0
+          ],
+          [
+            5.0,
+            0.0,
+            0.0
+          ],
+          [
+            6.0,
+            0.0,
+            0.0
+          ],
+          [
+            7.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "description": "Exchange with spatially varying A in DG0 (A=1.3e-11*(1+0.5 x0/8)), Ms=8.6e5, m unit-norm cos/sin, unit_length=1e-9, IntervalMesh(8,0,8).",
+      "mesh": {
+        "parameters": {
+          "cells": 8,
+          "x0": 0.0,
+          "x1": 8.0
+        },
+        "recipe": "dolfin.IntervalMesh(8, 0.0, 8.0)"
+      },
+      "oracle": {
+        "command": [
+          "dev/bin/run-legacy-oracle",
+          "--",
+          "pixi",
+          "run",
+          "--locked",
+          "env",
+          "PYTHONPATH=src",
+          "python",
+          "/home/sam/repos/finmag/src/finmag/tests/fixtures/gen_variable_params_oracle.py"
+        ],
+        "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+        "generator": "src/finmag/tests/fixtures/gen_variable_params_oracle.py",
+        "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle. Energies/fields are computed by the frozen legacy finmag energy classes (box-assemble); the driver only sorts and serialises coordinate-paired nodal values."
+      },
+      "physical_parameters": {
+        "A_expression": {
+          "unit": "J/m",
+          "value": "1.3e-11*(1.0 + 0.5*x[0]/8.0)"
+        },
+        "Ms": {
+          "unit": "A/m",
+          "value": 860000.0
+        },
+        "m_expression": {
+          "unit": "1",
+          "value": [
+            "0.6",
+            "0.8*cos(2*pi*x[0]/8.0)",
+            "0.8*sin(2*pi*x[0]/8.0)"
+          ]
+        },
+        "unit_length": {
+          "unit": "m",
+          "value": 1e-09
+        }
+      },
+      "quantities": [
+        {
+          "name": "m_vertex",
+          "tolerances": {
+            "absolute": 1e-12,
+            "relative": 1e-12
+          },
+          "unit": "1",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.6,
+              0.8,
+              0.0
+            ],
+            [
+              0.6,
+              0.5656854249492381,
+              0.565685424949238
+            ],
+            [
+              0.6,
+              4.898587196589413e-17,
+              0.8
+            ],
+            [
+              0.6,
+              -0.565685424949238,
+              0.5656854249492381
+            ],
+            [
+              0.6,
+              -0.8,
+              9.797174393178826e-17
+            ],
+            [
+              0.6,
+              -0.5656854249492381,
+              -0.565685424949238
+            ],
+            [
+              0.6,
+              -1.4695761589768238e-16,
+              -0.8
+            ],
+            [
+              0.6,
+              0.5656854249492379,
+              -0.5656854249492381
+            ],
+            [
+              0.6,
+              0.8,
+              -1.9594348786357652e-16
+            ]
+          ]
+        },
+        {
+          "name": "H_vertex",
+          "tolerances": {
+            "absolute": 0.03997770851540638,
+            "relative": 1e-09
+          },
+          "unit": "A/m",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.0,
+              -11626748.914243186,
+              28069454.91507256
+            ],
+            [
+              0.0,
+              -9071942.543295681,
+              -7869027.275740648
+            ],
+            [
+              0.0,
+              -850589.5428809803,
+              -12683726.088265296
+            ],
+            [
+              0.0,
+              8865554.912154552,
+              -10068470.179709578
+            ],
+            [
+              0.0,
+              14093028.98696144,
+              -850589.5428809896
+            ],
+            [
+              0.0,
+              11064997.816123482,
+              9862082.548568454
+            ],
+            [
+              0.0,
+              850589.5428809859,
+              15502331.885657586
+            ],
+            [
+              0.0,
+              -10858610.184982348,
+              12061525.45253738
+            ],
+            [
+              0.0,
+              -16559309.059679708,
+              -39977708.51540638
+            ]
+          ]
+        }
+      ],
+      "scalar_quantities": [
+        {
+          "name": "energy",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": 0.0487374316105585,
+          "value_shape": []
+        }
+      ]
+    },
+    "spatially_varying_anisotropy": {
+      "coordinates": {
+        "ordering": "lexicographic_xyz",
+        "unit": "mesh_coordinate",
+        "values": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.0,
+            0.0,
+            0.0
+          ],
+          [
+            3.0,
+            0.0,
+            0.0
+          ],
+          [
+            4.0,
+            0.0,
+            0.0
+          ],
+          [
+            5.0,
+            0.0,
+            0.0
+          ],
+          [
+            6.0,
+            0.0,
+            0.0
+          ],
+          [
+            7.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "description": "UniaxialAnisotropy with spatially varying unit easy axis in CG1 (axis=(cos(0.5 x0), sin(0.5 x0), 0)), K1=6e5, Ms=8.6e5, m unit-norm cos/sin, unit_length=1e-9, IntervalMesh(8,0,8).",
+      "mesh": {
+        "parameters": {
+          "cells": 8,
+          "x0": 0.0,
+          "x1": 8.0
+        },
+        "recipe": "dolfin.IntervalMesh(8, 0.0, 8.0)"
+      },
+      "oracle": {
+        "command": [
+          "dev/bin/run-legacy-oracle",
+          "--",
+          "pixi",
+          "run",
+          "--locked",
+          "env",
+          "PYTHONPATH=src",
+          "python",
+          "/home/sam/repos/finmag/src/finmag/tests/fixtures/gen_variable_params_oracle.py"
+        ],
+        "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+        "generator": "src/finmag/tests/fixtures/gen_variable_params_oracle.py",
+        "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle. Energies/fields are computed by the frozen legacy finmag energy classes (box-assemble); the driver only sorts and serialises coordinate-paired nodal values."
+      },
+      "physical_parameters": {
+        "K1": {
+          "unit": "J/m**3",
+          "value": 600000.0
+        },
+        "Ms": {
+          "unit": "A/m",
+          "value": 860000.0
+        },
+        "axis_expression": {
+          "unit": "1",
+          "value": [
+            "cos(0.5*x[0])",
+            "sin(0.5*x[0])",
+            "0.0"
+          ]
+        },
+        "m_expression": {
+          "unit": "1",
+          "value": [
+            "0.6",
+            "0.8*cos(2*pi*x[0]/8.0)",
+            "0.8*sin(2*pi*x[0]/8.0)"
+          ]
+        },
+        "unit_length": {
+          "unit": "m",
+          "value": 1e-09
+        }
+      },
+      "quantities": [
+        {
+          "name": "m_vertex",
+          "tolerances": {
+            "absolute": 1e-12,
+            "relative": 1e-12
+          },
+          "unit": "1",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.6,
+              0.8,
+              0.0
+            ],
+            [
+              0.6,
+              0.5656854249492381,
+              0.565685424949238
+            ],
+            [
+              0.6,
+              4.898587196589413e-17,
+              0.8
+            ],
+            [
+              0.6,
+              -0.565685424949238,
+              0.5656854249492381
+            ],
+            [
+              0.6,
+              -0.8,
+              9.797174393178826e-17
+            ],
+            [
+              0.6,
+              -0.5656854249492381,
+              -0.565685424949238
+            ],
+            [
+              0.6,
+              -1.4695761589768238e-16,
+              -0.8
+            ],
+            [
+              0.6,
+              0.5656854249492379,
+              -0.5656854249492381
+            ],
+            [
+              0.6,
+              0.8,
+              -1.9594348786357652e-16
+            ]
+          ]
+        },
+        {
+          "name": "H_vertex",
+          "tolerances": {
+            "absolute": 0.0008404703933372897,
+            "relative": 1e-09
+          },
+          "unit": "A/m",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              727529.3274430641,
+              128001.57243003829,
+              0.0
+            ],
+            [
+              672868.036275283,
+              355516.44115552603,
+              0.0
+            ],
+            [
+              216527.14727212102,
+              225047.7911542767,
+              0.0
+            ],
+            [
+              25420.15136836504,
+              -484967.48835721926,
+              0.0
+            ],
+            [
+              397332.7324901567,
+              -840470.3933372896,
+              0.0
+            ],
+            [
+              654138.2859674331,
+              -513988.46884025866,
+              0.0
+            ],
+            [
+              646463.3371180242,
+              -95141.96234622784,
+              0.0
+            ],
+            [
+              731686.9118508773,
+              296670.4986148623,
+              0.0
+            ],
+            [
+              745165.717313465,
+              629315.3669643283,
+              0.0
+            ]
+          ]
+        }
+      ],
+      "scalar_quantities": [
+        {
+          "name": "energy",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": 0.0024452450557583137,
+          "value_shape": []
+        }
+      ]
+    },
+    "two_region_zeeman": {
+      "coordinates": {
+        "ordering": "lexicographic_xyz",
+        "unit": "mesh_coordinate",
+        "values": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.0,
+            0.0,
+            0.0
+          ],
+          [
+            3.0,
+            0.0,
+            0.0
+          ],
+          [
+            4.0,
+            0.0,
+            0.0
+          ],
+          [
+            5.0,
+            0.0,
+            0.0
+          ],
+          [
+            6.0,
+            0.0,
+            0.0
+          ],
+          [
+            7.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "description": "Zeeman(H=1e6 x) energy on two regions (cell midpoint x<4 vs x>=4) and the whole mesh; Ms=8.6e5, m unit-norm cos/sin, unit_length=1e-9, IntervalMesh(8,0,8). Region energies sum to the total (additivity contract).",
+      "mesh": {
+        "parameters": {
+          "cells": 8,
+          "x0": 0.0,
+          "x1": 8.0
+        },
+        "recipe": "dolfin.IntervalMesh(8, 0.0, 8.0)"
+      },
+      "oracle": {
+        "command": [
+          "dev/bin/run-legacy-oracle",
+          "--",
+          "pixi",
+          "run",
+          "--locked",
+          "env",
+          "PYTHONPATH=src",
+          "python",
+          "/home/sam/repos/finmag/src/finmag/tests/fixtures/gen_variable_params_oracle.py"
+        ],
+        "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+        "generator": "src/finmag/tests/fixtures/gen_variable_params_oracle.py",
+        "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle. Energies/fields are computed by the frozen legacy finmag energy classes (box-assemble); the driver only sorts and serialises coordinate-paired nodal values."
+      },
+      "physical_parameters": {
+        "H_zeeman": {
+          "unit": "A/m",
+          "value": [
+            1000000.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Ms": {
+          "unit": "A/m",
+          "value": 860000.0
+        },
+        "m_expression": {
+          "unit": "1",
+          "value": [
+            "0.6",
+            "0.8*cos(2*pi*x[0]/8.0)",
+            "0.8*sin(2*pi*x[0]/8.0)"
+          ]
+        },
+        "region_split_x": {
+          "unit": "mesh_coordinate",
+          "value": 4.0
+        },
+        "unit_length": {
+          "unit": "m",
+          "value": 1e-09
+        }
+      },
+      "quantities": [
+        {
+          "name": "m_vertex",
+          "tolerances": {
+            "absolute": 1e-12,
+            "relative": 1e-12
+          },
+          "unit": "1",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.6,
+              0.8,
+              0.0
+            ],
+            [
+              0.6,
+              0.5656854249492381,
+              0.565685424949238
+            ],
+            [
+              0.6,
+              4.898587196589413e-17,
+              0.8
+            ],
+            [
+              0.6,
+              -0.565685424949238,
+              0.5656854249492381
+            ],
+            [
+              0.6,
+              -0.8,
+              9.797174393178826e-17
+            ],
+            [
+              0.6,
+              -0.5656854249492381,
+              -0.565685424949238
+            ],
+            [
+              0.6,
+              -1.4695761589768238e-16,
+              -0.8
+            ],
+            [
+              0.6,
+              0.5656854249492379,
+              -0.5656854249492381
+            ],
+            [
+              0.6,
+              0.8,
+              -1.9594348786357652e-16
+            ]
+          ]
+        }
+      ],
+      "scalar_quantities": [
+        {
+          "name": "energy_total",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": -0.005187397789607465,
+          "value_shape": []
+        },
+        {
+          "name": "energy_region_1",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": -0.0025936988948037326,
+          "value_shape": []
+        },
+        {
+          "name": "energy_region_2",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": -0.0025936988948037326,
+          "value_shape": []
+        }
+      ]
+    },
+    "variable_Ms_exchange": {
+      "coordinates": {
+        "ordering": "lexicographic_xyz",
+        "unit": "mesh_coordinate",
+        "values": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            2.0,
+            0.0,
+            0.0
+          ],
+          [
+            3.0,
+            0.0,
+            0.0
+          ],
+          [
+            4.0,
+            0.0,
+            0.0
+          ],
+          [
+            5.0,
+            0.0,
+            0.0
+          ],
+          [
+            6.0,
+            0.0,
+            0.0
+          ],
+          [
+            7.0,
+            0.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "description": "Exchange with spatially varying Ms in DG0 (Ms=8.6e5*(1+0.3 x0/8)), A=1.3e-11, m unit-norm cos/sin, unit_length=1e-9, IntervalMesh(8,0,8).",
+      "mesh": {
+        "parameters": {
+          "cells": 8,
+          "x0": 0.0,
+          "x1": 8.0
+        },
+        "recipe": "dolfin.IntervalMesh(8, 0.0, 8.0)"
+      },
+      "oracle": {
+        "command": [
+          "dev/bin/run-legacy-oracle",
+          "--",
+          "pixi",
+          "run",
+          "--locked",
+          "env",
+          "PYTHONPATH=src",
+          "python",
+          "/home/sam/repos/finmag/src/finmag/tests/fixtures/gen_variable_params_oracle.py"
+        ],
+        "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+        "generator": "src/finmag/tests/fixtures/gen_variable_params_oracle.py",
+        "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle. Energies/fields are computed by the frozen legacy finmag energy classes (box-assemble); the driver only sorts and serialises coordinate-paired nodal values."
+      },
+      "physical_parameters": {
+        "A": {
+          "unit": "J/m",
+          "value": 1.3e-11
+        },
+        "Ms_expression": {
+          "unit": "A/m",
+          "value": "8.6e5*(1.0 + 0.3*x[0]/8.0)"
+        },
+        "m_expression": {
+          "unit": "1",
+          "value": [
+            "0.6",
+            "0.8*cos(2*pi*x[0]/8.0)",
+            "0.8*sin(2*pi*x[0]/8.0)"
+          ]
+        },
+        "unit_length": {
+          "unit": "m",
+          "value": 1e-09
+        }
+      },
+      "quantities": [
+        {
+          "name": "m_vertex",
+          "tolerances": {
+            "absolute": 1e-12,
+            "relative": 1e-12
+          },
+          "unit": "1",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.6,
+              0.8,
+              0.0
+            ],
+            [
+              0.6,
+              0.5656854249492381,
+              0.565685424949238
+            ],
+            [
+              0.6,
+              4.898587196589413e-17,
+              0.8
+            ],
+            [
+              0.6,
+              -0.565685424949238,
+              0.5656854249492381
+            ],
+            [
+              0.6,
+              -0.8,
+              9.797174393178826e-17
+            ],
+            [
+              0.6,
+              -0.5656854249492381,
+              -0.565685424949238
+            ],
+            [
+              0.6,
+              -1.4695761589768238e-16,
+              -0.8
+            ],
+            [
+              0.6,
+              0.5656854249492379,
+              -0.5656854249492381
+            ],
+            [
+              0.6,
+              0.8,
+              -1.9594348786357652e-16
+            ]
+          ]
+        },
+        {
+          "name": "H_vertex",
+          "tolerances": {
+            "absolute": 0.026717904659819956,
+            "relative": 1e-09
+          },
+          "unit": "A/m",
+          "value_shape": [
+            3
+          ],
+          "values": [
+            [
+              0.0,
+              -11066918.468288735,
+              26717904.659819953
+            ],
+            [
+              0.0,
+              -7351210.764526205,
+              -8021947.269758897
+            ],
+            [
+              0.0,
+              441760.11424013786,
+              -10491027.089668404
+            ],
+            [
+              0.0,
+              7459739.413902632,
+              -6876415.7040480105
+            ],
+            [
+              0.0,
+              9806453.118471824,
+              386003.34974006005
+            ],
+            [
+              0.0,
+              6459148.594415181,
+              6971098.346698166
+            ],
+            [
+              0.0,
+              -340173.80630228855,
+              9205767.470119733
+            ],
+            [
+              0.0,
+              -6542482.532810413,
+              6089564.809813843
+            ],
+            [
+              0.0,
+              -8799549.806493001,
+              -21243992.485612933
+            ]
+          ]
+        }
+      ],
+      "scalar_quantities": [
+        {
+          "name": "energy",
+          "tolerances": {
+            "absolute": 0.0,
+            "relative": 1e-09
+          },
+          "unit": "J",
+          "value": 0.038989945288446785,
+          "value_shape": []
+        }
+      ]
+    }
+  },
+  "note": "Coordinate-ordered (lexicographic xyz) legacy FEniCS-2019 references for field-valued material parameters and region energy accounting (Task 16), generated at the frozen oracle commit via dev/bin/run-legacy-oracle on 1D interval meshes. Each case is a schema-v1 fixture (oracle/mesh/physical_parameters/coordinates/quantities); 'scalar_quantities' carries whole-domain / per-region energies. No iterative solve is involved, so tolerances reflect floating-point summation-order noise between the two FEM stacks.",
+  "schema_version": 1
+}

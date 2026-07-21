@@ -1,7 +1,5 @@
 """DOLFINx exchange interaction."""
 
-import numbers
-
 import numpy as np
 from aeon import timer
 from dolfinx import fem
@@ -9,19 +7,21 @@ from ufl import grad, inner
 
 from finmag.field import Field
 
-from .energy_base import EnergyBase, _require_cg1_magnetisation
+from .energy_base import EnergyBase, _require_cg1_magnetisation, scalar_coefficient
 
 
 class Exchange(EnergyBase):
     """Compute exchange energy and its lumped-box effective field.
 
-    This first DOLFINx slice supports a spatially constant scalar ``A`` and the
-    ``box-assemble`` method. Coordinates are converted with
+    Supports a constant scalar ``A`` or a spatially varying ``A`` (a callable,
+    :class:`~finmag.field.Field` or ``dolfinx.fem.Function``), placed -- exactly
+    as legacy did -- into a **DG0** (cellwise-constant) coefficient space; and
+    the ``box-assemble`` method. Coordinates are converted with
     ``unit_length**-2`` inside the gradient energy density.
     """
 
     def __init__(self, A, method="box-assemble", name="Exchange"):
-        self.A_value = _constant_scalar_value(A, "A")
+        self.A_value = scalar_coefficient(A, "A")
         self.name = name
         super().__init__(method=method, in_jacobian=True)
 
@@ -47,26 +47,3 @@ class Exchange(EnergyBase):
         )
         super().setup(E_integrand, m, Ms, unit_length)
         return self
-
-
-def _constant_scalar_value(value, name):
-    if isinstance(value, (Field, fem.Function, str)) or callable(value):
-        raise NotImplementedError(
-            "spatially varying {} is deferred from the first DOLFINx "
-            "energy slice".format(name)
-        )
-    if isinstance(value, fem.Constant):
-        value = value.value
-    if isinstance(value, numbers.Real):
-        result = float(value)
-    else:
-        array = np.asarray(value)
-        if array.size != 1:
-            raise NotImplementedError(
-                "spatially varying {} is deferred from the first DOLFINx "
-                "energy slice".format(name)
-            )
-        result = float(array.reshape(-1)[0])
-    if not np.isfinite(result):
-        raise ValueError("{} must be finite".format(name))
-    return result
