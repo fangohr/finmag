@@ -267,6 +267,27 @@ module with its tests.
   `dolfinx-src-native-bem-pytest`). The remaining Task 11 work (DOLFINx
   boundary-mesh probes, porting `src/finmag/energies/demag`, oracle BEM
   comparisons, barmini FK-demag workflow) is Task 11b. [Claude Opus 4.8]
+  Task 11b update: FK demag is no longer a gap. `src/finmag/energies/demag/
+  fk_demag.py` is now the direct DOLFINx port of the Fredkin-Koehler solver
+  (preserving the two-potential discrete formulation; only the FEM-API layer --
+  DOLFINx spaces, PETSc KSP, boundary extraction, dof maps -- changed), wired
+  into `Simulation.add(Demag())` and `sim_with(demag_solver="FK")` (the
+  default). The boundary-node ordering fed to the compiled
+  `compute_bem_fk_from_arrays` is built by `boundary_bem_arrays`: BEM-local node
+  `i` is a CG1 boundary dof of S1, `coords[i]`/`b2g[i]` are its coordinate/
+  S1-dof-index (the whole gather/scatter stays in S1 dof space), and the
+  boundary triangles are explicitly oriented **outward** (the sorted-index
+  winding DOLFINx returns from facet->vertex connectivity is not consistent and
+  yields a wrong-though-row-sum-`-1` BEM); triangle vertices are resolved to
+  BEM-local indices by coordinate, so the mapping is robust to submesh/entity
+  reordering. This is pinned bit-for-bit (atol 1e-13) against the 11a golden
+  matrix through both the explicit Kuhn cube and `create_unit_cube`. Field and
+  energy are validated against coordinate-ordered frozen-oracle references (cube
+  energy rel 4.7e-8, barmini rel 2.3e-9; pointwise ~5e-6, the Krylov tolerance)
+  plus the analytic cube demag factor (avg H = -Ms/3, E = mu0 Ms^2 V/6).
+  `solver_type='LU'`, `MacroGeometry`/`Demag2D`/`Treecode`/`GCR` raise
+  `NotImplementedError` by name. PBC/treecode demag remains the separate native
+  slice. Gate: `dolfinx-src-demag-pytest`. [Claude Opus 4.8]
 
 ## Direct-Edit Readiness Criteria
 
@@ -336,6 +357,12 @@ Before editing the matching module in `src/finmag`, check that:
   actually ports or explicitly stubs each class (Task 11 for demag; "Later
   Value-Driven Slices" item 1 for DMI/cubic anisotropy), rather than being
   patched incidentally by this aggregation-only gate. [Claude Sonnet 5]
+  Task 11b update: `Demag`/`Demag2D`/`MacroGeometry` are now
+  `requires_legacy_dolfin=False` and dolfin-clean -- `Demag()` builds the ported
+  DOLFINx `FKDemag`; `Demag2D`/`MacroGeometry`/non-FK solvers raise curated
+  by-name `NotImplementedError`. The remaining
+  `DMI`/`CubicAnisotropy`/`ThinFilmDemag`/`FixedEnergyDW` classes are still the
+  documented direct-construction gap. [Claude Opus 4.8]
 - The Task 5 box assembly and common interactions are now direct production
   code with focused serial/two-rank source tests. Spatially varying `A`, `K1`,
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
@@ -363,11 +390,11 @@ Before editing the matching module in `src/finmag`, check that:
   lumped weights are non-positive, so accepting arbitrary elements would fail
   late and potentially asymmetrically across ranks. Invalid volume detection
   is collective as a second guard. [Codex GPT-5.6]
-- Demag is not covered by the current DOLFINx prototype lane. The production
-  DOLFINx port should either reuse/port the array-based native FK BEM routines
-  or provide a replacement with equivalent tests; a pure Python/NumPy BEM path
-  may be acceptable for tiny references, but not as the assumed production
-  implementation. [Codex gpt-5.5 high]
+- Demag: FK (Fredkin-Koehler) demag is now ported directly to DOLFINx via the
+  array-based native FK BEM routines (Task 11b; see the FK demag baseline note
+  above). The pure Python/NumPy Magpar BEM remains reference-only. PBC/treecode
+  and the GCR/2D variants are still unported and raise by name. [Codex gpt-5.5
+  high; updated Claude Opus 4.8]
 - DMI, cubic anisotropy, variable material parameters, regions, PBC, scheduler
   output, legacy restart files, and production integrators are not covered by
   the current prototype lane. Bulk 3D DMI and constant-axis cubic anisotropy

@@ -13,6 +13,10 @@
 # `dev/bin/validation-common.sh` tracked-diff cleanliness guard used by every
 # other verifier in this repository. [Claude Sonnet 5]
 #
+# Task 11b folds in the array-only FK BEM native gate
+# (`dolfinx-src-native-bem-pytest`) and the direct DOLFINx FK demag port gate
+# (`dolfinx-src-demag-pytest`). [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -70,6 +74,12 @@ pixi run -e dolfinx dolfinx-src-simulation-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-deferred-pytest"
 pixi run -e dolfinx dolfinx-src-deferred-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-native-bem-pytest"
+pixi run -e dolfinx dolfinx-src-native-bem-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-demag-pytest"
+pixi run -e dolfinx dolfinx-src-demag-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

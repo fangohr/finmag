@@ -242,17 +242,22 @@ This completes the first core source port. It is not full Finmag completion.
 
 ## Task 11: Port FK demag
 
-- [ ] Separate the array-only LLG/BEM native bindings from legacy
-  SWIG-DOLFIN mesh converters and the `-ldolfin` link dependency.
-- [ ] Rebuild and test the resulting native surface on Python 3.12 without
-  installing legacy DOLFIN.
-- [ ] Validate DOLFINx boundary mesh/marker extraction under `dev/dolfinx`.
-- [ ] Validate the compiled `compute_bem_fk_from_arrays` entry point on the
-  Python-3.12 toolchain.
-- [ ] Port the existing FK demag modules directly in `src/finmag`.
-- [ ] Compare BEM matrices, fields, and energies with coordinate-ordered legacy
-  references.
-- [ ] Run a DOLFINx `barmini`-class workflow with compiled FK demag.
+- [x] Separate the array-only LLG/BEM native bindings from legacy
+  SWIG-DOLFIN mesh converters and the `-ldolfin` link dependency. (Task 11a)
+- [x] Rebuild and test the resulting native surface on Python 3.12 without
+  installing legacy DOLFIN. (Task 11a)
+- [x] Validate DOLFINx boundary mesh/marker extraction under `dev/dolfinx`.
+  (Task 11b: the coordinate-driven, outward-oriented boundary extraction is
+  implemented and *pinned* in-tree against the 11a golden BEM matrix -- see
+  `boundary_bem_arrays` and `test_fk_demag_dolfinx.py`; no throwaway probe was
+  needed since the mechanic is now a tested production path.)
+- [x] Validate the compiled `compute_bem_fk_from_arrays` entry point on the
+  Python-3.12 toolchain. (Task 11a)
+- [x] Port the existing FK demag modules directly in `src/finmag`. (Task 11b)
+- [x] Compare BEM matrices, fields, and energies with coordinate-ordered legacy
+  references. (Task 11b: golden BEM bit-for-bit; cube + barmini energy/average/
+  pointwise vs the frozen FEniCS-2019 oracle.)
+- [x] Run a DOLFINx `barmini`-class workflow with compiled FK demag. (Task 11b)
 
 PBC/treecode demag remains a separate native slice.
 

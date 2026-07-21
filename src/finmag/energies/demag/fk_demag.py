@@ -1,109 +1,201 @@
-"""
-Computation of the demagnetising field using the Fredkin-Koehler
-technique and the infamous magpar method.
+"""Fredkin-Koehler hybrid FEM/BEM demagnetising field, ported to DOLFINx.
 
-Rationale: The previous implementation in FemBemFKSolver (child class
-of FemBemDeMagSolver) was kind of a mess. This does the same thing in the same
-time with less code. Should be more conducive to further optimisation or as
-a template for other techniques like the GCR.
+This is the direct DOLFINx port of the legacy ``FKDemag`` two-potential method.
+The discrete formulation is preserved verbatim from the FEniCS-2019 module:
 
+1. ``phi_1`` solves the inhomogeneous Neumann Poisson problem
+   ``div(grad(phi_1)) = div(M)`` on the whole domain (pure-Neumann, singular;
+   the constant nullspace is projected out -- irrelevant to ``H = -grad(phi)``);
+2. the boundary values of ``phi_2`` are set from the boundary element matrix
+   ``phi_2|_bnd = B @ phi_1|_bnd`` (the compiled, dolfin-free
+   ``finmag.native.bem_arrays.compute_bem_fk_from_arrays`` kernel, Task 11a);
+3. ``phi_2`` solves the Laplace problem inside the domain with those Dirichlet
+   boundary values;
+4. ``H_demag = -grad(phi_1 + phi_2)``, recovered by the same lumped
+   box (assemble-and-divide-by-nodal-volume) trick as the legacy module.
+
+Only the FEM-API layer changed (DOLFINx function spaces / PETSc KSP solvers /
+boundary submesh extraction / dof maps). The boundary-node ordering fed to the
+native BEM kernel is built with an explicit, coordinate-driven mapping and the
+boundary triangles are consistently outward-oriented; both are pinned against
+the Task 11a golden BEM matrix in ``test_fk_demag_dolfinx.py``.
+
+Deliberate deviations from the legacy module (documented in
+``transition-notes.org`` and ``dev/dolfinx/porting_map.md``):
+
+- ``solver_type='LU'`` and ``macrogeometry`` (PBC / ``MacroGeometry``) are
+  deferred and raise ``NotImplementedError`` by name; only the Krylov path is
+  ported. ``Demag2D`` and the ``Treecode``/``GCR`` solvers likewise raise by
+  name through the ``Demag`` factory.
+- Serial assembly of the BEM is used (the legacy BEM was effectively serial);
+  the FEM solves themselves run through PETSc and are collective, but the
+  slice is validated serial-only.
+
+[Claude Opus 4.8]
 """
-import numpy as np
-import dolfin as df
+
 import logging
-from aeon import timer, Timer
-from finmag.util.consts import mu0
-from finmag.native.llg import compute_bem_fk, compute_bem_fk_from_arrays
-from finmag.util.meshes import nodal_volume
-from finmag.util import helpers, configuration
-from finmag.field import Field
-from .fk_demag_pbc import BMatrixPBC
+from math import pi
+
+import numpy as np
+import ufl
+from dolfinx import fem, mesh as dmesh
+from dolfinx.fem import petsc as fem_petsc
+from mpi4py import MPI
+from petsc4py import PETSc
+
+from finmag.field import Field, associated_scalar_space
+
+logger = logging.getLogger("finmag")
+
+mu0 = 4.0 * pi * 1e-7
 
 
-logger = logging.getLogger('finmag')
-fk_timer = Timer()
+def boundary_bem_arrays(domain, S1):
+    """Extract the FK BEM inputs from a DOLFINx volume mesh.
+
+    Returns ``(coords, cells, b2g)`` where
+
+    - ``coords`` is ``(n, 3)`` boundary-node coordinates in BEM-local order,
+      one row per CG1 boundary degree of freedom of ``S1``;
+    - ``cells`` is ``(m, 3)`` boundary triangles as BEM-local node indices,
+      oriented so the triangle normal points *out* of the domain (the winding
+      the Lindholm double-layer kernel and the legacy ``BoundaryMesh`` assume);
+    - ``b2g`` is ``(n,)`` the S1 degree-of-freedom index for each BEM-local
+      boundary node, so ``phi.x.array[b2g]`` gathers boundary values in
+      BEM-local order and the reverse scatter writes them back.
+
+    The BEM-local index of a boundary node is defined by its *coordinate*, so
+    the mapping is robust to DOLFINx submesh/entity reordering. This is the
+    exact place a silent permutation would corrupt the demag field, so it is
+    pinned bit-for-bit against the Task 11a golden matrix.
+    """
+    tdim = domain.topology.dim
+    fdim = tdim - 1
+    domain.topology.create_connectivity(fdim, tdim)
+    domain.topology.create_connectivity(fdim, 0)
+    domain.topology.create_connectivity(tdim, 0)
+    ext_facets = dmesh.exterior_facet_indices(domain.topology)
+
+    boundary_dofs = fem.locate_dofs_topological(S1, fdim, ext_facets)
+    boundary_dofs = np.asarray(boundary_dofs, dtype=np.int64)
+    dof_coords = S1.tabulate_dof_coordinates()
+    coords = np.ascontiguousarray(dof_coords[boundary_dofs], dtype=np.float64)
+
+    n = coords.shape[0]
+    keyed = {tuple(np.round(coords[i], 9)): i for i in range(n)}
+    if len(keyed) != n:
+        raise RuntimeError(
+            "FK demag boundary extraction found coincident boundary-node "
+            "coordinates; the coordinate mapping would be ambiguous"
+        )
+
+    # vertex -> coordinate, via the geometry dofmap (P1 simplex geometry).
+    vcoords = domain.geometry.x
+    geo_dofmap = domain.geometry.dofmap
+    c2v = domain.topology.connectivity(tdim, 0)
+    imap = domain.topology.index_map(0)
+    nverts = imap.size_local + imap.num_ghosts
+    vert_coord = np.full((nverts, 3), np.nan)
+    for c in range(c2v.num_nodes):
+        vs = c2v.links(c)
+        gs = geo_dofmap[c]
+        for lv, v in enumerate(vs):
+            vert_coord[v] = vcoords[gs[lv]]
+
+    f2v = domain.topology.connectivity(fdim, 0)
+    f2c = domain.topology.connectivity(fdim, tdim)
+    cells = np.empty((len(ext_facets), 3), dtype=np.int64)
+    for row, f in enumerate(ext_facets):
+        vs = list(f2v.links(f))
+        p = [vert_coord[v] for v in vs]
+        cell = f2c.links(f)[0]
+        opp = [v for v in c2v.links(cell) if v not in vs][0]
+        normal = np.cross(p[1] - p[0], p[2] - p[0])
+        if np.dot(normal, p[0] - vert_coord[opp]) < 0.0:
+            vs = [vs[0], vs[2], vs[1]]
+        cells[row] = [keyed[tuple(np.round(vert_coord[v], 9))] for v in vs]
+
+    return coords, cells, boundary_dofs
 
 
-def _dolfin_vector_array(vector):
-    if hasattr(vector, "get_local"):
-        return vector.get_local()
-    return vector.array()
+def _ksp(matrix, method, preconditioner, tol_params, nullspace=None):
+    """Build a PETSc KSP for ``matrix`` from legacy-style solver parameters."""
+    comm = matrix.getComm()
+    ksp = PETSc.KSP().create(comm)
+    ksp.setOperators(matrix)
+
+    method_map = {
+        "default": "cg",
+        "cg": "cg",
+        "gmres": "gmres",
+        "bicgstab": "bcgs",
+        "minres": "minres",
+        "richardson": "richardson",
+    }
+    ksp.setType(method_map.get(str(method).lower(), "cg"))
+
+    pc = ksp.getPC()
+    pc_map = {
+        "default": "hypre",
+        "amg": "hypre",
+        "hypre": "hypre",
+        "petsc_amg": "gamg",
+        "gamg": "gamg",
+        "ilu": "ilu",
+        "jacobi": "jacobi",
+        "none": "none",
+    }
+    pc_type = pc_map.get(str(preconditioner).lower(), "hypre")
+    try:
+        pc.setType(pc_type)
+    except PETSc.Error:  # pragma: no cover - environment-dependent
+        pc.setType("gamg")
+
+    rtol = float(tol_params.get("relative_tolerance", 1e-6))
+    atol = float(tol_params.get("absolute_tolerance", 1e-6))
+    max_it = int(tol_params.get("maximum_iterations", int(1e4)))
+    ksp.setTolerances(rtol=rtol, atol=atol, max_it=max_it)
+    if nullspace is not None:
+        matrix.setNullSpace(nullspace)
+    ksp.setFromOptions()
+    return ksp
 
 
 class FKDemag(object):
+    """Fredkin-Koehler hybrid FEM/BEM demagnetising field (DOLFINx port)."""
 
-    """
-    Computation of the demagnetising field using the Fredkin-Koehler hybrid
-    FEM/BEM technique.
-
-    Fredkin, D.R. and Koehler, T.R., "`Hybrid method for computing
-    demagnetizing fields`_", IEEE Transactions on Magnetics, vol.26, no.2,
-    pp.415-417, Mar 1990.
-
-    .. _Hybrid method for computing demagnetizing fields:
-       http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=106342
-
-    """
-
-    def __init__(self, name='Demag', thin_film=False, macrogeometry=None,
+    def __init__(self, name="Demag", thin_film=False, macrogeometry=None,
                  solver_type=None, parameters=None):
-        """
-        Create a new FKDemag instance.
-
-        The attribute `parameters` is a dict that contains the settings for the
-        solvers for the Neumann (potential phi_1) and Laplace (potential phi_2)
-        problems.
-
-        Setting the method used by the solvers:
-        Change the entries `phi_1_solver` and `phi_2_solver` to a value from
-        `df.list_krylov_solver_methods()`. Default is dolfin's default.
-
-        Setting the preconditioners:
-        Change the entries `phi_1_preconditioner` and `phi_2_preconditioner` to
-        a value from `df.list_krylov_solver_preconditioners()`. Default is
-        dolfin's default. There is a set of parameters optimised for thin films
-        (cg/ilu followed by default without preconditioner) that can be used by
-        passing in the argument 'thin_film` set to True.
-
-        Setting the tolerances:
-        Change the existing entries inside `phi_1` and `phi_2` which are
-        themselves dicts. You can add new entries to these dicts as well.
-        Everything which is understood by `df.KrylovSolver` is valid.
-
-        Allowed values for `solver_type` are 'Krylov','LU' and `None` (the
-        latter uses the value set in the .finmagrc file, defaulting to 'Krylov'
-        as no value is provided there).
-
-        """
         self.name = name
         self.in_jacobian = False
+
         default_parameters = {
-            'absolute_tolerance': 1e-6,
-            'relative_tolerance': 1e-6,
-            'maximum_iterations': int(1e4)
+            "absolute_tolerance": 1e-6,
+            "relative_tolerance": 1e-6,
+            "maximum_iterations": int(1e4),
         }
         self.parameters = {
-            'phi_1_solver': 'default',
-            'phi_1_preconditioner': 'default',
-            'phi_1': default_parameters,
-            'phi_2_solver': 'default',
-            'phi_2_preconditioner': 'default',
-            'phi_2': default_parameters.copy()
+            "phi_1_solver": "default",
+            "phi_1_preconditioner": "default",
+            "phi_1": default_parameters,
+            "phi_2_solver": "default",
+            "phi_2_preconditioner": "default",
+            "phi_2": default_parameters.copy(),
         }
         if parameters is not None:
             for (k, v) in parameters.items():
-                logger.debug(
-                    "Setting demag solver parameter {}='{}'".format(k, v))
-                if k in ['phi_1', 'phi_2']:
-                    # Since self.parameters['phi_1'] is a dictionary itself,
-                    # only update the keys that are given (and similarly for
-                    # 'phi_2').
+                if k in ("phi_1", "phi_2"):
                     for (k2, v2) in v.items():
                         self.parameters[k][k2] = v2
                 else:
                     self.parameters[k] = v
-            logger.debug("Demag parameters now: {}".format(self.parameters))
 
+        if solver_type is not None and str(solver_type).lower() == "lu":
+            raise NotImplementedError(
+                "FKDemag solver_type='LU' is deferred in the DOLFINx port; "
+                "use the Krylov solver (solver_type=None or 'Krylov')"
+            )
         self.solver_type = solver_type
 
         if thin_film:
@@ -111,28 +203,19 @@ class FKDemag(object):
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_2_preconditioner"] = "none"
 
-        self.macrogeometry = macrogeometry
+        if macrogeometry is not None:
+            raise NotImplementedError(
+                "FKDemag macrogeometry (periodic/MacroGeometry) demag is "
+                "deferred to the separate PBC/treecode native slice"
+            )
+        self.macrogeometry = None
 
-    @timer.method
     def setup(self, m, Ms, unit_length=1):
-        """
-        Setup the FKDemag instance. Usually called automatically by the
-        Simulation object.
+        """Bind the demag solver to magnetisation ``m`` and scalar ``Ms``.
 
-        *Arguments*
-
-        m: finmag.Field
-
-            The unit magnetisation on a finite element space.
-
-        Ms: float
-
-            The saturation magnetisation in A/m.
-
-        unit_length: float
-
-            The length (in m) represented by one unit on the mesh. Default 1.
-
+        ``m`` is a three-component CG1 :class:`~finmag.field.Field`; ``Ms`` is a
+        scalar :class:`~finmag.field.Field`; ``unit_length`` is the physical
+        length (m) of one mesh unit.
         """
         assert isinstance(m, Field)
         assert isinstance(Ms, Field)
@@ -140,280 +223,190 @@ class FKDemag(object):
         self.m = m
         self.Ms = Ms
         self.unit_length = unit_length
-        self.S1 = df.FunctionSpace(self.m.mesh(), "Lagrange", 1)
+        self.S3 = m.functionspace
+        self.domain = m.mesh()
+        self.dim = m.mesh_dim()
+        self.S1 = associated_scalar_space(self.S3)
 
-        self._test1 = df.TestFunction(self.S1)
-        self._trial1 = df.TrialFunction(self.S1)
-        self._test3 = df.TestFunction(self.m.functionspace)
-        self._trial3 = df.TrialFunction(self.m.functionspace)
+        v1 = ufl.TestFunction(self.S1)
+        u1 = ufl.TrialFunction(self.S1)
+        v3 = ufl.TestFunction(self.S3)
 
-        # for computation of energy
-        self._nodal_volumes = nodal_volume(self.S1, unit_length)
-        self._H_func = df.Function(m.functionspace)  # we will copy field into
-        # this when we need the
-        # energy
-        self._E_integrand = -0.5 * mu0 * \
-            df.dot(self._H_func, self.m.f * self.Ms.f)
-        self._E = self._E_integrand * df.dx
-        self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
-        self._nodal_E_func = df.Function(self.S1)
+        # lumped nodal volumes (mesh-coordinate units, no unit_length factor).
+        self._nodal_volumes_S1 = _assemble_owned(v1 * ufl.dx, self.S1)
+        self._nodal_volumes_S3 = _assemble_owned(
+            ufl.inner(v3, fem.Constant(self.domain, np.ones(3))) * ufl.dx,
+            self.S3,
+        )
 
-        # for computation of field and scalar magnetic potential
-        self._poisson_matrix = self._poisson_matrix()
-        self._laplace_zeros = df.Function(self.S1).vector()
+        # Poisson/Laplace stiffness form, reused for both potentials.
+        self._poisson_form = fem.form(
+            ufl.inner(ufl.grad(u1), ufl.grad(v1)) * ufl.dx)
 
-        # determine the solver type to be used (Krylov or LU); if the kwarg
-        # 'solver_type' is not provided, try to read the setting from the
-        # .finmagrc file; use 'Krylov' if this fails.
-        solver_type = self.solver_type
-        if solver_type is None:
-            solver_type = configuration.get_config_option(
-                'demag', 'solver_type', 'Krylov')
-        if solver_type == 'None':  # if the user set 'solver_type = None' in
-                                   # the .finmagrc file, solver_type will be a
-                                   # string so we need to catch this here.
-            solver_type = 'Krylov'
-        logger.debug("Using {} solver for demag.".format(solver_type))
+        # scalar potentials and the boundary-condition source function.
+        self._phi_1 = fem.Function(self.S1)
+        self._phi_2 = fem.Function(self.S1)
+        self._phi = fem.Function(self.S1)
+        self._g_bc = fem.Function(self.S1)  # Dirichlet source for phi_2
+        self._H_func = fem.Function(self.S3)  # holds H for energy assembly
 
-        if solver_type == 'Krylov':
-            self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
-                                                   self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
-            self._poisson_solver.parameters.update(self.parameters['phi_1'])
-            self._laplace_solver = df.KrylovSolver(
-                self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
-            self._laplace_solver.parameters.update(self.parameters['phi_2'])
-            # We're setting 'same_nonzero_pattern=True' to enforce the
-            # same matrix sparsity pattern across different demag solves,
-            # which should speed up things.
-            #self._laplace_solver.parameters["preconditioner"][
-            #    "structure"] = "same_nonzero_pattern"
-        elif solver_type == 'LU':
-            self._poisson_solver = df.LUSolver(self._poisson_matrix.copy())
-            self._laplace_solver = df.LUSolver()
-            # DOLFIN 2019 drops some legacy LU parameter names, so keep the
-            # reuse hint only where the backend still exposes it. [Codex GPT-5.4]
-            for solver in (self._poisson_solver, self._laplace_solver):
-                try:
-                    solver.parameters["reuse_factorization"] = True
-                except RuntimeError:
-                    pass
-        else:
-            raise ValueError("Argument 'solver_type' must be either 'Krylov' or 'LU'. "
-                             "Got: '{}'".format(solver_type))
+        # Boundary element matrix (compiled, dolfin-free) + ordering contract.
+        if not hasattr(self, "_bem"):
+            from finmag.native.bem_arrays import compute_bem_fk_from_arrays
 
-        with fk_timer('compute BEM'):
-            if not hasattr(self, "_bem"):
-                if self.macrogeometry is not None:
-                    Ts = self.macrogeometry.compute_Ts(self.m.mesh())
-                    pbc = BMatrixPBC(self.m.mesh(), Ts)
-                    self._b2g_map = np.array(pbc.b2g_map, dtype=np.int)
-                    self._bem = pbc.bm
-                else:
-                    boundary_mesh = df.BoundaryMesh(self.m.mesh(), 'exterior', False)
-                    try:
-                        self._bem, self._b2g_map = compute_bem_fk(boundary_mesh)
-                    except TypeError:
-                        coords = np.asarray(boundary_mesh.coordinates(), dtype=np.float64)
-                        cells = np.asarray(boundary_mesh.cells(), dtype=np.int64)
-                        entity_map = boundary_mesh.entity_map(0)
-                        if hasattr(entity_map, "array"):
-                            b2g_map = entity_map.array()
-                        else:
-                            b2g_map = entity_map.values()
-                        # DOLFIN 2019 no longer converts BoundaryMesh through the
-                        # old shared_ptr Boost.Python path, so fall back to an
-                        # array-based native BEM entry point. [Codex GPT-5.4]
-                        self._bem, self._b2g_map = compute_bem_fk_from_arrays(
-                            coords, cells, np.asarray(b2g_map, dtype=np.int64))
-        logger.debug("Boundary element matrix uses {:.2f} MB of memory.".format(
-            self._bem.nbytes / 1024. ** 2))
-        # solution of inhomogeneous Neumann problem
-        self._phi_1 = df.Function(self.S1)
-        # solution of Laplace equation inside domain
-        self._phi_2 = df.Function(self.S1)
-        self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
+            coords, cells, b2g = boundary_bem_arrays(self.domain, self.S1)
+            self._bem, _ = compute_bem_fk_from_arrays(
+                coords, cells, np.asarray(b2g, dtype=np.int64))
+            self._b2g_map = np.asarray(b2g, dtype=np.int64)
+        logger.debug(
+            "Boundary element matrix uses {:.2f} MB of memory.".format(
+                self._bem.nbytes / 1024.0 ** 2))
 
-        # To be applied to the vector field m as first step of computation of
-        # _phi_1.  This gives us div(M), which is equal to Laplace(_phi_1),
-        # equation which is then solved using _poisson_solver.
-        self._Ms_times_divergence = df.assemble(
-            self.Ms.f * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
+        # linear forms re-assembled every solve (m, phi change).
+        self._divergence_form = fem.form(
+            self.Ms.f * ufl.inner(self.m.f, ufl.grad(v1)) * ufl.dx)
+        self._gradient_form = fem.form(
+            ufl.inner(v3, -ufl.grad(self._phi)) * ufl.dx)
 
-        # we move the boundary condition here to avoid create a instance each
-        # time when compute the magnetic potential
-        self.boundary_condition = df.DirichletBC(
-            self.S1, self._phi_2, df.DomainBoundary())
-        self.boundary_condition.apply(self._poisson_matrix)
+        # energy integrands.
+        self._E_form = fem.form(
+            -0.5 * mu0 * ufl.dot(self._H_func, self.m.f * self.Ms.f) * ufl.dx)
+        self._nodal_E_form = fem.form(
+            -0.5 * mu0
+            * ufl.dot(self._H_func, self.m.f * self.Ms.f) * v1 * ufl.dx)
+        self._nodal_E_func = fem.Function(self.S1)
 
-        self._setup_gradient_computation()
+        # Dirichlet BC for phi_2 (values live in self._g_bc, updated per solve).
+        self._boundary_dofs = np.asarray(
+            self._b2g_map, dtype=np.int32)
+        self._bc = fem.dirichletbc(self._g_bc, self._boundary_dofs)
 
-    @timer.method
+        # Assembled operators.  A_neumann: pure Neumann (phi_1, singular);
+        # A_dirichlet: same stiffness with phi_2 boundary rows/cols pinned.
+        self._A_neumann = fem_petsc.assemble_matrix(self._poisson_form)
+        self._A_neumann.assemble()
+        self._nullspace = PETSc.NullSpace().create(
+            constant=True, comm=self.domain.comm)
+        self._A_dirichlet = fem_petsc.assemble_matrix(
+            self._poisson_form, bcs=[self._bc])
+        self._A_dirichlet.assemble()
+
+        self._poisson_solver = _ksp(
+            self._A_neumann, self.parameters["phi_1_solver"],
+            self.parameters["phi_1_preconditioner"], self.parameters["phi_1"],
+            nullspace=self._nullspace)
+        self._laplace_solver = _ksp(
+            self._A_dirichlet, self.parameters["phi_2_solver"],
+            self.parameters["phi_2_preconditioner"], self.parameters["phi_2"])
+
     def precomputed_bem(self, bem, b2g_map):
-        """
-        If the BEM and a boundary to global vertices map are known, they can be
-        passed to the FKDemag object with this method so it will skip
-        re-computing them.
+        """Reuse a previously computed BEM matrix and boundary->global map."""
+        self._bem, self._b2g_map = bem, np.asarray(b2g_map, dtype=np.int64)
 
-        """
-        self._bem, self._b2g_map = bem, b2g_map
+    def _compute_magnetic_potential(self):
+        # phi_1: inhomogeneous Neumann Poisson, div(M) source.
+        b1 = fem_petsc.assemble_vector(self._divergence_form)
+        b1.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
+                       mode=PETSc.ScatterMode.REVERSE)
+        # source is orthogonal to constants; project to be safe.
+        self._nullspace.remove(b1)
+        self._poisson_solver.solve(b1, self._phi_1.x.petsc_vec)
+        self._phi_1.x.scatter_forward()
+        b1.destroy()
 
-    @timer.method
+        # phi_2 boundary values from the BEM, then Laplace solve.
+        phi_1_boundary = self._phi_1.x.array[self._b2g_map]
+        bem_values = np.dot(self._bem, phi_1_boundary)
+        self._g_bc.x.array[:] = 0.0
+        self._g_bc.x.array[self._b2g_map] = bem_values
+        self._g_bc.x.scatter_forward()
+
+        b2 = fem_petsc.assemble_vector(
+            fem.form(fem.Constant(self.domain, 0.0)
+                     * ufl.TestFunction(self.S1) * ufl.dx))
+        fem_petsc.apply_lifting(b2, [self._poisson_form], bcs=[[self._bc]])
+        b2.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
+                       mode=PETSc.ScatterMode.REVERSE)
+        fem_petsc.set_bc(b2, [self._bc])
+        self._laplace_solver.solve(b2, self._phi_2.x.petsc_vec)
+        self._phi_2.x.scatter_forward()
+        b2.destroy()
+
+        # phi = phi_1 + phi_2
+        self._phi.x.array[:] = self._phi_1.x.array + self._phi_2.x.array
+        self._phi.x.scatter_forward()
+
     def compute_potential(self):
-        """
-        Compute the magnetic potential.
-
-        *Returns*
-            df.Function
-                The magnetic potential.
-
-        """
+        """Compute and return the total magnetic scalar potential Function."""
         self._compute_magnetic_potential()
         return self._phi
 
-    @timer.method
     def compute_field(self):
-        """
-        Compute the demagnetising field.
-
-        *Returns*
-            numpy.ndarray
-                The demagnetising field.
-
-        """
+        """Compute the demagnetising field as a flat owned ``xyz`` array."""
         self._compute_magnetic_potential()
         return self._compute_gradient()
 
+    def _compute_gradient(self):
+        H = _assemble_owned(None, self.S3, form=self._gradient_form)
+        return H / self._nodal_volumes_S3
+
     def average_field(self):
-        """
-        Compute the average demag field.
-        """
-        return helpers.average_field(self.compute_field())
+        """Collective arithmetic average of the demag field over owned nodes."""
+        values = self.compute_field().reshape((-1, 3))
+        local_sum = np.sum(values, axis=0)
+        global_sum = np.zeros_like(local_sum)
+        self.domain.comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
+        count = self.domain.comm.allreduce(values.shape[0], op=MPI.SUM)
+        return global_sum / count
 
-    @timer.method
+    def _load_H_func(self):
+        """Copy the current demag field (owned) into ``self._H_func``."""
+        owned = self.compute_field()
+        self._H_func.x.array[: owned.size] = owned
+        self._H_func.x.scatter_forward()
+
     def compute_energy(self):
-        """
-        Compute the total energy of the field.
+        """Total demag energy ``-1/2 mu0 int H.M`` in joules (collective)."""
+        self._load_H_func()
+        local = fem.assemble_scalar(self._E_form)
+        return self.domain.comm.allreduce(local, op=MPI.SUM) \
+            * self.unit_length ** self.dim
 
-        .. math::
-
-            E_\\mathrm{d} = -\\frac12 \\mu_0 \\int_\\Omega
-            H_\\mathrm{d} \\cdot \\vec M \\mathrm{d}x
-
-        *Returns*
-            Float
-                The energy of the demagnetising field.
-
-        """
-        self._H_func.vector()[:] = self.compute_field()
-        return df.assemble(self._E) * self.unit_length ** self.m.mesh_dim()
-
-    @timer.method
     def energy_density(self):
+        """Owned lumped nodal demag energy density (collective assembly).
+
+        Energy density is intensive: the ``unit_length**dim`` factors on the
+        physical nodal energy and the physical nodal volume cancel, so this is
+        assembled purely in mesh-coordinate units (matching the legacy module,
+        which multiplied *and* divided by ``unit_length**dim``).
         """
-        Compute the energy density in the field.
+        self._load_H_func()
+        nodal_E = _assemble_owned(None, self.S1, form=self._nodal_E_form)
+        return nodal_E / self._nodal_volumes_S1
 
-        .. math::
-            \\rho = \\frac{E_{\\mathrm{d}, i}}{V_i},
-
-        where V_i is the volume associated with the node i.
-
-        *Returns*
-            numpy.ndarray
-                The energy density of the demagnetising field.
-
-        """
-        self._H_func.vector()[:] = self.compute_field()
-        nodal_E = _dolfin_vector_array(df.assemble(self._nodal_E)) * \
-            self.unit_length ** self.m.mesh_dim()
-        return nodal_E / self._nodal_volumes
-
-    @timer.method
     def energy_density_function(self):
-        """
-        Returns the energy density in the field as a dolfin function to allow probing.
-
-        *Returns*
-            dolfin.Function
-                The energy density of the demagnetising field.
-
-        """
-        self._nodal_E_func.vector()[:] = self.energy_density()
+        """Return the lumped nodal energy density as a DOLFINx Function."""
+        density = self.energy_density()
+        self._nodal_E_func.x.array[: density.size] = density
+        self._nodal_E_func.x.scatter_forward()
         return self._nodal_E_func
 
-    @fk_timer.method
-    def _poisson_matrix(self):
-        A = df.dot(df.grad(self._trial1), df.grad(self._test1)) * df.dx
-        return df.assemble(A)  # stiffness matrix for Poisson equation
 
-    def _compute_magnetic_potential(self):
-        # compute _phi_1 on the whole domain
-        g_1 = self._Ms_times_divergence * self.m.f.vector()
-        with fk_timer("first linear solve"):
-            self._poisson_solver.solve(self._phi_1.vector(), g_1)
+def _owned_scalar_dofs(function_space):
+    dofmap = function_space.dofmap
+    return dofmap.index_map.size_local * dofmap.index_map_bs
 
-        # compute _phi_2 on the boundary using the Dirichlet boundary
-        # conditions we get from BEM * _phi_1 on the boundary.
-        with fk_timer("using boundary conditions"):
-            phi_1 = self._phi_1.vector()[self._b2g_map]
-            self._phi_2.vector()[self._b2g_map[:]] = np.dot(
-                self._bem, phi_1)
-            #boundary_condition = df.DirichletBC(self.S1, self._phi_2, df.DomainBoundary())
-            #A = self._poisson_matrix.copy()
-            #b = self._laplace_zeros
-            #boundary_condition.apply(A, b)
-            A = self._poisson_matrix
-            b = self._laplace_zeros
-            self.boundary_condition.set_value(self._phi_2)
-            self.boundary_condition.apply(A, b)
 
-        # compute _phi_2 on the whole domain
-        with fk_timer("second linear solve"):
-            self._laplace_solver.solve(A, self._phi_2.vector(), b)
-
-        # add _phi_1 and _phi_2 to obtain magnetic potential
-        self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
-
-    @fk_timer.method
-    def _setup_gradient_computation(self):
-        """
-        Prepare the discretised gradient to use in :py:meth:`FKDemag._compute_gradient`.
-
-        We don't need the gradient field as a continuous field, we are only
-        interested in the values at specific points. It is thus a waste of
-        computational effort to use a projection of the gradient field, since
-        it performs the fairly large operation of assembling a matrix and
-        solving a linear system of equations.
-
-        """
-        A = df.inner(self._test3, - df.grad(self._trial1)) * df.dx
-        # This can be applied to scalar functions.
-        self._gradient = df.assemble(A)
-
-        # The `A` above is in fact not quite the gradient, since we integrated
-        # over the volume as well. We will divide by the volume later, after
-        # the multiplication of the scalar magnetic potential. Since the two
-        # operations are symmetric (multiplying by volume, dividing by volume)
-        # we don't have to care for the units, i.e. unit_length.
-        b = df.dot(self._test3, df.Constant((1, 1, 1))) * df.dx
-        self._nodal_volumes_S3_no_units = _dolfin_vector_array(df.assemble(b))
-
-    @fk_timer.method
-    def _compute_gradient(self):
-        """
-        Get the demagnetising field from the magnetic scalar potential.
-
-        .. math::
-
-            \\vec{H}_{\\mathrm{d}} = - \\nabla \\phi (\\vec{r})
-
-        Using dolfin, we would translate this to
-
-        .. sourcecode::
-
-            H_d = df.project(- df.grad(self._phi), self.m.functionspace)
-
-        but the method used here is computationally less expensive.
-
-        """
-        H = self._gradient * self._phi.vector()
-        return _dolfin_vector_array(H) / self._nodal_volumes_S3_no_units
+def _assemble_owned(expression, function_space, form=None):
+    """Assemble a linear form and return owned entries (ghosts accumulated)."""
+    if form is None:
+        form = fem.form(expression)
+    vec = fem_petsc.assemble_vector(form)
+    vec.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
+                    mode=PETSc.ScatterMode.REVERSE)
+    vec.ghostUpdate(addv=PETSc.InsertMode.INSERT_VALUES,
+                    mode=PETSc.ScatterMode.FORWARD)
+    owned = np.array(vec.array[: _owned_scalar_dofs(function_space)],
+                     dtype=np.float64)
+    vec.destroy()
+    return owned

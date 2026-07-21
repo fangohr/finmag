@@ -3642,3 +3642,133 @@ delivered by 11a and the whole of Task 11 is ticked when 11b completes the FK
 demag capability.
 
 [Claude Opus 4.8]
+
+** Direct DOLFINx FK Demag Port (Task 11b)
+
+Task 11b is the second half of "Port FK demag": the direct DOLFINx port of the
+Fredkin-Koehler solver in =src/finmag/energies/demag/fk_demag.py=, wired into
+=Simulation.add(Demag())= / =sim_with(demag_solver="FK")=, with all of Task 11's
+plan checkboxes now ticked across 11a+11b.
+
+*** Formulation mapping (legacy step -> DOLFINx step)
+
+The discrete two-potential formulation is preserved verbatim; only the FEM-API
+layer changed.
+
+- =S1 = df.FunctionSpace(mesh, "Lagrange", 1)= -> =associated_scalar_space(m.functionspace)=.
+- Neumann stiffness =assemble(dot(grad(u),grad(v))*dx)= -> PETSc
+  =assemble_matrix(poisson_form)=; a constant =PETSc.NullSpace= is attached for
+  the singular pure-Neumann =phi_1= solve (the additive constant is irrelevant
+  to =H=-grad(phi)=).
+- Legacy =KrylovSolver= (default CG) -> =PETSc.KSP= CG with the legacy tolerance
+  dict mapped to =rtol/atol/max_it= and the legacy preconditioner name mapped to
+  a PETSc PC (=default->hypre=, =ilu=, =none=, ...). =solver_type='LU'= is
+  deferred by name (the singular Neumann matrix has no direct factorisation
+  without pinning); =macrogeometry= / =MacroGeometry= / =Demag2D= / non-FK
+  solvers raise =NotImplementedError= by name.
+- =_Ms_times_divergence * m.vector= (matrix-vector) -> a linear form
+  =assemble_vector(Ms.f*inner(m.f, grad(v))*dx)= re-assembled each solve (m
+  changes); likewise the gradient =_gradient * phi.vector= -> linear form
+  =assemble_vector(inner(v3, -grad(phi))*dx)= divided by unscaled nodal volumes.
+  This avoids assembling rectangular S3<->S1 operators and matches the box
+  pattern already used by =energy_base.py=.
+- =phi_2= Dirichlet data: =DirichletBC(S1, phi_2, DomainBoundary())= ->
+  =fem.dirichletbc(g_bc, boundary_dofs)= where =g_bc= is a Function whose
+  boundary dofs are set to =B @ phi_1|_bnd= each solve; the stiffness matrix is
+  assembled once with the BC, and each solve applies =apply_lifting= + =set_bc=
+  to the (zero) RHS.
+- Energy =-0.5 mu0 int H.M dx * unit_length**dim= and the lumped nodal energy
+  density are assembled exactly as before (the density's =unit_length**dim=
+  numerator/denominator cancel, so it is assembled in mesh units).
+
+*** Boundary-ordering contract and its pinning evidence
+
+The one genuinely new mechanic is =boundary_bem_arrays(domain, S1)=, which feeds
+the compiled =compute_bem_fk_from_arrays= (Task 11a). The contract:
+
+- BEM-local node =i= is a *CG1 boundary degree of freedom* of S1
+  (=locate_dofs_topological= on the exterior facets); =coords[i]= is that dof's
+  coordinate and =b2g[i]= is its S1 dof index, so =phi.x.array[b2g]= gathers
+  boundary values in BEM-local order and the reverse scatter writes them back
+  (no vertex/dof confusion -- the whole pipeline stays in S1 dof space).
+- Boundary triangles are taken from the exterior facets and *explicitly
+  oriented outward* (flip the winding when =cross(p1-p0,p2-p0).(p0-p_opposite) <
+  0=); the sorted-index winding DOLFINx returns from facet->vertex connectivity
+  is *not* consistent and gives a wrong (though row-sum -1) BEM.
+- BEM-local indices for each triangle vertex are resolved by *coordinate*, so
+  the mapping is robust to any DOLFINx submesh/entity reordering.
+
+Pinned bit-for-bit: on the exact legacy Kuhn (main-diagonal) split of the unit
+cube -- and, separately, on =create_unit_cube(1,1,1)=, which DOLFINx builds with
+the same split -- the extracted BEM equals the Task 11a golden matrix to
+=atol=1e-13= after the coordinate-induced row/col permutation
+(=test_extraction_reproduces_golden_bem_*=). Without the outward-orientation
+step the max entry error is ~0.18; with it, ~1e-17.
+
+*** Fixture provenance
+
+=src/finmag/tests/fixtures/fk_demag_oracle.json= holds coordinate-ordered
+(lexicographic xyz) legacy references generated at the frozen oracle commit
+=ba9280934e188d7f3800e7b9865e70a9422f7687= via =dev/bin/run-legacy-oracle= (the
+unmodified pre-port =fk_demag.py=, which is byte-identical to the oracle commit).
+Two cases: a uniformly magnetised =UnitCubeMesh(4,4,4)= (m=(1,0,0), Ms=8e5) and
+the barmini bar =BoxMesh(Point(0,0,0),Point(3,3,10),2,2,4)= (m=(1,0,1),
+Ms=0.86e6), unit_length=1e-9. The BEM golden matrix itself is reused from the
+11a fixture. The cube also carries an *analytic* anchor stronger than any
+numeric oracle: average demag field =-Ms/3= and energy =mu0 Ms^2 V / 6= (cube
+demag factor 1/3 per axis).
+
+*** Measured results (2026-07-21, =pixi run -e dolfinx=, serial)
+
+DOLFINx =create_box=/=create_unit_cube= reproduce the legacy =BoxMesh=/
+=UnitCubeMesh= vertex-for-vertex, so the comparison is coordinate-identical:
+
+- cube (4x4x4): energy rel diff =4.7e-8=; average-field rel diff ~=5e-6=;
+  pointwise field max abs diff / |H|_max = =6.9e-6=.
+- barmini (2x2x4): energy rel diff =2.3e-9=; average-field rel diff ~=1e-7=;
+  pointwise = =4.7e-6=.
+
+The residual ~5e-6 is the Krylov tolerance (=1e-6=), not the method. Declared
+gate tolerances: energy rel =1e-5=, average rel =1e-3=, pointwise/|H|max =1e-4=,
+BEM golden =1e-13=. The barmini =sim_with(..., demag_solver="FK")= workflow
+builds, computes demag energy =9.99e-21 J=, and integrates
+(=run_until(5e-12)=) with compiled FK demag present. The uniform-cube analytic
+checks hold on a 6x6x6 mesh (avg Hx within 10% of =-Ms/3=, energy within 10% of
+=mu0 Ms^2 V/6=; the coarse-mesh FK field converges toward the continuum result
+from above).
+
+*** Makefile build-hygiene (both lanes)
+
+The three mandatory 11a-review carry-ins are done and verified on *both* lanes:
+
+1. Per-env object tree =native/obj/$(PYTHON_PREFIX_TAG)/= and per-env
+   =PRECOMPILED_HEADER_DIR=, keyed on the active Python prefix, so the legacy
+   (libdolfin, NumPy-1 ABI) and DOLFINx (NumPy-2, =-DFINMAG_NO_DOLFIN=) builds
+   compile shared units such as =np_array.cc= into disjoint paths and can never
+   silently cross-link. Verified: the DOLFINx lane rebuilds =bem_arrays.so= and
+   passes =dolfinx-src-native-bem-pytest=; the legacy lane rebuilds the full
+   =-ldolfin= native surface and =dev/bin/verify-python3-native-fk-bem-smoke=
+   returns the expected =(8,8)= matrix -- objects land in
+   =obj/..._envs_default/= vs =obj/..._envs_dolfinx/= respectively. (This is
+   also the exact hazard that made a co-collected pytest run fail: loading the
+   stale NumPy-1 =sundials.so= into a NumPy-2 process corrupts the array ABI so
+   the NumPy-2 =bem_arrays= rejects arrays; the per-env split and separate gate
+   processes both avoid it.)
+2. =bem_arrays.cc= is excluded from the legacy branches' =SOURCES= (it is
+   compiled but never linked there).
+3. =dolfinx-src-native-bem-pytest= and the new =dolfinx-src-demag-pytest= are
+   folded into =dev/bin/verify-dolfinx-m5=.
+
+*** Deferred / deliberate deviations
+
+=solver_type='LU'=, =macrogeometry=/=MacroGeometry=, =Demag2D=, and the
+=Treecode=/=GCR= solvers all raise =NotImplementedError= by name. The Task 10
+fail-forward pins that expected =ModuleNotFoundError= for =Demag()= /
+=sim_with(demag_solver="FK")= are replaced with curated-behaviour assertions
+(=Demag()= now builds an =FKDemag=; the still-unported =DMI=/=CubicAnisotropy=/
+=ThinFilmDemag=/=FixedEnergyDW= remain the documented Task 3 gap). The
+=test_ported_simulation_does_not_load_legacy_dolfin_or_native= import-boundary
+check now runs in a fresh subprocess so it is order-independent once the opt-in
+demag interaction has loaded =finmag.native= elsewhere in the suite.
+
+[Claude Opus 4.8]

@@ -6,9 +6,9 @@ from importlib import import_module
 # Keep the legacy public interaction surface without importing every backend
 # and optional native module when the package is first discovered. [Codex GPT-5.6]
 _LAZY_EXPORTS = {
-    "Demag": ("finmag.energies.demag", "Demag", True),
-    "Demag2D": ("finmag.energies.demag", "Demag2D", True),
-    "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", True),
+    "Demag": ("finmag.energies.demag", "Demag", False),
+    "Demag2D": ("finmag.energies.demag", "Demag2D", False),
+    "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", False),
     "EnergyBase": ("finmag.energies.energy_base", "EnergyBase", False),
     "Exchange": ("finmag.energies.exchange", "Exchange", False),
     "UniaxialAnisotropy": (

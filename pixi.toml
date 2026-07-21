@@ -86,6 +86,12 @@ dolfinx-src-core-smoke = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m fin
 # DOLFINx env with no legacy dolfin. WRITE_FINMAG_VERSION=0 keeps the native
 # `make` from rewriting the tracked version file. [Claude Opus 4.8]
 dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_native_bem_arrays_dolfinx.py"
+# Task 11b: the direct DOLFINx FK demag port -- boundary-ordering pin against
+# the 11a golden BEM, analytic uniform-cube demag factor, and coordinate-ordered
+# legacy oracle comparisons (cube + barmini). WRITE_FINMAG_VERSION=0 keeps the
+# native `make` (triggered on demag setup) from rewriting the version file.
+# [Claude Opus 4.8]
+dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_fk_demag_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

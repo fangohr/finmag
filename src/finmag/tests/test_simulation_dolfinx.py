@@ -43,8 +43,27 @@ def _make_sim(**kwargs):
 def test_ported_simulation_does_not_load_legacy_dolfin_or_native():
     assert Simulation.__module__ == "finmag.sim.sim"
     assert sim_with.__module__ == "finmag.sim.sim"
-    assert "dolfin" not in sys.modules
-    assert not any(name.startswith("finmag.native") for name in sys.modules)
+    # Checked in a fresh interpreter: once the opt-in FK demag interaction is
+    # used (elsewhere in this suite) ``finmag.native`` stays in this process's
+    # ``sys.modules``, so the core import-boundary invariant -- a *demag-free*
+    # simulation pulls neither legacy ``dolfin`` nor ``finmag.native`` -- must
+    # be asserted in isolation. [Claude Opus 4.8]
+    import subprocess
+    import sys as _sys
+
+    script = (
+        "import sys\n"
+        "from finmag.sim.sim import Simulation, sim_with\n"
+        "import dolfinx.mesh as dm\n"
+        "from mpi4py import MPI\n"
+        "box = dm.create_box(MPI.COMM_WORLD, [(0.,0.,0.),(5.,5.,5.)],"
+        " [2,2,2], dm.CellType.tetrahedron)\n"
+        "sim = sim_with(box, Ms=8.6e5, m_init=(1.,0.,0.), unit_length=1e-9,"
+        " demag_solver=None)\n"
+        "assert 'dolfin' not in sys.modules\n"
+        "assert not any(n.startswith('finmag.native') for n in sys.modules)\n"
+    )
+    subprocess.run([_sys.executable, "-c", script], check=True)
 
 
 # --------------------------------------------------------------------------
@@ -295,9 +314,29 @@ def test_sim_with_builds_ported_interactions():
     assert np.allclose(sim.m_average, [1.0, 0.0, 0.0], atol=1e-12)
 
 
-def test_sim_with_default_demag_is_deferred_by_name():
-    with pytest.raises(NotImplementedError, match="[Dd]emag"):
-        sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9)
+def test_sim_with_default_demag_builds_fk_demag():
+    """Task 11b: the default FK demag solver is now ported and wired in, so
+    ``sim_with`` (default ``demag_solver='FK'``) adds a working Demag
+    interaction instead of raising by name (was
+    ``test_sim_with_default_demag_is_deferred_by_name``)."""
+    sim = sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9)
+    assert sim.has_interaction("Demag")
+    # compiled FK demag produces a finite, non-trivial field/energy
+    H = sim.get_interaction("Demag").average_field()
+    assert np.all(np.isfinite(H))
+    assert np.isfinite(sim.total_energy())
+
+
+def test_sim_with_non_fk_demag_is_deferred_by_name():
+    with pytest.raises(NotImplementedError, match="non-FK|GCR|[Tt]reecode"):
+        sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 demag_solver="GCR")
+
+
+def test_sim_with_macro_geometry_demag_is_deferred_by_name():
+    with pytest.raises(NotImplementedError, match="macro-geometry|periodic"):
+        sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 demag_solver="FK", nx=2)
 
 
 def test_sim_with_dmi_is_deferred_by_name():

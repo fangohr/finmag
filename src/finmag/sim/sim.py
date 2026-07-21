@@ -486,9 +486,10 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
              D=None, name="unnamed", pbc=None, sim_class=Simulation):
     """Create a :class:`Simulation` and add the requested ported interactions.
 
-    Exchange (``A``), uniaxial anisotropy (``K1`` + ``K1_axis``) and Zeeman
-    (``H_ext``) are ported. Demag (``demag_solver``, default ``'FK'``) and DMI
-    (``D``) are not ported and raise ``NotImplementedError`` by name when
+    Exchange (``A``), uniaxial anisotropy (``K1`` + ``K1_axis``), Zeeman
+    (``H_ext``) and Fredkin-Koehler demag (``demag_solver='FK'``, default) are
+    ported. DMI (``D``), non-FK demag solvers, and periodic macro-geometry demag
+    (``nx``/``ny``/``spacing_*``) raise ``NotImplementedError`` by name when
     requested; pass ``demag_solver=None`` to build a demag-free simulation.
     """
     sim = sim_class(mesh, Ms, unit_length=unit_length,
@@ -511,9 +512,22 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
     if D is not None:
         _deferred("sim_with(D=...)", "DMI")
     if demag_solver is not None:
-        _deferred(
-            "sim_with(demag_solver={!r})".format(demag_solver),
-            "demag (pass demag_solver=None for a demag-free simulation)",
-        )
+        if demag_solver != "FK":
+            _deferred(
+                "sim_with(demag_solver={!r})".format(demag_solver),
+                "non-FK demag solvers (only the 'FK' Fredkin-Koehler solver "
+                "is ported)",
+            )
+        if any(v is not None for v in (nx, ny, spacing_x, spacing_y)):
+            _deferred(
+                "sim_with(nx/ny/spacing_x/spacing_y)",
+                "periodic macro-geometry demag",
+            )
+        # Import lazily so plain `import finmag` and demag-free simulations
+        # never pull the native BEM extension or the demag module graph.
+        from finmag.energies import Demag
+
+        sim.add(Demag(solver="FK", solver_type=demag_solver_type,
+                      parameters=demag_solver_params))
     log.debug("Successfully created simulation '{}'".format(sim.name))
     return sim
