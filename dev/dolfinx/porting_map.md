@@ -763,3 +763,14 @@ Before editing the matching module in `src/finmag`, check that:
   `test_thin_film_demag_dolfinx.py` and `test_dw_fixed_energy_dolfinx.py`,
   added to the same pixi command rather than a new gate); 45 tests total.
   [Claude Sonnet 5]
+- Task 21 update: packaging is no longer a gap. `src/finmag` installs as a
+  regular editable Python package in the `dolfinx` pixi environment via
+  `pyproject.toml` (setuptools, src-layout); every `dolfinx-src-*` gate now
+  runs against that installed package. `PYTHONPATH=src` is no longer the
+  mechanism the port relies on -- it is retained only as one fallback gate
+  step (`dolfinx-src-import-pythonpath-fallback`) exercised alongside the
+  installed-package path, not as the primary install story. See
+  `transition-notes.org`'s "Packaging (Task 21)" section and `README.md`'s
+  "Installing the DOLFINx port (pixi)" subsection for the exact commands and
+  the dependency-split/version-split/wheel-non-goal rationale. [Claude
+  Sonnet 5]

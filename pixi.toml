@@ -97,8 +97,14 @@ dolfinx-restart-example = "python -m dev.dolfinx.restart_example --output /tmp/f
 # bare `pip`) guarantees this resolves to *this* environment's pip module: a
 # bare `pip` on PATH can silently resolve to an unrelated interpreter (e.g. the
 # base conda/system pip) and install the editable package into the wrong
-# place -- observed empirically while implementing this task. [Claude Sonnet 5]
-dolfinx-install-editable = "python -m pip install -e . --no-deps"
+# place -- observed empirically while implementing this task. `--no-build-isolation`:
+# `setuptools`/`wheel` are already in this pixi environment (added above), so
+# a build isolation venv is redundant; without this flag, default build
+# isolation still reaches out to PyPI to populate that venv even though
+# `--no-deps` only affects the *installed* package's dependencies, not the
+# transient build environment -- undesirable for a lane whose whole point is
+# not depending on PyPI resolving this stack. [Claude Sonnet 5]
+dolfinx-install-editable = "python -m pip install -e . --no-deps --no-build-isolation"
 # Explicit, documented second step of the native-extension story (no build
 # backend hook): compiles `bem_arrays.so` and `sundials.so` into
 # `src/finmag/native/` via the existing `native/Makefile` dolfinx lane. This is
@@ -110,7 +116,7 @@ dolfinx-install-editable = "python -m pip install -e . --no-deps"
 # WRITE_FINMAG_VERSION=0 keeps this from rewriting the tracked
 # `src/finmag/__version__.py` (matching every other native-triggering task
 # below). [Claude Sonnet 5]
-dolfinx-native-build = "WRITE_FINMAG_VERSION=0 make -C native PYTHON=python"
+dolfinx-native-build = "WRITE_FINMAG_VERSION=0 make -C native"
 # Provenance check: `import finmag` must resolve under THIS checkout's `src/`
 # tree (the editable install target), not some other installed copy. Task 21's
 # packaging story only pays off if this prints a path inside the active

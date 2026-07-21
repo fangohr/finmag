@@ -116,6 +116,14 @@ pixi run -e dolfinx dolfinx-native-build
 pixi run -e dolfinx dolfinx-provenance-check
 ```
 
+`pyproject.toml`'s static `version = "0.1.0"` is packaging metadata only; it
+has no runtime meaning. Runtime provenance remains `finmag.__version__` (a
+git revision SHA written into `src/finmag/__version__.py` by
+`native/Makefile`'s `add_version` target, gated by `WRITE_FINMAG_VERSION`).
+The two are intentionally decoupled: a git SHA is not a valid PEP 440
+version string, so `pyproject.toml` cannot derive its `version` from
+`finmag.__version__` directly.
+
 There is deliberately no build-backend hook that invokes `native/Makefile`
 during `pip install`: the native modules are C++/Boost.Python extensions
 linked directly against this pixi environment's conda-provided compiler,

@@ -127,24 +127,56 @@ exports, focused DOLFINx tests.
 **Files:** new `pyproject.toml`, `pixi.toml`, `native/Makefile` hook or build
 script, `dev/bin/verify-dolfinx-m5`, install docs.
 
-- [ ] Add a `pyproject.toml` making `src/finmag` an installable package
+Executed as Task 21 in the Phase 3 audited ordering (see
+"Phase 3: full master parity (Tasks 18-29)" below:
+`18→19→20→21(packaging, resumes Task 17)→22→...`); the checkboxes below are
+this task's outcome, delivered under the Task 21 label.
+
+- [x] Add a `pyproject.toml` making `src/finmag` an installable package
   (setuptools or hatchling; src-layout) with the runtime dependency set
-  derived from actual imports, not guesses.
-- [ ] Decide and implement the native-extension story: either a build-backend
+  derived from actual imports, not guesses. Outcome: `pyproject.toml`
+  (setuptools build backend, `package-dir={"": "src"}`,
+  `[tool.setuptools.packages.find]` restricted to `finmag*` under `src/`);
+  `[project.dependencies]` is `numpy`/`scipy` only, verified by grepping
+  module-scope imports reachable from the DOLFINx lane (conda/pixi keeps the
+  FEM/MPI/SUNDIALS stack out of pip's resolver — see the README INSTALL
+  section and `transition-notes.org`'s Task 21 section for the split
+  rationale).
+- [x] Decide and implement the native-extension story: either a build-backend
   hook that invokes the `native/Makefile` targets for the DOLFINx lane
   (`bem_arrays`), or a documented two-step install (`pip install -e .` +
   `make` task) — prefer the simplest reliable mechanism; record the decision
-  and its trade-offs.
-- [ ] `pixi run -e dolfinx` tasks work against the INSTALLED package
+  and its trade-offs. Outcome: documented two-step install, no build-backend
+  hook — `dolfinx-install-editable` (`python -m pip install -e .
+  --no-deps --no-build-isolation`) then `dolfinx-native-build` (`make -C
+  native`, using the Makefile's own default `PYTHON`), plus a
+  `dolfinx-provenance-check` step; a non-editable/built wheel is an explicit
+  non-goal (native `.so` extensions are linked against this specific
+  conda/pixi environment's ABI, not portable). See README INSTALL section.
+- [x] `pixi run -e dolfinx` tasks work against the INSTALLED package
   (editable) instead of `PYTHONPATH=src`; keep `PYTHONPATH=src` working
-  during the transition (both paths gated).
-- [ ] `import finmag` from a fresh editable install passes the import
+  during the transition (both paths gated). Outcome: all 22
+  `dolfinx-src-*` pixi tasks now run against the installed editable package;
+  exactly one retained task, `dolfinx-src-import-pythonpath-fallback`, keeps
+  the old `PYTHONPATH=src` mechanism exercised as a fallback gate step.
+- [x] `import finmag` from a fresh editable install passes the import
   boundary and version-access checks; `verify-dolfinx-m5` runs green against
-  the installed package.
-- [ ] Do not break the legacy oracle lane (its checkouts predate
-  `pyproject.toml`; `run-legacy-oracle` must stay functional).
-- [ ] Install documentation: a short INSTALL section (README or docs) with
-  the exact commands for the supported DOLFINx environment.
+  the installed package. Outcome: `dolfinx-provenance-check` asserts
+  `finmag.__file__` resolves under this checkout's `src/finmag`;
+  `dev/bin/verify-dolfinx-m5` runs the editable install, native build, and
+  provenance check up front, then every `dolfinx-src-*` gate, green
+  end-to-end.
+- [x] Do not break the legacy oracle lane (its checkouts predate
+  `pyproject.toml`; `run-legacy-oracle` must stay functional). Outcome:
+  confirmed unaffected — `dev/bin/run-legacy-oracle`'s detached worktrees
+  predate `pyproject.toml` entirely and do not need it.
+- [x] Install documentation: a short INSTALL section (README or docs) with
+  the exact commands for the supported DOLFINx environment. Outcome:
+  `README.md`'s "Installing the DOLFINx port (pixi)" subsection, including
+  the version-split note (static `pyproject.toml` `version` vs. runtime
+  `finmag.__version__`) and the wheel non-goal.
+
+[Claude Sonnet 5]
 
 ## Later phase-2 slices (sketch, sequence after Task 17)
 

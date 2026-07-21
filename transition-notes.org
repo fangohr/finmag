@@ -308,6 +308,15 @@ rather than a real package installation, because Finmag still lacks modern
 top-level packaging metadata. That is acceptable for the first probe, but it
 is not the final M2 install story.
 
+*Closure (Task 21):* the final install story now exists -- see the
+"Packaging (Task 21)" section near the end of this file for the
+=pyproject.toml=-based editable install, the exact commands, and the
+findings made while building it. Note for the record: the commit message for
+=82b0fde7= ("Make finmag installable: pyproject packaging for the DOLFINx
+lane") claimed this closure at the time, but no edit to this file was
+actually made in that commit -- this section is where that closure is
+actually written down, in the review fix-round that followed.
+
 *** Verified first-pass `pixi` status
 
 The current verified position is:
@@ -5205,5 +5214,98 @@ from =test_simulation_dolfinx.py::test_construction_core_state='s docstring.)
   default, unaffected by the factory-default flip).
 - =dolfinx-src-llg-pytest=: unchanged (17 passed); this task's fix round did
   not touch the hook-porting inventory established by the initial slice.
+
+[Claude Sonnet 5]
+
+** Packaging (Task 21)
+
+*** Correcting the record
+
+The commit message for =82b0fde7= ("Make finmag installable: pyproject
+packaging for the DOLFINx lane") stated that it was "finishing the 'not the
+final M2 install story' note left in transition-notes.org" -- but that
+commit did not actually edit this file. This section is the real closure of
+the M2-era note above ("that is acceptable for the first probe, but it is
+not the final M2 install story"), written in the review fix round that
+followed =82b0fde7=, not in that commit itself.
+
+*** The final install story
+
+=src/finmag= is now installed as a regular editable Python package in the
+=dolfinx= pixi environment via a new top-level =pyproject.toml= (setuptools
+build backend, src-layout, =package-dir={"": "src"}=). The supported
+sequence is:
+
+- =pixi install -e dolfinx= -- sync the conda/pixi environment.
+- =pixi run -e dolfinx dolfinx-install-editable= -- =python -m pip install -e
+  . --no-deps --no-build-isolation= (see the =pixi.toml= comment on this
+  task for why both flags are needed; =python -m pip=, not a bare =pip=, to
+  avoid the wrong-interpreter finding below).
+- =pixi run -e dolfinx dolfinx-native-build= -- the documented second step of
+  the native-extension story: compiles =bem_arrays.so=/=sundials.so= via the
+  existing =native/Makefile= dolfinx lane (no build-backend hook).
+- =pixi run -e dolfinx dolfinx-provenance-check= -- asserts =import finmag=
+  resolves under this checkout's =src/= tree, not some other installed copy.
+
+Every =dolfinx-src-*= gate (22 tasks) now runs against this installed
+package instead of =PYTHONPATH=src=; exactly one task,
+=dolfinx-src-import-pythonpath-fallback=, keeps the old =PYTHONPATH=src=
+mechanism exercised as a retained fallback/gate step, per the Task 21 brief.
+=dev/bin/verify-dolfinx-m5= runs this whole sequence and is green end-to-end
+against the installed package.
+
+*** Dependency-split rationale
+
+=pyproject.toml='s =[project.dependencies]= lists only =numpy=/=scipy= --
+the only two third-party libraries actually imported at module scope
+anywhere on the reachable-in-the-DOLFINx-lane import paths (verified by
+grepping =src/finmag= and cross-checked against the =dolfinx= pixi
+environment, which does not list =matplotlib=/=aeon=/=sh=). The finite
+element/MPI/SUNDIALS stack (=fenics-dolfinx=, =ufl=, =mpi4py=, =petsc4py=,
+=sundials=) stays a conda/pixi dependency (=pixi.toml='s =dolfinx= feature),
+never a pip one: those are not reliably pip-installable for this project and
+must stay linked against the conda-provided build: declaring them as pip
+dependencies too would invite pip to resolve/build a second, conflicting
+copy.
+
+*** The static =0.1.0= vs. git-SHA version split
+
+=pyproject.toml='s =project.version = "0.1.0"= is static packaging metadata
+only, pinned to match =pixi.toml='s own workspace =version=. It has no
+runtime meaning. Runtime provenance is, and remains, =finmag.__version__= --
+a git revision SHA written into =src/finmag/__version__.py= by
+=native/Makefile='s =add_version= target (gated by the =WRITE_FINMAG_VERSION=
+convention). The two are intentionally decoupled: wiring =project.version=
+as =dynamic= off =finmag.__version__= was tried and fails hard --
+=pip install -e .= raises =packaging.version.InvalidVersion= because
+setuptools' =egg_info= normalizes/validates whatever an =attr:= version
+returns as a PEP 440 version, and a raw git SHA is not a valid PEP 440
+version string. Reformatting the git-SHA convention itself would be a
+behavior change to =src/finmag= and was out of scope for a packaging-only
+task.
+
+*** Finding: a bare =pip= can resolve to the wrong interpreter
+
+Before =pip=/=setuptools= were added to =[feature.dolfinx.dependencies]= in
+=pixi.toml=, the =dolfinx= pixi environment had no =pip= conda package of its
+own. Running a bare =pip install -e . --no-deps= inside =pixi run -e
+dolfinx= silently resolved =pip= to the base conda/system installation on
+=PATH= (not the pixi environment's), installing =finmag= into the wrong
+=site-packages= entirely (confirmed via =pip show finmag= pointing at
+=~/miniconda3/lib/python3.12/site-packages= instead of
+=.pixi/envs/dolfinx/...=). Fixed by adding =pip=/=setuptools= to the
+=dolfinx= feature and using =python -m pip ...= (which always resolves to
+the active interpreter's own pip module) in every packaging task, instead of
+a bare =pip=.
+
+*** Wheel non-goal
+
+A non-editable, built wheel is an explicit non-goal for this lane, not an
+oversight: the compiled =.so= native extensions (=bem_arrays.so=,
+=sundials.so=) are linked directly against this specific conda/pixi
+environment's compiler ABI, Boost.Python tag, and SUNDIALS-7 sonames, so a
+built wheel would not be portable/redistributable the way a wheel implies.
+The supported, and only, install path for this lane is the editable install
+above.
 
 [Claude Sonnet 5]

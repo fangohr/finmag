@@ -10,7 +10,7 @@ readme = "README.md"
 # form): matches the BSD 3-Clause license this project's README and LICENSE
 # file already claim. [Claude Sonnet 5]
 license = "BSD-3-Clause"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 # Static, not dynamic: `src/finmag/__version__.py` holds a git revision SHA
 # (e.g. "907fe38636882b6026981a1b246cd9e77fba2495"), written by
 # `native/Makefile`'s `add_version` target for runtime provenance/debugging
