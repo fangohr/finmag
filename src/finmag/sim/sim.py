@@ -20,8 +20,14 @@ Deliberate deviations from the legacy module (all documented in
 
 - ``mesh`` is a ``dolfinx.mesh.Mesh``; the CG1 scalar/vector spaces are built
   with ``dolfinx.fem.functionspace`` and there is no ``constrained_domain``.
-- ``integrator_backend`` defaults to ``"scipy"`` (was ``"sundials"``) because
-  the native Sundials/CVODE extension is unported; an explicit
+- ``integrator_backend`` defaults to ``"scipy"`` (was ``"sundials"``). Task 20
+  ported and fully validated the native Sundials/CVODE extension on DOLFINx
+  (``integrator_backend="sundials"`` now works end-to-end when the extension
+  is built, and ``llg_integrator``'s own factory default was restored to
+  ``"sundials"``), but ``Simulation.integrator_backend``'s default is
+  deliberately kept at ``"scipy"`` -- USER ACCEPTANCE PENDING, see
+  ``transition-notes.org`` ("Native Sundials/CVODE on DOLFINx (Task 20)") and
+  ``dev/dolfinx/porting_map.md``. Without the native extension built,
   ``integrator_backend="sundials"`` still raises ``ImportError`` by name via
   ``llg_integrator``.
 - ``m`` and ``dmdt`` return the component-blocked coordinate-ordered ``xxx``
@@ -34,11 +40,13 @@ Deliberate deviations from the legacy module (all documented in
   and ``hysteresis_loop`` are also ported and supported (Task 15; the
   untouched legacy ``sim_relax.py``/``hysteresis.py`` modules bound the same
   way legacy did). What remains deferred and raises ``NotImplementedError``
-  (or ``ImportError`` for the native Sundials case) by name when requested:
-  the PBC/treecode/GCR demag variants, STT (``set_stt``/``set_zhangli``), the
-  ``sllg``/thermal kernel, ``integrator_backend="sundials"``, normal modes,
+  by name when requested: the PBC/treecode/GCR demag variants, STT
+  (``set_stt``/``set_zhangli``), the ``sllg``/thermal kernel, normal modes,
   and ``parallel=True`` -- none of these ever break import or the core ``llg``
-  paths. Region accounting (``mark_regions`` + per-region energy/magnetisation)
+  paths. ``integrator_backend="sundials"`` is no longer deferred (Task 20): it
+  works end-to-end when the native extension is built, and only raises
+  ``ImportError`` by name (unchanged failure mode) when it is not. Region
+  accounting (``mark_regions`` + per-region energy/magnetisation)
   is ported (Task 16); region-restricted submesh *field output*
   (``save_m_in_region``/``get_submesh``/``get_field_as_dolfin_function
   (region=...)``) remains deferred by name.
@@ -100,7 +108,11 @@ class Simulation(object):
 
           kernel : only ``'llg'`` is ported (``'sllg'``/``'llg_stt'`` deferred)
 
-          integrator_backend : ``'scipy'`` (default) or ``'sundials'`` (deferred)
+          integrator_backend : ``'scipy'`` (default) or ``'sundials'`` (Task 20:
+            fully ported and supported when the native extension is built;
+            raises ``ImportError`` by name otherwise). The ``"scipy"`` default
+            here is temporary -- see the Task 20 "USER ACCEPTANCE PENDING"
+            register entry in ``transition-notes.org``.
 
           pbc : periodic boundaries are deferred (only ``None`` is supported)
         """

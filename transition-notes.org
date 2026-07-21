@@ -5047,3 +5047,163 @@ occurs; =test_ported_energy_exports_bypass_legacy_dolfin= gains both classes.
 pin.
 
 [Claude Sonnet 5]
+
+** Native Sundials/CVODE on DOLFINx (Task 20)
+
+The modernized SUNDIALS-7 native wrapper (from Phase 1's M2/M3) is rebuilt
+dolfin-free for the DOLFINx env, ~SundialsIntegrator~ is wired against the
+ported deterministic ~LLG~, and ~backend="sundials"~ is a fully validated
+opt-in. Gate: new =dolfinx-src-sundials-pytest= (18 tests after fix round 1;
+17 in the initial slice), folded into =dev/bin/verify-dolfinx-m5=.
+
+*** Build separation: objects/flags only, no wrapper-source edits
+
+Every sundials source unit was audited for legacy =dolfin= coupling:
+=src/sundials/py_sundials_module.cc=, =sundials_cvode_impl.h=,
+=numpy_malloc.{h,cc}=, and =util/np_array.{h,cc}= contain zero dolfin symbols;
+the only coupling is the shared umbrella header =src/finmag_includes.h=,
+which pulls =dolfin.h= unless =-DFINMAG_NO_DOLFIN= (already added by Task 11a)
+and =cvode.h= unless =-DFINMAG_NO_SUNDIALS=. This is exactly the Task 11a
+=bem_arrays= situation: the separation is a pure compile-flag + link-set
+change in the =IS_DOLFINX_ENV=-guarded branch of =native/Makefile= --
+=MODULES= gains =sundials.so=, =SOURCES= gains the two non-dolfin sundials
+source files, and =CFLAGS_NODOLFIN= drops =-DFINMAG_NO_SUNDIALS= (SUNDIALS is
+now genuinely present in the env). No line of the wrapper itself was edited.
+The per-env object tree (keyed on =PYTHON_PREFIX_TAG=) and per-env PCH are
+inherited unchanged, so the DOLFINx (NumPy-2, no-dolfin) and legacy
+(NumPy-1, dolfin) object trees never cross-link. The legacy and legacy-pixi
+Makefile branches are structurally untouched (=make -n print-MODULES= on a
+non-dolfinx prefix still yields the original module set).
+
+*** Hook inventory (=src/finmag/physics/llg.py=)
+
+The legacy default driver method is =bdf_gmres_prec_id=: SPGMR + a left
+identity preconditioner + an analytic Jacobian-times-vector product. All four
+hooks that path needs:
+
+- =sundials_rhs(t,y,ydot)= -- already real (backend-neutral =solve_for=);
+  unchanged by this task.
+- =sundials_psetup(t,m,fy,jok,gamma,tmp1,tmp2,tmp3)= -- ported. Records the
+  linearisation state when =jok= is false and sets the vestigial
+  =self._reuse_jacobian= flag; the flag is set for parity with the legacy
+  wrapper's bookkeeping but is not read anywhere in the ported =jtimes= path
+  below (see the pure-NumPy jtimes decision).
+- =sundials_psolve(t,y,fy,r,z,gamma,delta,lr,tmp)= -- ported. Identity
+  preconditioner, =z[:] = r=.
+- =sundials_jtimes(mp,J_mp,t,m,fy,tmp)= -- ported. Analytic
+  ~J(m,t) mp = d/da rhs(m + a mp, H(m + a mp))|_{a=0}~, with
+  ~H' = H(mp)~ from the ported =EffectiveField.compute_jacobian_only=.
+
+**** The pure-NumPy jtimes decision (and the vestigial =_reuse_jacobian= flag)
+
+The node-local Jacobian kernel =_jtimes_numpy= is a direct NumPy
+transcription of native =dm_precession_i=/=dm_damping_i=/=dm_relaxation_i=
+(=native/src/llg/llg.cc=), the same transcription pattern =_dmdt_numpy=
+already uses for =calc_llg_dmdt=. This means every call to =sundials_jtimes=
+recomputes the effective-field directional derivative from scratch via
+=EffectiveField.compute_jacobian_only=, rather than reusing a cached
+Jacobian the way the legacy wrapper's =_reuse_jacobian=/=jok= bookkeeping was
+designed to allow. The flag is still set in =sundials_psetup= (matching the
+legacy call signature CVODE expects) but nothing in the ported path branches
+on it -- it is vestigial in this port. This only affects Krylov linear-solve
+*speed* (recomputing per call vs reusing a stale Jacobian between CVODE's own
+=jok= decisions), never the *trajectory*, which is controlled by
+reltol/abstol; the cross-backend agreement and finite-difference checks below
+validate that the recomputed-every-call analytic Jacobian is correct.
+
+Validation: =sundials_jtimes= is checked against a symmetric finite-difference
+of =sundials_rhs= and matches to *<1e-5 relative* -- direct evidence the
+analytic transcription is correct, independent of any downstream integration
+outcome.
+
+**** Remaining by-name hooks
+
+=use_slonczewski=/=use_zhangli= (spin-transfer torque) remain by-name
+=NotImplementedError=, unchanged -- neither is needed by the default
+=bdf_gmres_prec_id= path, and both are already tracked as Task 29 items. No
+new by-name registration was required for this slice.
+
+*** Cross-backend agreement
+
+Same Task 9/10 core workflow (Exchange 13pJ/m + Zeeman (0,0,1e6) +
+UniaxialAnisotropy 1e5 z on a 5nm box, alpha=0.5, m0=+x), both integrators at
+reltol=1e-8/abstol=1e-10, =run_until(1e-11)=:
+~max|m_scipy(t_end) - m_sundials(t_end)| < 1e-6~. Each integrator controls
+local truncation error to reltol=1e-8/abstol=1e-10; the cross-integrator
+difference at t_end is dominated by independent accumulation of that
+controlled error, so ~1e-6 (~100x rtol, |m| ~ O(1)) is the physically
+justified bound. Honest caveat: this is validated only over the short
+=1e-11= s horizon the Task 9/10 workflow uses -- it is not a claim that the
+two backends agree to 1e-6 over arbitrarily long integration windows, where
+independent error accumulation from two different stiff-ODE codes could grow
+further apart. The default =bdf_gmres_prec_id= sundials path is what's
+exercised here, so this number also validates the analytic jtimes + identity
+preconditioner hooks end-to-end, not just the rhs.
+
+*** Version note: SUNDIALS 7.8.0 (dolfinx) vs 7.2.1 (legacy default)
+
+=pixi.toml='s =[feature.dolfinx.dependencies]= adds ~sundials = ">=7,<8"~,
+pinned to the 7.x major the wrapper's SUNContext/SUNNonlinSol/
+=CVodeSetLinearSolver= wiring targets. The dolfinx env resolves *7.8.0*
+(=sundials-7.8.0-h8a7dba9_0=, =pixi.lock= +126 lines); the legacy default env
+keeps *7.2.1*. Both are SUNDIALS-7 major and the wrapper's 7.x API usage is
+stable across the minor-version gap -- no new compatibility shims were added
+to bridge 7.2 vs 7.8; the same wrapper source builds and passes against both.
+
+*** Default-backend resolution (Task 20 review, fix round 1)
+
+The initial Task 20 slice validated =backend="sundials"= as a fully working
+opt-in but conservatively left the =llg_integrator= factory default at
+=\"scipy\"=, deferring the default-flip decision to review. The Task 20
+review's controller decision: flip =llg_integrator='s =backend= default back
+to =\"sundials\"=, restoring the legacy default semantics, per the original
+plan wording (\"restore the legacy default-backend semantics ... ONLY if the
+sundials path passes the full validation\" -- validation had already passed).
+This is low blast radius: =finmag.sim.sim.Simulation= passes
+=backend=self.integrator_backend= explicitly in both =create_integrator= and
+=reset_time=, and every other in-tree caller passes =backend= explicitly
+(verified in the Task 8 review) -- nothing in the tree relied on the bare
+=llg_integrator(llg, m0)= default. Without the native extension built, the
+bare call now raises =ImportError= by name (the same failure mode an explicit
+=backend="sundials"= request always had; only *which* call sites trigger it
+changed).
+
+=Simulation.integrator_backend='s own default is a *separate* knob and stays
+=\"scipy\"= -- Phase 1 Task 8/9 sanctioned it as the temporary DOLFINx
+default, and flipping it would couple every =run_until= gate across the M5
+suite (simulation, restart-output, demag, dmi, cubicanis, timezeeman,
+varparams, meshes) to the native sundials build and to the CVODE trajectory,
+a larger re-validation deliberately not done in this slice.
+
+**** USER ACCEPTANCE PENDING
+
+~Simulation.integrator_backend~ default is ~"scipy"~ on DOLFINx vs legacy
+~"sundials"~ -- temporary, pending native-default hardening or user
+acceptance. (Mirrored in =dev/dolfinx/porting_map.md= and the Task 20 section
+of =docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md=; cross-referenced
+from =test_simulation_dolfinx.py::test_construction_core_state='s docstring.)
+
+*** Gate-count flips
+
+- =dolfinx-src-sundials-pytest=: 17 (initial slice) -> 18 (fix round 1 adds
+  =test_llg_integrator_default_backend_is_sundials_and_advances=, a bare
+  ~llg_integrator(llg, m0)~ call with no =backend= argument, guarded on
+  sundials availability, asserting both construction of a
+  =SundialsIntegrator= and a working =advance_time=).
+- =dolfinx-src-scipy-pytest=: unchanged total (18 passed + 1 skipped in the
+  initial slice's environment, later re-measured as 18 passed + 2 skipped once
+  the availability-guarded default-backend pin pair was added -- see the
+  count-change note below); the "checklist item 6" section's
+  =test_llg_integrator_default_backend_is_scipy= is retired and replaced by
+  the availability-guarded pair
+  =test_llg_integrator_default_backend_is_sundials= /
+  =test_llg_integrator_default_backend_raises_when_sundials_unavailable=,
+  exactly one of which runs (the other skips) in any given environment.
+- =dolfinx-src-simulation-pytest=: unchanged (32 passed); only a docstring
+  cross-reference was added to =test_construction_core_state=, no assertion
+  changed (=integrator_backend == "scipy"= still pins the =Simulation=
+  default, unaffected by the factory-default flip).
+- =dolfinx-src-llg-pytest=: unchanged (17 passed); this task's fix round did
+  not touch the hook-porting inventory established by the initial slice.
+
+[Claude Sonnet 5]

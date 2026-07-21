@@ -253,27 +253,72 @@ every capability not already formally dropped is treated as PORT.
 `src/finmag/drivers/sundials_integrator.py`, `src/finmag/drivers/llg_integrator.py`,
 `src/finmag/physics/llg.py` (`sundials_*` hooks, already stubbed by name).
 
-- [ ] Rebuild the native sundials module dolfin-free for the DOLFINx env,
+- [x] Rebuild the native sundials module dolfin-free for the DOLFINx env,
   following the proven `bem_arrays` pattern (`-DFINMAG_NO_DOLFIN`, per-env
   object trees, module set in the dolfinx Makefile branch). The SUNDIALS-7
   wrapper work from M2/M3 (SUNContext lifecycle, nonlinear-solver attachment,
   modern linear-solver wiring) is the starting point — audit which parts still
   touch dolfin/np_array-with-dolfin and separate exactly as 11a did for BEM.
-- [ ] Wire `SundialsIntegrator` on the DOLFINx stack: `llg.sundials_rhs`
+  DONE: audited every sundials source unit (`py_sundials_module.cc`,
+  `sundials_cvode_impl.h`, `numpy_malloc.{h,cc}`, `util/np_array.{h,cc}`) —
+  zero dolfin symbol-level coupling, only the shared `finmag_includes.h`
+  umbrella gated by `-DFINMAG_NO_DOLFIN`/`-DFINMAG_NO_SUNDIALS`. Separation was
+  a pure compile-flag + link-set change in the dolfinx-branch of
+  `native/Makefile`, no wrapper source edits. [Claude Sonnet 5]
+- [x] Wire `SundialsIntegrator` on the DOLFINx stack: `llg.sundials_rhs`
   (+ `jtimes`/`psetup`/`psolve` as legacy wired them), xxx-ordered state
   consistent with the ported LLG contract, serial-only guard inherited.
-- [ ] Make `backend="sundials"` work while scipy remains available; restore
+  DONE: `sundials_rhs` was already real (backend-neutral `solve_for`);
+  `sundials_psetup`/`sundials_psolve`/`sundials_jtimes` are now real
+  (transcribed verbatim / via the `_jtimes_numpy` node-local kernel from
+  native `dm_precession_i`/`dm_damping_i`/`dm_relaxation_i`) for the legacy
+  default `bdf_gmres_prec_id` path (SPGMR + identity preconditioner + analytic
+  Jacobian-times-vector). `use_slonczewski`/`use_zhangli` (STT) remain
+  out-of-scope `NotImplementedError` by name — unneeded by the default path,
+  already tracked as Task 29 items. [Claude Sonnet 5]
+- [x] Make `backend="sundials"` work while scipy remains available; restore
   the legacy default-backend semantics (`llg_integrator` default) ONLY if the
   sundials path passes the full validation below — otherwise keep scipy
-  default and record the decision explicitly.
-- [ ] Validation: the legacy `sundials_ode` test invariants (simple/stiff),
+  default and record the decision explicitly. DONE, in two steps across the
+  slice and its fix round: the initial slice validated `backend="sundials"`
+  as a fully working opt-in but conservatively kept the `llg_integrator`
+  factory default at `"scipy"`, pending review. Fix round 1 (Task 20 review)
+  restored the `llg_integrator` factory default to `"sundials"` as the plan
+  directs — full validation had already passed and every explicit-backend
+  in-tree caller (`Simulation` passes `backend=self.integrator_backend`
+  explicitly) is unaffected. `Simulation.integrator_backend`'s own default
+  stays `"scipy"` (Phase 1 Task 8/9 sanctioned it as the temporary DOLFINx
+  default; flipping it would couple every `run_until` gate to the native
+  build, a larger re-validation deliberately deferred) — registered as
+  **USER ACCEPTANCE PENDING** in `transition-notes.org` and
+  `dev/dolfinx/porting_map.md`. [Claude Sonnet 5]
+- [x] Validation: the legacy `sundials_ode` test invariants (simple/stiff),
   analytic macrospin trajectory vs closed form, cross-backend agreement
   (sundials vs scipy on the Task 9/10 core workflow within declared
   tolerances), and a `barmini`-class Sim advance mirroring the pixi
-  `barmini-smoke` acceptance slice.
-- [ ] Env: SUNDIALS libraries into the dolfinx pixi feature (pixi.lock change
-  expected — call out); native build hygiene per Task 11b conventions.
-- [ ] New gate `dolfinx-src-sundials-pytest` folded into `verify-dolfinx-m5`;
+  `barmini-smoke` acceptance slice. DONE: all invariants ported into
+  `test_sundials_driver_dolfinx.py` and green — analytic macrospin trajectory,
+  jtimes-vs-finite-difference (<1e-5 relative), cross-backend agreement
+  (max|Δm| < 1e-6 at reltol=1e-8/abstol=1e-10, short `run_until(1e-11)`
+  horizon — see the honest caveat in `transition-notes.org`), and the
+  barmini-class default-path advance. [Claude Sonnet 5]
+- [x] Env: SUNDIALS libraries into the dolfinx pixi feature (pixi.lock change
+  expected — call out); native build hygiene per Task 11b conventions. DONE:
+  `sundials = ">=7,<8"` added to `[feature.dolfinx.dependencies]`, resolving
+  **7.8.0** (dolfinx env) vs the legacy default env's **7.2.1** — both
+  SUNDIALS-7 major, no new compat shims needed beyond what the wrapper already
+  carries; `pixi.lock` +126 lines. [Claude Sonnet 5]
+- [x] New gate `dolfinx-src-sundials-pytest` folded into `verify-dolfinx-m5`;
   driver/deferred-sweep tests updated (sundials no longer raises by name —
   fail-forward pins flip to ported-behavior assertions incl. the Task 10 skip
-  guards, which were designed for exactly this moment).
+  guards, which were designed for exactly this moment). DONE: 17 tests
+  initially (18 after fix round 1's added bare-factory-default integration
+  test), folded into `verify-dolfinx-m5`; `test_llg_dolfinx.py`'s deferred
+  sweep lost 3 by-name params (now-ported hooks) and gained a positive ported
+  test; the fix round additionally flipped
+  `test_llg_integrator_default_backend_is_scipy` to
+  `test_llg_integrator_default_backend_is_sundials` (paired with an
+  availability-guarded raises-by-name counterpart covering the other branch)
+  and added a docstring cross-reference from `test_construction_core_state`'s
+  `Simulation`-default pin to the USER ACCEPTANCE PENDING register entry.
+  [Claude Sonnet 5]

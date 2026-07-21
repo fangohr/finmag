@@ -1,13 +1,33 @@
 """Backend-selecting integrator factory (unchanged public API).
 
-Task 8: the native Sundials/CVODE extension is not yet ported to DOLFINx, so
-``backend="sundials"`` keeps raising ``ImportError`` by name (unchanged
-behaviour, see the ``sundials`` branch below). Instead of adding a new
-selection mechanism, the ``backend`` keyword's *default value* is changed
-from ``"sundials"`` to ``"scipy"``, making the ported ``ScipyIntegrator`` the
-temporary supported/default DOLFINx backend while every legacy caller that
-still explicitly passes ``backend="sundials"`` (e.g. ``finmag.sim.sim.Simulation``)
-is unaffected. [Claude Sonnet 5]
+Task 8 (superseded by Task 20, see below): the native Sundials/CVODE
+extension was not yet ported to DOLFINx, so ``backend="sundials"`` kept
+raising ``ImportError`` by name. Instead of adding a new selection mechanism,
+the ``backend`` keyword's *default value* was changed from ``"sundials"`` to
+``"scipy"``, making the ported ``ScipyIntegrator`` the temporary
+supported/default DOLFINx backend while every legacy caller that still
+explicitly passes ``backend="sundials"`` (e.g. ``finmag.sim.sim.Simulation``)
+was unaffected.
+
+Task 20 fix round 1: the native Sundials/CVODE backend is now fully ported
+and validated on DOLFINx (see ``sundials_integrator.py`` and the
+``dolfinx-src-sundials-pytest`` gate). With the backend genuinely available,
+this factory's ``backend`` default is flipped back to ``"sundials"``,
+restoring the legacy default semantics, exactly as the Task 20 plan directed.
+This is low blast radius: ``finmag.sim.sim.Simulation`` passes
+``backend=self.integrator_backend`` explicitly (``sim.py`` around
+``create_integrator``/``reset_time``) and every other in-tree caller passes
+``backend`` explicitly. When the native extension is unavailable in an
+environment, a bare ``llg_integrator(llg, m0)`` call now raises ``ImportError``
+by name (unchanged failure mode, just triggered by the default instead of an
+explicit request) -- callers that need the always-available driver should
+still pass ``backend="scipy"`` explicitly.
+
+Note ``Simulation.integrator_backend`` itself is a *separate* default (set in
+``finmag.sim.sim.Simulation.__init__``) and deliberately stays ``"scipy"`` for
+now -- see the "USER ACCEPTANCE PENDING" register entry in
+``transition-notes.org`` / ``dev/dolfinx/porting_map.md`` / the Task 20 plan
+section. [Claude Sonnet 5]
 
 Task 11a: the eager module-scope ``from finmag.drivers.sundials_integrator
 import SundialsIntegrator`` was moved behind a PEP 562 module ``__getattr__``.
@@ -93,7 +113,7 @@ def __getattr__(name):
     )
 
 
-def llg_integrator(llg, m0, backend="scipy", **kwargs):
+def llg_integrator(llg, m0, backend="sundials", **kwargs):
     # XXX TODO: Passing the tablewriter argument on like this is a
     #           complete hack and this should be refactored. The same
     #           is true with saving snapshots. Neither saving average

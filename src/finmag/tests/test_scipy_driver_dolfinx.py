@@ -290,13 +290,42 @@ def test_reinit_preserves_cur_t():
 
 
 # --------------------------------------------------------------------------
-# checklist item 6: scipy is the default/supported DOLFINx backend
+# checklist item 6 (Task 20 fix round 1): sundials is restored as the
+# llg_integrator factory default; scipy remains available and fully
+# supported as an explicit opt-in. See ``llg_integrator``'s module docstring
+# and ``transition-notes.org`` ("Native Sundials/CVODE on DOLFINx (Task 20)")
+# for the decision history. [Claude Sonnet 5]
 # --------------------------------------------------------------------------
 
-def test_llg_integrator_default_backend_is_scipy():
+def test_llg_integrator_default_backend_is_sundials():
+    """The factory-default pin, restored to its legacy value.
+
+    This is one half of the availability-guarded pair with
+    ``test_llg_integrator_default_backend_raises_when_sundials_unavailable``
+    below: whichever branch the current environment is in, exactly one of
+    the two pins the *behaviour actually exercised* -- either the default
+    constructs a working ``SundialsIntegrator``, or (native extension absent)
+    the default raises ``ImportError`` by name. [Claude Sonnet 5]
+    """
     llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    if SundialsIntegrator is None:
+        pytest.skip("native sundials extension is not available in this environment")
     integrator = llg_integrator(llg, llg.m_field)
-    assert isinstance(integrator, ScipyIntegrator)
+    assert isinstance(integrator, SundialsIntegrator)
+
+
+def test_llg_integrator_default_backend_raises_when_sundials_unavailable():
+    """The other half of the pin above: without the native extension built,
+    the *default* call (no explicit ``backend=``) now fails exactly the way
+    an explicit ``backend="sundials"`` request always did -- flipping the
+    factory default does not change the by-name ``ImportError`` failure
+    mode, it only changes which call sites trigger it. [Claude Sonnet 5]
+    """
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    if SundialsIntegrator is not None:
+        pytest.skip("native sundials extension is available in this environment")
+    with pytest.raises(ImportError, match="sundials"):
+        llg_integrator(llg, llg.m_field)
 
 
 def test_llg_integrator_explicit_scipy_backend():

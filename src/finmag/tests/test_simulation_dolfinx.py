@@ -71,6 +71,18 @@ def test_ported_simulation_does_not_load_legacy_dolfin_or_native():
 # --------------------------------------------------------------------------
 
 def test_construction_core_state():
+    """USER ACCEPTANCE PENDING: ``Simulation.integrator_backend`` defaults to
+    ``"scipy"`` here, diverging from the legacy default of ``"sundials"`` that
+    Task 20 fix round 1 restored for the bare ``llg_integrator`` factory. This
+    is deliberate and temporary (Phase 1 Task 8/9 sanctioned ``"scipy"`` as
+    the DOLFINx ``Simulation`` default) -- flipping it would couple every
+    ``run_until`` gate across the M5 suite to the native sundials build, a
+    larger re-validation not done in this slice. See the identical register
+    entry in ``transition-notes.org`` ("Native Sundials/CVODE on DOLFINx
+    (Task 20)"), ``dev/dolfinx/porting_map.md``, and the Task 20 section of
+    ``docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md``. [Claude
+    Sonnet 5]
+    """
     box = _box()
     sim = Simulation(box, 8.6e5, unit_length=1e-9, name="my_sim")
     assert sim.mesh is box

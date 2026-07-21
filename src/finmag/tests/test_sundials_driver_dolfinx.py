@@ -233,6 +233,22 @@ def test_llg_integrator_sundials_backend_available():
 
 
 @requires_sundials
+def test_llg_integrator_default_backend_is_sundials_and_advances():
+    """Task 20 fix round 1: ``llg_integrator``'s ``backend`` default was
+    flipped back from ``"scipy"`` to ``"sundials"``, restoring the legacy
+    default semantics. A bare call with no explicit ``backend=`` must both
+    construct a ``SundialsIntegrator`` (not just raise/skip) and be able to
+    actually advance time -- construction alone would not catch a default
+    that resolves to a broken or half-wired backend. [Claude Sonnet 5]
+    """
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    integrator = llg_integrator(llg, llg.m_field)
+    assert isinstance(integrator, SundialsIntegrator)
+    assert integrator.advance_time(1e-12) is True
+    assert integrator.cur_t == 1e-12
+
+
+@requires_sundials
 def test_sundials_advance_time_zero_first_is_a_no_op():
     llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
     integrator = llg_integrator(llg, llg.m_field, backend="sundials")

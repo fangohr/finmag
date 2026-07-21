@@ -115,6 +115,18 @@ module with its tests.
   `"sundials"` to `"scipy"`, making the ported driver the working default
   while an explicit `backend="sundials"` request keeps raising `ImportError`
   by name (native Sundials/CVODE remains unported). [Claude Sonnet 5]
+  Task 20 update: sundials is no longer a gap. Native Sundials/CVODE is
+  ported and fully validated on the DOLFINx stack (`SundialsIntegrator`
+  wired against the ported `LLG`, `bdf_gmres_prec_id` default path exercised
+  end-to-end). Fix round 1 (Task 20 review) restored `llg_integrator`'s
+  `backend` default from `"scipy"` back to `"sundials"`, matching the legacy
+  default semantics -- the initial slice had left it at `"scipy"` pending
+  review even though full validation had already passed. An explicit
+  `backend="scipy"` remains fully supported. `Simulation.integrator_backend`
+  is a separate default and deliberately stays `"scipy"` -- DELIBERATE
+  DEVIATION, USER ACCEPTANCE PENDING (see the register entry in the Task 9
+  update below and `transition-notes.org`'s "Native Sundials/CVODE on DOLFINx
+  (Task 20)" section). [Claude Sonnet 5]
 - Task 7 update: `physics/llg.py` is no longer an unported `xxx` consumer. The
   direct DOLFINx port makes `solve`/`solve_for` and the `m` setters
   unambiguously component-blocked coordinate-ordered `xxx`, and routes the
@@ -130,6 +142,16 @@ module with its tests.
   `solve_for` adapter. The deterministic dm/dt is transcribed from the native
   `calc_llg_dmdt` (`native/src/llg/llg.cc`), including the `c*(1-|m|^2)*m` norm-
   relaxation term. [Claude Opus 4.8]
+  Task 20 update: `sundials_jtimes`/`sundials_psetup`/`sundials_psolve` are no
+  longer by-name deferrals -- all three are real implementations of the
+  legacy `bdf_gmres_prec_id` default path (SPGMR + identity preconditioner +
+  analytic Jacobian-times-vector, the node-local kernel transcribed from
+  native `dm_precession_i`/`dm_damping_i`/`dm_relaxation_i`), validated to
+  <1e-5 relative against a finite-difference of the rhs. Spatially varying
+  `alpha` was already ported by Task 16 (unrelated to this task). The only
+  remaining by-name items unchanged from this list: Slonczewski/Zhang-Li STT
+  (`use_slonczewski`/`use_zhangli`) and the multi-rank ODE state guard.
+  [Claude Sonnet 5]
 - Task 7 addendum: legacy `set_pins` logged `logger.error(...)` for
   out-of-range pin indices and silently kept the previous `_pins` array
   unchanged; the ported `set_pins` instead raises `ValueError` for the same
@@ -165,6 +187,21 @@ module with its tests.
   this slice is a local dolfin-free reimplementation of their
   `finmag.util.helpers` import). `magnetisation_patterns` and the legacy
   per-simulation table writer remain untouched/off the core import graph.
+  [Claude Sonnet 5]
+  Task 20 register entry, DELIBERATE DEVIATION, USER ACCEPTANCE PENDING:
+  `Simulation.integrator_backend` default is `"scipy"` on DOLFINx vs legacy
+  `"sundials"` -- temporary, pending native-default hardening or user
+  acceptance. Native Sundials/CVODE is fully ported and validated (Task 20;
+  `llg_integrator`'s own factory default was restored to `"sundials"` in the
+  Task 20 review's fix round 1), so `integrator_backend="sundials"` works
+  end-to-end when requested explicitly. `Simulation`'s default is kept at
+  `"scipy"` regardless, because flipping it would couple every `run_until`
+  gate across the M5 suite to the native sundials build and CVODE
+  trajectory -- a larger re-validation deliberately not done in this slice.
+  Mirrored in `transition-notes.org`'s "Native Sundials/CVODE on DOLFINx
+  (Task 20)" section and the Task 20 section of
+  `docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md`; cross-referenced
+  from `test_simulation_dolfinx.py::test_construction_core_state`'s docstring.
   [Claude Sonnet 5]
 - Task 9 removed-surfaces addendum: a handful of legacy `Simulation` public
   names were dropped outright rather than deferred by name --
