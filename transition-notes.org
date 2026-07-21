@@ -4735,3 +4735,110 @@ with a clean tracked tree; =pixi.lock= untouched.
   limitation there (fix round 1, Finding 1, above).
 
 [Claude Opus 4.8]; fix round 1 (per-node =Ms=, doc updates) [Claude Sonnet 5]
+
+** Mesh Tooling Bridge (Netgen/Gmsh -> DOLFINx) (Task 18)
+
+=src/finmag/util/meshes.py= and =src/finmag/util/mesh_templates.py= are now the
+direct DOLFINx port of the mesh-generation surface. Gate:
+=dolfinx-src-meshes-pytest= (=src/finmag/tests/test_meshes_dolfinx.py=, 27
+tests), folded into =dev/bin/verify-dolfinx-m5=.
+
+*** Gmsh Python-API bridge (no dolfin-XML)
+
+The legacy path built Netgen =algebraic3d= CSG text, shelled out to
+=netgen=/=gmsh= CLIs, went through DIFFPACK/=.msh= -> dolfin-XML ->
+=df.Mesh(...xml.gz)=. The port instead drives Gmsh through its Python API
+(OpenCASCADE kernel) and converts the model to a =dolfinx.mesh= in-memory via
+=dolfinx.io.gmsh.model_to_mesh= (the module is =gmsh= in DOLFINx 0.10, not the
+older =gmshio= name; =model_to_mesh(model, comm, rank, gdim)= returns a
+=MeshData= whose =.mesh= is the dolfinx mesh). No dolfin-XML intermediates, no
+CLI shelling. =gmsh= and the dolfinx runtime are imported *lazily* inside the
+generators, so =import finmag= never pulls in gmsh (plain-import boundary; the
+import-boundary gate stays green, and an explicit assertion confirms =gmsh not
+in sys.modules= after importing =finmag.util.meshes=).
+
+OCC primitives used: =addBox=, =addSphere=, =addCylinder=, =addCone=; elliptic
+cylinders/ellipsoids are a unit primitive followed by =occ.dilate=; =ring= and
+=MeshDifference= use =occ.cut=; =MeshSum= uses =occ.fuse=; =pair_of_disks= puts
+two disjoint cylinders in one physical group. A physical group of the
+top-dimensional volumes is required by =model_to_mesh= (it raises otherwise).
+
+*** Preserved hashing/naming contract; internal geometry change
+
+The template classes (=MeshTemplate=, =MeshPrimitive=, =Sphere=, =Box=,
+=EllipticalNanodisk=, =Nanodisk=, =MeshSum=, =MeshDifference=) keep their
+public names, parameters, and =csg_string()=/=csg_stub()=/=hash()=/
+=generic_filename()= semantics *unchanged*. The Netgen-CSG text is retained
+byte-for-byte and used purely as the md5 cache key, so the frozen digests in
+the legacy =mesh_templates_test.py::test_hash=
+(=50f3b55770e40ba7a5f8e62d7ff7d327=, =1ee55186811cfc21f22e17fbad35bfed=) still
+hold. The *internal* change is that geometry is built through the Gmsh OCC
+kernel from the stored numeric parameters rather than by parsing the CSG text.
+=vec2str= was inlined into =mesh_templates.py= (it previously came from
+=finmag.util.helpers=, which imports =dolfin= at module scope and so is not
+import-safe in the dolfinx env).
+
+Per-primitive =maxh_NAME= discretisation for combined meshes is reproduced with
+a spatially varying Gmsh mesh-size callback: each leaf primitive contributes a
+=(contains_fn, size)= region and the callback returns the min matching size
+(with =MeshSizeFromPoints/FromCurvature/ExtendFromBoundary= disabled so the
+callback dominates). This keeps the legacy invariant that a finer
+=maxh_sphere2= yields more vertices than a coarser one.
+
+*** Caching contract on an XDMF store (first internal XDMF read)
+
+The legacy contract (same inputs -> cache hit, distinct inputs -> distinct
+files, =directory= override honoured, md5-of-CSG key when no filename given) is
+preserved with a DOLFINx-native store: meshes are cached as XDMF (=.xdmf= +
+=.h5=). A cache hit reads the mesh back via =XDMFFile.read_mesh=. This is the
+repo's first XDMF *read* usage, but it is kept strictly internal to the cache;
+it is NOT general XDMF read-back support (that remains Task 26). A legacy
+=.xml.gz= (or =.xdmf=) filename argument is honoured by stripping the suffix.
+Cache files are only ever written under caller-chosen directories (tests chdir
+into =tmp_path=), so the tracked-tree cleanliness guard stays satisfied.
+
+*** Vertex/cell counts not pinned
+
+Legacy Netgen produced different tetrahedralisations than Gmsh OCC, so the
+frozen pixi-tip vertex/cell counts are not meaningful to compare. Validation is
+by analytic volume (planar boxes exact to =TOL3=1e-14=; curved meshes within
+=TOL1=1e-2=, matching the legacy tolerances) plus the caching-determinism and
+FK-demag smokes. The box-difference volume is exact (29000.0) because OCC boxes
+have planar faces.
+
+*** Physics smoke
+
+=test_fk_demag_on_generated_sphere_smoke= generates a sphere through the bridge
+(=sphere(r=20, maxh=3)=), runs the ported =FKDemag= on it with uniform m along
+z, and asserts the average demag field is -Ms/3 (sphere demag factor 1/3)
+within 5%, with small transverse components -- proving the bridge feeds real
+physics end-to-end.
+
+*** Deferrals (documented, Task 29 review items)
+
+- *Netgen backend*: conda-forge =netgen= is not in the dolfinx env and the
+  =.geo= -> netgen -> DIFFPACK -> dolfin-XML path does not port cleanly.
+  =netgen_is_usable()= returns =False=; the Gmsh path covers the geometry set
+  the legacy tests exercise.
+- =nmesh_to_dolfin.py=: unchanged and unported -- it emits legacy dolfin-XML
+  (unreadable by DOLFINx) and is consumed only by the unported Nmag
+  reference-generation scripts (=tests/**/run_nmag*.py=, Task 27 scope). Not
+  ported speculatively.
+- Textual entry points =from_geofile= / =from_csg= (Netgen-CSG/dolfin-XML) are
+  by-name =NotImplementedError= stubs -- the Gmsh-API generators replace them.
+- Multi-region "airbox" generators =sphere_inside_box= /
+  =elliptical_nanodisk_with_cuboid_shell= (subdomain-marked meshes), the 2D
+  gmsh-script helpers =regular_polygon= / =regular_polygon_extruded= /
+  =disk_with_internal_layers=, and the dolfin-based analysis/plotting utilities
+  (=mesh_info=, =mesh_quality=, =nodal_volume=, =longest_edges=, =mesh_size=,
+  =mesh_is_periodic=, =build_mesh=, =embed3d=, =line_mesh=, =plot_mesh=) are
+  by-name stubs. =mesh_volume=/=num_vertices=/=order_of_magnitude= ARE ported
+  (dolfinx-native).
+
+*** Env dependency change
+
+=gmsh= and =python-gmsh= were added to the =feature.dolfinx.dependencies= in
+=pixi.toml= (conda-forge). =pixi.lock= changed accordingly. They are only ever
+imported lazily inside the generators.
+
+[Claude Opus 4.8]

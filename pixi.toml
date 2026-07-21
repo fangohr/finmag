@@ -45,6 +45,13 @@ scipy = "*"
 cxx-compiler = "*"
 make = "*"
 libboost-python-devel = "*"
+# Task 18: mesh-tooling bridge. `gmsh`/`python-gmsh` provide the Gmsh Python API
+# used by the ported mesh generators (`finmag.util.meshes`/`mesh_templates`),
+# converted to `dolfinx.mesh` in-memory via `dolfinx.io.gmsh.model_to_mesh`
+# (no dolfin-XML intermediates). gmsh is lazily imported inside the generators
+# so `import finmag` never pulls it in. [Claude Opus 4.8]
+gmsh = "*"
+python-gmsh = "*"
 
 [feature.dolfinx.activation.env]
 # The DOLFINx port lane can now compile an array-only native surface
@@ -121,6 +128,13 @@ dolfinx-src-timezeeman-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python
 # coefficient placement and the varying-alpha RHS; a divergence pin makes the
 # now-LIVE K2 native-typo deviation executable evidence. [Claude Opus 4.8]
 dolfinx-src-varparams-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_variable_params_dolfinx.py"
+# Task 18: the mesh-tooling bridge -- Gmsh Python-API generators + CSG template
+# classes converted to dolfinx.mesh via dolfinx.io.gmsh.model_to_mesh, the
+# preserved Netgen-CSG md5 hashing/naming contract, the XDMF caching contract,
+# and an FK-demag-on-a-generated-sphere physics smoke. WRITE_FINMAG_VERSION=0
+# keeps the native `make` (triggered by the demag smoke) from rewriting the
+# tracked version file. [Claude Opus 4.8]
+dolfinx-src-meshes-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_meshes_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

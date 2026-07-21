@@ -188,26 +188,35 @@ every capability not already formally dropped is treated as PORT.
 **Files:** `src/finmag/util/meshes.py`, `src/finmag/util/mesh_templates.py`,
 `src/finmag/util/nmesh_to_dolfin.py`, pixi env deps if needed.
 
-- [ ] Establish the legacy mesh-generation surface from the pixi tip: the
+- [x] Establish the legacy mesh-generation surface from the pixi tip: the
   generator functions in `util/meshes.py` (box/cylinder/sphere/ellipsoid/
   elliptical cylinder/nanodisk etc. via `mesh_templates.py` CSG), the
   gmsh/netgen invocation paths, and the md5-keyed mesh-file caching contract.
-- [ ] Port the Gmsh path first: drive Gmsh via its Python API and convert to
-  `dolfinx.mesh` via `dolfinx.io.gmshio` (investigate and use the supported
-  bridge; no dolfin XML intermediates). Preserve the public generator
-  signatures and the caching contract (cache format may change — document).
-- [ ] Port `mesh_templates.py` CSG template classes on top of the Gmsh path,
-  preserving template names/parameters and `csg()`/hash semantics where
-  practical (documented deviations otherwise).
-- [ ] Netgen path: port if the conda-forge netgen in the DOLFINx env supports
-  the legacy workflow cleanly; otherwise defer by name with documentation
-  (decision recorded for Task 29 review, not silently narrowed).
-- [ ] `nmesh_to_dolfin.py`: assess against the nsim reference-data usage;
-  port the reader if it feeds checked-in Nmag comparisons, else defer by name.
-- [ ] Validation: analytic volume/surface checks per template (legacy
-  `mesh_templates_test.py` invariants), vertex/cell-count sanity vs the pixi
-  tip where deterministic, and one FK-demag-on-generated-mesh smoke proving
-  the bridge feeds real physics.
-- [ ] New gate `dolfinx-src-meshes-pytest` folded into `verify-dolfinx-m5`;
-  env deps called out if `gmsh`/`python-gmsh`/`netgen` must be added to the
-  dolfinx feature (pixi.lock change expected — call out).
+  [Claude Opus 4.8]
+- [x] Port the Gmsh path first: drive Gmsh via its Python API and convert to
+  `dolfinx.mesh` via `dolfinx.io.gmsh.model_to_mesh` (the 0.10 module name;
+  `gmshio` in older releases) — no dolfin XML intermediates. Public generator
+  signatures preserved; caching contract preserved on an XDMF store
+  (documented). [Claude Opus 4.8]
+- [x] Port `mesh_templates.py` CSG template classes on top of the Gmsh path,
+  preserving template names/parameters and `csg()`/`hash()` semantics exactly
+  (the Netgen-CSG text is retained byte-for-byte as the cache key; geometry is
+  built through the Gmsh OCC kernel — documented internal change). [Claude Opus 4.8]
+- [x] Netgen path: DEFERRED by name (conda-forge `netgen` is not in the
+  dolfinx env and the `.geo`→netgen→DIFFPACK→dolfin-XML path does not port
+  cleanly; the Gmsh path covers the geometry set the legacy tests need).
+  `netgen_is_usable()` returns `False`. Task 29 review item. [Claude Opus 4.8]
+- [x] `nmesh_to_dolfin.py`: DEFERRED by name — it emits legacy dolfin-XML
+  (unreadable by DOLFINx) and is consumed only by the unported Nmag
+  reference-generation harness (`tests/**/run_nmag*.py`, Task 27 scope). Not
+  ported speculatively. Task 29 review item. [Claude Opus 4.8]
+- [x] Validation: analytic volume checks per generator/template within the
+  legacy tolerances (box exact `TOL3`, curved within `TOL1`), the preserved
+  md5 hashing/naming contract, XDMF caching determinism (cache hit vs distinct
+  files), and an FK-demag-on-a-generated-sphere smoke (demag factor ~1/3).
+  Vertex/cell counts are NOT pinned (Gmsh OCC meshing differs from the frozen
+  Netgen tip); validated via volume/quality metrics instead — documented.
+  [Claude Opus 4.8]
+- [x] New gate `dolfinx-src-meshes-pytest` folded into `verify-dolfinx-m5`;
+  `gmsh` + `python-gmsh` added to the dolfinx feature (pixi.lock changed —
+  called out in the report). [Claude Opus 4.8]

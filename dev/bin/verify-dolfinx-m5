@@ -33,6 +33,12 @@
 # spatially varying alpha, and region-accounting port gate
 # (`dolfinx-src-varparams-pytest`). [Claude Opus 4.8]
 #
+# Task 18 folds in the DOLFINx mesh-tooling bridge gate
+# (`dolfinx-src-meshes-pytest`): Gmsh Python-API generators + CSG template
+# classes converted to dolfinx.mesh via dolfinx.io.gmsh, the preserved
+# Netgen-CSG hashing/naming and XDMF caching contracts, and an
+# FK-demag-on-a-generated-sphere physics smoke. [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -111,6 +117,9 @@ pixi run -e dolfinx dolfinx-src-timezeeman-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-varparams-pytest"
 pixi run -e dolfinx dolfinx-src-varparams-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-meshes-pytest"
+pixi run -e dolfinx dolfinx-src-meshes-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

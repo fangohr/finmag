@@ -643,3 +643,29 @@ Before editing the matching module in `src/finmag`, check that:
   skyrmion/submesh/normal-mode helpers, already dropped from the ported
   `Simulation` in Task 9, were removed). Gate:
   `dolfinx-src-restart-output-pytest`. [Claude Opus 4.8]
+
+- `src/finmag/util/meshes.py` and `src/finmag/util/mesh_templates.py` are now
+  the direct DOLFINx port of the mesh-generation surface (Task 18). The Netgen
+  CSG + CLI + dolfin-XML toolchain is replaced by the Gmsh Python API
+  (OpenCASCADE kernel) converted to `dolfinx.mesh` in-memory via
+  `dolfinx.io.gmsh.model_to_mesh` (the DOLFINx 0.10 module name; `gmshio` in
+  older releases). Public generator names/signatures are preserved
+  (`box`/`sphere`/`cylinder`/`nanodisk`/`elliptic_cylinder`/
+  `elliptical_nanodisk`/`ellipsoid`/`truncated_cone`/`ring`/`pair_of_disks`),
+  as are the template classes (`Sphere`/`Box`/`EllipticalNanodisk`/`Nanodisk`/
+  `MeshSum`/`MeshDifference`) with their `csg_string()`/`hash()`/
+  `generic_filename()` semantics *exactly* (the Netgen-CSG text is retained
+  byte-for-byte as the md5 cache key -- the frozen `test_hash` digests still
+  hold -- while geometry is built through Gmsh OCC from stored parameters).
+  `gmsh` is lazily imported so `import finmag` never pulls it in
+  (plain-import boundary intact). The md5-of-CSG caching contract is preserved
+  on a DOLFINx-native XDMF store (`.xdmf`+`.h5`; first *internal* XDMF read,
+  not general read-back -- Task 26). `mesh_volume`/`num_vertices`/
+  `order_of_magnitude` are ported dolfinx-native. Deferred by name (Task 29
+  review items): the Netgen backend (`netgen_is_usable()` returns `False`),
+  `nmesh_to_dolfin.py` (legacy dolfin-XML emitter, consumed only by the
+  unported Nmag harness -- Task 27), the textual `from_geofile`/`from_csg`
+  entry points, the multi-region airbox generators, the 2D gmsh-script
+  helpers, and the dolfin-based analysis/plotting utilities. `gmsh` +
+  `python-gmsh` added to the dolfinx pixi feature (`pixi.lock` changed). Gate:
+  `dolfinx-src-meshes-pytest`. [Claude Opus 4.8]
