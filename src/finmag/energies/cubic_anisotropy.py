@@ -61,7 +61,8 @@ class CubicAnisotropy(EnergyBase):
     every other line uses the per-node ``K2[i]``. For the spatially *constant*
     ``K2`` supported by this slice the nodal ``K2`` array is uniform, so
     ``K2[2] == K2[i]`` and the typo is numerically dormant: the native oracle
-    reproduces the correct analytic field to ~1e-12 (see
+    reproduces the correct analytic field to a measured ~1e-15 relative error
+    (asserted at the fixture's declared ``rtol=1e-11``; see
     ``test_native_oracle_*`` and the K2 fixture). This port implements the
     *correct* per-node field unconditionally. Task 16 makes spatially varying
     ``K2`` supported, so this deviation is now LIVE (still USER ACCEPTANCE
@@ -91,7 +92,7 @@ class CubicAnisotropy(EnergyBase):
     ``ValueError: compute_cubic_field: Ms: Expected array of shape (nodes),
     got (cells)`` in exactly this scenario). See
     ``test_variable_params_dolfinx.py`` for the varying-Ms tests and
-    ``cubic_varying_ms_native_oracle.json`` for the quantitative pin.
+    ``cubic_varying_ms_oracle.json`` for the quantitative pin.
     """
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
@@ -146,7 +147,8 @@ class CubicAnisotropy(EnergyBase):
             # this reproduces exactly that placement so spatially varying K's
             # match the legacy native field node-for-node (except the
             # deliberately-fixed K2 hz typo). For constant K it equals the
-            # scalar, preserving the constant-K native oracle to ~1e-11.
+            # scalar, preserving the constant-K native oracle match (measured
+            # ~1e-15 relative error, asserted at the fixture's rtol=1e-11).
             scalar_test = TestFunction(self.S1)
             self._K1_nodal = (
                 _assemble_vector_owned(self.K1.f * scalar_test * dx, self.S1)

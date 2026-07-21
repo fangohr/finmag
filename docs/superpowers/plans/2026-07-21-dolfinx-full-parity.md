@@ -160,6 +160,11 @@ script, `dev/bin/verify-dolfinx-m5`, install docs.
 8. External comparison workflows (OOMMF/Nmag/Magpar), HDF5/XDMF read-back,
    plotting/spherical helpers, remaining dropped convenience surfaces
    (skyrmion initialisers, `skyrmion_number`, `mesh_info`, ...).
+9. Port the undocumented legacy `DMI(dmi_type='D2D')` variant, or formally
+   accept its deferral (it is not part of the public `dmi_type` contract
+   documented on the legacy class; see Task 13 above and
+   `dev/dolfinx/porting_map.md`) so the Definition of Full Parity checklist
+   below can close. [Claude Sonnet 5]
 
 ## Definition of Full Parity
 

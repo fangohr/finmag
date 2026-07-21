@@ -134,26 +134,37 @@ def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
 # --------------------------------------------------------------------------
 
 def test_demag_dmi_and_cubic_anisotropy_are_ported_and_the_others_remain_a_known_gap():
-    """Task 11b ports the FK demag surface, so ``finmag.energies.Demag`` now
-    constructs a working DOLFINx ``FKDemag`` (it no longer surfaces the legacy
-    ``ModuleNotFoundError`` for ``dolfin``). ``Demag2D``/``MacroGeometry`` are
-    now curated by-name ``NotImplementedError`` too.
+    """State at HEAD (kept accurate by the whole-branch review -- this file is
+    the designated aggregated reviewer reference; see item 2 of the Tier 1
+    review). Task 11b ports the FK demag surface, so ``finmag.energies.Demag``
+    now constructs a working DOLFINx ``FKDemag`` (it no longer surfaces the
+    legacy ``ModuleNotFoundError`` for ``dolfin``). ``Demag2D``/``MacroGeometry``
+    are now curated by-name ``NotImplementedError`` too.
 
     Task 13 ports ``DMI`` directly (constant scalar ``D``, ``dmi_type``
     dispatch across ``'auto'``/``'1d'``/``'2d'``/``'3d'``/``'interfacial'``);
     constructing it directly now works instead of surfacing the legacy
     ``ModuleNotFoundError`` for ``dolfin`` (see ``test_dmi_dolfinx.py`` for
-    the focused DMI suite). ``dmi_type='D2D'`` and spatially varying ``D``
-    are curated by-name ``NotImplementedError`` (not ported this slice).
+    the focused DMI suite). Task 16 update: spatially varying ``D``
+    (callable/``Field``/``dolfinx.fem.Function``, placed in DG0) is now
+    SUPPORTED -- it is no longer a by-name deferral. Only the undocumented
+    ``dmi_type='D2D'`` variant and legacy string Expressions remain curated
+    by-name ``NotImplementedError``.
 
     Task 14 ports ``CubicAnisotropy`` directly (constant scalar
     ``K1``/``K2``/``K3`` and constant ``u1``/``u2`` axes, with
     ``u3 = u1 x u2``); constructing it directly now works too (see
-    ``test_cubic_anisotropy_dolfinx.py`` for the focused suite). Spatially
-    varying coefficients/axes are curated by-name ``NotImplementedError``,
-    and the legacy-default ``assemble=False`` native/direct field path is
-    curated by-name ``NotImplementedError`` on ``compute_field()`` (energy
-    still works under the default, matching the legacy class exactly).
+    ``test_cubic_anisotropy_dolfinx.py`` for the focused suite). Task 14 fix
+    round 1 (60ac165b) ports the legacy-default ``assemble=False``
+    native/direct field path as a NumPy transcription of the closed-form
+    analytic field, so ``compute_field()`` under the default now works too --
+    it is no longer a by-name deferral (energy was always box-assembled and
+    always worked, matching the legacy class exactly). Task 16 update:
+    spatially varying ``K1``/``K2``/``K3`` (CG1-placed) are now SUPPORTED,
+    including under the ``assemble=False`` native analytic path (see
+    ``test_variable_params_dolfinx.py`` for the K2-native-typo divergence pin
+    this makes LIVE). Only spatially varying ``u1``/``u2`` axes remain
+    curated by-name ``NotImplementedError``.
 
     The still-unported ``requires_legacy_dolfin=True`` optional energy classes
     (``ThinFilmDemag``/``FixedEnergyDW``) remain a known Task 3 boundary gap:

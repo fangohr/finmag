@@ -194,6 +194,28 @@ def test_from_field_interpolates_between_compatible_spaces(spaces):
     )
 
 
+def test_from_function_interpolates_dg0_into_cg1(spaces):
+    """Value-level pin for the Task 16 ``Field.from_function`` cross-space
+    interpolation superset (whole-branch review finding 7): a coefficient
+    ``dolfinx.fem.Function`` living on a *different* space than the target
+    ``Field`` -- e.g. a DG0 coefficient placed into a CG1 ``Field``, exactly
+    the shape mismatch legacy hard-errored on -- is interpolated rather than
+    rejected. A spatially uniform DG0 source makes the expected CG1 vertex
+    values unambiguous regardless of which owning cell each vertex's
+    interpolation samples from."""
+    domain, scalar_space, _ = spaces
+    dg0_space = fem.functionspace(domain, ("DG", 0))
+    dg0_function = fem.Function(dg0_space)
+    dg0_function.x.array[:] = 3.5
+
+    target = Field(scalar_space, 0.0)
+    target.from_function(dg0_function)
+
+    owned = scalar_space.dofmap.index_map.size_local
+    np.testing.assert_allclose(
+        target.as_array()[:owned], 3.5, rtol=0, atol=1e-12)
+
+
 def test_flat_xyz_xxx_round_trips_and_coords(spaces):
     _, _, vector_space = spaces
     field = Field(

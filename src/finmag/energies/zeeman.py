@@ -359,6 +359,14 @@ class TimeZeemanPython(TimeZeeman):
     ``H0`` is interpolated once in :meth:`setup`; every subsequent
     :meth:`update` only rescales the cached array, matching the legacy
     performance rationale exactly.
+
+    By-name gate (Task 15 deviation, not a generic crash): :meth:`setup`
+    probes ``time_fun(0.0)`` and raises :class:`NotImplementedError` naming
+    the unported "TimeZeemanPython vector-valued time_fun" branch if it is
+    not scalar-like. Without this gate, the vector-``time_fun`` branch would
+    instead fail with a generic ``ValueError`` from :meth:`Field.set`
+    rejecting an incompatible pointwise shape, or a raw ``TypeError`` from
+    ``float(self.time_fun(t))`` first hit mid-integration in :meth:`_apply`.
     """
 
     def __init__(self, H0_value, time_fun, t_off=None, name="TimeZeemanPython"):
@@ -371,6 +379,7 @@ class TimeZeemanPython(TimeZeeman):
 
     def setup(self, m, Ms, unit_length=1.0):
         _bind_zeeman_fields(self, m, Ms, unit_length)
+        self._check_time_fun_is_scalar_valued()
 
         H0_field = Field(m.functionspace, name="H0")
         H0_field.set(self.H0_value)
@@ -385,6 +394,34 @@ class TimeZeemanPython(TimeZeeman):
         self._apply(0.0)
         self.E = -mu0 * self.Ms.f * inner(self.m.f, self.H.f)
         return self
+
+    def _check_time_fun_is_scalar_valued(self):
+        """By-name gate for the unported vector-valued ``time_fun`` branch.
+
+        Probes ``time_fun(0.0)``: the legacy scalar-spatial-envelope-with-
+        vector-``time_fun`` branch (one shared scalar envelope multiplied
+        independently per vector component, e.g. for a rotating field) is
+        not exercised by any legacy test and is not ported in this slice
+        (see the class docstring and ``transition-notes.org``/
+        ``dev/dolfinx/porting_map.md`` Task 15). Without this upfront,
+        by-name check, that branch would instead fail late with a generic
+        ``ValueError`` from ``Field.set`` (an incompatible pointwise value
+        shape) at ``setup``, or a raw ``TypeError`` from
+        ``float(self.time_fun(t))`` the first time :meth:`_apply` runs
+        mid-integration.
+        """
+        probe = np.asarray(self.time_fun(0.0))
+        if probe.shape not in ((), (1,)):
+            raise NotImplementedError(
+                "TimeZeemanPython vector-valued time_fun is not ported "
+                "(Task 15 deviation): time_fun(t) must return a scalar "
+                "amplitude, not a {}-shaped value. The legacy scalar-"
+                "spatial-envelope-with-vector-time_fun branch "
+                "(independently scaling each component of a shared scalar "
+                "spatial envelope, e.g. for a rotating field) is not "
+                "exercised by any legacy test and is not ported in this "
+                "slice.".format(probe.shape)
+            )
 
     def _apply(self, t):
         scale = float(self.time_fun(t))

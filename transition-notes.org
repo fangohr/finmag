@@ -4521,7 +4521,16 @@ removed), native-bem 8, demag 19, restart-output 20, dmi 28, cubicanis 25.
 *** Deferred / deliberate deviations
 
 - The legacy =TimeZeemanPython= scalar-spatial-envelope-with-vector-
-  =time_fun= branch (not exercised by any legacy test) is not ported.
+  =time_fun= branch (not exercised by any legacy test) is not ported
+  (DELIBERATE DEVIATION, USER ACCEPTANCE PENDING). Fix round 2 (whole-branch
+  review finding 1) adds a by-name gate: =TimeZeemanPython.setup= probes
+  =time_fun(0.0)= and raises a named =NotImplementedError= if it is not
+  scalar-like, instead of failing later with a generic =ValueError= (from
+  =Field.set= rejecting an incompatible pointwise shape) or a raw
+  =TypeError= (from =float(self.time_fun(t))=, first hit mid-integration in
+  =_apply=). Pinned in
+  =test_timezeeman_dolfinx.py::test_time_zeeman_python_vector_time_fun_is_deferred_by_name=.
+  [Claude Sonnet 5]
 - =t_off=0.0= is falsy-disabled (preserved legacy quirk).
 - =DiscreteTimeZeeman='s cached energy form goes stale after the first
   interval update (preserved legacy quirk, discovered this slice, USER
@@ -4567,6 +4576,30 @@ those same spaces. Legacy *string* =Expression= coefficients raise
 a documented deviation shared with the rest of the port. (=Field.from_function=
 now interpolates on a space mismatch instead of erroring -- a tested superset
 of the legacy contract; see =dev/dolfinx/porting_map.md='s Field entry.)
+
+*** Axis contract: constant-axis-normalised vs varying-axis-as-given (register clarification)
+
+=axis_coefficient= (=finmag/energies/energy_base.py=) treats the uniaxial
+anisotropy easy axis differently depending on whether it is constant or
+spatially varying, and both halves are deliberate, evidence-based decisions,
+not an oversight:
+
+- a *constant* axis (3-tuple/list/array) is validated finite and then
+  normalised to a unit vector, restoring the *intended* legacy contract that
+  the dot product =axis.m= represents an angle cosine (=E = K1*(1 -
+  (axis.m)^2)= only means what it says for a unit =axis=) -- a pre-Tier-1
+  (Task 5) =UniaxialAnisotropy= deviation from the letter of the legacy
+  class, documented in =finmag/energies/anisotropy.py='s own docstring.
+- a *spatially varying* axis (callable / =Field= / =dolfinx.fem.Function=,
+  Task 16) is used exactly as given, with no normalisation applied per node
+  -- this is bug-compatible with legacy, which interpolates a varying axis
+  =Expression=/callable directly into its coefficient space and never
+  renormalises the result either.
+
+Cubic anisotropy's =u1=/=u2= are a different, third case: they are *never*
+normalised, constant or varying (see "Axis-handling investigation" above) --
+the legacy =CubicAnisotropy= class does not normalise its axes at all, for
+either input form.
 
 *** Spatially varying alpha (per-node in gamma_LL AND damping)
 
@@ -4662,11 +4695,14 @@ New oracle fixture =cubic_varying_ms_oracle.json=
 =K1=-8608726=, =K3=1100269=, =K2=0= (deliberately, to sidestep the K2[2]
 typo per the Task 16 review note), =Ms=876626*(1+0.35 x0/0.7)= (spatially
 varying), same mesh/axes/=m= as the constant-Ms native oracle. The port's
-field matches the legacy native field at the same tolerance as the other
-native-oracle per-term cases (=rtol=1e-11=); the generator additionally
-verifies its own =H_vertex= against an independent NumPy analytic derivation
-with the same per-node =Ms= before serialising (=rtol=1e-9=), as a
-self-consistency check. New tests in =test_variable_params_dolfinx.py=:
+field matches the legacy native field at the fixture's declared tolerance
+(=rtol=1e-9=, per =cubic_varying_ms_oracle.json='s =H_vertex= tolerances --
+looser than the constant-K native-oracle cases' =rtol=1e-11= because this
+fixture also exercises a non-uniform per-node =Ms= divisor); the generator
+additionally verifies its own =H_vertex= against an independent NumPy
+analytic derivation with the same per-node =Ms= before serialising
+(=rtol=1e-9=), as a self-consistency check. New tests in
+=test_variable_params_dolfinx.py=:
 the oracle pin, a finite-and-nonzero direct check, an =EffectiveField=-driven
 dynamics check (per-node =Ms= actually enters =LLG.solve='s right-hand side,
 built directly against =LLG=/=EffectiveField= since =Simulation=/=LLG= force

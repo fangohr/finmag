@@ -487,8 +487,10 @@ def _native_case_port_field(case):
 def test_native_oracle_pure_transcription(case_name):
     """K1-only, K3-only, and all-nonzero native (assemble=False) fields are a
     pure transcription of the legacy native analytic routine, so the port must
-    match the legacy oracle to ~1e-12 (far tighter than the fixture's
-    floating-point-noise tolerance)."""
+    match the legacy oracle closely: measured relative error is ~1e-15 across
+    these cases, asserted here at the fixture's declared ``rtol=1e-11`` (far
+    tighter than the fixture's floating-point-noise tolerance would strictly
+    require)."""
     case = NATIVE_ORACLE["cases"][case_name]
     H_s, coords_s = _native_case_port_field(case)
 

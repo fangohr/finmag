@@ -16,12 +16,21 @@ Gilbert damping ``alpha``, and the region energy/magnetisation accounting, again
 - an explicit K2 native-typo DIVERGENCE PIN for spatially varying K2
   (``cubic_k2_varying_oracle.json``): the ported (correct) field differs from
   the legacy native field in exactly the ``hz`` component the ``energy.cc:116``
-  ``K2[2]`` typo predicts, while the box-assembled energy matches.
+  ``K2[2]`` typo predicts, while the box-assembled energy matches;
+- ``test_tier1_composed_physics`` (whole-branch review finding 3): every
+  Tier 1 slice (Tasks 13-16) composed on one ``Simulation`` -- varying-A
+  Exchange, varying-D DMI, constant-axis uniaxial anisotropy, an
+  ``assemble=False`` cubic anisotropy with varying K2, an auto-connected
+  ``OscillatingZeeman``, spatially varying ``alpha``, and ``mark_regions`` --
+  asserting every interaction's field is nonzero, ``H_eff`` equals the sum of
+  the parts, per-region energies sum to the total, a short ``run_until``
+  advances with the oscillating field tracking ``cos(2*pi*f*t)``, and
+  ``|m|`` stays 1.
 
 By-name deferrals kept: legacy string Expressions (pass a callable) and
 spatially varying cubic axes.
 
-[Claude Opus 4.8]
+[Claude Opus 4.8]; composed-physics test [Claude Sonnet 5]
 """
 
 import json
@@ -33,7 +42,10 @@ from dolfinx import fem, mesh
 from mpi4py import MPI
 
 import finmag.util.consts as consts
-from finmag.energies import CubicAnisotropy, DMI, Exchange, UniaxialAnisotropy, Zeeman
+from finmag.energies import (
+    CubicAnisotropy, DMI, Exchange, OscillatingZeeman, UniaxialAnisotropy,
+    Zeeman,
+)
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
 from finmag.physics.effective_field import EffectiveField
@@ -587,6 +599,89 @@ def test_total_energy_over_region_sums_all_interactions():
         + sim.compute_energy("total", region=2)
     whole = sim.compute_energy("Exchange") + sim.compute_energy("Zeeman")
     np.testing.assert_allclose(tot, whole, rtol=1e-12, atol=1e-18)
+
+
+# --------------------------------------------------------------------------
+# Tier 1 whole-branch review, finding 3: composed-physics test. No existing
+# test exercises every Tier 1 slice (Tasks 13-16) composed on one Simulation;
+# this mirrors the experiment the whole-branch reviewer ran by hand. Kept in
+# this file (not a new file) since it is a direct extension of the Task 16
+# variable-parameters/regions coverage above, and is wired into the same
+# ``dolfinx-src-varparams-pytest`` gate as every other test here.
+# --------------------------------------------------------------------------
+
+def _composed_physics_sim():
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)], [3, 3, 3],
+        mesh.CellType.tetrahedron)
+    sim = Simulation(domain, 8.6e5, unit_length=1e-9, name="tier1_composed")
+
+    def m0(x):
+        return np.vstack((
+            0.6 * np.ones(x.shape[1]),
+            0.8 * np.cos(2.0 * np.pi * x[0] / 5.0),
+            0.8 * np.sin(2.0 * np.pi * x[0] / 5.0),
+        ))
+
+    sim.set_m(m0, normalise=True)
+    sim.alpha = lambda x: 0.3 + 0.2 * x[0] / 5.0  # spatially varying alpha
+
+    sim.add(Exchange(lambda x: 1.3e-11 * (1.0 + 0.3 * x[0] / 5.0)))  # varying A
+    sim.add(DMI(lambda x: 1.0e-3 * (1.0 + 0.2 * x[0] / 5.0)))  # varying D
+    sim.add(UniaxialAnisotropy(1.0e4, (0.0, 0.0, 1.0)))  # constant axis
+    sim.add(CubicAnisotropy(  # assemble=False (default) with varying K2
+        (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), K1=1.0e3,
+        K2=lambda x: 5.0e3 * (1.0 + 0.3 * x[0] / 5.0), K3=1.0e2,
+        assemble=False))
+    osc = OscillatingZeeman(H0=(0.0, 0.0, 5.0e4), freq=1.0e8, phase=0.0, t_off=None)
+    sim.add(osc)  # no explicit with_time_update: exercises the Task 6 auto-connect
+
+    sim.mark_regions(lambda pt: 1 if pt[0] < 2.5 else 2)
+    return sim, osc
+
+
+def test_tier1_composed_physics():
+    """Every Tier 1 slice composed on one Simulation: varying-A Exchange,
+    varying-D DMI, constant-axis uniaxial anisotropy, ``assemble=False``
+    cubic anisotropy with varying K2, an auto-connected ``OscillatingZeeman``,
+    spatially varying ``alpha``, and ``mark_regions``."""
+    sim, osc = _composed_physics_sim()
+
+    # each interaction's field is finite and genuinely nonzero.
+    for name in sim.interactions():
+        H = sim.get_interaction(name).compute_field()
+        assert np.all(np.isfinite(H))
+        assert np.max(np.abs(H)) > 0.0, name
+
+    # H_eff equals the sum of the parts (t=0.0, needed for the auto-connected
+    # OscillatingZeeman).
+    H_eff = sim.llg.effective_field.compute(t=0.0)
+    parts_sum = sum(
+        sim.get_interaction(name).compute_field() for name in sim.interactions())
+    np.testing.assert_allclose(H_eff, parts_sum, rtol=1e-10, atol=1e-10)
+
+    # per-region energies sum to the total.
+    total = sim.compute_energy("total")
+    region_sum = (
+        sim.compute_energy("total", region=1)
+        + sim.compute_energy("total", region=2))
+    np.testing.assert_allclose(region_sum, total, rtol=1e-11, atol=1e-18)
+
+    # a short run_until advances, with the oscillating field tracking
+    # cos(2*pi*f*t), and |m| stays 1.
+    freq = 1.0e8
+    t_end = 2.0e-10
+    sim.run_until(t_end)
+
+    expected_scale = np.cos(2.0 * np.pi * freq * sim.t)
+    expected = np.array([0.0, 0.0, 5.0e4]) * expected_scale
+    H_osc = osc.compute_field().reshape(-1, 3)
+    np.testing.assert_allclose(
+        H_osc, np.broadcast_to(expected, H_osc.shape), atol=1.0, rtol=1e-6)
+
+    m_xxx = sim.m.reshape(3, -1)
+    norms = np.sqrt(np.sum(m_xxx ** 2, axis=0))
+    np.testing.assert_allclose(norms, 1.0, atol=1e-6)
 
 
 def test_region_m_average_is_restricted():

@@ -466,8 +466,9 @@ Before editing the matching module in `src/finmag`, check that:
   important finding: legacy's own `hysteresis()`/`hysteresis_loop()`, when
   actually exercised (including against the frozen oracle), do not achieve
   an independent re-relaxation after their first stage -- preserved
-  verbatim, not fixed. PBC, non-FK demag, stochastic/STT kernels, regions,
-  and normal-mode consumers remain unported. [Claude Sonnet 5]
+  verbatim, not fixed (DELIBERATE DEVIATION, USER ACCEPTANCE PENDING). PBC,
+  non-FK demag, stochastic/STT kernels, regions, and normal-mode consumers
+  remain unported. [Claude Sonnet 5]
 - Task 10 established the first aggregated direct-source DOLFINx gate
   (`dev/bin/verify-dolfinx-m5`), running every `dolfinx-src-*` focused pytest
   gate and MPI probe plus a new core physical-time smoke
@@ -537,12 +538,36 @@ Before editing the matching module in `src/finmag`, check that:
   on `Simulation` (see the Task 9/6 updates above). Spatially varying
   material parameters and regions (Task 16) and LLB/normal-mode consumers
   remain outside this slice. [Claude Sonnet 5]
+  DELIBERATE DEVIATION, USER ACCEPTANCE PENDING: the legacy `TimeZeemanPython`
+  scalar-spatial-envelope-with-vector-`time_fun` branch (not exercised by any
+  legacy test) is not ported; whole-branch review fix round 2 adds a by-name
+  gate (`TimeZeemanPython.setup` probes `time_fun(0.0)` and raises a named
+  `NotImplementedError` instead of a generic `ValueError`/`TypeError`
+  surfacing later), pinned in
+  `test_timezeeman_dolfinx.py::test_time_zeeman_python_vector_time_fun_is_deferred_by_name`.
+  DELIBERATE DEVIATION, USER ACCEPTANCE PENDING (also carried in
+  `transition-notes.org`'s Task 15 section): `DiscreteTimeZeeman.update`
+  bypasses `set_value()`, so the cached energy form built once in `setup()`
+  never sees a later interval update -- `compute_energy()` silently goes
+  stale while `compute_field()`/`energy_density()` stay current, discovered
+  building the Task 15 oracle fixture and preserved verbatim, not fixed
+  (the `hysteresis`/`hysteresis_loop` no-independent-re-relaxation deviation
+  noted in the `Simulation` entry above carries the same USER ACCEPTANCE
+  PENDING status). [Claude Sonnet 5]
   Task 16 update: spatially varying `A`/`K1`/`K2`/anisotropy axis/`Ms` are now
   SUPPORTED with the established DG0 (A) / CG1 (K1/K2/axis) / caller-space (Ms)
   placement; spatially varying LLG `alpha` is per-node in the damping term and
   `gamma_LL`; `sim.mark_regions` + per-region `compute_energy(dx=...)` /
   `m_average_in_region` are ported (region-restricted submesh field output
-  stays deferred). Gate: `dolfinx-src-varparams-pytest`
+  stays deferred). Axis contract split (`axis_coefficient` in
+  `energy_base.py`, register clarification): a *constant* uniaxial-anisotropy
+  axis is normalised to a unit vector (restoring the intended legacy cosine
+  contract -- a pre-Tier-1/Task 5 deviation from the letter of the legacy
+  class); a *spatially varying* axis (Task 16) is used exactly as given, with
+  no per-node normalisation -- bug-compatible with legacy, which never
+  renormalised an interpolated varying axis either. See
+  `transition-notes.org`'s Task 16 "Axis contract" section. Gate:
+  `dolfinx-src-varparams-pytest`
   (`test_variable_params_dolfinx.py`, oracle fixtures
   `variable_params_oracle.json`/`spatially_varying_alpha_rhs.json`/
   `cubic_k2_varying_oracle.json`). Only legacy string Expressions, varying

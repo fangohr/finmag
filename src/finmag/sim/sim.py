@@ -2,9 +2,10 @@
 
 This is the direct DOLFINx port of the legacy ``finmag.sim.sim.Simulation``. It
 preserves the public core surface -- construction on a DOLFINx mesh with scalar
-``Ms``/``unit_length``/``name``/scalar ``alpha``/scalar ``gamma``; ``set_m``,
-``m``, ``m_field``, ``m_average``, ``t``, ``dmdt``; the interaction registry
-(``add``/``get_interaction``/``interactions``/``remove_interaction`` and the
+or spatially varying ``Ms``/``alpha`` (Task 16), scalar ``unit_length``/``name``/
+``gamma``; ``set_m``, ``m``, ``m_field``, ``m_average``, ``t``, ``dmdt``; the
+interaction registry (``add``/``get_interaction``/``interactions``/
+``remove_interaction`` and the
 energy accessors); integrator creation/tolerances/``advance_time``/``run_until``/
 ``reset_time``/``reinit_integrator``; and the ``sim_with`` convenience factory
 for Exchange, Zeeman, uniaxial anisotropy and DMI -- all driven through the ported
@@ -234,7 +235,12 @@ class Simulation(object):
 
     @property
     def alpha(self):
-        """The scalar Gilbert damping constant :math:`\\alpha`."""
+        """The Gilbert damping constant :math:`\\alpha`.
+
+        Returns a Python ``float`` when uniform (preserving the legacy scalar
+        contract) or a per-node array when spatially varying (Task 16); see
+        ``finmag.physics.llg.LLG.alpha``.
+        """
         return self.llg.alpha
 
     @alpha.setter

@@ -29,8 +29,10 @@ Validates the ported ``finmag.energies.dmi.DMI`` against:
   ``src/finmag/tests/fixtures/gen_dmi_oracle.py``;
 - dmi_type dispatch, including the by-name deferral of the undocumented
   legacy ``'D2D'`` variant and unsupported strings;
-- by-name deferral of spatially varying ``D`` and every non-``box-assemble``
-  method (matching the Task 5 energy foundation exactly);
+- support for spatially varying ``D`` (Task 16: callable/Field/Function,
+  placed in DG0), with by-name deferral kept only for legacy string
+  Expressions and every non-``box-assemble`` method (matching the Task 5
+  energy foundation exactly);
 - ``sim_with(D=...)`` construction.
 
 [Claude Sonnet 5]
@@ -45,7 +47,6 @@ from dolfinx import fem, mesh
 from mpi4py import MPI
 
 from finmag.energies import DMI
-from finmag.energies.energy_base import mu0
 from finmag.field import Field
 from finmag.sim.sim import Simulation, sim_with
 
@@ -204,7 +205,6 @@ def test_bulk_dmi_chirality_sign_flips_with_handedness():
 
     assert right.compute_energy() == pytest.approx(D * c, rel=1e-13)
     assert left.compute_energy() == pytest.approx(-D * c, rel=1e-13)
-    assert right.compute_energy() < 0 or left.compute_energy() < 0
     assert right.compute_energy() == pytest.approx(-left.compute_energy(), rel=1e-13)
 
 
