@@ -47,6 +47,19 @@
 # scipy-vs-sundials cross-backend agreement. scipy remains the DOLFINx default
 # backend; sundials is a fully validated opt-in. [Claude Opus 4.8]
 #
+# Task 21 makes this gate run against an INSTALLED editable package instead of
+# `PYTHONPATH=src` (`pyproject.toml`, src-layout, setuptools). It adds three
+# steps right after `dolfinx-versions`: `dolfinx-install-editable` (`pip
+# install -e . --no-deps`), `dolfinx-native-build` (the documented explicit
+# second step of the native-extension story -- compiles `bem_arrays.so` and
+# `sundials.so` via `native/Makefile`; not strictly required since
+# `finmag.native.init` also triggers `make` as an import side effect, but
+# gives a fast, visible failure if the native toolchain breaks), and
+# `dolfinx-provenance-check` (`import finmag` must resolve under this
+# checkout's `src/`). Every `dolfinx-src-*` task migrated off `PYTHONPATH=src`;
+# exactly one fallback step (`dolfinx-src-import-pythonpath-fallback`) keeps
+# that mechanism exercised during the transition. [Claude Sonnet 5]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -69,8 +82,20 @@ install_tracked_files_guard "${repo_root}" \
 echo "==> pixi run -e dolfinx dolfinx-versions"
 pixi run -e dolfinx dolfinx-versions
 
+echo "==> pixi run -e dolfinx dolfinx-install-editable"
+pixi run -e dolfinx dolfinx-install-editable
+
+echo "==> pixi run -e dolfinx dolfinx-native-build"
+pixi run -e dolfinx dolfinx-native-build
+
+echo "==> pixi run -e dolfinx dolfinx-provenance-check"
+pixi run -e dolfinx dolfinx-provenance-check
+
 echo "==> pixi run -e dolfinx dolfinx-src-import"
 pixi run -e dolfinx dolfinx-src-import
+
+echo "==> pixi run -e dolfinx dolfinx-src-import-pythonpath-fallback"
+pixi run -e dolfinx dolfinx-src-import-pythonpath-fallback
 
 echo "==> pixi run -e dolfinx dolfinx-src-import-pytest"
 pixi run -e dolfinx dolfinx-src-import-pytest

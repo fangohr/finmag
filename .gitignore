@@ -43,3 +43,9 @@ install/docker/finmag/finmag-compiled.done
 install/docker/finmag/finmag-repo-clone.done
 .ipynb_checkpoints/
 /src/finmag/tests/cython/test_cython.c
+# Task 21: setuptools editable-install metadata/build artifacts. `pip install
+# -e . --no-deps` (the `dolfinx-install-editable` pixi task) writes
+# `src/finmag.egg-info/` next to the package and may create a top-level
+# `build/` directory; neither is tracked output. [Claude Sonnet 5]
+*.egg-info/
+/build/

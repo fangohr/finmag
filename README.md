@@ -82,6 +82,56 @@ Docker image which contains all of the dependencies necessary to run finmag is h
 
 More detailed comments on the installation of finmag on a host machine are in [`install/README.md`](install/README.md).
 
+### Installing the DOLFINx port (pixi)
+
+The in-progress DOLFINx port (`src/finmag` on Python 3.12 + `fenics-dolfinx`)
+is installed as a regular editable Python package via [pixi](https://pixi.sh)
+and a `pyproject.toml` (setuptools, src-layout). This is currently the only
+supported install path for this lane: there is no published wheel, and
+`PYTHONPATH=src` (the earlier transitional workaround, see
+`transition-notes.org`) is kept only as a single fallback task.
+
+```bash
+# 1. Create/sync the dolfinx pixi environment (conda-forge fenics-dolfinx,
+#    mpi4py, petsc4py, sundials, the native build toolchain, ...).
+pixi install -e dolfinx
+
+# 2. Install finmag itself into that environment as an editable package.
+#    --no-deps: numpy/scipy/the FEM stack/SUNDIALS come from the conda/pixi
+#    environment above, not from PyPI (see pyproject.toml's dependency
+#    comment for why: dolfinx/mpi4py/petsc4py/sundials are not reliable pip
+#    installs for this project and must stay tied to the conda build they are
+#    linked against).
+pixi run -e dolfinx dolfinx-install-editable
+
+# 3. Build the native extensions (bem_arrays.so, sundials.so) via the
+#    existing native/Makefile. Optional up front -- `finmag.native` triggers
+#    the same `make` as an import side effect -- but recommended so a broken
+#    native toolchain fails fast and visibly instead of inside the first test
+#    that imports finmag.native.
+pixi run -e dolfinx dolfinx-native-build
+
+# 4. Confirm `import finmag` resolves to this checkout (not some other
+#    installed copy).
+pixi run -e dolfinx dolfinx-provenance-check
+```
+
+There is deliberately no build-backend hook that invokes `native/Makefile`
+during `pip install`: the native modules are C++/Boost.Python extensions
+linked directly against this pixi environment's conda-provided compiler,
+Boost, and SUNDIALS libraries, and are rebuilt in place under
+`src/finmag/native/`, which an editable install picks up automatically with
+no reinstall step. A non-editable (built) wheel is explicitly a non-goal for
+this lane: the compiled `.so` files are linked against this specific conda
+environment's libraries (Boost.Python ABI tag, SUNDIALS 7 sonames, etc.) and
+are not portable/redistributable the way a wheel implies.
+
+Every focused DOLFINx port gate (`pixi run -e dolfinx dolfinx-src-*`) and the
+aggregated `dev/bin/verify-dolfinx-m5` witness run against this installed
+package. The immutable legacy-oracle comparison lane
+(`dev/bin/run-legacy-oracle`) is unaffected: its reference checkouts predate
+`pyproject.toml` and do not need it.
+
 ## Binder
 
 If you want to try using Finmag in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?filepath=binder%2Findex.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
