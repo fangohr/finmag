@@ -66,8 +66,24 @@ doc = {
     "oracle": {
         "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
         "command": [
-            "pixi", "run", "--locked", "python", "gen_llg_fixture.py",
+            "dev/bin/run-legacy-oracle",
+            "--",
+            "pixi",
+            "run",
+            "--locked",
+            "env",
+            "PYTHONPATH=src",
+            "python",
+            "<abs-path-to>/gen_llg_rhs_nonuniform.py",
         ],
+        "generator": "src/finmag/tests/fixtures/gen_llg_rhs_nonuniform.py",
+        "generator_note": (
+            "Committed driver run at the oracle by absolute path via "
+            "dev/bin/run-legacy-oracle (the script does not exist inside the "
+            "detached oracle checkout, so it is supplied by absolute path). "
+            "The RHS itself is computed by the frozen finmag LLG.solve; the "
+            "driver only sorts and serialises coordinate-paired nodal values."
+        ),
     },
     "description": (
         "Deterministic LLG dm/dt on a 1D interval mesh with spatially varying "

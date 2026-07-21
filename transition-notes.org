@@ -2993,6 +2993,13 @@ the serial-only guard is covered by a focused serial test instead.
 =Simulation=, the SciPy/Sundials drivers, STT, thermal, and demag consumers
 remain unported. [Claude Opus 4.8]
 
+- Deliberate =set_pins= deviation: legacy =set_pins= logged
+  =logger.error(...)= for out-of-range pin indices and silently kept the
+  previous =_pins= array unchanged; the ported =set_pins= instead raises
+  =ValueError= for the same condition. This is a fail-fast improvement --
+  silently keeping stale pins on a bad index is a latent correctness trap --
+  and is covered by =test_out_of_range_pins_raise=. [Claude Sonnet 5]
+
 ** First M5 / DOLFINx Core Simulation Slice
 
 M5 starts with a reduced core-path wrapper rather than a legacy API port:

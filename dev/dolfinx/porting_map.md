@@ -116,6 +116,11 @@ module with its tests.
   `solve_for` adapter. The deterministic dm/dt is transcribed from the native
   `calc_llg_dmdt` (`native/src/llg/llg.cc`), including the `c*(1-|m|^2)*m` norm-
   relaxation term. [Claude Opus 4.8]
+- Task 7 addendum: legacy `set_pins` logged `logger.error(...)` for
+  out-of-range pin indices and silently kept the previous `_pins` array
+  unchanged; the ported `set_pins` instead raises `ValueError` for the same
+  condition, a deliberate fail-fast deviation covered by
+  `test_out_of_range_pins_raise`. [Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
