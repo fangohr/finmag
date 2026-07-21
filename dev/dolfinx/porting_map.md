@@ -243,23 +243,48 @@ module with its tests.
   ever gated *field* computation (energy is always box-assembled in both
   legacy and here): `assemble=True` reuses the same box-assemble weak-form
   derivative `EnergyBase` already provides; the legacy-default
-  `assemble=False` native/compiled direct-field path is not part of the
-  DOLFINx port and raises `NotImplementedError` by name, but only when
-  `compute_field()` is actually called -- construction and
-  `compute_energy()` keep working under the legacy default exactly as
-  `cubic_anisotropy_test.py` itself exercises. Legacy's own `sim_with` never
-  had cubic-anisotropy parameters, so `Simulation.add(CubicAnisotropy(...,
-  assemble=True))` is the full integration surface. Cubic-symmetry
-  easy/hard-axis ordering for `K1>0` (`<100>` easy, `<111>` hard, exact
-  `K1/4`/`K1/3` energy differences from `<100>`) is verified directly from
-  the transcribed form, not assumed. One coordinate-ordered legacy oracle
-  fixture case (`cubic_3d`; schema v1,
+  `assemble=False` uses the native `compute_cubic_field` analytic field.
+  Legacy's own `sim_with` never had cubic-anisotropy parameters, so
+  `Simulation.add(CubicAnisotropy(...))` is the full integration surface.
+  Cubic-symmetry easy/hard-axis ordering for `K1>0` (`<100>` easy, `<111>`
+  hard, exact `K1/4`/`K1/3` energy differences from `<100>`) is verified
+  directly from the transcribed form, not assumed. One coordinate-ordered
+  legacy oracle fixture case (`cubic_3d`; schema v1,
   `src/finmag/tests/fixtures/cubic_anisotropy_oracle.json`/
   `gen_cubic_anisotropy_oracle.py`, using the exact
   `cubic_anisotropy_test.py` constants/axes plus a nonuniform unit-norm `m`)
   confirms faithful transcription against the frozen legacy class to near
   machine precision (energy relative error `8.3e-14`; field relative error
   `1.4e-15`). Gate: `dolfinx-src-cubicanis-pytest`. [Claude Sonnet 5]
+
+  Task 14 fix round 1 [Claude Opus 4.8]: the initial slice ported only
+  `assemble=True` and raised `NotImplementedError` on `compute_field()` for
+  the legacy-*default* `assemble=False`, which made a default-constructed
+  `CubicAnisotropy` unable to participate in dynamics -- a functional
+  regression the Task 14 review flagged (legacy *capability* is the parity
+  bar, not just legacy test usage). Remedy 2: `_compute_field_analytic` now
+  ports the native `compute_cubic_field` path as a NumPy transcription of the
+  hand-derived closed form `H = -1/(mu0 Ms) dE/dm` (chain rule through
+  `a=u1.m`, `b=u2.m`, `c=u3.m`), restoring the legacy default's *capability*
+  with the legacy default's *discretisation* (exact nodal analytic field, not
+  the box-assemble derivative). Both flags now support `compute_field()` and
+  dynamics; they differ only in discretisation and converge together under
+  refinement (box-vs-analytic rel. L2 gap for `all_nonzero` at n=2,4,8 =
+  0.616/0.355/0.138). Companion native-field fixture
+  `cubic_anisotropy_native_oracle.json` (`gen_cubic_anisotropy_native_oracle.py`,
+  same oracle commit; K1/K2/K3-only + all-nonzero cases; Ms on CG1 because the
+  native routine needs a per-vertex Ms array) matches the ported analytic
+  field to ~2e-15 per case. DELIBERATE DEVIATION, USER ACCEPTANCE PENDING:
+  the legacy native routine has a real K2 typo at
+  `native/src/llg/energy.cc:116` (`hz[i] += K2[2]*(...)` -- fixed index `2`
+  where every other line uses per-node `K2[i]`); it is numerically dormant
+  for the constant K2 this slice supports (uniform nodal K2 array so
+  `K2[2] == K2[i]`; the `k2_only` oracle matches the *correct* derivation to
+  2.7e-15), so the legacy K2 native-field bug is not reproduced. The port
+  implements the correct per-node field unconditionally and would diverge
+  from legacy only under spatially varying K2 (deferred by name). See
+  `transition-notes.org` Task 14 "assemble flag" section for the full
+  derivation, C++ comparison, and per-case numbers.
 - Wiring: `RelaxationParameters`/`PrototypeSimulation.energy_terms()` now
   include `dmi_constant` and `cubic_anisotropy_K1`/`K2`/`K3`/`u1`/`u2`
   fields, both defaulting to inert values. `dmi_energy` requires a 3D mesh, and

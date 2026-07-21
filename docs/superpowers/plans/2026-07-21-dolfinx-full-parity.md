@@ -57,6 +57,12 @@ exports, focused DOLFINx tests.
   constants/axes as `cubic_anisotropy_test.py`) and a legacy oracle fixture.
 - [x] Replace the fail-forward pin; new gate `dolfinx-src-cubicanis-pytest`
   folded into `verify-dolfinx-m5`.
+- [x] Fix round 1 [Claude Opus 4.8]: port the legacy-default `assemble=False`
+  native analytic field (`H = -1/(mu0 Ms) dE/dm`) so a default-constructed
+  `CubicAnisotropy` participates in dynamics (review Important finding). Both
+  field paths now work; documented the dormant legacy K2 `energy.cc:116`
+  native typo (DELIBERATE DEVIATION, USER ACCEPTANCE PENDING) with per-term
+  native oracle fixtures and a box->analytic convergence check.
 
 ## Task 15: Port time-dependent Zeeman and hysteresis
 

@@ -9,7 +9,7 @@ from ufl import inner
 
 from finmag.field import Field
 
-from .energy_base import EnergyBase, _require_cg1_magnetisation
+from .energy_base import EnergyBase, _require_cg1_magnetisation, mu0
 
 
 class CubicAnisotropy(EnergyBase):
@@ -31,16 +31,36 @@ class CubicAnisotropy(EnergyBase):
 
     The legacy ``assemble`` flag chose between two different *field*
     computation algorithms; the total *energy* is always box-assembled, in
-    both the legacy class and here. ``assemble=True`` used the very same
-    box-assemble weak-form derivative this port always uses for
-    ``compute_field()``. ``assemble=False`` (the legacy default) used a
-    separate native/compiled direct computation
-    (``finmag.native.llg.compute_cubic_field``) that is not part of the
-    DOLFINx port. Construction and ``compute_energy()`` therefore work
-    identically regardless of ``assemble`` (matching the legacy default
-    constructor call exactly); ``compute_field()`` -- and anything built on
-    it, e.g. ``EffectiveField``/dynamics -- requires ``assemble=True`` and
-    raises ``NotImplementedError`` by name otherwise.
+    both the legacy class and here. ``assemble=True`` uses the box-assemble
+    weak-form derivative provided by ``EnergyBase.compute_field``.
+    ``assemble=False`` (the legacy default) uses the native/compiled direct
+    computation ``finmag.native.llg.compute_cubic_field`` in the legacy code;
+    this port reproduces that path in NumPy as ``_compute_field_analytic`` --
+    the closed-form nodal field
+
+    ``H = -1/(mu0*Ms) * dE/dm``
+
+    with, for each axis ``u_k`` and its projection ``p_k in {a, b, c}``,
+
+    ``dE/dp1 = 2*K1*a*(b**2+c**2) + 2*K2*a*b**2*c**2 + 4*K3*a**3*(b**4+c**4)``
+
+    (and cyclically for ``p2``/``p3``), giving ``dE/dm = (dE/da)*u1 +
+    (dE/db)*u2 + (dE/dc)*u3``. Both flags therefore support ``compute_field``
+    (and dynamics via ``EffectiveField``); they differ only in discretisation
+    (exact nodal analytic field vs box-assemble weak-form derivative), which
+    is the legacy behaviour exactly, and the two agree under mesh refinement.
+
+    Native K2 typo (DELIBERATE DEVIATION, documented): the legacy native
+    routine ``native/src/llg/energy.cc:116`` writes the K2 contribution's
+    ``hz`` line as ``hz[i] += K2[2]*(...)`` -- a fixed node index ``2`` where
+    every other line uses the per-node ``K2[i]``. For the spatially *constant*
+    ``K2`` supported by this slice the nodal ``K2`` array is uniform, so
+    ``K2[2] == K2[i]`` and the typo is numerically dormant: the native oracle
+    reproduces the correct analytic field to ~1e-12 (see
+    ``test_native_oracle_*`` and the K2 fixture). This port implements the
+    *correct* per-node field unconditionally; it would only diverge from the
+    legacy native output under spatially varying ``K2``, which is deferred by
+    name. See ``transition-notes.org``/``dev/dolfinx/porting_map.md`` Task 14.
     """
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
@@ -89,16 +109,48 @@ class CubicAnisotropy(EnergyBase):
         super(CubicAnisotropy, self).setup(E_integrand, m, Ms, unit_length)
 
         if not self.assemble:
-            self.compute_field = self._compute_field_not_ported
+            self.compute_field = self._compute_field_analytic
         return self
 
-    def _compute_field_not_ported(self):
-        raise NotImplementedError(
-            "the legacy native/direct cubic-anisotropy field computation "
-            "(assemble=False, the default) is not ported to DOLFINx; "
-            "construct CubicAnisotropy(..., assemble=True) to use box "
-            "assembly for compute_field()"
-        )
+    def _compute_field_analytic(self):
+        """Legacy-default (``assemble=False``) nodal analytic effective field.
+
+        NumPy transcription of the native routine
+        ``native/src/llg/energy.cc::compute_cubic_field``: the per-node
+        analytic ``H = -1/(mu0 Ms) dE/dm`` obtained by the chain rule through
+        ``a = u1.m``, ``b = u2.m``, ``c = u3.m`` (see the class docstring for
+        the closed form and the K2 native-typo note). This is the legacy
+        default's *own* discretisation -- an exact pointwise field at the CG1
+        nodes -- and is deliberately distinct from the box-assemble
+        weak-form-derivative field used for ``assemble=True``; the two agree
+        in the continuum limit (they converge together under refinement).
+
+        Returned in the same flat, rank-local owned-dof layout as
+        ``EnergyBase.compute_field`` so it is a drop-in replacement.
+        """
+        m_nodes = self.m.as_array().reshape(-1, self.m.value_dim())
+        Ms = self.Ms.as_constant()
+
+        u1 = self.u1_value
+        u2 = self.u2_value
+        u3 = self.u3_value
+        a = m_nodes @ u1
+        b = m_nodes @ u2
+        c = m_nodes @ u3
+
+        K1 = self.K1_value
+        K2 = self.K2_value
+        K3 = self.K3_value
+        # dE/da, dE/db, dE/dc, then dE/dm = (dE/da) u1 + (dE/db) u2 + (dE/dc) u3.
+        g1 = (2 * K1 * a * (b**2 + c**2) + 2 * K2 * a * b**2 * c**2
+              + 4 * K3 * a**3 * (b**4 + c**4))
+        g2 = (2 * K1 * b * (a**2 + c**2) + 2 * K2 * b * a**2 * c**2
+              + 4 * K3 * b**3 * (a**4 + c**4))
+        g3 = (2 * K1 * c * (a**2 + b**2) + 2 * K2 * c * a**2 * b**2
+              + 4 * K3 * c**3 * (a**4 + b**4))
+        dEdm = g1[:, None] * u1 + g2[:, None] * u2 + g3[:, None] * u3
+        H = -(1.0 / (mu0 * Ms)) * dEdm
+        return H.reshape(-1)
 
 
 def _constant_scalar_value(value, name):

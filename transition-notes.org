@@ -4133,27 +4133,78 @@ Both legacy =CubicAnisotropy= and =UniaxialAnisotropy= always box-assemble
 the *energy* (=E_integrand*dx=) regardless of =self.assemble=; the flag only
 selects which algorithm computes the *field*: =assemble=True= uses the same
 box-assemble weak-form derivative =EnergyBase= already provides;
-=assemble=False= overrides =compute_field= with a separate native/compiled
-routine (=finmag.native.llg.compute_cubic_field=) that is not part of the
-DOLFINx port (mirroring the already-established precedent for
-=UniaxialAnisotropy=, whose ported =assemble=False= path also raises).
+=assemble=False= (the =CubicAnisotropy= *legacy default*) uses the native
+routine =finmag.native.llg.compute_cubic_field= (=native/src/llg/energy.cc=).
 
-The wrinkle specific to =CubicAnisotropy= is that its *legacy default* is
-=assemble=False= (=UniaxialAnisotropy='s legacy default is =True=), and the
-legacy oracle test itself calls =CubicAnisotropy(u1, u2, K1, K2, K3)= with
-that default -- exercising only =compute_energy()=, never =compute_field()=.
-Eagerly rejecting =assemble=False= in =__init__= (as =UniaxialAnisotropy=
-does) would therefore break the legacy class's own most common, exactly
-transcribed invocation before energy is ever computed. The port instead defers
-the by-name rejection to =compute_field()= itself: construction and
-=compute_energy()= work identically regardless of =assemble= (preserving the
-legacy default call exactly); only =compute_field()= -- and anything built on
-it, e.g. =EffectiveField=/dynamics -- raises
-=NotImplementedError("...construct CubicAnisotropy(..., assemble=True)...")=
-under the (default) unported native path. This is exercised by
-=test_default_assemble_false_computes_energy_but_defers_field= and
-=test_cubic_anisotropy_default_assemble_defers_effective_field_by_name=
-(through =Simulation=).
+**** Fix round 1 (Claude Opus 4.8): both field paths now ported
+
+The initial Task 14 slice ported only =assemble=True= and raised
+=NotImplementedError= on =compute_field()= for =assemble=False= -- but since
+=assemble=False= is the *legacy default*, that made a default-constructed
+=CubicAnisotropy= unable to participate in dynamics, a functional regression
+against the full-parity rule (legacy *capability*, not merely legacy test
+usage, is the bar). The Task 14 review flagged this as Important.
+
+Remedy 2 (controller decision): port the native analytic field path for
+=assemble=False= as a NumPy transcription
+(=CubicAnisotropy._compute_field_analytic=), restoring the legacy default's
+capability with the legacy default's *discretisation* (exact nodal analytic
+field, not the box-assemble weak-form derivative). =assemble=True= is
+unchanged. The analytic field is the closed form
+
+: H = -1/(mu0*Ms) * dE/dm
+: dE/da = 2*K1*a*(b^2+c^2) + 2*K2*a*b^2*c^2 + 4*K3*a^3*(b^4+c^4)   (cyclically for b,c)
+: dE/dm = (dE/da)*u1 + (dE/db)*u2 + (dE/dc)*u3
+
+hand-derived by the chain rule through =a=u1.m=, =b=u2.m=, =c=u3.m= from the
+legacy energy density, and verified three ways: (i) against the native C++
+=compute_cubic_field= transcription to 6e-17; (ii) against an independent
+finite-difference gradient of =E= to 8e-11; (iii) against per-term legacy
+native oracle fixtures below to ~2e-15. Now both flags support
+=compute_field()= and dynamics; they differ only in discretisation, and the
+box field converges toward the analytic field under refinement (see
+=test_box_field_converges_to_analytic_field_under_refinement=: box-vs-analytic
+relative L2 gap for =all_nonzero= at n=2,4,8 = 0.616, 0.355, 0.138; for
+=k2_only= = 0.747, 0.574, 0.270).
+
+Construction and =compute_energy()= still work identically regardless of
+=assemble= (preserving the legacy default call exactly). The now-obsolete
+"defers field" tests were rewritten to assert the working analytic field
+(=test_default_assemble_false_computes_energy_and_analytic_field=,
+=test_cubic_anisotropy_default_assemble_effective_field_works=), and a
+default-constructed dynamics test was added
+(=test_default_assemble_false_cubic_anisotropy_affects_dynamics=: =run_until=
+moves =m= under the analytic effective field, dynamics effect asserted).
+
+**** DELIBERATE DEVIATION -- legacy K2 native-field typo (USER ACCEPTANCE PENDING)
+
+The reviewer flagged an apparent bug in =native/src/llg/energy.cc:116=: the K2
+contribution's =hz= line reads
+
+: hz[i] += K2[2]*(t1*u1_z+t2*u2_z+t3*u3_z);   // energy.cc:116
+
+using a *fixed* node index =2= where the =hx=/=hy= lines (and every other
+line) use the per-node =K2[i]=. The correct expression is
+
+: hz[i] += K2[i]*(t1*u1_z+t2*u2_z+t3*u3_z);
+
+Following the mandatory K2-typo protocol (derive by hand, do not eyeball; then
+confront the native oracle): the typo is a *real* coding bug, but it is
+**numerically dormant for the spatially constant K2 this slice supports**.
+The native routine receives =K2= as a *nodal array*
+(=self.K2 = assemble(K2_field*v*dx)/volumes=); for constant K2 every entry is
+equal, so =K2[2] == K2[i]= and the wrong index selects the same value. The
+K2-only native oracle (case =k2_only=) therefore matches the *correct*
+hand-derived analytic field to 2.7e-15 (measured;
+=test_native_oracle_k2_typo_is_dormant_for_constant_k2= pins this, whole field
+incl. the =hz= component the typo touches). The port implements the *correct*
+per-node field unconditionally; it would diverge from the legacy native output
+*only* under spatially varying =K2=, which is deferred by name in this slice.
+The independent arbiter (box-assemble field) converges toward the correct
+analytic field, not a K2[2] variant (the convergence check above), confirming
+the correct field is the continuum limit. Marked USER ACCEPTANCE PENDING:
+the legacy K2 native-field bug is not reproduced (it cannot manifest under the
+supported constant-K2 case, and the port is correct where legacy is buggy).
 
 *** Cubic-symmetry easy/hard-axis ordering (verified, not assumed)
 
@@ -4197,6 +4248,22 @@ both far tighter than the declared fixture tolerances (=rtol=1e-9=), so
 observed disagreement is floating-point summation-order noise, not a solver
 residual or a transcription error.
 
+Fix round 1 (Claude Opus 4.8) adds a companion native-field fixture
+=src/finmag/tests/fixtures/cubic_anisotropy_native_oracle.json= (schema v1,
+generator =gen_cubic_anisotropy_native_oracle.py=), same oracle commit and
+same mesh/=m=/axes/=Ms= family, but the legacy class is constructed with the
+*default* =assemble=False= so the recorded =H_vertex= is the *native*
+=compute_cubic_field= analytic field. Four sub-cases isolate each term
+(=k1_only=, =k2_only=, =k3_only=) plus =all_nonzero=, so the pure
+transcription of each of K1/K2/K3 can be checked independently; the =k2_only=
+case is the executable evidence for the =energy.cc:116= K2[2] typo being
+dormant for constant K2. Ms is placed on a CG1 (nodal) space in this
+generator because the native routine expects a per-vertex Ms array, not the
+per-cell DG0 one (Ms is constant, so the value and the box-assembled energy
+are unchanged). Measured agreement, ported analytic field vs native oracle:
+=k1_only= 2.1e-15, =k2_only= 2.7e-15, =k3_only= 2.2e-15, =all_nonzero= 2.0e-15
+-- machine precision, confirming pure transcription.
+
 *** TDD evidence
 
 Before this slice, =CubicAnisotropy(...)= raised the raw
@@ -4235,15 +4302,18 @@ tracked tree; =pixi.lock= untouched.
 
 Spatially varying =K1=/=K2=/=K3= (=Field=/callable/string) and spatially
 varying =u1=/=u2= axes (=Field=/callable/string-tuple) raise
-=NotImplementedError= by name (Task 16). The legacy-default
-=assemble=False= native/direct field-computation path raises
-=NotImplementedError= by name on =compute_field()= only (construction and
-=compute_energy()= work identically to legacy regardless of =assemble=, see
-above). Legacy's own =sim_with= never had cubic-anisotropy parameters, so
-there is no =sim_with= wiring gap to close; =Simulation.add(CubicAnisotropy(
-..., assemble=True))= is the full integration surface, exercised together
-with a genuine dynamics effect (a low-symmetry initial =m= precesses/relaxes
-under the resulting nonzero torque) in
-=test_cubic_anisotropy_affects_dynamics=.
+=NotImplementedError= by name (Task 16). As of fix round 1 (Claude Opus 4.8)
+*both* field paths are ported: =assemble=True= (box-assemble weak-form
+derivative) and the legacy-default =assemble=False= (native analytic field,
+=_compute_field_analytic=); neither raises. Legacy's own =sim_with= never had
+cubic-anisotropy parameters, so there is no =sim_with= wiring gap to close;
+=Simulation.add(CubicAnisotropy(...))= is the full integration surface,
+exercised with genuine dynamics effects for *both* the =assemble=True=
+(=test_cubic_anisotropy_affects_dynamics=) and legacy-default
+=assemble=False= (=test_default_assemble_false_cubic_anisotropy_affects_dynamics=)
+constructors -- a low-symmetry initial =m= precesses/relaxes under the
+resulting nonzero torque. The one remaining deliberate deviation is the
+dormant legacy K2 native-field typo documented above (USER ACCEPTANCE
+PENDING: not reproduced under the supported constant-K2 case).
 
-[Claude Sonnet 5]
+[Claude Sonnet 5]; fix round 1 [Claude Opus 4.8]

@@ -147,10 +147,11 @@ def run_probe():
     anisotropy_function = Field(vector_space, anisotropy.compute_field())
     _assert_function_ghosts_match_owners(anisotropy_function)
 
-    # Cubic anisotropy (Task 14): collective energy agreement across ranks,
-    # an owned/ghost-consistent field under assemble=True, and the by-name
-    # deferral of the legacy-default assemble=False field path -- exercised
-    # here with the same distributed m/Ms already used above.
+    # Cubic anisotropy (Task 14): collective energy agreement across ranks and
+    # owned/ghost-consistent fields under *both* field paths -- the
+    # assemble=True box-assemble weak-form derivative and the legacy-default
+    # assemble=False native analytic field (fix round 1) -- exercised here with
+    # the same distributed m/Ms already used above.
     cubic = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0, K2=1.0,
                             assemble=True)
     cubic.setup(m, Ms)
@@ -161,18 +162,14 @@ def run_probe():
     cubic_function = Field(vector_space, H_cubic)
     _assert_function_ghosts_match_owners(cubic_function)
 
-    cubic_default = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0)
+    cubic_default = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0,
+                                    K2=1.0)  # default assemble=False
     cubic_default.setup(m, Ms)
     assert np.isfinite(cubic_default.compute_energy())
-    try:
-        cubic_default.compute_field()
-    except NotImplementedError as error:
-        assert "assemble=True" in str(error)
-    else:
-        raise AssertionError(
-            "assemble=False cubic-anisotropy compute_field() was not "
-            "rejected by name"
-        )
+    H_cubic_default = cubic_default.compute_field()
+    assert np.max(np.abs(H_cubic_default)) > 0.0
+    cubic_default_function = Field(vector_space, H_cubic_default)
+    _assert_function_ghosts_match_owners(cubic_default_function)
 
     invalid_ms = Field(scalar_space, 2.5)
     if comm.rank == 0:
