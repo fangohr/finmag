@@ -168,7 +168,11 @@ module with its tests.
   `mesh_info` (from `sim_details`), `profile`, `close_logfile`, and the
   `instances_*` management family (`instances_list_all`,
   `instances_delete_all`, `instances_delete_all_others`,
-  `instances_alive_count`) plus `shutdown`. They now raise a plain
+  `instances_alive_count`) plus `shutdown`; and, on the ported `LLG` itself,
+  the legacy full-moment `M`/`M_average` properties (superseded by the unit
+  `m`/`m_average` contract) and the STT enable flags
+  `do_slonczewski`/`do_zhangli` (STT stays deferred behind
+  `set_stt`/`set_zhangli` raising by name). They now raise a plain
   `AttributeError` rather than a by-name `NotImplementedError`, accepted by
   review as a judgment-call deferral. [Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
@@ -344,9 +348,11 @@ Before editing the matching module in `src/finmag`, check that:
   added only for a concrete output/restart consumer; multi-rank ODE state is
   not claimed by the first Field/driver slices. [Codex GPT-5.6]
 - Task 9 delivered the DOLFINx-backed core `finmag.Simulation`/`sim_with`
-  (see the Task 9 update above). Demag, PBC, stochastic/STT kernels, the
-  scheduler, restart, NDT/VTK output, regions, hysteresis, and normal-mode
-  consumers remain unported and fail by name when requested.
+  (see the Task 9 update above). FK demag (Task 11b, below) and the
+  scheduler/restart/NDT/VTK output surfaces (Task 12, below) are now ported
+  and supported; PBC, the non-FK demag variants, stochastic/STT kernels,
+  regions, hysteresis, and normal-mode consumers remain unported and fail by
+  name when requested. [Claude Sonnet 5]
 - Task 10 established the first aggregated direct-source DOLFINx gate
   (`dev/bin/verify-dolfinx-m5`), running every `dolfinx-src-*` focused pytest
   gate and MPI probe plus a new core physical-time smoke
@@ -384,8 +390,9 @@ Before editing the matching module in `src/finmag`, check that:
   `K2`, anisotropy axes and `Ms`, matrix/project/direct energy methods,
   region/PBC interaction behavior, `DipolarField`, and time-dependent Zeeman
   variants remain outside this slice. The ported interactions are currently
-  direct-use building blocks with DOLFINx `Field`; `Simulation`, hysteresis,
-  LLB, and normal-mode consumers remain unported. [Codex GPT-5.6]
+  direct-use building blocks with DOLFINx `Field`; at the time of this Task 5
+  slice, hysteresis, LLB, and normal-mode consumers remained unported
+  (`Simulation` itself is ported as of Task 9/11b/12, above). [Codex GPT-5.6]
 - Task 6: `EffectiveField` is now a direct DOLFINx production module. It keeps
   the exact registry API (`add`/`get`/`exists`/`all`/`remove`, unique-name
   `ValueError`, `UnknownInteraction`), total field/energy accumulation, the
@@ -398,9 +405,10 @@ Before editing the matching module in `src/finmag`, check that:
   `finmag.util.helpers.vector_valued_function` (which pulls in legacy
   `dolfin`); it is reimplemented directly with `Field(m.functionspace,
   interaction.compute_field()).f` and explicitly rejects the historical
-  (already-unused) `region` argument rather than silently ignoring it.
-  `Simulation`, hysteresis, LLB, and normal-mode consumers remain unported.
-  [Claude Sonnet 5]
+  (already-unused) `region` argument rather than silently ignoring it. At the
+  time of this Task 6 slice, hysteresis, LLB, and normal-mode consumers
+  remained unported (`Simulation` itself is ported as of Task 9/11b/12,
+  above). [Claude Sonnet 5]
 - The production box foundation deliberately requires a blocked
   three-component CG1 magnetisation space. Some higher-order Lagrange row-sum
   lumped weights are non-positive, so accepting arbitrary elements would fail

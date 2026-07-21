@@ -219,6 +219,45 @@ assert not any(
 
 
 @pytest.mark.skipif(
+    importlib.util.find_spec("dolfinx") is None,
+    reason="The curated MacroGeometry stub check requires the DOLFINx environment.",
+)
+def test_macro_geometry_top_level_export_matches_energies_curated_stub():
+    """``finmag.MacroGeometry`` and ``finmag.energies.MacroGeometry`` must raise
+    the identical curated ``NotImplementedError`` -- not the raw
+    ``ModuleNotFoundError('dolfin')`` a stale ``requires_legacy_dolfin=True``
+    lazy-export flag would otherwise surface for the top-level name alone.
+    [Claude Sonnet 5]"""
+    _run_isolated(
+        """
+import sys
+import finmag
+import finmag.energies as energies
+
+assert finmag.MacroGeometry is energies.MacroGeometry
+assert finmag.MacroGeometry.__module__ == "finmag.energies.demag"
+
+try:
+    finmag.MacroGeometry()
+except NotImplementedError as error:
+    top_level_message = str(error)
+else:
+    raise AssertionError("finmag.MacroGeometry() did not raise NotImplementedError")
+
+try:
+    energies.MacroGeometry()
+except NotImplementedError as error:
+    energies_message = str(error)
+else:
+    raise AssertionError("finmag.energies.MacroGeometry() did not raise NotImplementedError")
+
+assert top_level_message == energies_message
+assert "dolfin" not in sys.modules
+"""
+    )
+
+
+@pytest.mark.skipif(
     importlib.util.find_spec("dolfin") is None
     or importlib.util.find_spec("dolfinx") is None,
     reason=(
@@ -243,7 +282,7 @@ import finmag.energies as energies
 
 assert Simulation.__module__ == "finmag.sim.sim"
 assert sim_with.__module__ == "finmag.sim.sim"
-assert MacroGeometry.__module__ == "finmag.energies.demag.fk_demag_pbc"
+assert MacroGeometry.__module__ == "finmag.energies.demag"
 assert NormalModeSimulation.__module__ == "finmag.sim.normal_mode_sim"
 assert normal_mode_simulation.__module__ == "finmag.sim.normal_mode_sim"
 assert set_logging_level.__module__ == "finmag.util.helpers"
@@ -259,12 +298,12 @@ expected_energy_modules = {
     "DMI": "finmag.energies.dmi",
     "DMI_interfacial": "finmag.energies.dmi",
     "Demag": "finmag.energies.demag",
-    "Demag2D": "finmag.energies.demag.fk_demag_2d",
+    "Demag2D": "finmag.energies.demag",
     "DiscreteTimeZeeman": "finmag.energies.zeeman",
     "EnergyBase": "finmag.energies.energy_base",
     "Exchange": "finmag.energies.exchange",
     "FixedEnergyDW": "finmag.energies.dw_fixed_energy",
-    "MacroGeometry": "finmag.energies.demag.fk_demag_pbc",
+    "MacroGeometry": "finmag.energies.demag",
     "OscillatingZeeman": "finmag.energies.zeeman",
     "ThinFilmDemag": "finmag.energies.thin_film_demag",
     "TimeZeeman": "finmag.energies.zeeman",

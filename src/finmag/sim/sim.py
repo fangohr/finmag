@@ -8,9 +8,11 @@ preserves the public core surface -- construction on a DOLFINx mesh with scalar
 energy accessors); integrator creation/tolerances/``advance_time``/``run_until``/
 ``reset_time``/``reinit_integrator``; and the ``sim_with`` convenience factory
 for Exchange, Zeeman and uniaxial anisotropy -- all driven through the ported
-``LLG``/``EffectiveField``/``Field`` stack and the SciPy integrator. No compiled
-``finmag.native`` extension, legacy ``dolfin``, scheduler, table writer, or
-per-simulation log file is used.
+``LLG``/``EffectiveField``/``Field`` stack and the SciPy integrator. FK demag
+(via the compiled ``finmag.native.bem_arrays`` extension), the coordinate-aware
+v2 ``.npz`` restart format, scheduler-driven ``run_until``, NDT output (via
+``Tablewriter``) and write-only VTK/XDMF field output are all ported and
+supported (Tasks 11b/12). No legacy ``dolfin`` is used anywhere in this module.
 
 Deliberate deviations from the legacy module (all documented in
 ``transition-notes.org`` and ``dev/dolfinx/porting_map.md``):
@@ -25,12 +27,17 @@ Deliberate deviations from the legacy module (all documented in
   arrays (matching the ``LLG`` state-vector contract), not raw backend dofs.
 - ``t`` reports ``0.0`` until an integrator exists rather than lazily creating
   one just to read the clock.
-- No table writer / scheduler / per-simulation log file: NDT/VTK output,
-  scheduling, restart, regions, hysteresis, normal modes, STT, PBC, demag, and
-  the non-``llg`` kernels all raise ``NotImplementedError`` by name when
-  requested, while never breaking import or the core paths.
+- Scheduling, restart, NDT and VTK/XDMF output are ported and supported (see
+  ``Simulation.schedule``/``run_until``, ``Simulation.save_restart_data``/
+  ``restart``, and ``Tablewriter``/``FieldSaver``). What remains deferred and
+  raises ``NotImplementedError`` (or ``ImportError`` for the native Sundials
+  case) by name when requested: the PBC/treecode/GCR demag variants, STT
+  (``set_stt``/``set_zhangli``), the ``sllg``/thermal kernel,
+  ``integrator_backend="sundials"``, normal modes, hysteresis, regions/
+  materials, and ``parallel=True`` -- none of these ever break import or the
+  core ``llg`` paths.
 
-[Claude Opus 4.8]
+[Claude Opus 4.8], [Claude Sonnet 5]
 """
 
 import logging
@@ -152,7 +159,7 @@ class Simulation(object):
             fem.form(fem.Constant(mesh, 1.0) * ufl.dx))
         self.Volume = mesh.comm.allreduce(vol_local, op=MPI.SUM)
 
-        self.driver = "cvode"
+        self.driver = "scipy"
         self.reltol = 1e-6
         self.abstol = 1e-6
         self.parallel = False

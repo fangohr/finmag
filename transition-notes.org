@@ -3256,7 +3256,12 @@ the =sim_details=-backed =length_scales=/=mesh_info=; =profile= (cProfile
 wrapper); =close_logfile= (per-simulation log handler teardown); and the
 =instances_*= class-level instance-management family (=instances_list_all=,
 =instances_delete_all=, =instances_delete_all_others=,
-=instances_alive_count=) plus =shutdown=. [Claude Sonnet 5]
+=instances_alive_count=) plus =shutdown=; and, on the ported =LLG= itself, the
+legacy full-moment =M=/=M_average= properties (A/m-scaled magnetisation,
+superseded by the unit =m=/=m_average= contract) and the STT enable flags
+=do_slonczewski=/=do_zhangli= (STT remains deferred behind =set_stt=/
+=set_zhangli= raising by name; the underlying flags are not retained as dead
+state). [Claude Sonnet 5]
 
 Dead legacy branches inside the touched core methods were removed rather than
 left half-referencing deleted helpers (the parallel/llg_stt/sllg integrator
@@ -3794,7 +3799,7 @@ The final core slice ports restart persistence, the required output surfaces
 =Simulation=. Everything is wired through the already-ported =Field=/=LLG=/
 =ScipyIntegrator= stack; no legacy =dolfin=, =finmag.native=, or =aeon= enters
 the DOLFINx import graph. Gate: =dolfinx-src-restart-output-pytest=
-(=src/finmag/tests/test_restart_output_dolfinx.py=, 18 tests), folded into
+(=src/finmag/tests/test_restart_output_dolfinx.py=, 20 tests), folded into
 =dev/bin/verify-dolfinx-m5=.
 
 *** Restart format decision (explicit deviation)
@@ -3885,7 +3890,7 @@ demag), schedules NDT saves, runs to =6e-12=, saves restart, reloads into a
 of =t= and =m= across the reload is asserted (=atol 1e-12=), with nodal unit
 norm preserved (=atol 1e-4=). The Task 10 core smoke and all prior gates
 (import 8p/2s, field 26, energies 26, effectivefield 15, llg 19, scipy 19,
-simulation 31, deferred 5, native-bem 8, demag 19, restart-output 18) remain
+simulation 31, deferred 5, native-bem 8, demag 19, restart-output 20) remain
 green; =dev/bin/verify-dolfinx-m5= passes end-to-end with a clean tracked tree.
 
 *** Deferred / deliberate deviations

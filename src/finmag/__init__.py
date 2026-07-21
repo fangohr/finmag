@@ -31,7 +31,7 @@ _LAZY_EXPORTS = {
     "Simulation": ("finmag.sim.sim", "Simulation", False),
     "sim_with": ("finmag.sim.sim", "sim_with", False),
     "Field": ("finmag.field", "Field", False),
-    "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", True),
+    "MacroGeometry": ("finmag.energies.demag", "MacroGeometry", False),
     "NormalModeSimulation": (
         "finmag.sim.normal_mode_sim",
         "NormalModeSimulation",
