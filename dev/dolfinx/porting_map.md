@@ -669,3 +669,24 @@ Before editing the matching module in `src/finmag`, check that:
   helpers, and the dolfin-based analysis/plotting utilities. `gmsh` +
   `python-gmsh` added to the dolfinx pixi feature (`pixi.lock` changed). Gate:
   `dolfinx-src-meshes-pytest`. [Claude Opus 4.8]
+- Task 18 fix round 1 (review findings on commit `867c9ca1`): the
+  dolfin-based analysis/plotting deferrals above are, explicitly, `mesh_info`,
+  `mesh_quality`, `nodal_volume`, `longest_edges`, `mesh_size`,
+  `mesh_size_plausible`, `describe_mesh_size`, `print_mesh_info`,
+  `mesh_is_periodic`, `build_mesh`, `embed3d`, `line_mesh`, `plot_mesh`,
+  `plot_mesh_with_paraview`, `plot_mesh_regions` -- the last five
+  (`mesh_size_plausible`/`describe_mesh_size`/`print_mesh_info`/
+  `plot_mesh_with_paraview`/`plot_mesh_regions`) had been deleted outright
+  (bare `AttributeError`) instead of getting by-name stubs like their
+  siblings; they now do. `ring(with_middle_plane=True)` was a legacy kwarg
+  accepted but silently ignored; it now raises `NotImplementedError` by name
+  (`with_middle_plane=False`, the default, is unaffected) -- both were
+  by-name-deferral narrowings the Phase 3 review rule requires fixing. A new
+  cache-drift guard test (`test_csg_occ_cache_drift_guard`) pins that no
+  `Sphere`/`Box`/`EllipticalNanodisk`/`MeshSum`/`MeshDifference` constructor
+  parameter can move the OCC geometry without also moving the md5 hash. The
+  legacy `test_mesh_sum` TOL2 fused-vs-separate-spheres cross-check is now
+  ported into `test_template_mesh_sum_volume` (Gmsh OCC measures ~5.24e-6
+  relative deviation for r1,r2,r3=10,18,12 at maxh=2.0, within the port's
+  declared `TOL2=1e-5`). Gate: `dolfinx-src-meshes-pytest`, 34 tests.
+  [Claude Sonnet 5]

@@ -4831,9 +4831,10 @@ physics end-to-end.
   gmsh-script helpers =regular_polygon= / =regular_polygon_extruded= /
   =disk_with_internal_layers=, and the dolfin-based analysis/plotting utilities
   (=mesh_info=, =mesh_quality=, =nodal_volume=, =longest_edges=, =mesh_size=,
-  =mesh_is_periodic=, =build_mesh=, =embed3d=, =line_mesh=, =plot_mesh=) are
-  by-name stubs. =mesh_volume=/=num_vertices=/=order_of_magnitude= ARE ported
-  (dolfinx-native).
+  =mesh_size_plausible=, =describe_mesh_size=, =print_mesh_info=,
+  =mesh_is_periodic=, =build_mesh=, =embed3d=, =line_mesh=, =plot_mesh=,
+  =plot_mesh_with_paraview=, =plot_mesh_regions=) are by-name stubs.
+  =mesh_volume=/=num_vertices=/=order_of_magnitude= ARE ported (dolfinx-native).
 
 *** Env dependency change
 
@@ -4842,3 +4843,49 @@ physics end-to-end.
 imported lazily inside the generators.
 
 [Claude Opus 4.8]
+
+*** Fix round 1 (review findings on commit 867c9ca1)
+
+Four review findings against this slice were fixed (gate stays
+=dolfinx-src-meshes-pytest=, now 34 tests):
+
+1. *CSG<->OCC cache-drift guard*: the md5-of-CSG cache key (=hash()=/
+   =generic_filename()=) and the OCC geometry (=_occ_solids=) are parallel
+   encodings both derived from the same constructor parameters, with nothing
+   enforcing that a parameter can't move one without the other. A new
+   =test_csg_occ_cache_drift_guard= (in =test_meshes_dolfinx.py=) perturbs
+   every geometry-affecting constructor parameter of a representative sample
+   (=Sphere=, =Box=, =EllipticalNanodisk=, and one =MeshSum=/=MeshDifference=
+   pair -- the sampling rationale is documented in the test docstring) and
+   asserts both the hash changes and a (volume, centroid) geometry fingerprint
+   changes, at coarse =maxh= to keep it fast.
+2. *=ring(with_middle_plane=True)= by-name*: this legacy kwarg was accepted but
+   silently ignored by the Gmsh port -- a silent narrowing of the by-name-
+   deferral rule. It now raises =NotImplementedError= (the default
+   =with_middle_plane=False= path is unaffected), tested by
+   =test_ring_with_middle_plane_deferred_by_name=.
+3. *Five deleted sibling helpers*: =mesh_size_plausible=, =describe_mesh_size=,
+   =print_mesh_info=, =plot_mesh_with_paraview=, =plot_mesh_regions= were
+   dropped outright in the initial port (bare =AttributeError= on lookup)
+   instead of getting by-name stubs like their siblings (=mesh_size=,
+   =mesh_info=, =plot_mesh=, ...). They now have explicit =_deferred=-style
+   stubs in =meshes.py=, are named explicitly (replacing the "=mesh_size= and
+   friends"/"=plot_mesh*=" wildcard language) in this file and in
+   =dev/dolfinx/porting_map.md=, and are covered by a parametrized
+   =test_deleted_mesh_helpers_raise_by_name=.
+4. *TOL2 cross-check*: the legacy =mesh_templates_test.py::test_mesh_sum=
+   cross-checked the fused three-sphere mesh's volume against the sum of the
+   three spheres meshed separately (at =TOL2=, looser than the analytic-volume
+   =TOL1= because a combined mesh is discretised slightly differently than its
+   components). This cross-check was not carried into the ported
+   =test_template_mesh_sum_volume=; the port's =TOL2=1e-5= constant was
+   declared but dead. Ported (not documented as a deviation): measured on Gmsh
+   OCC for the same geometry (=r1,r2,r3=10,18,12=, =maxh=2.0=), fused volume
+   =35613.142170867324= vs. separately-meshed sum =35612.955630276556=, a
+   relative deviation of =~5.24e-6= -- comfortably inside =TOL2=1e-5=
+   (reproducible across repeated runs). Note this is *looser*, not tighter,
+   than the legacy Netgen comment's own =TOL2=1e-7=; Gmsh OCC is not
+   unconditionally "more consistent" than Netgen here, but it is well within
+   the tolerance this port had already declared for the purpose.
+
+[Claude Sonnet 5]

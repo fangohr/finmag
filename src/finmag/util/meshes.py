@@ -30,9 +30,10 @@ Deferred by name in this slice (documented, Task 29 review items):
 - the 2D gmsh-script helpers ``regular_polygon`` /
   ``regular_polygon_extruded`` / ``disk_with_internal_layers``;
 - the dolfin-based mesh analysis/plotting utilities (``mesh_info``,
-  ``mesh_quality``, ``nodal_volume``, ``longest_edges``, ``mesh_size`` and
-  friends, ``build_mesh``, ``embed3d``, ``line_mesh``, ``mesh_is_periodic``,
-  ``plot_mesh*``).
+  ``mesh_quality``, ``nodal_volume``, ``longest_edges``, ``mesh_size``,
+  ``mesh_size_plausible``, ``describe_mesh_size``, ``print_mesh_info``,
+  ``build_mesh``, ``embed3d``, ``line_mesh``, ``mesh_is_periodic``,
+  ``plot_mesh``, ``plot_mesh_with_paraview``, ``plot_mesh_regions``).
 
 Caveat (inherited): mesh coordinates are stored at reduced precision, so build
 "macroscopic" meshes and use ``unit_length`` to set the physical scale.
@@ -333,6 +334,17 @@ def ring(r1, r2, h, maxh, save_result=True, filename='', directory='',
     Return a dolfinx mesh representing a ring with inner radius ``r1``, outer
     radius ``r2`` and height ``h`` (centred on z=0).
     """
+    if with_middle_plane:
+        raise NotImplementedError(
+            "finmag.util.meshes.ring(with_middle_plane=True) is deferred by "
+            "name in the DOLFINx mesh bridge port (Task 18); the legacy "
+            "three-solid CSG variant (an extra half-height solid split at "
+            "the middle plane) is not reproduced by the Gmsh OCC bridge in "
+            "this slice -- with_middle_plane=False (the default) is "
+            "unaffected. It is tracked as a Task 29 review item (flagged in "
+            "review: this kwarg was previously accepted but silently "
+            "ignored).")
+
     csg_string = textwrap.dedent("""\
         algebraic3d
         solid fincyl = cylinder (0, 0, -{h}; 0, 0, {h}; {r1} )
@@ -489,6 +501,15 @@ longest_edges = _deferred(
 mesh_size = _deferred(
     "mesh_size",
     "dolfin-based mesh analysis utilities are not ported in this slice.")
+mesh_size_plausible = _deferred(
+    "mesh_size_plausible",
+    "dolfin-based mesh analysis utilities are not ported in this slice.")
+describe_mesh_size = _deferred(
+    "describe_mesh_size",
+    "dolfin-based mesh analysis utilities are not ported in this slice.")
+print_mesh_info = _deferred(
+    "print_mesh_info",
+    "dolfin-based mesh analysis utilities are not ported in this slice.")
 mesh_is_periodic = _deferred(
     "mesh_is_periodic",
     "dolfin-based mesh analysis utilities are not ported in this slice.")
@@ -504,3 +525,9 @@ line_mesh = _deferred(
 plot_mesh = _deferred(
     "plot_mesh",
     "matplotlib/dolfin mesh plotting is not ported in this slice.")
+plot_mesh_with_paraview = _deferred(
+    "plot_mesh_with_paraview",
+    "Paraview-based mesh rendering is not ported in this slice.")
+plot_mesh_regions = _deferred(
+    "plot_mesh_regions",
+    "matplotlib/dolfin mesh-region plotting is not ported in this slice.")

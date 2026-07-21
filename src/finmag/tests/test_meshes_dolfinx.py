@@ -22,6 +22,14 @@ What is validated here (mirroring the frozen legacy oracle tests
 - one FK-demag-on-a-generated-sphere smoke proving the bridge feeds real
   physics (uniform sphere demag factor ~1/3).
 
+Fix round 1 (review findings on commit 867c9ca1) added: a CSG-hash/OCC-
+geometry cache-drift guard (``test_csg_occ_cache_drift_guard``); a by-name
+test for the previously-silently-ignored ``ring(with_middle_plane=True)``;
+a parametrized by-name test for five sibling mesh-analysis/plotting helpers
+that were deleted outright rather than stubbed; and the legacy
+``test_mesh_sum`` TOL2 fused-vs-separately-meshed cross-check, ported into
+``test_template_mesh_sum_volume``. [Claude Sonnet 5]
+
 [Claude Opus 4.8]
 """
 
@@ -102,6 +110,16 @@ def test_ring_volume(tmp_path):
     r1, r2, h = 10.0, 18.0, 6.0
     m = ring(r1=r1, r2=r2, h=h, maxh=2.0, save_result=False)
     _check_volume(m, pi * (r2 ** 2 - r1 ** 2) * h, TOL1)
+
+
+def test_ring_with_middle_plane_deferred_by_name(tmp_path):
+    """``with_middle_plane`` was a legacy kwarg silently ignored by the Gmsh
+    port; it must now raise NotImplementedError by name rather than silently
+    narrowing the deferral (Phase 3 binding rule)."""
+    os.chdir(str(tmp_path))
+    with pytest.raises(NotImplementedError):
+        ring(r1=10.0, r2=18.0, h=6.0, maxh=2.0, save_result=False,
+             with_middle_plane=True)
 
 
 def test_truncated_cone_volume(tmp_path):
@@ -220,6 +238,20 @@ def test_template_mesh_sum_volume(tmp_path):
     vol_exact = sum(4.0 / 3 * pi * r ** 3 for r in (r1, r2, r3))
     _check_volume(m, vol_exact, TOL1)
 
+    # Legacy cross-check (mesh_templates_test.py::test_mesh_sum): the fused
+    # mesh's volume vs. the sum of the three spheres' volumes when meshed
+    # separately (at the same maxh). The legacy Netgen comment noted this
+    # needs a looser tolerance than a single primitive because the combined
+    # mesh is discretised slightly differently than its components; ported
+    # here at TOL2 -- Gmsh OCC measures ~5.2e-6 relative deviation for this
+    # geometry (fused=35613.142170867324, separate-sum=35612.955630276556),
+    # comfortably inside TOL2=1e-5 with headroom, so this is carried forward
+    # rather than documented as a deviation. [Claude Sonnet 5]
+    vol1 = mesh_volume(sphere1.create_mesh(maxh=maxh, save_result=False))
+    vol2 = mesh_volume(sphere2.create_mesh(maxh=maxh, save_result=False))
+    vol3 = mesh_volume(sphere3.create_mesh(maxh=maxh, save_result=False))
+    _check_volume(m, vol1 + vol2 + vol3, TOL2)
+
 
 def test_template_mesh_difference_volume(tmp_path):
     os.chdir(str(tmp_path))
@@ -243,6 +275,134 @@ def test_combined_mesh_per_primitive_maxh_changes_resolution(tmp_path):
     m_fine = two.create_mesh(maxh=5.0, maxh_sphere2=8.0, save_result=False)
     m_coarse = two.create_mesh(maxh=5.0, maxh_sphere2=10.0, save_result=False)
     assert num_vertices(m_fine) > num_vertices(m_coarse)
+
+
+# --------------------------------------------------------------------------
+# CSG<->OCC cache-drift guard (documented review item)
+# --------------------------------------------------------------------------
+
+def _geometry_fingerprint(mesh):
+    """(volume, centroid) fingerprint used purely for change-detection, not
+    value-pinning. Volume is sensitive to size-changing parameters; centroid
+    (mean vertex position) is sensitive to pure-translation parameters that
+    leave volume unchanged (e.g. ``center``, ``valign``). Together they
+    detect any parameter that moves the OCC geometry."""
+    vol = mesh_volume(mesh)
+    centroid = tuple(mesh.geometry.x.mean(axis=0))
+    return vol, centroid
+
+
+def _assert_geometry_changed(fp0, fp1):
+    (vol0, c0), (vol1, c1) = fp0, fp1
+    vol_changed = not np.isclose(vol0, vol1, rtol=1e-6, atol=1e-9)
+    centroid_changed = not np.allclose(c0, c1, rtol=1e-6, atol=1e-9)
+    assert vol_changed or centroid_changed, (
+        "geometry fingerprint did not change: volume {} vs {}, "
+        "centroid {} vs {}".format(vol0, vol1, c0, c1))
+
+
+def _assert_cache_key_tracks_geometry(base, perturbed, maxh):
+    """Core guard invariant: perturbing a geometry-affecting constructor
+    parameter must move BOTH the md5-of-CSG cache key (``hash()``) AND the
+    OCC-built mesh geometry (``_occ_solids``, checked via volume/centroid).
+    These are parallel encodings of the same constructor parameters; if a
+    parameter could move one without the other, the mesh cache would go
+    stale silently."""
+    h0 = base.hash(maxh=maxh)
+    h1 = perturbed.hash(maxh=maxh)
+    assert h0 != h1, "cache key (hash) did not change for a geometry-affecting parameter"
+    m0 = base.create_mesh(maxh=maxh, save_result=False)
+    m1 = perturbed.create_mesh(maxh=maxh, save_result=False)
+    _assert_geometry_changed(_geometry_fingerprint(m0), _geometry_fingerprint(m1))
+
+
+def test_csg_occ_cache_drift_guard(tmp_path):
+    """Guard against CSG-hash/OCC-geometry drift: the md5-of-CSG cache key
+    (``hash()``/``generic_filename()``) and the OCC geometry (``_occ_solids``)
+    are parallel encodings both derived from the same constructor parameters
+    (see ``mesh_templates.py`` module docstring). If a parameter could ever
+    affect one but not the other, the XDMF mesh cache would silently go
+    stale. This test pins that every geometry-affecting constructor
+    parameter, for a representative sample of template classes, moves both
+    the hash and the generated mesh.
+
+    Sampling rationale (rather than every template class): ``Sphere``
+    exercises a curved leaf primitive with a size param (``r``) and a
+    pure-translation param (``center``); ``Box`` exercises a planar leaf
+    primitive with six independent size params; ``EllipticalNanodisk``
+    exercises a leaf primitive with a *derived* positional parameter
+    (``valign``, which moves ``h_bottom``/``h_top`` without being interpolated
+    directly into a single CSG token); and one ``MeshSum``/``MeshDifference``
+    pair exercises the combined-template path, whose ``hash()``/
+    ``_occ_solids()`` recurse into leaf primitives rather than encoding
+    parameters directly. Together these four cover every distinct code path
+    that turns constructor parameters into a CSG stub (for the cache key) and
+    into OCC solids (for the geometry) in this module; ``Nanodisk`` is a thin
+    ``EllipticalNanodisk`` alias and combined templates all share
+    ``MeshSum``/``MeshDifference``'s implementation, so exhaustively repeating
+    every concrete class would not add coverage. ``maxh`` is kept coarse
+    (8-10) to keep this fast -- the point is "changed", not a pinned value.
+    """
+    os.chdir(str(tmp_path))
+    maxh = 8.0
+
+    # ---- Sphere: r (size), center (translation, x/y/z each) ----
+    base = Sphere(r=20.0, center=(0.0, 0.0, 0.0), name='S')
+    for perturbed in [
+        Sphere(r=25.0, center=(0.0, 0.0, 0.0), name='S'),
+        Sphere(r=20.0, center=(6.0, 0.0, 0.0), name='S'),
+        Sphere(r=20.0, center=(0.0, 6.0, 0.0), name='S'),
+        Sphere(r=20.0, center=(0.0, 0.0, 6.0), name='S'),
+    ]:
+        _assert_cache_key_tracks_geometry(base, perturbed, maxh)
+
+    # ---- Box: x0, y0, z0, x1, y1, z1 (all size/position params) ----
+    base = Box(0, 0, 0, 10, 20, 30, name='B')
+    for perturbed in [
+        Box(4, 0, 0, 10, 20, 30, name='B'),
+        Box(0, 4, 0, 10, 20, 30, name='B'),
+        Box(0, 0, 4, 10, 20, 30, name='B'),
+        Box(0, 0, 0, 14, 20, 30, name='B'),
+        Box(0, 0, 0, 10, 24, 30, name='B'),
+        Box(0, 0, 0, 10, 20, 34, name='B'),
+    ]:
+        _assert_cache_key_tracks_geometry(base, perturbed, maxh)
+
+    # ---- EllipticalNanodisk: d1, d2, h, center, valign ----
+    base = EllipticalNanodisk(30.0, 20.0, 5.0, center=(0, 0, 0),
+                               valign='bottom', name='E')
+    for perturbed in [
+        EllipticalNanodisk(36.0, 20.0, 5.0, center=(0, 0, 0),
+                           valign='bottom', name='E'),
+        EllipticalNanodisk(30.0, 26.0, 5.0, center=(0, 0, 0),
+                           valign='bottom', name='E'),
+        EllipticalNanodisk(30.0, 20.0, 9.0, center=(0, 0, 0),
+                           valign='bottom', name='E'),
+        EllipticalNanodisk(30.0, 20.0, 5.0, center=(6, 0, 0),
+                           valign='bottom', name='E'),
+        EllipticalNanodisk(30.0, 20.0, 5.0, center=(0, 0, 0),
+                           valign='center', name='E'),
+        EllipticalNanodisk(30.0, 20.0, 5.0, center=(0, 0, 0),
+                           valign='top', name='E'),
+    ]:
+        _assert_cache_key_tracks_geometry(base, perturbed, maxh)
+
+    # ---- Combined: MeshSum recurses hash()/_occ_solids() into leaves ----
+    sum_maxh = 10.0
+    fixed_leaf = Sphere(18.0, center=(30, 0, 0), name='sphere_b')
+    base_sum = Sphere(10.0, center=(-30, 0, 0), name='sphere_a') + fixed_leaf
+    perturbed_sum = Sphere(14.0, center=(-30, 0, 0), name='sphere_a') + fixed_leaf
+    _assert_cache_key_tracks_geometry(base_sum, perturbed_sum, sum_maxh)
+
+    # ---- Combined: MeshDifference recurses hash()/_occ_solids() into leaves ----
+    # (box2's corner stays inside box1's extent on the perturbed axis so the
+    # subtracted overlap -- and hence the difference volume -- actually
+    # changes; a corner moved past box1's own boundary would be clipped away
+    # and leave the overlap, and thus the volume, unchanged.)
+    box1 = Box(0, 0, 0, 50, 30, 20, name='box1')
+    base_diff = box1 - Box(30, 20, 15, 45, 30, 20, name='box2')
+    perturbed_diff = box1 - Box(30, 20, 15, 40, 30, 20, name='box2')
+    _assert_cache_key_tracks_geometry(base_diff, perturbed_diff, sum_maxh)
 
 
 # --------------------------------------------------------------------------
@@ -321,6 +481,24 @@ def test_deferred_generators_raise_by_name():
     ]:
         with pytest.raises(NotImplementedError):
             fn(**kwargs)
+
+
+@pytest.mark.parametrize("name", [
+    "mesh_size_plausible",
+    "describe_mesh_size",
+    "print_mesh_info",
+    "plot_mesh_with_paraview",
+    "plot_mesh_regions",
+])
+def test_deleted_mesh_helpers_raise_by_name(name):
+    """These five siblings of the already-stubbed ``mesh_info``/``mesh_size``/
+    ``plot_mesh`` family were deleted outright in the initial port (bare
+    ``AttributeError`` on lookup) instead of getting by-name deferral stubs
+    like their siblings -- a silent narrowing of the Task 29 deferral list.
+    Each must now raise ``NotImplementedError`` by name."""
+    fn = getattr(meshes, name)
+    with pytest.raises(NotImplementedError):
+        fn()
 
 
 # --------------------------------------------------------------------------
