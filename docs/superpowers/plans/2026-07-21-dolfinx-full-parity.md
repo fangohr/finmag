@@ -538,3 +538,26 @@ not error, it silently scrambles physics.
 - [x] Docs (verification-checklist item): plan checkboxes, transition-notes
   "Ordering correction (Task 31)" incl. the de-registered drift, porting_map
   register update. Attribution.
+
+## Task 26a: Decision-free I/O/utility parity wins (point-probing, spherical, skyrmion number)
+
+Scoped subset of the Task 26 long tail — the cheap, mechanically-proven,
+owner-decision-free items. (HDF5 read-back, region field output, plotting
+stay in a later 26b.)
+
+- [ ] `Field.__call__`/point evaluation (`probe`): restore legacy point
+  evaluation via DOLFINx point-in-cell (bb_tree + compute_colliding_cells +
+  Function.eval — the mechanic already used in the Task 30 exchange_demag
+  density helper). Preserve the legacy signature/return. REVERTS the
+  point-probing interface drift (removes the exchange_demag workaround —
+  update that example + its drift-table row to "corrected").
+- [ ] `Field.get_spherical`/`set_spherical`: restore the legacy Cartesian↔
+  spherical conversion (analytic; pin against legacy formulas).
+- [ ] `skyrmion_number` (+ density function): restore the topological-charge
+  computation (analytic — a known-skyrmion config gives ~±1; pin it).
+- [ ] Validate each against legacy oracle fixtures or analytic references;
+  update the deferred-surfaces sweep (these leave the deferred list).
+- [ ] New gate `dolfinx-src-io-utils-pytest` folded into `verify-dolfinx-m5`.
+- [ ] Docs (verification-checklist item): plan checkboxes, transition-notes
+  section, porting_map (surfaces de-deferred), interface-audit note that
+  point-probing drift is reverted. Attribution.
