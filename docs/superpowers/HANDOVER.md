@@ -60,12 +60,13 @@ NEB, GCR demag (accept-drop candidate).
   22, 23, 30 DONE and review-approved. Task 31 (public array
   component-ordering correction, user-directed) is IMPLEMENTED at `1b06420a`
   (all 22 gates green; dedicated ordering gate RED pre-fix incl. the
-  double-conversion catch; ~20-consumer audit in the task-31 report) — its
-  Opus review is the in-flight step; see the ledger for the outcome.
+  double-conversion catch; ~20-consumer audit in the task-31 report) and its
+  Opus review is APPROVED — the ordering drift is corrected and
+  de-registered; the Fable re-review stays on the backlog.
 - Remaining after 31: 24 (SLLG/LLB), 25 (normal modes/NEB/FFT — user cares;
   may be pulled ahead of 24), 26 (I/O long tail), 27 (harnesses), 28 (MPI +
   CI), 29 (accept-drop sign-off).
-- **Execution is PAUSED after Task 31 + its review by user directive.** Do
+- **Execution is PAUSED (Task 31 closed 2026-07-22) by user directive.** Do
   not dispatch further slices without user go-ahead.
 
 ## 4. The acceptance-pending register (user must sign off; Task 29)
