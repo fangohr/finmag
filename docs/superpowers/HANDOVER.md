@@ -57,10 +57,11 @@ NEB, GCR demag (accept-drop candidate).
 - Phase 2 Tier 1 (Tasks 13-16): DONE, sealed by a critical whole-branch
   (Fable) review with a composed-physics guard test.
 - Phase 3 (audited plan, Tasks 17-29 + inserted 30/31): 18, 19, 20, 21(=17),
-  22, 23, 30 DONE and review-approved. **Task 31 (public array
-  component-ordering correction, user-directed) is the in-flight slice** —
-  implementer done/pending, Fable review pending at time of writing; see the
-  ledger for its outcome.
+  22, 23, 30 DONE and review-approved. Task 31 (public array
+  component-ordering correction, user-directed) is IMPLEMENTED at `1b06420a`
+  (all 22 gates green; dedicated ordering gate RED pre-fix incl. the
+  double-conversion catch; ~20-consumer audit in the task-31 report) — its
+  Opus review is the in-flight step; see the ledger for the outcome.
 - Remaining after 31: 24 (SLLG/LLB), 25 (normal modes/NEB/FFT — user cares;
   may be pulled ahead of 24), 26 (I/O long tail), 27 (harnesses), 28 (MPI +
   CI), 29 (accept-drop sign-off).
@@ -100,9 +101,11 @@ export, 3 historical xfails, batch_task) consolidated in plan Task 29.
 - **Gate**: every slice adds a `dolfinx-src-*` pixi gate folded into
   `dev/bin/verify-dolfinx-m5`; the whole thing must stay green; the
   cleanliness guard forbids tests dirtying tracked files.
-- **Orchestration ladder** (user-set): Sonnet default; Opus for hard slices +
-  physics reviews; Fable sparingly for critical reviews (new-physics
-  transcription, whole-branch, stochastic) and hard plans. Every slice:
+- **Orchestration ladder** (user-set): Sonnet default; Opus for hard slices
+  AND all difficult reviews. **FABLE IS SUSPENDED (2026-07-22, token budget)**
+  — do not dispatch it; append candidates to the FABLE REVIEW BACKLOG in the
+  ledger instead (current backlog: Task 31 ordering re-review, Task 24
+  stochastic validation, Phase 3 whole-branch review). Every slice:
   implement → independent review → fix round → re-review before closing.
 - **User's standing requirements**: minimal changes (especially examples);
   no silent behavior changes; full master parity as end state; pause points
