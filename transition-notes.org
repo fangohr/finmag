@@ -5883,10 +5883,10 @@ silently rewritten.
 |---+---------+--------------------+----------------+-----------|
 | 1 | =from_geofile= deferred | =from_geofile("*.geo")= builds a mesh | Task 18 deferred it | implemented the Netgen-CSG-subset loader (see above); scripts unchanged |
 | 2 | string =Expression= dropped | =df.Expression("...", ...)= for m/axis/alpha/field | port accepts only Python callables (documented Task 3+ decision) | each Expression rewritten as a vectorized numpy callable |
-| 3 | =compute_field()= ordering | component-blocked =(xxx yyy zzz)=, =reshape(3,-1)= | coordinate-interleaved =(xyz xyz)=, =reshape(-1,3)= | reshape((-1,3)) + column slice (demag/test_field.py). TASK 30 WORKAROUND, REVERT in Task 31 (component-ordering restoration): Task 31 restores component-blocked ordering, after which the legacy =reshape((3,-1))= is used verbatim |
+| 3 | =compute_field()= ordering | component-blocked =(xxx yyy zzz)=, =reshape(3,-1)= | coordinate-interleaved =(xyz xyz)=, =reshape(-1,3)= | *CORRECTED (Task 31)*: =compute_field()= restored to legacy component-blocked ordering on all public surfaces; the legacy =reshape((3,-1))= is used verbatim (demag/test_field.py). See "Public field-array component-ordering correction (Task 31)" below |
 | 4 | Field point-probing | =field((x,y,z))= evaluates at a point | =Field.__call__= raises NotImplementedError | read nodal values via =coords_and_values()= (spatially-varying) |
 | 5 | =llg.m= state vector | attribute =llg.m= | property =llg.m_numpy= (xxx-ordered) | use =llg.m_numpy= (exchange_1D) |
-| 6 | =get_numpy_array_debug()= ordering | component-blocked (fed to =solve_for=) | raw interleaved; =solve_for= expects xxx -> corrupts state | use =llg.m_numpy= as odeint init (macrospin_alpha_rtol). TASK 30 WORKAROUND, REVERT in Task 31: CONTROLLER DECISION -- Task 31 restores =get_numpy_array_debug()= to the legacy component-blocked ordering, after which the legacy call is used verbatim |
+| 6 | =get_numpy_array_debug()= ordering | component-blocked (fed to =solve_for=) | raw interleaved; =solve_for= expects xxx -> corrupts state | *CORRECTED (Task 31)*: =get_numpy_array_debug()= restored to legacy component-blocked ordering (and =set_with_numpy_array_debug= kept its exact inverse); the legacy =sim.llg._m_field.get_numpy_array_debug()= odeint init is used verbatim (macrospin_alpha_rtol). See "Public field-array component-ordering correction (Task 31)" below |
 | 7 | =llg.alpha.vector().array()= | dolfin =Function.vector().array()= | =llg.alpha= already returns the node array | use =llg.alpha= directly (varying_alpha) |
 | 8 | =sim.hysteresis(ndarray)= | =if H_ext_list == []= tolerated an ndarray (py2/old-numpy) | modern numpy raises on =ndarray == []= | pass a python =list= of field vectors (cubic hysteresis) |
 | 9 | =Simulation.mesh_info()= | prints mesh statistics | not ported | print =num_vertices(mesh)= instead (magnetic_grain) |
@@ -5975,3 +5975,72 @@ physics is unchanged). This is recorded as a stale-example fix, not port drift.
 - No legacy oracle tests touched; =pixi.lock= untouched.
 
 [Claude Opus 4.8]
+
+** Public field-array component-ordering correction (Task 31)
+
+De-registers the interleaved-ordering interface drift (drift rows #3 and #6 in
+the Task 30 table above, now marked CORRECTED). USER-DIRECTED, CONTROLLER
+DECISION: every PUBLIC field-array surface restores the legacy
+component-blocked ordering =[x1..xN, y1..yN, z1..zN]= -- the
+owned-vertex-coordinate-ordered =xxx= view (=xyz.reshape(-1,3).T.reshape(-1)=,
+the same ordering =sim.m=/=llg.m= already return). Internal DOLFINx storage
+(node-interleaved backend order) is UNCHANGED; only the value returned at each
+public boundary changes. This is a CRITICAL-class change: a wrong ordering fix
+does not raise, it silently scrambles physics.
+
+*** Surfaces restored to component-blocked ordering
+
+- Every interaction's =compute_field()=: =EnergyBase= box path (Exchange,
+  UniaxialAnisotropy, DMI, cubic =assemble=True=), =Zeeman= + the whole time /
+  dipolar Zeeman family, =CubicAnisotropy= analytic =assemble=False= path,
+  =FKDemag= (and =TreecodeBEM=, inherited), =ThinFilmDemag=.
+- =EffectiveField.H_eff= / =compute()= / =compute_jacobian_only()= and
+  =sim.effective_field()=: these accumulate interaction =compute_field()=
+  outputs, so once each term is blocked the accumulation is blocked with NO
+  change to the summation (=output_size= unchanged).
+- =Field.get_numpy_array_debug()=: returns the blocked view (legacy dolfin
+  local-vector semantic); =set_with_numpy_array_debug()= kept as its exact
+  inverse (both blocked), matching legacy's =get_local=/=set_local= pair.
+
+*** One conversion, one place
+
+A single shared helper =finmag.field.owned_raw_to_blocked(functionspace,
+raw_array)= performs the raw->blocked conversion. It reuses the canonical
+=_owned_vertex_to_dof= coordinate permutation (NOT a naive interleave-transpose)
+and is applied at each class's public return point. =EnergyBase= /
+=CubicAnisotropy= / =FKDemag= keep an internal =_compute_field_raw()= (raw
+node-interleaved) that =average_field()= (an order-invariant nodal mean) and
+=FKDemag._load_H_func= consume, because those pair elementwise with the raw
+=nodal_volume_S3= weights / write straight into a DOLFINx Function's
+backend-order storage. =Zeeman= and =ThinFilmDemag= convert at their single
+return.
+
+*** Double-conversion is THE failure mode (removed)
+
+=LLG.solve= previously converted the raw =H_eff= into =xxx= via
+=Field.from_array(...).get_ordered_numpy_array_xxx()=; =sundials_jtimes=
+did the same for =H_eff= and =compute_jacobian_only=. With those already
+blocked, that conversion was REMOVED (=H = self.effective_field.H_eff.reshape
+((3,-1))=), otherwise it would double-convert and scramble. Reconstructing a
+Function from a blocked array (=EffectiveField.get_dolfin_function=, and the
+oracle/probe test rebuilds) must invert the ordering with
+=set_with_ordered_numpy_array_xxx=, never the raw =Field(space, array)=
+constructor.
+
+*** Anti-scramble net
+
+New dedicated contract gate =test_ordering_contract_dolfinx.py= (4 tests):
+component-asymmetric analytic layouts where blocked, interleaved and
+double-converted orderings differ element-for-element -- pins the blocked
+=compute_field= layout, the blocked =H_eff=, =LLG.solve= consuming =H_eff=
+without double-conversion (the exact node-local kernel applied to the intended
+uniform (m,H)), and the blocked =get_numpy_array_debug= round-trip. Verified
+demonstrably RED against the pre-fix source (3/4 fail, incl. the
+double-conversion catch). Full =verify-dolfinx-m5= green end-to-end
+(composed-physics + cross-backend + examples). Ordering-sensitive oracle/probe
+comparisons updated to convert the now-blocked field to owned-vertex per-node
+rows (=reshape((3,-1)).T=) paired with owned-vertex coordinates -- fixture
+VALUES untouched, only the conversion applied before comparison. The two
+example workarounds were reverted to their legacy one-liners.
+
+[Claude Fable 5]

@@ -120,7 +120,9 @@ def _compare_with_expected(H_gen, m_init, atol=0.0, rtol=0.0):
     demag = ThinFilmDemag()
     demag.setup(m, Ms, unit_length=1e-9)
     H_computed = demag.compute_field()
-    H_expected = H_gen(m.as_array())
+    # compute_field() is component-blocked (Task 31); build the expected field
+    # from the blocked m so the ``-Ms * m`` invariant compares like-for-like.
+    H_expected = H_gen(m.get_ordered_numpy_array_xxx())
     np.testing.assert_allclose(H_computed, H_expected, atol=atol, rtol=rtol)
 
 
@@ -155,19 +157,19 @@ def test_thin_film_demag_against_real_demag():
 
     tfdemag = ThinFilmDemag()
     tfdemag.setup(m, Ms, unit_length=1.0)
-    H_tfdemag = tfdemag.compute_field().reshape((-1, 3)).mean(axis=0)
+    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(axis=1)
 
     demag = Demag()
     demag.setup(m, Ms, unit_length=1.0)
-    H_demag = demag.compute_field().reshape((-1, 3)).mean(axis=0)
+    H_demag = demag.compute_field().reshape((3, -1)).mean(axis=1)
 
     diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
     assert np.allclose(H_tfdemag, H_demag, atol=0.05 * Ms_CONST)  # 5% of Ms
     assert np.all(diff < 0.05)
 
     m.set((1.0, 0.0, 0.0))
-    H_tfdemag = tfdemag.compute_field().reshape((-1, 3)).mean(axis=0)
-    H_demag = demag.compute_field().reshape((-1, 3)).mean(axis=0)
+    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(axis=1)
+    H_demag = demag.compute_field().reshape((3, -1)).mean(axis=1)
 
     diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
     assert np.allclose(H_tfdemag, H_demag, atol=0.005 * Ms_CONST)  # 0.5% of Ms
@@ -190,7 +192,9 @@ def test_compute_field_is_recomputed_fresh_every_call():
 
     m.set((0.0, 0.0, 1.0))
     second = demag.compute_field()
-    expected = -Ms_CONST * m.as_array()
+    # compute_field() is component-blocked (Task 31); compare against the
+    # blocked m (here H == -Ms * m because m lies purely along the z direction).
+    expected = -Ms_CONST * m.get_ordered_numpy_array_xxx()
     np.testing.assert_allclose(second, expected, rtol=1e-14)
 
 
@@ -203,7 +207,7 @@ def test_explicit_field_strength_bypasses_ms_average():
     m, Ms = _fields(domain, (1.0, 0.0, 0.0), Ms=1.0e6)
     demag = ThinFilmDemag(direction="x", field_strength=250.0)
     demag.setup(m, Ms, unit_length=1e-9)
-    H = demag.compute_field().reshape((-1, 3))
+    H = demag.compute_field().reshape((3, -1)).T
     expected = np.zeros_like(H)
     expected[:, 0] = -250.0 * 1.0
     np.testing.assert_allclose(H, expected, rtol=1e-14)
@@ -282,8 +286,10 @@ def _oracle_compare(case_name, direction, field_strength):
     demag = ThinFilmDemag(direction=direction, field_strength=field_strength)
     demag.setup(m, Ms, unit_length=1e-9)
     E = demag.compute_energy()
-    H = demag.compute_field().reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+    # compute_field() is component-blocked (Task 31); per-node rows are
+    # reshape((3, -1)).T in owned-vertex order, matching coords_and_values().
+    H = demag.compute_field().reshape((3, -1)).T
+    coords, _ = m.coords_and_values()
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     coords_s, H_s = coords[order], H[order]
 
@@ -333,7 +339,7 @@ def test_thin_film_demag_added_to_simulation_directly():
     assert sim.has_interaction("ThinFilmDemag")
     assert sim.total_energy() == pytest.approx(0.0, abs=1e-25)
     interaction = sim.get_interaction("ThinFilmDemag")
-    H = interaction.compute_field().reshape((-1, 3))
+    H = interaction.compute_field().reshape((3, -1)).T
     expected = np.zeros_like(H)
     expected[:, 2] = -Ms_CONST
     np.testing.assert_allclose(H, expected, rtol=1e-12)

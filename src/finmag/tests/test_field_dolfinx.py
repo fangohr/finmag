@@ -60,7 +60,11 @@ def test_dimensions_ordering_and_underlying_accessors(mesh_dimension, components
     )
     assert field.vector() is field.f.x
     assert field.as_vector() is field.f.x
-    assert np.array_equal(field.get_numpy_array_debug(), field.as_array())
+    # Task 31: get_numpy_array_debug() returns the legacy component-blocked
+    # (``xxx``) owned-vertex ordering, not the raw backend-order as_array().
+    assert np.array_equal(
+        field.get_numpy_array_debug(), field.get_ordered_numpy_array_xxx()
+    )
     assert field.petsc_vector().getSize() == (
         function_space.dofmap.index_map.size_global
         * function_space.dofmap.index_map_bs

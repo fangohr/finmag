@@ -8,7 +8,30 @@ from mpi4py import MPI
 
 from finmag.energies import DMI, CubicAnisotropy, Exchange, UniaxialAnisotropy, Zeeman
 from finmag.energies.energy_base import mu0
-from finmag.field import Field
+from finmag.field import Field, owned_raw_to_blocked
+
+
+def _node_rows(blocked):
+    """Component-blocked (``xxx``) flat -> per-rank owned-vertex node rows.
+
+    Task 31: each rank's ``compute_field()`` returns its OWNED nodes in
+    component-blocked ``[x(v0)..x(vK), y(v0)..y(vK), z(v0)..z(vK)]`` order
+    (over that rank's owned vertices only), so per-node ``(K, 3)`` rows are
+    ``reshape((3, -1)).T``.
+    """
+    return blocked.reshape((3, -1)).T
+
+
+def _function_from_blocked(space, blocked):
+    """Rebuild a Field/Function on ``space`` from a component-blocked array.
+
+    Inverts the ``xxx`` ordering (like ``EffectiveField.get_dolfin_function``),
+    since the raw ``Field(space, array)`` constructor would interpret the
+    blocked array as raw backend-order dofs and scramble the components.
+    """
+    field = Field(space)
+    field.set_with_ordered_numpy_array_xxx(blocked)
+    return field
 
 
 def _assert_function_ghosts_match_owners(field):
@@ -53,9 +76,9 @@ def run_probe():
     applied_value = np.array((1.25, -2.5, 3.75))
     zeeman = Zeeman(applied_value)
     zeeman.setup(m, Ms, unit_length=2.0e-9)
-    assert np.allclose(zeeman.compute_field().reshape((-1, 3)), applied_value)
+    assert np.allclose(_node_rows(zeeman.compute_field()), applied_value)
     assert np.allclose(zeeman.average_field(), applied_value)
-    zeeman_function = Field(vector_space, zeeman.compute_field())
+    zeeman_function = _function_from_blocked(vector_space, zeeman.compute_field())
     _assert_function_ghosts_match_owners(zeeman_function)
     energies = comm.allgather(zeeman.compute_energy())
     assert np.allclose(energies, energies[0])
@@ -88,7 +111,7 @@ def run_probe():
     )
     density_function = Field(exchange_1.S1, exchange_1.energy_density_function())
     _assert_function_ghosts_match_owners(density_function)
-    exchange_function = Field(vector_space, H1)
+    exchange_function = _function_from_blocked(vector_space, H1)
     _assert_function_ghosts_match_owners(exchange_function)
 
     local_component_volume = exchange_1.nodal_volume_S3.reshape((-1, 3)).sum(0)
@@ -96,10 +119,12 @@ def run_probe():
     comm.Allreduce(local_component_volume, global_component_volume, op=MPI.SUM)
     assert np.allclose(global_component_volume, 1.0)
 
-    weighted = (
-        H1.reshape((-1, 3))
-        * exchange_1.nodal_volume_S3.reshape((-1, 3))
-    ).sum(0)
+    # H1 is component-blocked (Task 31); pair with the blocked nodal volumes so
+    # each component's owned volume-weighted sum contracts matching nodes.
+    vol_blocked = owned_raw_to_blocked(
+        exchange_1.m.functionspace, exchange_1.nodal_volume_S3
+    )
+    weighted = (H1 * vol_blocked).reshape((3, -1)).sum(1)
     global_weighted = np.zeros(3)
     comm.Allreduce(weighted, global_weighted, op=MPI.SUM)
     assert np.allclose(global_weighted, 0.0, atol=1e-8)
@@ -117,7 +142,7 @@ def run_probe():
     assert np.allclose(H_dmi_2, H_dmi_1 / 2.0)
     dmi_energies = comm.allgather(dmi_1.compute_energy())
     assert np.allclose(dmi_energies, dmi_energies[0])
-    dmi_function = Field(vector_space, H_dmi_1)
+    dmi_function = _function_from_blocked(vector_space, H_dmi_1)
     _assert_function_ghosts_match_owners(dmi_function)
 
     dmi_reversed = DMI(-5.0, dmi_type="auto")
@@ -135,7 +160,7 @@ def run_probe():
 
     anisotropy = UniaxialAnisotropy(4.0, (0.0, 0.0, 1.0), K2=1.5)
     anisotropy.setup(m, Ms)
-    anisotropy_values = anisotropy.compute_field().reshape((-1, 3))
+    anisotropy_values = _node_rows(anisotropy.compute_field())
     expected_z = (2.0 * 4.0 * 0.8 + 4.0 * 1.5 * 0.8**3) / (mu0 * 2.5)
     assert np.allclose(
         anisotropy_values, (0.0, 0.0, expected_z), rtol=1e-13, atol=1e-9
@@ -144,7 +169,7 @@ def run_probe():
     assert np.isclose(
         anisotropy.compute_energy(), expected_anisotropy_energy, rtol=1e-12
     )
-    anisotropy_function = Field(vector_space, anisotropy.compute_field())
+    anisotropy_function = _function_from_blocked(vector_space, anisotropy.compute_field())
     _assert_function_ghosts_match_owners(anisotropy_function)
 
     # Cubic anisotropy (Task 14): collective energy agreement across ranks and
@@ -159,7 +184,7 @@ def run_probe():
     assert np.max(np.abs(H_cubic)) > 0.0
     cubic_energies = comm.allgather(cubic.compute_energy())
     assert np.allclose(cubic_energies, cubic_energies[0])
-    cubic_function = Field(vector_space, H_cubic)
+    cubic_function = _function_from_blocked(vector_space, H_cubic)
     _assert_function_ghosts_match_owners(cubic_function)
 
     cubic_default = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), 4.0,
@@ -168,7 +193,7 @@ def run_probe():
     assert np.isfinite(cubic_default.compute_energy())
     H_cubic_default = cubic_default.compute_field()
     assert np.max(np.abs(H_cubic_default)) > 0.0
-    cubic_default_function = Field(vector_space, H_cubic_default)
+    cubic_default_function = _function_from_blocked(vector_space, H_cubic_default)
     _assert_function_ghosts_match_owners(cubic_default_function)
 
     invalid_ms = Field(scalar_space, 2.5)

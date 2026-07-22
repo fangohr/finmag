@@ -253,8 +253,11 @@ def _oracle_compare(case_name, mesh, m_vec, Ms, unit_length, parameters=None):
     demag, S3 = _demag_on(mesh, m_vec, Ms, unit_length, parameters=parameters)
     E = demag.compute_energy()
     avg = demag.average_field()
-    H = demag.compute_field().reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: component-blocked field -> owned-vertex per-node rows, sorted
+    # against the matching owned-vertex coordinates.
+    H = demag.compute_field().reshape((3, -1)).T
+    n_owned = mesh.geometry.index_map().size_local
+    coords = mesh.geometry.x[:n_owned, : mesh.geometry.dim]
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     coords_s, H_s = coords[order], H[order]
 

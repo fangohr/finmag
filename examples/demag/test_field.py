@@ -6,7 +6,8 @@
 #   - from_geofile("sphere1.geo") kept UNCHANGED: the Netgen-CSG '.geo' loader
 #     was ported for the examples subset (Task 30 amendment, see
 #     finmag.util.geofile).
-#   - compute_field() ordering: see the INTERFACE-DRIFT note inline below.
+#   - compute_field() returns the legacy component-blocked ordering (restored
+#     in Task 31), so the legacy reshape((3, -1)) + row slices are used verbatim.
 # [Claude Opus 4.8]
 import os
 from numpy import average
@@ -36,17 +37,11 @@ def test_field():
     demag = Demag()
     demag.setup(m, Field(fem.functionspace(mesh, ("DG", 0)), Ms), unit_length=1e-9)
 
-    # Compute demag field.
-    # INTERFACE-DRIFT (#3): the legacy compute_field() returned component-blocked
-    # order (xxx...yyy...zzz), reshaped as (3, -1). The DOLFINx port returns
-    # coordinate-interleaved order (xyz xyz ...), so we reshape as (-1, 3) and
-    # take columns. (Cf. src/finmag/tests/test_fk_demag_dolfinx.py:256.)
-    # Task 30 WORKAROUND, to be REVERTED in Task 31 (component-ordering
-    # restoration): the controller decision is that Task 31 restores the
-    # component-blocked ordering, after which the legacy `reshape((3, -1))` line
-    # (x, y, z = H_demag[0], H_demag[1], H_demag[2]) is used verbatim again.
-    H_demag = demag.compute_field().reshape(-1, 3)
-    x, y, z = H_demag[:, 0], H_demag[:, 1], H_demag[:, 2]
+    # Compute demag field. Task 31 restored the legacy component-blocked
+    # (``xxx...yyy...zzz``) ordering on compute_field(), so the verbatim legacy
+    # ``reshape((3, -1))`` + row-slice access is used again.
+    H_demag = demag.compute_field().reshape((3, -1))
+    x, y, z = H_demag[0], H_demag[1], H_demag[2]
 
     print("Max values in direction:")
     print("x: %g,  y: %g,  z: %g" % (max(x), max(y), max(z)))

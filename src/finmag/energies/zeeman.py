@@ -99,12 +99,19 @@ class Zeeman:
         return self
 
     def compute_field(self):
-        """Return flat rank-local owned field coefficients."""
-        return self.H.as_array()
+        """Return the applied field in legacy component-blocked (``xxx``) order.
+
+        Public field-array surface (Task 31): the external field stored in
+        ``self.H`` is returned in the legacy component-blocked, owned-vertex
+        ordering (identical to ``self.H.get_ordered_numpy_array_xxx()``); the
+        raw backend-order dofs remain available via ``self.H.as_array()``.
+        The whole time/dipolar Zeeman family inherits this method.
+        """
+        return self.H.get_ordered_numpy_array_xxx()
 
     def average_field(self):
         """Collectively return the legacy arithmetic nodal field average."""
-        values = self.compute_field().reshape((-1, self.m.value_dim()))
+        values = self.H.as_array().reshape((-1, self.m.value_dim()))
         local_sum = np.sum(values, axis=0)
         global_sum = np.zeros_like(local_sum)
         self.m.mesh().comm.Allreduce(local_sum, global_sum, op=MPI.SUM)

@@ -15,7 +15,7 @@ from dolfinx import fem, la
 from mpi4py import MPI
 from ufl import TestFunction, dx, inner
 
-from finmag.field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
 
 
 mu0 = 4.0 * pi * 1e-7
@@ -146,13 +146,32 @@ class EnergyBase:
 
     @timer.method
     def compute_field(self):
-        """Collectively return flat rank-local owned field coefficients."""
+        """Collectively return the field in legacy component-blocked order.
+
+        Public field-array surface (Task 31): the raw owned box-assembled
+        coefficients (:meth:`_compute_field_raw`, node-interleaved backend
+        order) are converted once here to the legacy component-blocked,
+        owned-vertex-coordinate-ordered ``xxx`` view via the shared
+        ``owned_raw_to_blocked`` helper -- the same ordering ``sim.m`` returns.
+        """
+        return owned_raw_to_blocked(
+            self.m.functionspace, self._compute_field_raw()
+        )
+
+    def _compute_field_raw(self):
+        """Flat rank-local owned box-assembled field (backend/interleaved order).
+
+        Internal, pre-conversion layout used by the public blocked
+        ``compute_field`` and by ``average_field`` (an order-invariant nodal
+        mean). Kept raw because it pairs elementwise with the raw
+        ``nodal_volume_S3`` weights.
+        """
         derivative = _assemble_vector_owned(self.dE_dm, self.m.functionspace)
         return derivative / self.nodal_volume_S3
 
     def average_field(self):
         """Collectively return the legacy arithmetic nodal field average."""
-        values = self.compute_field().reshape((-1, self.m.value_dim()))
+        values = self._compute_field_raw().reshape((-1, self.m.value_dim()))
         local_sum = np.sum(values, axis=0)
         global_sum = np.zeros_like(local_sum)
         self.m.mesh().comm.Allreduce(local_sum, global_sum, op=MPI.SUM)

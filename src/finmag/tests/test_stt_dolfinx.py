@@ -187,7 +187,9 @@ def test_slonczewski_rhs_matches_legacy_oracle_fixture():
 
     cm, m_vals = llg.m_field.coords_and_values()
     Hf = Field(S3)
-    Hf.from_array(llg.effective_field.H_eff)
+    # H_eff is component-blocked (``xxx``, Task 31); invert that ordering to
+    # rebuild the Function (raw from_array would scramble the components).
+    Hf.set_with_ordered_numpy_array_xxx(llg.effective_field.H_eff)
     _, H_vals = Hf.coords_and_values()
     _, dmdt_vals = llg._dmdt.coords_and_values()
 
@@ -242,7 +244,8 @@ def test_zhangli_rhs_and_gradient_match_legacy_oracle_fixture():
 
     cm, m_vals = llg.m_field.coords_and_values()
     Hf = Field(S3)
-    Hf.from_array(llg.effective_field.H_eff)
+    # H_eff is component-blocked (``xxx``, Task 31); invert that ordering.
+    Hf.set_with_ordered_numpy_array_xxx(llg.effective_field.H_eff)
     _, H_vals = Hf.coords_and_values()
     _, hg_vals = hg_field.coords_and_values()
     _, dmdt_vals = llg._dmdt.coords_and_values()

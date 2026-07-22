@@ -79,7 +79,9 @@ def _fields(m=(0.6, 0.8, 0.0), Ms=8.0e5, extent=1.0, n=3):
 
 def _diff(interaction, expected_field):
     """Max deviation between an interaction's average field and expected."""
-    H = interaction.compute_field().reshape((-1, 3)).mean(0)
+    # Task 31: compute_field() is component-blocked; per-component nodal mean
+    # is reshape((3, -1)).mean(1), not the old raw-interleaved reshape((-1, 3)).
+    H = interaction.compute_field().reshape((3, -1)).mean(1)
     return np.max(np.abs(H - np.asarray(expected_field)))
 
 
@@ -283,7 +285,7 @@ def test_oscillating_zeeman_waveform():
     def check_field_at(H_osc, t, val):
         H_osc.update(t)
         assert np.allclose(
-            H_osc.compute_field().reshape(-1, 3), val, atol=0, rtol=1e-8)
+            H_osc.compute_field().reshape((3, -1)).T, val, atol=0, rtol=1e-8)
 
     H_osc = OscillatingZeeman(H0=H, freq=freq, phase=0, t_off=t_off)
     H_osc.setup(m, Ms, unit_length=1.0)
@@ -373,8 +375,11 @@ def test_dipolar_field_matches_closed_form():
     H_dipole = DipolarField(pos=[0, 0, 0], m=[1, 0, 0], magnitude=3e9)
     H_dipole.setup(m, Ms, unit_length=1e-9)
 
-    coords = m.functionspace.tabulate_dof_coordinates()
-    H = H_dipole.compute_field().reshape(-1, 3)
+    # Task 31: component-blocked field -> owned-vertex per-node rows, paired
+    # with the matching owned-vertex coordinates.
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
+    H = H_dipole.compute_field().reshape((3, -1)).T
 
     moment = np.array([3e9, 0.0, 0.0])
     # Skip points too close to the origin dipole (closed form singular there).
@@ -428,7 +433,9 @@ def test_oracle_time_zeeman_sequence_matches_legacy():
     tz = TimeZeeman(field_function)
     tz.setup(m, Ms, unit_length=1e-9)
 
-    coords = m.functionspace.tabulate_dof_coordinates()
+    # Task 31: sort owned-vertex coordinates; blocked field rows follow suit.
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
 
     ref_coords = np.asarray(case["coordinates"]["values"])
@@ -438,7 +445,7 @@ def test_oracle_time_zeeman_sequence_matches_legacy():
         if t != 0.0:
             tz.update(t)
         E = tz.compute_energy()
-        H = tz.compute_field().reshape(-1, 3)[order]
+        H = tz.compute_field().reshape((3, -1)).T[order]
 
         e_q = snap["scalar_quantities"][0]
         h_q = snap["quantities"][0]
@@ -460,14 +467,16 @@ def test_oracle_discrete_time_zeeman_sequence_matches_legacy():
     dtz = DiscreteTimeZeeman(field_function, dt_update=2e-10)
     dtz.setup(m, Ms, unit_length=1e-9)
 
-    coords = m.functionspace.tabulate_dof_coordinates()
+    # Task 31: sort owned-vertex coordinates; blocked field rows follow suit.
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
 
     for t, snap in zip(case["t_values"], case["snapshots"]):
         if t != 0.0:
             dtz.update(t)
         E = dtz.compute_energy()
-        H = dtz.compute_field().reshape(-1, 3)[order]
+        H = dtz.compute_field().reshape((3, -1)).T[order]
 
         e_q = snap["scalar_quantities"][0]
         h_q = snap["quantities"][0]
@@ -507,7 +516,7 @@ def test_real_timezeeman_auto_connects_without_explicit_with_time_update():
     H_at_0 = sim.llg.effective_field.compute(t=0.0)
     assert np.isfinite(H_at_0).all()
     np.testing.assert_allclose(
-        H_at_0.reshape(-1, 3), np.broadcast_to((0.0, 0.0, 1e5), (H_at_0.size // 3, 3)),
+        H_at_0.reshape((3, -1)).T, np.broadcast_to((0.0, 0.0, 1e5), (H_at_0.size // 3, 3)),
         rtol=1e-12, atol=0.0)
 
 
@@ -532,5 +541,5 @@ def test_real_timezeeman_field_changes_during_run_until():
     expected = np.array([0.0, 0.0, 1e5]) * expected_scale
     assert not np.allclose(H_before, H_after)
     np.testing.assert_allclose(
-        H_after.reshape(-1, 3), np.broadcast_to(expected, (H_after.size // 3, 3)),
+        H_after.reshape((3, -1)).T, np.broadcast_to(expected, (H_after.size // 3, 3)),
         atol=1.0, rtol=1e-6)

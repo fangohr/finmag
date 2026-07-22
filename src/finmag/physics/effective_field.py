@@ -25,10 +25,12 @@ class EffectiveField(object):
         self.Ms = Ms
         self.unit_length = unit_length
 
-        # Sized to m's flat rank-local owned DOLFINx dofs -- the same
-        # owned-array contract every ported interaction's compute_field()
-        # returns, so accumulation below stays shape-consistent. [Claude
-        # Sonnet 5]
+        # Sized to m's flat rank-local owned DOLFINx dofs. Every ported
+        # interaction's compute_field() now returns the same size in legacy
+        # component-blocked (``xxx``) order (Task 31); the elementwise
+        # accumulation below stays shape- and ordering-consistent because
+        # every term shares that one ordering, so H_eff is itself blocked.
+        # [Claude Sonnet 5]
         self.output_size = self.m_field.as_array().size
         self.H_eff = np.zeros(self.output_size)
 
@@ -170,12 +172,15 @@ class EffectiveField(object):
         """Return a fresh DOLFINx Function on m's space holding an
         interaction's current field.
 
-        The result wraps the interaction's flat rank-local owned
-        ``compute_field()`` array on ``self.m_field.functionspace``, matching
-        the legacy contract of returning a bare Function (as
-        ``Simulation.llg._m_field.f`` does for ``m`` itself). Region-restricted
-        extraction is not yet ported and fails explicitly rather than being
-        silently ignored.
+        The result reconstructs a Function on ``self.m_field.functionspace``
+        from the interaction's ``compute_field()`` array, matching the legacy
+        contract of returning a bare Function (as ``Simulation.llg._m_field.f``
+        does for ``m`` itself). Since ``compute_field()`` now returns the legacy
+        component-blocked (``xxx``) ordering (Task 31), the reconstruction must
+        invert it with ``set_with_ordered_numpy_array_xxx`` -- not the raw
+        ``from_array`` constructor path, which would scramble the components.
+        Region-restricted extraction is not yet ported and fails explicitly
+        rather than being silently ignored.
         """
         if region is not None:
             raise NotImplementedError(
@@ -183,4 +188,6 @@ class EffectiveField(object):
                 "DOLFINx EffectiveField slice"
             )
         interaction = self.get(interaction_name)
-        return Field(self.m_field.functionspace, interaction.compute_field()).f
+        field = Field(self.m_field.functionspace)
+        field.set_with_ordered_numpy_array_xxx(interaction.compute_field())
+        return field.f

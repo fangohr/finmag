@@ -316,7 +316,10 @@ def test_nonuniform_rhs_matches_legacy_oracle_fixture():
 
     cm, m_vals = llg.m_field.coords_and_values()
     Hf = Field(S3)
-    Hf.from_array(llg.effective_field.H_eff)
+    # H_eff is now component-blocked (``xxx``, Task 31); reconstruct the
+    # Function by inverting that ordering, not the raw from_array path (which
+    # would scramble components and silently mis-order this oracle comparison).
+    Hf.set_with_ordered_numpy_array_xxx(llg.effective_field.H_eff)
     _, H_vals = Hf.coords_and_values()
     _, dmdt_vals = llg._dmdt.coords_and_values()
 

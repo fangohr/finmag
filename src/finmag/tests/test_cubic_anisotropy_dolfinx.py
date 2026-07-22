@@ -309,11 +309,13 @@ def test_default_assemble_false_computes_energy_and_analytic_field():
     assert ca.assemble is False
     assert np.isfinite(ca.compute_energy())
 
-    H = ca.compute_field().reshape(-1, 3)
+    # Task 31: compute_field() is component-blocked; per-node rows are
+    # reshape((3, -1)).T (owned-vertex order), matching m.coords_and_values().
+    H = ca.compute_field().reshape((3, -1)).T
     assert np.all(np.isfinite(H))
     assert np.max(np.abs(H)) > 0.0
     H_expected = _analytic_field(
-        m.as_array().reshape(-1, 3), u1, u2, K1, K2, K3, Ms)
+        m.coords_and_values()[1], u1, u2, K1, K2, K3, Ms)
     np.testing.assert_allclose(H, H_expected, rtol=1e-12, atol=0.0)
 
 
@@ -377,8 +379,9 @@ def test_default_assemble_false_field_matches_analytic_derivation():
     ca.setup(m, Ms_field, unit_length=1e-9)
     assert ca.assemble is False
 
-    H = ca.compute_field().reshape(-1, 3)
-    m_nodes = m.as_array().reshape(-1, 3)
+    # Task 31: component-blocked field/m to owned-vertex per-node rows.
+    H = ca.compute_field().reshape((3, -1)).T
+    m_nodes = m.coords_and_values()[1]
     H_expected = _analytic_field(m_nodes, u1, u2, K1, K2, K3, Ms)
     np.testing.assert_allclose(H, H_expected, rtol=1e-12, atol=0.0)
     assert np.max(np.abs(H)) > 0.0
@@ -420,8 +423,10 @@ def test_oracle_cubic_3d_field_energy():
     ca.setup(m, Ms, unit_length=physical["unit_length"]["value"])
 
     E = ca.compute_energy()
-    H = ca.compute_field().reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: component-blocked field -> owned-vertex per-node rows, sorted
+    # against the matching owned-vertex coordinates.
+    H = ca.compute_field().reshape((3, -1)).T
+    coords, _ = m.coords_and_values()
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     coords_s, H_s = coords[order], H[order]
 
@@ -477,8 +482,9 @@ def _native_case_port_field(case):
     assert ca.assemble is False
     ca.setup(m, Ms, unit_length=physical["unit_length"]["value"])
 
-    H = ca.compute_field().reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: component-blocked field -> owned-vertex per-node rows.
+    H = ca.compute_field().reshape((3, -1)).T
+    coords, _ = m.coords_and_values()
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     return H[order], coords[order]
 

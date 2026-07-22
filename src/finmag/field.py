@@ -184,7 +184,14 @@ class Field:
         return self.from_constant(sequence)
 
     def set_with_numpy_array_debug(self, value, normalised=False):
-        self.from_array(value)
+        """Set from a legacy component-blocked (``xxx``) owned-vertex array.
+
+        Kept the exact inverse of :meth:`get_numpy_array_debug` (Task 31):
+        legacy's ``set_local``/``get_local`` pair both operated on the blocked
+        local vector, so the debug getter/setter must round-trip. Use
+        :meth:`from_array` for a raw backend-order owned array.
+        """
+        self.set_with_ordered_numpy_array_xxx(value)
         if normalised:
             self.normalise()
         return self
@@ -194,7 +201,14 @@ class Field:
         return self.f.x.array[: self._owned_scalar_dofs()].copy()
 
     def get_numpy_array_debug(self):
-        return self.as_array()
+        """Return the legacy component-blocked (``xxx``) owned-vertex array.
+
+        Restored to legacy semantics (Task 31): legacy dolfin's local vector
+        was component-blocked, so every historical consumer that reshaped this
+        as ``(3, -1)`` expected blocked ordering. The raw backend-order owned
+        dofs remain available through :meth:`as_array`.
+        """
+        return self.get_ordered_numpy_array_xxx()
 
     def local_array_with_ghosts(self):
         """Return rank-local DOLFINx storage, including ghost entries."""
@@ -601,3 +615,29 @@ def _owned_vertex_to_dof(functionspace):
     if np.any(permutation >= num_owned_dofs):
         raise ValueError("owned vertices did not map exclusively to owned dofs")
     return permutation
+
+
+def owned_raw_to_blocked(functionspace, raw_array):
+    """Convert a flat owned backend-order array to the legacy blocked view.
+
+    ``raw_array`` is a flat rank-local **owned** dof array in DOLFINx backend
+    (node-interleaved ``[x0, y0, z0, x1, y1, z1, ...]``) order -- exactly what
+    an interaction's raw box/analytic assembly or ``Field.as_array()`` returns.
+    The result is the legacy component-blocked, owned-vertex-coordinate-ordered
+    ``xxx`` view (``[x(v0), x(v1), ..., y(v0), ..., z(v0), ...]`` over owned
+    vertices), identical to :meth:`Field.get_ordered_numpy_array_xxx`.
+
+    This is the single shared conversion applied at every public field-array
+    boundary (each interaction's ``compute_field``); it reuses the canonical
+    ``_owned_vertex_to_dof`` coordinate permutation -- it is NOT a naive
+    interleave-transpose. Scalar spaces are returned coordinate-ordered.
+    """
+    element = functionspace.ufl_element()
+    value_shape = element.reference_value_shape
+    value_dim = int(np.prod(value_shape)) if value_shape else 1
+    permutation = _owned_vertex_to_dof(functionspace)
+    raw_array = np.asarray(raw_array, dtype=np.float64)
+    xyz = raw_array.reshape((-1, value_dim))[permutation].reshape(-1)
+    if value_dim == 1:
+        return xyz
+    return xyz.reshape((-1, value_dim)).T.reshape(-1)

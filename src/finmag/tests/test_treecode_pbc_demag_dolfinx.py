@@ -302,7 +302,8 @@ def test_treecode_uniform_sphere_demag_factor():
     m, Ms = _fields(mesh, (0.0, 0.0, 1.0), 8.6e5)
     tc = TreecodeBEM(mac=0.4, p=5, num_limit=100)
     tc.setup(m, Ms, unit_length=1e-9)
-    H = tc.compute_field().reshape((-1, 3))
+    # Task 31: component-blocked field -> owned-vertex per-node rows.
+    H = tc.compute_field().reshape((3, -1)).T
     Hz_avg = H[:, 2].mean()
     assert abs(Hz_avg / Ms.f.x.array[0] + 1.0 / 3.0) < 0.05
 
@@ -320,7 +321,8 @@ def _pbc_field_avg(mesh, m_vec, Ms, nx=1, ny=1):
     m, Ms_f = _fields(mesh, m_vec, Ms)
     demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny))
     demag.setup(m, Ms_f, unit_length=1e-9)
-    H = demag.compute_field().reshape((-1, 3))
+    # Task 31: component-blocked field -> owned-vertex per-node rows.
+    H = demag.compute_field().reshape((3, -1)).T
     return H.mean(axis=0)
 
 
@@ -337,9 +339,10 @@ def _field_at_origin(mesh, m_vec, Ms, nx=1, ny=1):
     demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny),
                     parameters={"phi_1": tol, "phi_2": tol})
     demag.setup(m, Ms_f, unit_length=1e-9)
-    S3 = m.functionspace
-    H = demag.compute_field().reshape((-1, 3))
-    coords = S3.tabulate_dof_coordinates()[: H.shape[0]]
+    # Task 31: component-blocked field -> owned-vertex per-node rows, paired
+    # with the matching owned-vertex coordinates.
+    H = demag.compute_field().reshape((3, -1)).T
+    coords, _ = m.coords_and_values()
     i = int(np.argmin(np.linalg.norm(coords, axis=1)))
     return H[i] / Ms
 

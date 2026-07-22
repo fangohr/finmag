@@ -45,7 +45,7 @@ from dolfinx.fem import petsc as fem_petsc
 from mpi4py import MPI
 from petsc4py import PETSc
 
-from finmag.field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
 from finmag.util.configuration import get_config_option
 
 logger = logging.getLogger("finmag")
@@ -440,7 +440,23 @@ class FKDemag(object):
         return self._phi
 
     def compute_field(self):
-        """Compute the demagnetising field as a flat owned ``xyz`` array."""
+        """Compute the demag field in legacy component-blocked (``xxx``) order.
+
+        Public field-array surface (Task 31): the raw node-interleaved owned
+        gradient array (:meth:`_compute_field_raw`) is converted once here to
+        the legacy component-blocked, owned-vertex ``xxx`` view via the shared
+        helper. ``TreecodeBEM`` inherits this method unchanged.
+        """
+        return owned_raw_to_blocked(self.S3, self._compute_field_raw())
+
+    def _compute_field_raw(self):
+        """Raw node-interleaved owned demag field (pre-conversion layout).
+
+        Internal: used by the public blocked ``compute_field``, by the
+        order-invariant ``average_field`` nodal mean, and by ``_load_H_func``
+        (which writes it straight into a DOLFINx Function's backend-order
+        storage).
+        """
         self._compute_magnetic_potential()
         return self._compute_gradient()
 
@@ -450,7 +466,7 @@ class FKDemag(object):
 
     def average_field(self):
         """Collective arithmetic average of the demag field over owned nodes."""
-        values = self.compute_field().reshape((-1, 3))
+        values = self._compute_field_raw().reshape((-1, 3))
         local_sum = np.sum(values, axis=0)
         global_sum = np.zeros_like(local_sum)
         self.domain.comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
@@ -459,7 +475,7 @@ class FKDemag(object):
 
     def _load_H_func(self):
         """Copy the current demag field (owned) into ``self._H_func``."""
-        owned = self.compute_field()
+        owned = self._compute_field_raw()
         self._H_func.x.array[: owned.size] = owned
         self._H_func.x.scatter_forward()
 

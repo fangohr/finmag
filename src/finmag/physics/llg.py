@@ -277,15 +277,15 @@ class LLG(object):
         """
         self._require_serial("solve")
 
-        # Accumulate the total effective field from the registry, then route it
-        # into the same coordinate-ordered component-blocked layout as m so the
-        # node-local update below is unambiguous.
+        # Accumulate the total effective field from the registry. Since Task 31
+        # every interaction's compute_field() -- and therefore the accumulated
+        # H_eff -- is already in the coordinate-ordered component-blocked
+        # (``xxx``) layout m uses, so it is consumed directly here with NO
+        # re-conversion (the former raw->xxx round-trip would double-convert).
         self.effective_field.update(t)
-        H_eff_field = Field(self.S3)
-        H_eff_field.from_array(self.effective_field.H_eff)
 
         m = self._m_field.get_ordered_numpy_array_xxx().reshape((3, -1))
-        H = H_eff_field.get_ordered_numpy_array_xxx().reshape((3, -1))
+        H = self.effective_field.H_eff.reshape((3, -1))
 
         # Spin-transfer-torque dispatch, mirroring the legacy ``solve``:
         # Slonczewski and Zhang-Li are mutually exclusive extra torques added
@@ -409,17 +409,15 @@ class LLG(object):
         mp = np.asarray(mp, dtype=np.float64).reshape(-1)
 
         # H' = dH_eff/da in the direction mp (linear interactions -> H(mp)).
+        # compute_jacobian_only / H_eff are already component-blocked (``xxx``)
+        # since Task 31, so they are consumed directly with NO re-conversion.
         self._m_field.set_with_ordered_numpy_array_xxx(mp)
-        Hp_field = Field(self.S3)
-        Hp_field.from_array(self.effective_field.compute_jacobian_only(t))
-        Hp = Hp_field.get_ordered_numpy_array_xxx()
+        Hp = self.effective_field.compute_jacobian_only(t)
 
         # Restore the linearisation state m and its effective field H(m, t).
         self._m_field.set_with_ordered_numpy_array_xxx(m)
         self.effective_field.update(t)
-        H_field = Field(self.S3)
-        H_field.from_array(self.effective_field.H_eff)
-        H = H_field.get_ordered_numpy_array_xxx()
+        H = self.effective_field.H_eff
 
         jt = self._jtimes_numpy(
             m.reshape((3, -1)), H.reshape((3, -1)),

@@ -162,8 +162,21 @@ class CubicAnisotropy(EnergyBase):
                 _assemble_vector_owned(self.K3.f * scalar_test * dx, self.S1)
                 / self.nodal_volume_S1
             )
-            self.compute_field = self._compute_field_analytic
         return self
+
+    def _compute_field_raw(self):
+        """Dispatch the raw (backend-order) field by discretisation flag.
+
+        ``assemble=True`` reuses ``EnergyBase``'s box-assemble weak-form
+        derivative; the legacy-default ``assemble=False`` uses the analytic
+        native-transcription path. Both return the raw node-interleaved owned
+        layout; the public ``compute_field`` (inherited) applies the single
+        shared component-blocked conversion (Task 31), so the analytic path is
+        no longer bound directly onto ``self.compute_field``.
+        """
+        if self.assemble:
+            return super()._compute_field_raw()
+        return self._compute_field_analytic()
 
     def _compute_field_analytic(self):
         """Legacy-default (``assemble=False``) nodal analytic effective field.
@@ -178,8 +191,9 @@ class CubicAnisotropy(EnergyBase):
         weak-form-derivative field used for ``assemble=True``; the two agree
         in the continuum limit (they converge together under refinement).
 
-        Returned in the same flat, rank-local owned-dof layout as
-        ``EnergyBase.compute_field`` so it is a drop-in replacement.
+        Returned in the raw flat, rank-local owned node-interleaved dof
+        layout of ``EnergyBase._compute_field_raw`` (the public
+        ``compute_field`` applies the shared component-blocked conversion).
         """
         m_nodes = self.m.as_array().reshape(-1, self.m.value_dim())
         Ms = self._ms_per_node(m_nodes.shape[0])

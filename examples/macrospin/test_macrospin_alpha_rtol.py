@@ -3,15 +3,9 @@
 #   - print statements -> print() (Python 3).
 #   - dolfin.BoxMesh(dolfin.Point(...)) -> dolfinx.mesh.create_box.
 #   - make_analytic_solution imported from finmag.util.macrospin directly.
-#   - INTERFACE-DRIFT (#6): the legacy initial state
-#     sim.llg._m_field.get_numpy_array_debug() (fed to odeint(sim.llg.solve_for,
-#     ...)) was component-blocked; in the port get_numpy_array_debug() is raw
-#     interleaved dof order while solve_for expects the component-blocked "xxx"
-#     ordering. As a Task 30 WORKAROUND we use sim.llg.m_numpy (the xxx-ordered
-#     state) as the initial condition. This is to be REVERTED in Task 31
-#     (component-ordering restoration): CONTROLLER DECISION -- Task 31 will
-#     restore get_numpy_array_debug() to the legacy component-blocked ordering,
-#     after which the legacy line is used verbatim again. reshape((3, -1)) on
+#   - get_numpy_array_debug() returns the legacy component-blocked ("xxx")
+#     ordering (restored in Task 31), which is exactly what solve_for expects,
+#     so the legacy initial-state line is used verbatim. reshape((3, -1)) on
 #     solve_for's xxx output is unchanged.
 #   - The pure-matplotlib do_plot branch is restored from legacy (Agg backend,
 #     savefig only); it runs on the __main__/save path under FINMAG_EXAMPLE_FULL
@@ -67,16 +61,12 @@ def test_deviations_over_alpha_and_tol(number_of_alphas=3, do_plot=False):
             sim.add(Zeeman((0, 0, 1e5)))
 
             ts = numpy.linspace(0, 1e-9, num=50)
-            # Task 30 WORKAROUND (drift #6), REVERT in Task 31: the legacy line
-            # was
-            #   odeint(sim.llg.solve_for,
-            #          sim.llg._m_field.get_numpy_array_debug(), ...)
-            # get_numpy_array_debug() is raw-interleaved in the port but
-            # solve_for expects the xxx ordering, so m_numpy is used here.
-            # Task 31 restores get_numpy_array_debug() to component-blocked
-            # ordering (controller decision), after which the legacy call
-            # is used verbatim.
-            ys = odeint(sim.llg.solve_for, sim.llg.m_numpy, ts,
+            # Task 31 restored get_numpy_array_debug() to the legacy
+            # component-blocked (``xxx``) ordering, which is exactly what
+            # solve_for expects, so the verbatim legacy initial-state line is
+            # used again.
+            ys = odeint(sim.llg.solve_for,
+                        sim.llg._m_field.get_numpy_array_debug(), ts,
                         rtol=rtol, atol=rtol)
 
             # One entry per timestep: the deviation between the two solutions.

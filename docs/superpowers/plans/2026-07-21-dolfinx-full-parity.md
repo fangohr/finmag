@@ -512,29 +512,29 @@ surfaces return legacy component-blocked ordering (x1..xN, y1..yN, z1..zN);
 internal storage unchanged. CRITICAL-class change: a wrong ordering fix does
 not error, it silently scrambles physics.
 
-- [ ] `compute_field()` on every interaction (EnergyBase box path, Exchange,
+- [x] `compute_field()` on every interaction (EnergyBase box path, Exchange,
   Zeeman + time family + DipolarField, uniaxial + cubic (both field paths),
   DMI, ThinFilmDemag, FKDemag, treecode/MacroGeometry) returns xxx-blocked
   owned arrays — implemented ONCE at the shared boundary (EnergyBase helper /
   each class's return point), not N hand-copies.
-- [ ] `EffectiveField.H_eff`/`compute()`/`compute_jacobian_only()` and
+- [x] `EffectiveField.H_eff`/`compute()`/`compute_jacobian_only()` and
   `sim.effective_field()` are xxx-blocked; `LLG.solve`'s existing raw→xxx
   H_eff conversion REMOVED (double-conversion is the failure mode — pin with
   a test that would catch it).
-- [ ] `Field.get_numpy_array_debug()` returns legacy component-blocked
+- [x] `Field.get_numpy_array_debug()` returns legacy component-blocked
   ordering (legacy = dolfin local vector = blocked).
-- [ ] Every ordering-sensitive test/fixture/probe updated: oracle-fixture
+- [x] Every ordering-sensitive test/fixture/probe updated: oracle-fixture
   array→table conversions, energies/effectivefield MPI probes, any gate
   pinning the old raw ordering — each change justified (the fixture VALUES
   never change, only the conversion applied before comparison).
-- [ ] Example workarounds reverted to legacy one-liners
+- [x] Example workarounds reverted to legacy one-liners
   (`examples/demag/test_field.py`, `examples/macrospin/
   test_macrospin_alpha_rtol.py`); drift rows #3/#6 closed in the table
   (moved to a "corrected" section, not deleted).
-- [ ] Cross-backend + composed-physics + examples gates all green — these are
+- [x] Cross-backend + composed-physics + examples gates all green — these are
   the anti-scramble safety net; plus one NEW dedicated ordering contract test
   (uniform-field asymmetric case where interleaved vs blocked provably
   differ, asserted against an analytic layout).
-- [ ] Docs (verification-checklist item): plan checkboxes, transition-notes
+- [x] Docs (verification-checklist item): plan checkboxes, transition-notes
   "Ordering correction (Task 31)" incl. the de-registered drift, porting_map
   register update. Attribution.

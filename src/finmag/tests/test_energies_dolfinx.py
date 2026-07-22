@@ -16,7 +16,17 @@ from finmag.energies import (
     Zeeman,
 )
 from finmag.energies.energy_base import mu0
-from finmag.field import Field
+from finmag.field import Field, owned_raw_to_blocked
+
+
+def _node_rows(blocked_field):
+    """Reshape a legacy component-blocked (``xxx``) field to per-node rows.
+
+    Task 31: ``compute_field()`` now returns component-blocked
+    ``[x0..xN, y0..yN, z0..zN]``; per-node ``(N, 3)`` rows (owned-vertex order)
+    are ``reshape((3, -1)).T``, not the old raw-interleaved ``reshape((-1, 3))``.
+    """
+    return blocked_field.reshape((3, -1)).T
 
 
 def _domain(dimension, cells=2):
@@ -86,7 +96,7 @@ def test_zeeman_field_average_and_analytic_energy(dimension):
 
     assert zeeman.name == "Applied"
     assert zeeman.in_jacobian is False
-    assert np.allclose(zeeman.compute_field().reshape((-1, 3)), H)
+    assert np.allclose(_node_rows(zeeman.compute_field()), H)
     assert np.allclose(zeeman.average_field(), H)
     expected = -mu0 * 8.0e5 * np.dot((0.6, 0.0, 0.8), H)
     expected *= unit_length**dimension
@@ -109,7 +119,7 @@ def test_zeeman_callable_set_value_keeps_live_function_and_density():
     assert np.allclose(density_values, -4.0 * mu0 * (1.0 + coordinates[:, 0]))
     zeeman.set_value((-2.0, 0.0, 0.0))
     assert zeeman.H.f is function
-    assert np.allclose(zeeman.compute_field().reshape((-1, 3)), (-2.0, 0.0, 0.0))
+    assert np.allclose(_node_rows(zeeman.compute_field()), (-2.0, 0.0, 0.0))
     assert zeeman.compute_energy() == pytest.approx(8.0 * mu0)
 
     density = zeeman.energy_density()
@@ -205,7 +215,13 @@ def test_exchange_field_scales_as_inverse_unit_length_squared():
 
     assert np.max(np.abs(H1)) > 0.0
     assert np.allclose(H2, H1 / 4.0)
-    weighted = (H1 * first.nodal_volume_S3).reshape((-1, 3)).sum(0)
+    # H1 is component-blocked (Task 31); pair it with the blocked nodal volumes
+    # so each component's volume-weighted sum (the exchange field integrates to
+    # zero) contracts matching nodes.
+    vol_blocked = owned_raw_to_blocked(
+        first.m.functionspace, first.nodal_volume_S3
+    )
+    weighted = (H1 * vol_blocked).reshape((3, -1)).sum(1)
     assert np.allclose(weighted, 0.0, atol=1e-8)
 
 
@@ -258,8 +274,8 @@ def test_anisotropy_k1_k2_field_direction_ms_and_length_scaling():
 
     expected_z = (2.0 * 4.0 * 0.8 + 4.0 * 1.5 * 0.8**3) / (mu0 * 2.5)
     expected = np.array((0.0, 0.0, expected_z))
-    H1 = first.compute_field().reshape((-1, 3))
-    H2 = second.compute_field().reshape((-1, 3))
+    H1 = _node_rows(first.compute_field())
+    H2 = _node_rows(second.compute_field())
     assert np.allclose(H1, expected, rtol=1e-13, atol=1e-9)
     assert np.allclose(H2, expected, rtol=1e-13, atol=1e-9)
     assert np.allclose(first.axis.coords_and_values()[1], (0.0, 0.0, 1.0))
@@ -275,12 +291,12 @@ def test_anisotropy_reassembles_nonlinear_k2_after_m_changes():
     _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
     anisotropy = UniaxialAnisotropy(4.0, (0.0, 0.0, 1.0), K2=1.5)
     anisotropy.setup(m, Ms)
-    first = anisotropy.compute_field().copy()
+    first = _node_rows(anisotropy.compute_field())
 
     m.set((0.8, 0.0, 0.6))
-    second = anisotropy.compute_field().reshape((-1, 3))
+    second = _node_rows(anisotropy.compute_field())
     expected_z = (2.0 * 4.0 * 0.6 + 4.0 * 1.5 * 0.6**3) / (mu0 * 2.5)
-    assert not np.allclose(first, second.reshape(-1))
+    assert not np.allclose(first, second)
     assert np.allclose(second, (0.0, 0.0, expected_z), rtol=1e-13, atol=1e-9)
 
 
@@ -299,9 +315,14 @@ def test_box_field_matches_finite_difference_energy_sign_and_mu0():
     m.set(base)
     numerical_derivative = (plus - minus) / (2.0 * epsilon)
 
-    H = anisotropy.compute_field().reshape((-1, 3))
+    H = _node_rows(anisotropy.compute_field())
     delta = np.repeat(perturbation[None, :], H.shape[0], axis=0)
-    volumes = anisotropy.nodal_volume_S3.reshape((-1, 3))
+    # Blocked field paired with blocked nodal volumes, both as owned-vertex rows.
+    volumes = _node_rows(
+        owned_raw_to_blocked(
+            anisotropy.m.functionspace, anisotropy.nodal_volume_S3
+        )
+    )
     local_pairing = np.sum(H * delta * volumes)
     pairing = m.mesh().comm.allreduce(local_pairing, op=MPI.SUM)
     expected_derivative = (

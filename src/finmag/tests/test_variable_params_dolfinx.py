@@ -105,9 +105,24 @@ def _scalar(case, name):
     raise KeyError(name)
 
 
-def _sorted_field(flat, S3):
-    H = flat.reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+def _blocked_to_xyz(blocked):
+    """Component-blocked (``xxx``) flat -> node-interleaved (``xyz``) flat.
+
+    Task 31: ``compute_field()`` now returns component-blocked order; this
+    converts it to the per-node-interleaved layout ``_sorted_field`` expects.
+    """
+    return blocked.reshape((3, -1)).T.reshape(-1)
+
+
+def _sorted_field(flat_xyz, S3):
+    # Task 31: sort a node-interleaved (``xyz``) flat by the matching
+    # owned-vertex coordinates (geometry order), so blocked ``compute_field``
+    # (converted via _blocked_to_xyz) and ``get_ordered_numpy_array_xyz`` both
+    # pair correctly with the coordinates.
+    domain = S3.mesh
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
+    H = flat_xyz.reshape(-1, 3)
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     return coords[order], H[order]
 
@@ -216,7 +231,7 @@ def _compare_energy_field(case_name, energy_factory, coeff_ms):
     energy.setup(m, Ms, unit_length=1e-9)
 
     E = energy.compute_energy()
-    coords_s, H_s = _sorted_field(energy.compute_field(), S3)
+    coords_s, H_s = _sorted_field(_blocked_to_xyz(energy.compute_field()), S3)
 
     ref_coords = np.asarray(case["coordinates"]["values"])
     np.testing.assert_allclose(coords_s, ref_coords, rtol=0, atol=1e-9)
@@ -378,7 +393,11 @@ def _k2_oracle_setup():
         physical["u1"]["value"], physical["u2"]["value"], K1=0,
         K2=lambda x: -1.3e7 * (1.0 + 0.4 * x[0] / 0.7), K3=0)
     ca.setup(m, Ms, unit_length=physical["unit_length"]["value"])
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: order by owned-vertex coords so blocked compute_field() rows
+    # (reshape((3, -1)).T) sort consistently.
+    domain = S3.mesh
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     return ca, S3, order
 
@@ -388,7 +407,7 @@ def test_k2_varying_port_matches_correct_field_and_energy():
     independently-derived correct field, and the box-assembled energy (which
     never uses the native field path) matches the legacy energy."""
     ca, S3, order = _k2_oracle_setup()
-    H_port = ca.compute_field().reshape(-1, 3)[order]
+    H_port = ca.compute_field().reshape((3, -1)).T[order]
     H_correct = np.asarray(_quantity(K2_FIX, "H_correct")["values"])
     scale = np.abs(H_correct).max()
     np.testing.assert_allclose(H_port, H_correct, rtol=1e-9, atol=1e-9 * scale)
@@ -409,7 +428,7 @@ def test_k2_varying_diverges_from_legacy_native_in_hz_only():
     ``hz`` differs, and the implied per-node K2 that reproduces the legacy
     ``hz`` is a single constant ``K2[v*]``."""
     ca, S3, order = _k2_oracle_setup()
-    H_port = ca.compute_field().reshape(-1, 3)[order]
+    H_port = ca.compute_field().reshape((3, -1)).T[order]
     H_legacy = np.asarray(_quantity(K2_FIX, "H_vertex")["values"])
     H_correct = np.asarray(_quantity(K2_FIX, "H_correct")["values"])
     K2_nodal = np.asarray(_quantity(K2_FIX, "K2_nodal")["values"])
@@ -457,7 +476,10 @@ def _cubic_varying_ms_setup():
         K1=physical["K1"]["value"], K2=physical["K2"]["value"],
         K3=physical["K3"]["value"])  # assemble=False default
     ca.setup(m, Ms, unit_length=physical["unit_length"]["value"])
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: order by owned-vertex coords (matches blocked compute_field rows).
+    domain = S3.mesh
+    n_owned = domain.geometry.index_map().size_local
+    coords = domain.geometry.x[:n_owned, :3]
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     return ca, S3, order
 
@@ -468,7 +490,7 @@ def test_cubic_varying_ms_matches_native_oracle():
     ``compute_cubic_field`` output node-for-node, at the same tolerance as
     the other native-oracle per-term cases."""
     ca, S3, order = _cubic_varying_ms_setup()
-    H_port = ca.compute_field().reshape(-1, 3)[order]
+    H_port = ca.compute_field().reshape((3, -1)).T[order]
     H_q = _quantity(MS_FIX, "H_vertex")
     ref_H = np.asarray(H_q["values"])
     np.testing.assert_allclose(
@@ -675,7 +697,7 @@ def test_tier1_composed_physics():
 
     expected_scale = np.cos(2.0 * np.pi * freq * sim.t)
     expected = np.array([0.0, 0.0, 5.0e4]) * expected_scale
-    H_osc = osc.compute_field().reshape(-1, 3)
+    H_osc = osc.compute_field().reshape((3, -1)).T
     np.testing.assert_allclose(
         H_osc, np.broadcast_to(expected, H_osc.shape), atol=1.0, rtol=1e-6)
 

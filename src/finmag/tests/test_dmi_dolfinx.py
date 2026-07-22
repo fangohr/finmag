@@ -366,8 +366,10 @@ def _oracle_compare(case_name, dmi_type):
     dmi = DMI(5.0e-3, dmi_type=dmi_type)
     dmi.setup(m, Ms, unit_length=1e-9)
     E = dmi.compute_energy()
-    H = dmi.compute_field().reshape(-1, 3)
-    coords = S3.tabulate_dof_coordinates()
+    # Task 31: component-blocked field -> owned-vertex per-node rows, sorted
+    # against the matching owned-vertex coordinates.
+    H = dmi.compute_field().reshape((3, -1)).T
+    coords, _ = m.coords_and_values()
     order = np.lexsort((coords[:, 2], coords[:, 1], coords[:, 0]))
     coords_s, H_s = coords[order], H[order]
 

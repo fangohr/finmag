@@ -146,6 +146,9 @@ pixi run -e dolfinx dolfinx-src-effectivefield-mpi
 echo "==> pixi run -e dolfinx dolfinx-src-llg-pytest"
 pixi run -e dolfinx dolfinx-src-llg-pytest
 
+echo "==> pixi run -e dolfinx dolfinx-src-ordering-pytest"
+pixi run -e dolfinx dolfinx-src-ordering-pytest
+
 echo "==> pixi run -e dolfinx dolfinx-src-scipy-pytest"
 pixi run -e dolfinx dolfinx-src-scipy-pytest
 

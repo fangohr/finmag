@@ -25,7 +25,7 @@ import logging
 import numpy as np
 from ufl import TestFunction, dx
 
-from finmag.field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
 
 from .energy_base import _assemble_vector_owned, _nodal_volume_owned, _require_cg1_magnetisation
 
@@ -94,15 +94,17 @@ class ThinFilmDemag:
         return self
 
     def compute_field(self):
-        """Collectively return flat rank-local owned field coefficients.
+        """Collectively return the field in legacy component-blocked order.
 
         Recomputed fresh from the currently bound ``m`` on every call (like
         legacy), so it reflects the live magnetisation state, not a value
-        cached at :meth:`setup` time.
+        cached at :meth:`setup` time. Public field-array surface (Task 31):
+        the raw node-interleaved owned array is converted once to the legacy
+        component-blocked, owned-vertex ``xxx`` view via the shared helper.
         """
         m_values = self.m.as_array().reshape((-1, 3))
         self.H[:, self.direction] = -self.strength * m_values[:, self.direction]
-        return self.H.reshape(-1).copy()
+        return owned_raw_to_blocked(self.m.functionspace, self.H.reshape(-1))
 
     def compute_energy(self):
         """Legacy hard-codes a literal ``0`` here: this field-only

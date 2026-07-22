@@ -152,6 +152,10 @@ dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m fin
 dolfinx-src-effectivefield-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_effective_field_dolfinx.py"
 dolfinx-src-effectivefield-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.effective_field_dolfinx_mpi_probe"
 dolfinx-src-llg-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_llg_dolfinx.py"
+# Task 31: the dedicated public field-array component-ordering contract (the
+# anti-scramble net); asymmetric analytic layouts that tell blocked from
+# interleaved and double-converted. [Claude Fable 5]
+dolfinx-src-ordering-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_ordering_contract_dolfinx.py"
 dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_scipy_driver_dolfinx.py"
 dolfinx-src-simulation-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_simulation_dolfinx.py"
 # Task 10: the aggregated deferred-surfaces sweep and the core Simulation
