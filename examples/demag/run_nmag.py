@@ -1,3 +1,6 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Requires Task 27: nmag reference generation via nsim.
+# [Claude Opus 4.8]
 import os
 import nmag, sys
 from nmag import SI

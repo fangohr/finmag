@@ -566,27 +566,38 @@ def _owned_vertex_to_dof(functionspace):
             )
         )
 
-    by_coordinate = {}
-    for index, coordinate in enumerate(np.round(dof_coordinates, decimals=12)):
-        key = tuple(coordinate)
-        if key in by_coordinate:
-            raise ValueError(
-                "coordinate ordering requires distinct dof coordinates"
-            )
-        by_coordinate[key] = index
-
     num_owned_vertices = domain.geometry.index_map().size_local
     num_owned_dofs = functionspace.dofmap.index_map.size_local
-    permutation = np.empty(num_owned_vertices, dtype=np.int64)
-    for vertex, coordinate in enumerate(
-        np.round(vertex_coordinates[:num_owned_vertices], decimals=12)
-    ):
-        try:
-            permutation[vertex] = by_coordinate[tuple(coordinate)]
-        except KeyError:
-            raise ValueError(
-                "could not match DOLFINx dofs to owned mesh vertices"
-            )
+
+    # Tolerance-based nearest-vertex match.
+    #
+    # The original implementation matched dof<->vertex coordinates by an exact
+    # 12-decimal-rounded dictionary lookup. That is bit-exact (and works) for
+    # structured meshes such as ``dolfinx.mesh.create_box``, but it is brittle
+    # for meshes carrying floating-point coordinate noise -- notably the
+    # Gmsh/``from_geofile`` meshes exercised by the converted examples (Task 30),
+    # whose vertices differ from the tabulated dof coordinates by ~1e-13. When
+    # such noise straddles a 12th-decimal rounding boundary the exact lookup
+    # raises "could not match DOLFINx dofs to owned mesh vertices" even though a
+    # clean one-to-one correspondence exists. A nearest-neighbour match within a
+    # scale-relative tolerance is robust to that noise and remains exact for
+    # bit-exact structured meshes. (Discovered while running exchange_demag /
+    # std_prob_4 on ``from_geofile`` bar meshes -- see the Task 30 report.)
+    # [Claude Opus 4.8]
+    from scipy.spatial import cKDTree
+
+    tree = cKDTree(dof_coordinates)
+    targets = vertex_coordinates[:num_owned_vertices]
+    distances, permutation = tree.query(targets)
+    permutation = np.asarray(permutation, dtype=np.int64)
+
+    span = dof_coordinates.max(axis=0) - dof_coordinates.min(axis=0)
+    scale = float(np.linalg.norm(span))
+    tol = 1e-9 * scale if scale > 0.0 else 1e-12
+    if distances.size and float(distances.max()) > tol:
+        raise ValueError("could not match DOLFINx dofs to owned mesh vertices")
+    if np.unique(permutation).size != permutation.size:
+        raise ValueError("coordinate ordering requires distinct dof coordinates")
     if np.any(permutation >= num_owned_dofs):
         raise ValueError("owned vertices did not map exclusively to owned dofs")
     return permutation

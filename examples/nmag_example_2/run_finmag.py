@@ -1,3 +1,8 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# nmag comparison harness (finmag half). Requires Task 27 (OOMMF/Nmag
+# comparison harnesses, NOT ported). The finmag physics here (bar + exchange
+# + FK demag) is already covered by the converted exchange_demag example.
+# [Claude Opus 4.8]
 from aeon import timer
 from finmag import Simulation
 from finmag.energies import Exchange, Demag

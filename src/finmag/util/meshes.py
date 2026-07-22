@@ -460,15 +460,12 @@ def netgen_is_usable():
     return False
 
 
-from_geofile = _deferred(
-    "from_geofile",
-    "the textual Netgen '.geo' -> dolfin-XML path is replaced by the Gmsh "
-    "Python-API generators.")
-from_csg = _deferred(
-    "from_csg",
-    "the textual Netgen-CSG -> dolfin-XML path is replaced by the Gmsh "
-    "Python-API generators (build geometry through the named generators or "
-    "mesh_templates classes instead).")
+# Task 18 deferred these; Task 30 (controller amendment) lifts the deferral for
+# the Netgen-CSG *subset* the examples use, building geometry through the same
+# OCC/Gmsh machinery above (``_mesh_from_geometry``). The netgen *binary*
+# backend stays deferred. See ``finmag.util.geofile`` for the supported dialect
+# and per-construct errors. [Claude Opus 4.8]
+from finmag.util.geofile import from_geofile, from_csg  # noqa: E402
 sphere_inside_box = _deferred(
     "sphere_inside_box",
     "multi-region 'airbox' meshes with subdomain markers are not part of this "

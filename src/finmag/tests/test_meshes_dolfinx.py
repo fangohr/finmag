@@ -473,9 +473,11 @@ def test_netgen_backend_deferred_by_name():
 
 
 def test_deferred_generators_raise_by_name():
+    # NB: from_geofile / from_csg were un-deferred in Task 30 (Netgen-CSG-subset
+    # loader) and are now covered by the test_from_geofile_* cases below.
+    # sphere_inside_box (multi-region airbox with subdomain markers) stays
+    # deferred.
     for fn, kwargs in [
-        (meshes.from_geofile, dict(geofile='x.geo')),
-        (meshes.from_csg, dict(csg='algebraic3d\n')),
         (meshes.sphere_inside_box,
          dict(r_sphere=10, r_shell=15, l_box=50, maxh_sphere=5, maxh_box=10)),
     ]:
@@ -524,3 +526,82 @@ def test_fk_demag_on_generated_sphere_smoke(tmp_path):
     assert np.isclose(avg[2], -Ms / 3.0, rtol=0.05)
     assert abs(avg[0]) < 0.05 * Ms
     assert abs(avg[1]) < 0.05 * Ms
+
+
+# --------------------------------------------------------------------------
+# from_geofile: Netgen-CSG '.geo' loader for the examples subset
+# (Task 30 amendment -- Task 18 deferral partially lifted). [Claude Opus 4.8]
+# --------------------------------------------------------------------------
+
+from finmag.util.meshes import from_geofile, from_csg
+from finmag.util.geofile import GeoFileError
+
+_EXAMPLES = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))))),
+    "examples",
+)
+
+
+@pytest.mark.parametrize("relpath,expected_vol,rtol", [
+    ("std_prob_4/bar.geo", 500 * 125 * 3, 1e-9),                 # orthobrick
+    ("exchange_demag/bar30_30_100.geo", 30 * 30 * 100, 1e-9),    # 6-plane box
+    ("cubic_anisotropy/bar.geo", 1 * 1 * 40, 1e-9),              # orthobrick
+    ("demag/sphere1.geo", 4.0 / 3 * pi * 10 ** 3, TOL1),         # sphere
+    ("demag/sphere_fine.geo", 4.0 / 3 * pi * 1 ** 3, TOL1),      # sphere (fine)
+])
+def test_from_geofile_example_volumes(tmp_path, relpath, expected_vol, rtol):
+    os.chdir(str(tmp_path))
+    mesh = from_geofile(os.path.join(_EXAMPLES, relpath), save_result=False)
+    _check_volume(mesh, expected_vol, rtol)
+
+
+def test_from_geofile_multi_tlo_cylinder_and_not(tmp_path):
+    """film.geo exercises cylinder + capping planes + 'and not' + two tlo.
+
+    The film block (orthobrick 1000 x 42 x 5) dominates; the carved contact
+    cylinder sits almost entirely inside the film, so the single-material
+    fused volume is ~ the film box. Proves the harder CSG path meshes at all."""
+    os.chdir(str(tmp_path))
+    mesh = from_geofile(os.path.join(_EXAMPLES, "edge_damping/film.geo"),
+                        save_result=False)
+    film_box = 1000.0 * 42.0 * 5.0
+    got = mesh_volume(mesh)
+    assert film_box <= got < 1.05 * film_box
+
+
+def test_from_csg_orthobrick_matches_geofile(tmp_path):
+    os.chdir(str(tmp_path))
+    csg = ("algebraic3d\nsolid cube = orthobrick(0,0,0;2,3,4) -maxh=1.0;\n"
+           "tlo cube;\n")
+    mesh = from_csg(csg, save_result=False)
+    _check_volume(mesh, 2 * 3 * 4, TOL3)
+
+
+def test_from_geofile_cache_roundtrip(tmp_path):
+    """Content-keyed cache: same .geo -> cache hit reproduces the mesh."""
+    geo = tmp_path / "b.geo"
+    geo.write_text("algebraic3d\nsolid c = orthobrick(0,0,0;1,1,1) -maxh=0.5;\ntlo c;\n")
+    m1 = from_geofile(str(geo))                 # writes cache beside the file
+    m2 = from_geofile(str(geo))                 # cache hit
+    assert num_vertices(m1) == num_vertices(m2)
+    assert np.isclose(mesh_volume(m1), mesh_volume(m2))
+
+
+def test_from_geofile_unsupported_construct_raises_by_name(tmp_path):
+    """multitranslate (used only by the T25-deferred dispersion_curves .geo)
+    must fail-forward, naming the construct."""
+    os.chdir(str(tmp_path))
+    csg = ("algebraic3d\nsolid a = orthobrick(0,0,0;1,1,1);\n"
+           "solid b = multitranslate(2,0,0;3;a);\ntlo b;\n")
+    with pytest.raises(NotImplementedError, match="multitranslate"):
+        from_csg(csg, save_result=False)
+
+
+def test_from_geofile_oblique_plane_raises(tmp_path):
+    os.chdir(str(tmp_path))
+    csg = ("algebraic3d\n"
+           "solid p = plane(0,0,0;1,1,0) and orthobrick(0,0,0;1,1,1) -maxh=0.5;\n"
+           "tlo p;\n")
+    with pytest.raises(NotImplementedError, match="axis-aligned"):
+        from_csg(csg, save_result=False)

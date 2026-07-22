@@ -1,70 +1,55 @@
+# DOLFINx port (Task 30): converted from the legacy dolfin example.
+#
+# Exponentially increasing damping at the film edges. The legacy script built a
+# dolfin Expression, projected it onto a CG1 space, and plotted it. In the port:
+#   - the damping profile is a plain vectorized NumPy callable (the port drops
+#     string Expressions -- see INTERFACE-DRIFT: Expression-strings);
+#   - df.project / matplotlib plotting are removed (plotting deferred, Task 26);
+#   - from_geofile("film.geo") is kept UNCHANGED (Netgen-CSG loader ported for
+#     the examples subset, Task 30 amendment -- film.geo exercises the
+#     cylinder + capping-plane + 'and not' + multi-tlo path);
+#   - the profile is validated numerically instead of plotted.
+# [Claude Opus 4.8]
+import os
 import numpy as np
-import dolfin as df
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
+from finmag.util.meshes import from_geofile
+
+MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def damping_expression(alpha, xmin, xmax, width):
-    """
-    Exponentially increasing damping at the edges along the x-axis.
-
-    Will increase alpha from its starting value `alpha` to 1 in a region
-    less than `width` away from `xmin` or `xmax`, where `xmin` and `xmax` are
-    the extremal x-coordinates of the mesh. Returns a df.Expression.
-
-    """
-    eps = 0.01  # changes slope of exponential fit
+def damping_profile(alpha, xmin, xmax, width):
+    """Return a vectorized callable alpha(x[0]) that ramps from `alpha` in the
+    bulk up to ~1 within `width` of either x-edge (replacing the legacy
+    df.Expression)."""
+    eps = 0.01
     a = alpha + eps
     b = ((1 + eps) / a) ** (1.0 / width)
     xa = xmin + width
     xb = xmax - width
-    code = ("(x[0] <= xa || xb <= x[0])"
-            " ? a * pow(b, fabs(x[0] - (x[0] <= xa ? xa : xb))) - eps"
-            " : alpha")
-    expr = df.Expression(code, xa=xa, xb=xb, alpha=alpha, a=a, b=b, eps=eps, degree=1)
-    return expr
 
+    def f(xs):
+        xs = np.asarray(xs, dtype=float)
+        near_left = xs <= xa
+        near_right = xb <= xs
+        ref = np.where(near_left, xa, xb)
+        edge_val = a * b ** np.abs(xs - ref) - eps
+        return np.where(near_left | near_right, edge_val, alpha)
 
-def plot_damping_profile(expr, mesh):
-    """
-    Plot a given damping profile to file 'damping.png'.
+    return f
 
-    The first argument `expr` should be a df.Expression (it can be obtained
-    using the function damping_expression in this module) and the second
-    argument should be a df.Mesh.
-
-    """
-    xs = mesh.coordinates()[:, 0]
-    xmin = xs.min()
-    xmax = xs.max()
-
-    points = 1000
-    xs_plot = np.linspace(xmin, xmax, points)
-    alphas = np.zeros(points)
-
-    S1 = df.FunctionSpace(mesh, "CG", 1)
-    alpha_func = df.project(expr, S1)
-    for i, x in enumerate(xs_plot):
-        try:
-            alphas[i] = alpha_func(x, 0, 0)
-        except RuntimeError:
-            # could raise Exception due to now resolved bug in dolfin
-            # https://bitbucket.org/fenics-project/dolfin/issue/97/function-eval-does-not-find-a-point-that
-            alphas[i] = 0
-
-    plt.plot(xs_plot, alphas)
-    plt.xlabel("x (nm)")
-    plt.xlim((xmin, xmax))
-    plt.ylabel("damping")
-    plt.ylim((0, 1))
-    plt.grid()
-    plt.title("Spatial Profile of the Damping")
-    plt.savefig('damping.png')
-    print "Saved plot of damping to 'damping.png'."
 
 if __name__ == "__main__":
-    from finmag.util.meshes import from_geofile
-    mesh = from_geofile("film.geo")
-    expr = damping_expression(0.02, 0, 1000, 200)
-    plot_damping_profile(expr, mesh)
+    mesh = from_geofile(os.path.join(MODULE_DIR, "film.geo"))
+    xs = mesh.geometry.x[:, 0]
+    xmin, xmax = xs.min(), xs.max()
+    f = damping_profile(0.02, 0, 1000, 200)
+    alphas = f(np.linspace(xmin, xmax, 1000))
+
+    # The bulk damping is ~0.02, it rises towards 1 near the edges, and never
+    # exceeds 1.
+    assert np.isclose(alphas.min(), 0.02, atol=1e-6), "bulk damping wrong"
+    assert alphas.max() > 0.9, "edge damping did not ramp up"
+    assert alphas.max() <= 1.0 + 1e-6, "damping exceeded 1"
+    # film.geo (x in [0, 1000]) loaded through the ported Netgen-CSG reader.
+    assert xmin < 1.0 and xmax > 999.0, "unexpected film x-extent"
+    print("edge_damping: film.geo loaded; edge-damping profile is correct.")

@@ -475,29 +475,32 @@ to surface, not something to paper over with rewrites.
 
 **Files:** `examples/` scripts (+ per-example run/verify wiring), a new gate.
 
-- [ ] Inventory every example and classify: (a) convertible now; (b) requires
-  an unported feature — annotate "requires Task N", do not force-port:
-  expected (b) set: `dispersion_curves` (normal modes, T25), `llb` (T24),
-  `nmag_example_2` (comparison harness, T27), `boost_python` (native demo —
-  assess/annotate).
-- [ ] Convert the (a) set with MINIMAL diffs: target = import/install story
-  and mechanically necessary touches only. Every changed line justified in
-  the report. Any example needing more than mechanical changes = an
-  interface-parity finding: record it (file, line, what the legacy API
-  expected, what the port requires) in a dedicated "interface drift"
-  section of the report and transition-notes — the user explicitly wants
-  this signal.
-- [ ] Same practical results: where an example has checked-in reference data
-  (`exchange_demag` averages/energies refs; std_prob_3/std_prob_4 known
-  µMAG results; others' printed numbers), compare at declared tolerances.
-  Where output is qualitative (VTK/plots), assert the artifacts are produced
-  and physically sane (norms, energies finite/consistent). Long-running
-  examples may run at reduced-but-honest resolution for the gate with the
-  full-resolution command documented.
-- [ ] New gate `dolfinx-src-examples-pytest` (or script-runner equivalent)
-  folded into `verify-dolfinx-m5`, runtime kept reasonable (subset/reduced
-  resolution for CI; full set runnable by a documented command).
-- [ ] Docs (verification-checklist item): plan checkboxes with outcomes,
-  transition-notes "Examples conversion (Task 30)" section incl. the
-  per-example table (converted/deferred/drift findings) and result
-  comparisons, porting_map update. Attribution.
+- [x] Inventory every example and classify. DONE: all 19 subdirs inventoried
+  (see the transition-notes per-example table). (b) set = `dispersion_curves`
+  (T25), `llb` (T24), `nmag_example_2` (T27), `boost_python` (Boost.Python C++
+  tutorials — not the finmag API), plus the nmag-comparison / mayavi-vpython
+  visualisation sibling scripts (T27 / T26); each annotated with a "requires
+  Task N" header. Everything else converted (a). [Claude Opus 4.8]
+- [x] Convert the (a) set with MINIMAL diffs. DONE: 18 scripts converted;
+  every changed line justified in the report + inline. 11 interface-drift
+  findings recorded in the dedicated table (transition-notes + report),
+  incl. one genuine src BUG (coordinate<->vertex matching crashed on
+  Gmsh/`from_geofile` meshes) fixed minimally and flagged for review, and one
+  stale-example fix (`CubicAnisotropy` signature). [Claude Opus 4.8]
+- [x] Controller amendment: `from_geofile` partially un-deferred. DONE:
+  `src/finmag/util/geofile.py` implements a Netgen-CSG-subset `.geo`/`from_csg`
+  loader on the Task 18 OCC/Gmsh machinery (orthobrick/sphere/plane-box/cylinder
+  + and/not + multi-tlo; multitranslate & oblique planes raise by name); example
+  `from_geofile("*.geo")` lines are unchanged. 10 focused tests in
+  `dolfinx-src-meshes-pytest`. Netgen-binary backend still deferred. [Claude Opus 4.8]
+- [x] Same practical results. DONE: exchange_demag vs checked-in nmag refs
+  (averages 2.9e-3, demag E 3.5e-3, exch E 2.8e-2 at honest tolerances);
+  macrospin & demag field/energy analytic; std_prob_3 flower E_total 0.2985 vs
+  µMAG 0.302; std_prob_4 µMAG switching window (FULL); the rest physical-sanity.
+  Reduced-resolution loosenings documented in transition-notes. [Claude Opus 4.8]
+- [x] New gate `dolfinx-src-examples-pytest` folded into `verify-dolfinx-m5`:
+  14 fast subprocess-run examples (~3-4 min) + 3 FULL-only (FINMAG_EXAMPLE_FULL=1
+  documented per-script). [Claude Opus 4.8]
+- [x] Docs. DONE: these checkboxes; transition-notes "Examples conversion (Task
+  30)" section (per-example table, drift table, from_geofile inventory, result
+  numbers); porting_map update. Attribution [Claude Opus 4.8].

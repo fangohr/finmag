@@ -1,3 +1,7 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Plots dynamics.ndt vs the Martinez reference. Requires Task 26 (plotting);
+# no dolfin/finmag-runtime dependency, kept as-is.
+# [Claude Opus 4.8]
 import os
 import numpy as np
 import matplotlib.pyplot as plt

@@ -49,3 +49,26 @@ install/docker/finmag/finmag-repo-clone.done
 # `build/` directory; neither is tracked output. [Claude Sonnet 5]
 *.egg-info/
 /build/
+
+# Task 30: generated artifacts from running the converted examples/ scripts and
+# the from_geofile Netgen-CSG mesh cache (md5-keyed *.xdmf/*.h5 written beside
+# the .geo). Checked-in reference data (*_ref*.txt, tracked *.png/*.pdf) is
+# unaffected -- gitignore only hides *untracked* files. [Claude Opus 4.8]
+examples/**/*.xdmf
+examples/**/*.h5
+examples/**/*.pvd
+examples/**/*.vtu
+examples/**/*.pvtu
+examples/**/*.npy
+examples/**/*.ndt
+examples/exchange_demag/averages.txt
+examples/exchange_demag/energies.txt
+examples/demag/demagenergies.txt
+examples/std_prob_3/data_m.txt
+examples/std_prob_3/data_energies.txt
+examples/std_prob_3/data_diffs.txt
+examples/exchange_1D/1d_times.txt
+examples/exchange_1D/1d_M.txt
+examples/exchange_1D/1d_coord.txt
+examples/cubic_anisotropy/hysteresis.txt
+examples/time-dependent-applied-field/fittedresults.txt

@@ -230,6 +230,10 @@ dolfinx-src-sundials-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 
 # native `make` (triggered by the sundials cross-check) from rewriting the
 # tracked version file. [Claude Opus 4.8]
 dolfinx-src-stt-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_stt_dolfinx.py"
+# Task 30: run the converted examples/ scripts as subprocesses against the
+# installed package (the practical-parity witness). The heavy muMAG /
+# long-dynamics examples run only with FINMAG_EXAMPLE_FULL=1. [Claude Opus 4.8]
+dolfinx-src-examples-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q examples/test_examples_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

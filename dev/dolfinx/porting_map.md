@@ -865,3 +865,24 @@ Before editing the matching module in `src/finmag`, check that:
   "Installing the DOLFINx port (pixi)" subsection for the exact commands and
   the dependency-split/version-split/wheel-non-goal rationale. [Claude
   Sonnet 5]
+- Task 30 (examples conversion, practical-parity witness): the legacy
+  `examples/` scripts now run on the ported package. 18 scripts converted with
+  minimal diffs (import/mesh/Expression-callable/print fixes only); the (b) set
+  (`dispersion_curves` T25, `llb` T24, `nmag_example_2`/nmag-comparison T27,
+  `boost_python` C++ tutorials, mayavi/vpython viz T26) is annotated
+  "requires Task N", not force-ported. Each converted script embeds its own
+  validation (checked-in reference data for `exchange_demag`; analytic for
+  `macrospin`/`demag`; µMAG for `std_prob_3/4`; physical-sanity otherwise) and
+  is run as a subprocess by the new `dolfinx-src-examples-pytest` gate
+  (14 fast + 3 FULL-only), folded into `verify-dolfinx-m5`. 11 interface-drift
+  findings are recorded in `transition-notes.org` ("Examples conversion (Task
+  30)"), the user's headline deliverable. Two `src/finmag` changes beyond the
+  documented example diffs, both flagged for review: (1) **controller-approved**
+  — `finmag.util.meshes.from_geofile`/`from_csg` un-deferred for the Netgen-CSG
+  subset the examples use (new `src/finmag/util/geofile.py`, built on the Task
+  18 OCC/Gmsh path; netgen-BINARY backend still deferred), so `from_geofile`
+  lines stay untouched; (2) a genuine robustness BUG fix in
+  `field.py::_owned_vertex_to_dof` (exact 12-decimal coordinate matching crashed
+  on Gmsh/`from_geofile` meshes; replaced with a tolerance-based nearest-vertex
+  match that is exact for `create_box` and robust to generator FP noise). No
+  legacy oracle tests touched; `pixi.lock` untouched. [Claude Opus 4.8]

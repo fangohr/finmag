@@ -1,3 +1,7 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# VPython live visualisation using the removed legacy LLG(mesh) single-arg
+# constructor. Requires Task 26 (visualisation).
+# [Claude Opus 4.8]
 """ Attempt to visualise some dynimacs using python's visual module.
 
 Visualisation probably okay, but some convergence problem in the time

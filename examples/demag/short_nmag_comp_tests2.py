@@ -1,3 +1,7 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Requires Task 27 (nmag comparison) AND the deferred GCR demag solver
+# (finmag.energies.demag.solver_gcr, by-name deferral).
+# [Claude Opus 4.8]
 ##import io
 import os
 import sys

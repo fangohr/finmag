@@ -76,6 +76,15 @@
 # exactly one fallback step (`dolfinx-src-import-pythonpath-fallback`) keeps
 # that mechanism exercised during the transition. [Claude Sonnet 5]
 #
+# Task 30 folds in the converted-examples gate (`dolfinx-src-examples-pytest`):
+# the legacy examples/ scripts converted to the ported package and run as
+# subprocesses, each embedding its own validation (checked-in reference data,
+# analytic solutions, published muMAG values, or physical-sanity invariants) --
+# the practical-parity witness. The heavy muMAG / long-dynamics examples run
+# only under FINMAG_EXAMPLE_FULL=1. This task also partially lifts the Task 18
+# `from_geofile` deferral (Netgen-CSG '.geo' loader for the examples subset),
+# covered by new cases in `dolfinx-src-meshes-pytest`. [Claude Opus 4.8]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -181,3 +190,6 @@ pixi run -e dolfinx dolfinx-src-stt-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke
+
+echo "==> pixi run -e dolfinx dolfinx-src-examples-pytest"
+pixi run -e dolfinx dolfinx-src-examples-pytest
