@@ -354,3 +354,37 @@ every capability not already formally dropped is treated as PORT.
   and added a docstring cross-reference from `test_construction_core_state`'s
   `Simulation`-default pin to the USER ACCEPTANCE PENDING register entry.
   [Claude Sonnet 5]
+
+## Task 22: STT — Slonczewski and Zhang-Li
+
+**Files:** `src/finmag/physics/llg.py` (`set_stt`/`set_zhangli` and the STT
+dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
+(`set_stt`/`set_zhangli` pass-throughs), their tests.
+
+- [ ] Establish the legacy STT surface at the pixi tip: `LLG.set_stt`
+  (Slonczewski: current density, polarisation, thickness, direction) and
+  `set_zhangli` (adiabatic/non-adiabatic in-plane torque), the exact dm/dt
+  term forms (native `calc_llg_stt_dmdt`/related kernels in `native/src/llg`
+  — read the C++ for the formulas, as Task 7 did), and the `llg_stt.py`
+  module's role vs the in-LLG flags.
+- [ ] Port the deterministic STT terms into the ported LLG's NumPy RHS,
+  transcribing the native formulas exactly (Task 7 protocol: derive from the
+  C++ source, never from docstrings); native STT kernels are NOT rebuilt —
+  this is a NumPy transcription slice (document that decision).
+- [ ] Coordinate-ordered legacy oracle fixtures: one Slonczewski case and one
+  Zhang-Li case (m, parameters, dm/dt), per the fixture schema; analytic
+  sanity pins (torque direction/scaling with current density).
+- [ ] `sundials`/scipy integration with STT active: a short dynamics witness
+  per torque type asserting a physical effect (domain-wall/spin-torque tilt),
+  cross-checked between backends at declared tolerance.
+- [ ] Preserve `do_slonczewski`/`do_zhangli`-era public semantics where the
+  ported LLG exposes them (Task 9 dropped the bare flags — restore the
+  set_* API surface faithfully; document any surface that stays deferred,
+  Task 29-registered).
+- [ ] `llg_stt.py` (the separate STT-LLG class): port if its capability is
+  distinct from the in-LLG flags (read legacy usage); else defer by name
+  with documentation.
+- [ ] New gate `dolfinx-src-stt-pytest` folded into `verify-dolfinx-m5`.
+- [ ] Docs (verification-checklist item, not optional): plan checkboxes with
+  outcomes, transition-notes "STT (Task 22)" section with formulas cited to
+  C++ lines + fixture numbers, porting_map update. Attribution.
