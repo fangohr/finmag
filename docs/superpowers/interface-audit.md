@@ -263,3 +263,22 @@ git show b9006786:src/finmag/util/geofile.py | sed -n '525p'         # from_csg(
 # No keyword callers of any renamed param:
 grep -rn 'fun_regions=\|from_callable( *func=\|from_constant( *constant=\|from_array( *arr=\|from_sequence( *seq=\|from_csg( *csg=' examples/ src/finmag/   # -> empty
 ```
+
+## CubicAnisotropy argument-order concern — RESOLVED (user review 2026-07-22)
+
+Direct `git show` evidence: `CubicAnisotropy.__init__` is
+`(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy', assemble=False)`
+**byte-identical** at master `b5015c5a`, pixi oracle `ba928093`, and the port
+(current HEAD). Master's own `cubic_anisotropy_test.py:43` calls
+`CubicAnisotropy(u1, u2, K1, K2, K3)`, matching the class. Only master's
+`examples/cubic_anisotropy/hysteresis.py:31` used
+`CubicAnisotropy(K1, u1, K2, u2, K3, u3)` — which did **not** match its own
+class on master (integer `K1` passed where tuple `u1` is expected; a stale,
+almost certainly never-run Python-2 example). The port kept the class
+unchanged and corrected the stale example call. **Verdict: not a
+port-introduced interface change; user confirmed keep-as-is.**
+
+(Record note: this resolution was first written to the working tree during a
+concurrent revert slice and was discarded by that slice's clean-tree guard;
+re-committed here on a clean tree. Lesson logged: the controller must not edit
+tracked files while an implementer subagent owns the working tree.)
