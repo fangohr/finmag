@@ -54,6 +54,15 @@
 # analytic direction/scaling pins, Simulation pass-throughs, dynamics witnesses
 # and a scipy-vs-sundials cross-backend STT check. [Claude Opus 4.8]
 #
+# Task 23 folds in the treecode/PBC demag port gate
+# (`dolfinx-src-treecode-pytest`): the native `treecode_bem` Cython BEM kernels
+# rebuilt for the DOLFINx env (Cython/NumPy-2, dolfin-free), the
+# treecode-accelerated FK solver (`Demag(solver='Treecode')`) and the periodic
+# MacroGeometry demag (`Demag(macrogeometry=...)`), validated by cross-method
+# comparison against the dense FK demag (no treecode oracle fixtures exist) plus
+# periodic image-sum convergence and the analytic thin-film limit. [Claude
+# Opus 4.8]
+#
 # Task 21 makes this gate run against an INSTALLED editable package instead of
 # `PYTHONPATH=src` (`pyproject.toml`, src-layout, setuptools). It adds three
 # steps right after `dolfinx-versions`: `dolfinx-install-editable` (`pip
@@ -142,6 +151,9 @@ pixi run -e dolfinx dolfinx-src-native-bem-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-demag-pytest"
 pixi run -e dolfinx dolfinx-src-demag-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-treecode-pytest"
+pixi run -e dolfinx dolfinx-src-treecode-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-restart-output-pytest"
 pixi run -e dolfinx dolfinx-src-restart-output-pytest

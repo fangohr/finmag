@@ -69,6 +69,14 @@ sundials = ">=7,<8"
 # so `import finmag` never pulls it in. [Claude Opus 4.8]
 gmsh = "*"
 python-gmsh = "*"
+# Task 23: build toolchain for the treecode/PBC BEM native extension
+# (`treecode_bem.so`). Unlike `bem_arrays`/`sundials` (Boost.Python C++),
+# `treecode_bem` is a Cython extension compiled from `.pyx` + pure-C kernels
+# via its own `setup.py` (driven by the `native/Makefile` dolfinx lane), so it
+# needs Cython at build time. It is a compile-time-only dependency: the module
+# is dolfin-free and lazily imported, so `import finmag` never pulls Cython.
+# [Claude Opus 4.8]
+cython = "*"
 
 [feature.dolfinx.activation.env]
 # The DOLFINx port lane can now compile an array-only native surface
@@ -160,6 +168,15 @@ dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=
 # native `make` (triggered on demag setup) from rewriting the version file.
 # [Claude Opus 4.8]
 dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_fk_demag_dolfinx.py"
+# Task 23: the treecode + periodic (MacroGeometry) demag port -- the native
+# `treecode_bem` Cython BEM kernels rebuilt for the DOLFINx env (no libdolfin),
+# the single-tile periodic BEM pinned bit-for-bit to the 11a golden dense FK
+# BEM, treecode-vs-dense-FK cross-checks (direct-sum + legacy-default accuracy),
+# a treecode sphere demag factor, and periodic image-sum convergence + the
+# analytic out-of-plane thin-film limit. WRITE_FINMAG_VERSION=0 keeps the native
+# `make` (which now also builds treecode_bem.so) from rewriting the version
+# file. [Claude Opus 4.8]
+dolfinx-src-treecode-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_treecode_pbc_demag_dolfinx.py"
 # Task 12: the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
 # scheduler port. WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered by
 # the end-to-end FK demag witness) from rewriting the tracked version file.

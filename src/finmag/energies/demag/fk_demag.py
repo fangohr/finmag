@@ -23,10 +23,11 @@ the Task 11a golden BEM matrix in ``test_fk_demag_dolfinx.py``.
 Deliberate deviations from the legacy module (documented in
 ``transition-notes.org`` and ``dev/dolfinx/porting_map.md``):
 
-- ``solver_type='LU'`` and ``macrogeometry`` (PBC / ``MacroGeometry``) are
-  deferred and raise ``NotImplementedError`` by name; only the Krylov path is
-  ported. ``Demag2D`` and the ``Treecode``/``GCR`` solvers likewise raise by
-  name through the ``Demag`` factory.
+- ``solver_type='LU'`` is deferred and raises ``NotImplementedError`` by name;
+  only the Krylov path is ported. ``macrogeometry`` (periodic ``MacroGeometry``
+  demag) and the ``Treecode`` solver are ported in Task 23 on top of the native
+  ``treecode_bem`` Cython BEM kernels; ``Demag2D`` and the ``GCR`` solver still
+  raise by name through the ``Demag`` factory.
 - Serial assembly of the BEM is used (the legacy BEM was effectively serial);
   the FEM solves themselves run through PETSc and are collective, but the
   slice is validated serial-only.
@@ -118,6 +119,53 @@ def boundary_bem_arrays(domain, S1):
         cells[row] = [keyed[tuple(np.round(vert_coord[v], 9))] for v in vs]
 
     return coords, cells, boundary_dofs
+
+
+def boundary_solid_angles(domain, S1, b2g):
+    """Boundary solid-angle correction per boundary node, in BEM-local order.
+
+    Reproduces the legacy ``__compute_bsa`` accumulation: for every tetrahedron
+    and each of its four vertices, add the solid angle subtended at that vertex
+    by the opposite face; normalise by ``4*pi`` and subtract one; then restrict
+    to the boundary via ``b2g``.  This is the diagonal of the Fredkin-Koehler
+    boundary-element matrix (the periodic BEM adds it once, the treecode carries
+    it as ``vert_bsa``).  ``b2g`` are S1 dof indices in BEM-local order.
+    [Claude Opus 4.8]
+    """
+    from finmag.native.treecode_bem import compute_solid_angle_single
+
+    dofmap = S1.dofmap
+    dof_coords = S1.tabulate_dof_coordinates()
+    ndofs = dofmap.index_map.size_local * dofmap.index_map_bs
+    bsa = np.zeros(ndofs)
+    tdim = domain.topology.dim
+    ncells = domain.topology.index_map(tdim).size_local
+    for c in range(ncells):
+        d = dofmap.cell_dofs(c)
+        for j in range(4):
+            bsa[d[j]] += compute_solid_angle_single(
+                np.ascontiguousarray(dof_coords[d[j]]),
+                np.ascontiguousarray(dof_coords[d[(j + 1) % 4]]),
+                np.ascontiguousarray(dof_coords[d[(j + 2) % 4]]),
+                np.ascontiguousarray(dof_coords[d[(j + 3) % 4]]))
+    bsa = bsa / (4.0 * pi) - 1.0
+    return np.ascontiguousarray(bsa[np.asarray(b2g, dtype=np.int64)])
+
+
+def boundary_triangle_normals(coords, cells):
+    """Outward unit normals per boundary triangle.
+
+    ``cells`` are already outward-oriented by :func:`boundary_bem_arrays`, so the
+    normalised ``cross(p1-p0, p2-p0)`` points out of the domain -- the
+    orientation the treecode ``FastSum`` (and the legacy ``face.normal()``)
+    assume. [Claude Opus 4.8]
+    """
+    p0 = coords[cells[:, 0]]
+    p1 = coords[cells[:, 1]]
+    p2 = coords[cells[:, 2]]
+    n = np.cross(p1 - p0, p2 - p0)
+    n = n / np.linalg.norm(n, axis=1)[:, None]
+    return np.ascontiguousarray(n, dtype=np.float64)
 
 
 def _ksp(matrix, method, preconditioner, tol_params, nullspace=None):
@@ -226,12 +274,12 @@ class FKDemag(object):
             self.parameters["phi_1_preconditioner"] = "ilu"
             self.parameters["phi_2_preconditioner"] = "none"
 
-        if macrogeometry is not None:
-            raise NotImplementedError(
-                "FKDemag macrogeometry (periodic/MacroGeometry) demag is "
-                "deferred to the separate PBC/treecode native slice"
-            )
-        self.macrogeometry = None
+        # Periodic (MacroGeometry) demag is ported in Task 23: the boundary
+        # element matrix is replaced by a Lindholm image sum over the
+        # macro-geometry translation lattice (see ``_setup_bem`` and
+        # ``fk_demag_pbc.BMatrixPBC``). It rides the native treecode BEM kernels
+        # and is lazily wired, so a non-periodic FKDemag never imports them.
+        self.macrogeometry = macrogeometry
 
     def setup(self, m, Ms, unit_length=1):
         """Bind the demag solver to magnetisation ``m`` and scalar ``Ms``.
@@ -273,17 +321,17 @@ class FKDemag(object):
         self._g_bc = fem.Function(self.S1)  # Dirichlet source for phi_2
         self._H_func = fem.Function(self.S3)  # holds H for energy assembly
 
-        # Boundary element matrix (compiled, dolfin-free) + ordering contract.
+        # Boundary element operator + ordering contract.  ``_setup_bem`` is the
+        # single override point: the base class builds the dense Fredkin-Koehler
+        # BEM (or the periodic image-sum BEM when ``macrogeometry`` is set);
+        # ``TreecodeBEM`` overrides it to build a fast-summation approximation.
         if not hasattr(self, "_bem"):
-            from finmag.native.bem_arrays import compute_bem_fk_from_arrays
-
             coords, cells, b2g = boundary_bem_arrays(self.domain, self.S1)
-            self._bem, _ = compute_bem_fk_from_arrays(
-                coords, cells, np.asarray(b2g, dtype=np.int64))
-            self._b2g_map = np.asarray(b2g, dtype=np.int64)
-        logger.debug(
-            "Boundary element matrix uses {:.2f} MB of memory.".format(
-                self._bem.nbytes / 1024.0 ** 2))
+            self._setup_bem(coords, cells, b2g)
+        if self._bem is not None:
+            logger.debug(
+                "Boundary element matrix uses {:.2f} MB of memory.".format(
+                    self._bem.nbytes / 1024.0 ** 2))
 
         # linear forms re-assembled every solve (m, phi change).
         self._divergence_form = fem.form(
@@ -322,6 +370,33 @@ class FKDemag(object):
             self._A_dirichlet, self.parameters["phi_2_solver"],
             self.parameters["phi_2_preconditioner"], self.parameters["phi_2"])
 
+    def _setup_bem(self, coords, cells, b2g):
+        """Build the boundary-element operator (base: dense FK or periodic BEM).
+
+        Sets ``self._bem`` (a dense ``(n, n)`` matrix) and ``self._b2g_map``.
+        ``TreecodeBEM`` overrides this to build a fast-summation operator and
+        leaves ``self._bem`` as ``None``.
+        """
+        self._b2g_map = np.asarray(b2g, dtype=np.int64)
+        if self.macrogeometry is not None:
+            from .fk_demag_pbc import build_periodic_bem
+
+            Ts = self.macrogeometry.compute_Ts(self.domain)
+            bsa = boundary_solid_angles(self.domain, self.S1, self._b2g_map)
+            self._bem = build_periodic_bem(coords, cells, bsa, Ts)
+        else:
+            from finmag.native.bem_arrays import compute_bem_fk_from_arrays
+
+            self._bem, _ = compute_bem_fk_from_arrays(
+                coords, cells, self._b2g_map)
+
+    def _apply_bem(self, phi_1_boundary):
+        """Boundary potential ``phi_2|_bnd = B @ phi_1|_bnd`` (dense matvec).
+
+        ``TreecodeBEM`` overrides this with the fast-summation matvec.
+        """
+        return np.dot(self._bem, phi_1_boundary)
+
     def precomputed_bem(self, bem, b2g_map):
         """Reuse a previously computed BEM matrix and boundary->global map."""
         self._bem, self._b2g_map = bem, np.asarray(b2g_map, dtype=np.int64)
@@ -339,7 +414,7 @@ class FKDemag(object):
 
         # phi_2 boundary values from the BEM, then Laplace solve.
         phi_1_boundary = self._phi_1.x.array[self._b2g_map]
-        bem_values = np.dot(self._bem, phi_1_boundary)
+        bem_values = self._apply_bem(phi_1_boundary)
         self._g_bc.x.array[:] = 0.0
         self._g_bc.x.array[self._b2g_map] = bem_values
         self._g_bc.x.scatter_forward()

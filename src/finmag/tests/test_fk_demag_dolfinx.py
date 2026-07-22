@@ -358,29 +358,26 @@ def test_demag_factory_returns_fk_demag():
 
 
 def test_deferred_demag_solvers_raise_by_name():
+    # GCR stays deferred (Task 29 candidate); Treecode is now ported (Task 23,
+    # see test_treecode_pbc_demag_dolfinx.py) and no longer raises by name.
     with pytest.raises(NotImplementedError, match="GCR"):
         Demag(solver="GCR")
-    with pytest.raises(NotImplementedError, match="Treecode"):
-        Demag(solver="Treecode")
     with pytest.raises(NotImplementedError, match="not implemented"):
         Demag(solver="Nonexistent")
 
 
-def test_demag2d_and_macrogeometry_raise_by_name():
+def test_demag2d_still_deferred_macrogeometry_ported():
+    # Demag2D stays deferred (Task 23 decision: heavy MeshEditor/Expression
+    # coupling, no treecode dependency); MacroGeometry is ported and constructs.
     with pytest.raises(NotImplementedError, match="Demag2D"):
         Demag2D()
-    with pytest.raises(NotImplementedError, match="MacroGeometry"):
-        MacroGeometry()
+    mg = MacroGeometry(nx=3, ny=1, dx=10.0, dy=10.0)
+    assert len(mg.compute_Ts(None)) == 3
 
 
 def test_lu_solver_type_raises_by_name():
     with pytest.raises(NotImplementedError, match="LU"):
         FKDemag(solver_type="LU")
-
-
-def test_macrogeometry_argument_raises_by_name():
-    with pytest.raises(NotImplementedError, match="macrogeometry"):
-        FKDemag(macrogeometry=object())
 
 
 def test_finmagrc_solver_type_option_raises_by_name(tmp_path, monkeypatch):

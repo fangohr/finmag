@@ -5484,3 +5484,177 @@ gradient-matrix rebuild). Both match the legacy =solve= dispatch exactly.
   docstring inventory updated to move STT to the ported list).
 
 [Claude Opus 4.8]
+
+** Treecode/PBC demag (Task 23)
+
+Task 23 is the third native-extension slice: it rebuilds the =treecode_bem=
+Cython extension for the DOLFINx env and ports the two demag surfaces that
+consume it -- the treecode-accelerated Fredkin-Koehler solver
+(=Demag(solver='Treecode')=) and the periodic macro-geometry demag
+(=Demag(macrogeometry=MacroGeometry(...))=). Both ride the Task 11b ported
+=FKDemag= unchanged except for the one boundary-element step each replaces.
+
+*** dolfin-coupling audit (checklist item 1)
+
+The native sources =native/src/treecode_bem/= (=common.{c,h}=, =bem_pbc.c=,
+=treecode_bem_I.c=, =treecode_bem_II.c=, =treecode_bem_lib.pyx=) were audited
+symbol-by-symbol: =grep -niE 'dolfin|swig|boost'= returns nothing. They are
+pure C octree fast-summation + Lindholm double-layer BEM kernels facing NumPy
+through Cython buffer syntax -- NO libdolfin, NO Boost.Python, NO SWIG-DOLFIN.
+This is unlike =bem_arrays=/=sundials= (Boost.Python C++): =treecode_bem= is a
+*Cython* extension built by its own =setup.py=. The built
+=treecode_bem.cpython-312-*.so= links only =libgomp= and =libm= (=ldd=
+confirmed: no libdolfin/libboost), and importing it leaves =sys.modules= free
+of =dolfin=. The Python consumers import the native symbols lazily (inside
+=setup=/matvec), so plain =import finmag= never pulls the extension.
+
+*** Cython / NumPy-2 porting inventory (checklist item 1)
+
+The module had NEVER been built on any modern lane (audit M4: collected-skip in
+the pixi M3 gate). Porting it to Python 3.12 / Cython-current / NumPy 2.x:
+
+- =setup.py=: rewritten from the removed-on-3.12 =distutils= +
+  =Cython.Distutils.build_ext= to =setuptools= + =Cython.Build.cythonize=
+  (=compiler_directives={'language_level': '3'}=). Added =-fopenmp= to
+  =extra_link_args= (was compile-only).
+- =treecode_bem_lib.pyx=: added a =# cython: language_level=3= header; removed
+  a duplicate =compute_boundary_element= def (the second, identical definition
+  was dead). No Python-2 statements existed in the code itself (only in
+  comments); the =np.ndarray[double, ndim=2, mode="c"]= buffer syntax and
+  =np.ndarray[int, ...]= (C =int= = int32, callers already pass =dtype=np.int32=)
+  compile cleanly under NumPy 2.4.6. The deprecated-NumPy-C-API warning is
+  emitted but is non-fatal; =NPY_NO_DEPRECATED_API= was deliberately NOT set
+  (it would break the legacy buffer protocol the =.pyx= relies on).
+- =native/Makefile=: added =treecode_bem.so= to the DOLFINx =MODULES= list and
+  rewrote its rule for Task 11b per-env hygiene. Two build subtleties:
+  1. The conda compiler activation exports the Makefile's own =CFLAGS= (finmag
+     PCH =-include=, =-DFINMAG_NO_DOLFIN=, =-std=c++0x=) into the =setup.py=
+     subshell, poisoning the C build (a =.h= PCH cannot be =-include='d into a C
+     compile). Fixed by clearing =CFLAGS== for the treecode recipe only -- the
+     C kernels need none of the finmag C++/PCH flags; =setup.py= supplies the
+     NumPy include and =-fopenmp=/=-lm= itself.
+  2. Object files build into a per-prefix =OBJ_DIR/treecode_bem= build-temp so
+     legacy and DOLFINx ABIs never share a path; the ABI-tagged =.so= is also
+     copied to the plain =treecode_bem.so= target name so =make= sees the target
+     satisfied and does not rebuild every invocation.
+- =pixi.toml=: added =cython = "*"= to =[feature.dolfinx.dependencies]= (genuine
+  build-time dependency; =pixi.lock= changed). It is compile-time only -- the
+  extension is dolfin-free and lazily imported, so =import finmag= never pulls
+  Cython.
+
+*** Validation basis: cross-method + analytic, NOT oracle fixtures
+
+This is the plan's accepted-evidence exception. The frozen FEniCS-2019 oracle
+env itself never built =treecode_bem= (the =demag_pbc_test.py= was a collected
+SKIP on every modern lane and last green only on the ancient M1 docker lane),
+so there are NO obtainable treecode/PBC oracle reference numbers. Validation is
+therefore by cross-method comparison against the already-oracle-validated dense
+FK demag (Task 11b) plus analytic limits:
+
+1. *Single-tile periodic BEM == dense golden FK BEM, bit-for-bit.* The periodic
+   BEM assembled with =Ts=[(0,0,0)]= (one tile) reproduces the Task 11a golden
+   dense Fredkin-Koehler BEM matrix to =max|diff| = 3.5e-17= on the Kuhn unit
+   cube. This proves the treecode Lindholm kernels use the *same*
+   convention/orientation as the array BEM, and that the ported
+   coordinate-driven boundary extraction (=boundary_bem_arrays=) feeds them
+   consistently. Row sums are -1 (closed-surface solid-angle identity).
+2. *Treecode field cross-checks the dense FK demag.* On a 30nm cube the
+   treecode demag field matches the dense FK field to =rel < 1e-6= in the
+   direct-sum limit (=mac=0.7=; the octree accepts no multipole approximation
+   and evaluates the boundary sum exactly). At the legacy default knobs
+   (=mac=0.3, p=3=) the agreement is =~4e-5= (test bound 5e-3), the documented
+   treecode accuracy. Convergence trend on a 1538-node boundary: =mac>=0.5=
+   (direct) -> =3.4e-15=; =mac=0.3= -> =4.0e-5=. NOTE the multipole order =p= does
+   not move the error at these tile counts -- the near-field =correct_factor=
+   correction, not the expansion order, sets the accuracy floor; this is
+   documented rather than asserted as a clean p-convergence (which this kernel
+   does not exhibit).
+3. *Analytic checks.* A uniformly-magnetised sphere (generated mesh) gives the
+   treecode demag factor =Nz ~ 1/3= (within 0.05). A thin film tiled
+   periodically in-plane and magnetised out of plane converges to the analytic
+   =Nz -> 1= limit (=<Hz>/Ms -> -1=, error < 1e-3 already at 3x3 tiles).
+4. *Periodic image-sum convergence* (the plan's named PBC sanity). A cube tiled
+   along x approaches an infinite chain: =<Hx>/Ms= descends monotonically
+   =-0.334 -> -0.165 -> -0.125 -> -0.109= for =nx = 1,3,5,9= with shrinking
+   increments toward a stable limit (~-0.10 at nx=31).
+
+*** Periodic-BEM faithfulness and a documented conditional-convergence caveat
+
+=build_periodic_bem= reproduces the legacy =BMatrixPBC.compute_bmatrix=
+algorithm exactly: sum =build_boundary_matrix= (Lindholm) over the translation
+lattice =Ts=, then add the boundary solid-angle diagonal =once=. Because the
+single-tile case is bit-for-bit identical to the oracle-validated dense BEM and
+the multi-tile summation is the identical algorithm, the port is faithful to
+legacy. Two honest caveats, both inherent to the finite periodic dipole sum
+(not port defects):
+- The legacy =demag_pbc_test.py::test_field_1d= asserted a tiled small sample
+  matches a finite long bar to 1.2%. That is NOT reproduced and NOT asserted
+  here: the periodic image sum converges to the infinite-array limit, which is
+  a *different* physical quantity from a finite bar, and the legacy numbers
+  were never green on any modern numeric stack. The convergence-with-image-count
+  witness replaces it, per the brief.
+- When the tile spacing exactly equals the sample extent, adjacent-tile boundary
+  nodes coincide and the double-layer sum is ill-conditioned (row sums reach -2
+  on shared faces; a coarse mesh can then diverge). The robust witnesses avoid
+  this by construction (out-of-plane thin film; a centred-cube 1D chain that
+  stays well-conditioned). Documented as a method property of the finite
+  periodic BEM.
+
+*** Demag2D decision (checklist item 4)
+
+=Demag2D= is DEFERRED by name (Task 29 review item). It does NOT ride the
+treecode kernels at all -- it builds an auxiliary extruded 3D mesh via the
+legacy =dolfin.MeshEditor= and interpolates =Ms= through legacy
+=dolfin.Expression= objects, plus =vertex_to_dof_map= plumbing; none of these
+have a cheap DOLFINx equivalent on the current foundations. It is out of scope
+for a treecode/PBC slice and its dependency footprint (mesh extrusion +
+Expression interpolation) belongs with the deferred mesh/Expression work.
+
+*** =pbc=1d/2d= (Simulation constrained_domain) stays deferred -- separate
+capability
+
+=util/pbc2d.py='s =PeriodicBoundary1D/2D= are =dolfin.SubDomain= objects used as
+=constrained_domain=periodic function *spaces* (the =Simulation(pbc=...)= path,
+for exchange etc.). That is a DIFFERENT mechanism from MacroGeometry demag:
+DOLFINx has no =constrained_domain=; periodic spaces require =dolfinx_mpc=
+(MultiPointConstraint), which is not in the env. =Simulation(pbc=...)= remains a
+by-name deferral (unchanged), and =pbc2d.py= is left dormant (imported only by
+the still-deferred LLB physics). The behavioral PBC-demag contract
+(=demag_pbc_test.py=) uses =pbc=None= and gets its periodicity entirely from
+=MacroGeometry=, so the ported capability is complete without =dolfinx_mpc=.
+Registered as a Task 29 candidate.
+
+*** Legacy-lane activation note
+
+Closing the pixi-era treecode skip on the *legacy* FEniCS-2019 lane was NOT done
+(the brief allows it only if trivially safe). The legacy =BoundaryMesh=-based
+=treecode_bem.py=/=fk_demag_pbc.py= consumers were fully replaced by the DOLFINx
+ports, and the legacy Makefile branch does not list =treecode_bem.so=; wiring it
+back would mean maintaining a second (dolfin) consumer path. Left as a
+=porting_map= follow-up rather than done speculatively.
+
+*** demag_treecode.py
+
+=demag_treecode.py= (the standalone =FastDemag=/=Demag= experiment) is NOT
+ported: it imports =finmag.native.fast_sum_lib= (a DIFFERENT, never-built native
+module, commented out in the Makefile), carries Python-2 =print= statements, and
+is not referenced by the public demag surface. Dead/experimental legacy code;
+left untouched.
+
+*** Test-count deltas
+
+- New gate =dolfinx-src-treecode-pytest=: 16 tests
+  (=test_treecode_pbc_demag_dolfinx.py=), folded into =verify-dolfinx-m5=.
+- =test_fk_demag_dolfinx.py=: the Task 11b fail-forward pins flip to ported
+  behavior -- =test_deferred_demag_solvers_raise_by_name= drops the Treecode
+  assertion (keeps GCR); =test_demag2d_and_macrogeometry_raise_by_name= becomes
+  =test_demag2d_still_deferred_macrogeometry_ported=; the standalone
+  =test_macrogeometry_argument_raises_by_name= is removed (macrogeometry now
+  works). Net -1 test.
+- =test_import_boundary.py=: the curated-stub test becomes
+  =..._is_ported_and_dolfin_free= (MacroGeometry constructs, dolfin-free,
+  =__module__= now =finmag.energies.demag.fk_demag_pbc=). Same count.
+- =test_deferred_surfaces_dolfinx.py=: 1p/4s unchanged (reviewer-reference
+  docstring updated for Task 23).
+
+[Claude Opus 4.8]

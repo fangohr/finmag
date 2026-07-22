@@ -59,8 +59,10 @@ ifneq ($(IS_DOLFINX_ENV),)
 # native Sundials/CVODE wrapper (Task 20). Neither carries libdolfin or
 # SWIG-DOLFIN; the sundials module is the array/callback CVODE wrapper compiled
 # with -DFINMAG_NO_DOLFIN, linking only conda-forge SUNDIALS-7 (no -ldolfin).
-# [Claude Opus 4.8]
-MODULES = bem_arrays.so sundials.so
+# Task 23 adds the Cython treecode/PBC BEM module (treecode_bem.so): pure-C
+# kernels + NumPy-facing Cython, built by its own setup.py rule below (no
+# libdolfin, no Boost.Python, no PCH/object-tree participation). [Claude Opus 4.8]
+MODULES = bem_arrays.so sundials.so treecode_bem.so
 else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 MODULES = sundials.so llg.so llb.so
 else
@@ -107,9 +109,19 @@ $(MODULE_DIR)/neb.so : $(OBJ_DIR)/src/neb/py_neb_module.o $(OBJ_DIR)/src/util/np
 #	cd src/fast_sum_lib && $(PYTHON) setup.py build_ext --inplace
 #	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
-$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx 
-	cd src/treecode_bem && $(PYTHON) setup.py build_ext --inplace
+# Treecode/PBC BEM Cython extension (Task 23). Built via its own setuptools +
+# cythonize setup.py, using the same $(PYTHON) as the rest of the native build.
+# The compiled object files go into a per-env build-temp under the per-prefix
+# OBJ_DIR (Task 11b hygiene: legacy and DOLFINx builds never share ABI output
+# paths); the ABI-tagged .so (e.g. treecode_bem.cpython-312-*.so) is produced
+# in-place and installed into the module dir. Any stale untagged .so is removed
+# first so the glob install can never pick up a wrong-ABI artifact. [Claude
+# Opus 4.8]
+$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx
+	rm -f src/treecode_bem/treecode_bem*.so $(MODULE_DIR)/treecode_bem*.so
+	cd src/treecode_bem && CFLAGS= $(PYTHON) setup.py build_ext --inplace --build-temp $(abspath $(OBJ_DIR))/treecode_bem
 	install src/treecode_bem/treecode_bem*.so ../src/finmag/native
+	cp src/treecode_bem/treecode_bem*.so $@
 
 #$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
 #	cd src/cvode && $(PYTHON) setup.py build_ext --inplace

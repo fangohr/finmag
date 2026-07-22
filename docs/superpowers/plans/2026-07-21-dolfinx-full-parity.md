@@ -411,28 +411,43 @@ dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
 `demag_treecode.py`, `treecode_bem.py`, `src/finmag/util/pbc2d.py`,
 `src/finmag/sim/sim.py` (`pbc` paths), `energies/demag/__init__.py`.
 
-- [ ] Build `finmag.native.treecode_bem` for the DOLFINx env: audit the C/
-  Cython sources for dolfin coupling (expected: none — pure C kernels +
-  numpy-facing Cython), adapt the setup.py/Makefile invocation to the
-  dolfinx per-env build conventions (Task 11b hygiene), and prove the module
-  imports dolfin-free. This was ALSO a pixi-lane gap (audit M4: "collected
-  skip in M3") — closing it may allow a legacy-lane activation too; do that
-  ONLY if trivially safe, else note it.
-- [ ] Port the Python demag modules that consume it (`demag_treecode.py`,
-  `treecode_bem.py` wrapper, `fk_demag_pbc.py` MacroGeometry/PBC path,
-  `util/pbc2d.py`) onto the ported Field/FK-demag foundations, preserving
-  the legacy `Demag(solver='Treecode')` and `MacroGeometry(...)`/`pbc=`
-  public surfaces.
-- [ ] Validation: legacy oracle references for `demag_pbc_test.py`'s
-  invariants where runnable at the oracle (note: the oracle env itself
-  skipped treecode — if no oracle numbers are obtainable, validate
-  treecode-vs-FK cross-check on the same geometry at the method's documented
-  accuracy, plus PBC physics sanity (periodic image convergence)); document
-  the validation basis explicitly.
-- [ ] Unported variants stay by-name (GCR remains a Task 29 candidate;
-  `Demag2D` decide per its dependency footprint — port or defer-by-name
-  documented).
-- [ ] New gate `dolfinx-src-treecode-pytest` folded into `verify-dolfinx-m5`.
-- [ ] Docs (verification-checklist item): plan checkboxes with outcomes,
-  transition-notes "Treecode/PBC demag (Task 23)" section incl. validation
-  basis, porting_map update. Attribution.
+- [x] Build `finmag.native.treecode_bem` for the DOLFINx env. DONE: audited the
+  C/Cython sources -- pure-C octree fast-summation + Lindholm BEM kernels, zero
+  dolfin/Boost/SWIG coupling (`grep` clean; the built `.so` links only
+  libgomp/libm; import leaves `sys.modules` dolfin-free). Rewrote `setup.py`
+  from removed-on-3.12 `distutils` to `setuptools`+`cythonize`
+  (`language_level=3`, NumPy-2 clean), fixed a Cython duplicate-def, added
+  `treecode_bem.so` to the DOLFINx Makefile `MODULES` with per-env build-temp
+  and a `CFLAGS=` clear (the conda `make` was exporting the finmag PCH
+  `-include` into the C build), and added `cython` to the pixi feature
+  (`pixi.lock` changed). Legacy-lane activation NOT done (not trivially safe;
+  noted in porting_map as follow-up). [Claude Opus 4.8]
+- [x] Port the Python demag modules that consume it. DONE: `treecode_bem.py`
+  (`TreecodeBEM(FKDemag)`, `Demag(solver='Treecode')`) and `fk_demag_pbc.py`
+  (`MacroGeometry` + `BMatrixPBC` + `build_periodic_bem`,
+  `FKDemag(macrogeometry=...)`) ported onto the Task 11b FK foundation via two
+  clean `FKDemag` hooks (`_setup_bem`/`_apply_bem`). `demag_treecode.py` NOT
+  ported (uses the never-built `fast_sum_lib`, Python-2 code; dead/experimental).
+  `util/pbc2d.py`/`Simulation(pbc=...)` (constrained_domain periodic *spaces*, a
+  DIFFERENT capability needing `dolfinx_mpc`) stays deferred by name -- the PBC
+  *demag* contract uses `pbc=None` + `MacroGeometry`, so it is unaffected.
+  [Claude Opus 4.8]
+- [x] Validation: cross-method + analytic (documented as the plan's accepted
+  evidence exception -- the oracle env never built treecode, so NO oracle
+  numbers exist). DONE: single-tile periodic BEM == golden dense FK BEM
+  bit-for-bit (3.5e-17); treecode-vs-dense-FK cross-check (<1e-6 direct-sum,
+  ~4e-5 at legacy default mac=0.3/p=3); sphere demag factor ~1/3; periodic
+  image-sum convergence (-0.334->-0.165->-0.125->-0.109) + analytic
+  out-of-plane thin-film Nz->1 limit. The legacy `demag_pbc_test` finite-bar
+  1.2% numbers (a SKIP on every modern lane) are NOT reproduced/asserted -- the
+  periodic sum converges to the infinite-array limit, a different quantity;
+  documented. [Claude Opus 4.8]
+- [x] Unported variants stay by-name. DONE: `GCR` deferred (Task 29 candidate);
+  `Demag2D` DEFERRED (decision: heavy MeshEditor/Expression coupling, no
+  treecode dependency -- documented in porting_map + transition-notes). [Claude
+  Opus 4.8]
+- [x] New gate `dolfinx-src-treecode-pytest` (16 tests) folded into
+  `verify-dolfinx-m5`; full m5 green end-to-end. [Claude Opus 4.8]
+- [x] Docs: this checklist, transition-notes "Treecode/PBC demag (Task 23)"
+  section (dolfin audit, Cython/NumPy-2 inventory, validation basis + numbers,
+  Demag2D/pbc decisions, legacy-lane note), porting_map update. [Claude Opus 4.8]

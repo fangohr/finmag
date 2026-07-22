@@ -447,9 +447,45 @@ module with its tests.
   energy rel 4.7e-8, barmini rel 2.3e-9; pointwise ~5e-6 at the standard 1e-6
   Krylov tolerance on both sides) plus the analytic cube demag factor (avg H =
   -Ms/3, E = mu0 Ms^2 V/6).
-  `solver_type='LU'`, `MacroGeometry`/`Demag2D`/`Treecode`/`GCR` raise
-  `NotImplementedError` by name. PBC/treecode demag remains the separate native
-  slice. Gate: `dolfinx-src-demag-pytest`. [Claude Opus 4.8]
+  `solver_type='LU'`, `Demag2D`/`GCR` raise `NotImplementedError` by name.
+  Task 23 update: `Demag(solver='Treecode')` and `MacroGeometry` /
+  `FKDemag(macrogeometry=...)` are now PORTED (see the Task 23 row below);
+  `Demag2D`/`GCR` stay deferred by name. Gate: `dolfinx-src-demag-pytest`
+  (18 tests; the Task 11b Treecode/MacroGeometry/macrogeometry-argument
+  fail-forward pins flipped to ported-behavior assertions, net -1).
+  [Claude Opus 4.8]
+
+- `energies/demag/treecode_bem.py` (`TreecodeBEM`),
+  `energies/demag/fk_demag_pbc.py` (`MacroGeometry` + `BMatrixPBC` +
+  `build_periodic_bem`), `native/src/treecode_bem/` (Cython + C):
+  **PORTED (Task 23).** The `treecode_bem` Cython extension (pure-C octree
+  fast-summation + Lindholm BEM kernels; audited dolfin/Boost/SWIG-free) is
+  rebuilt for the DOLFINx env (setuptools+cythonize `setup.py`, NumPy-2 clean,
+  `treecode_bem.so` added to the DOLFINx Makefile `MODULES`, `cython` added to
+  the pixi feature -> `pixi.lock` changed). `TreecodeBEM`
+  (`Demag(solver='Treecode')`) rides the ported `FKDemag`, replacing the dense
+  BEM matvec with the `FastSum` fast-summation of the SAME operator.
+  `MacroGeometry` / `FKDemag(macrogeometry=...)` build the periodic image-sum
+  BEM. Validation is cross-method + analytic (NO treecode oracle fixtures
+  exist -- the oracle env never built the module): single-tile periodic BEM ==
+  golden dense FK BEM bit-for-bit (3.5e-17); treecode-vs-dense-FK cross-check
+  (<1e-6 direct-sum, ~4e-5 at legacy default mac=0.3/p=3); sphere demag factor
+  ~1/3; periodic image-sum convergence + analytic out-of-plane thin-film limit.
+  `Demag2D` DEFERRED (heavy MeshEditor/Expression coupling, no treecode
+  dependency; Task 29). `demag_treecode.py` (uses the never-built `fast_sum_lib`,
+  Python-2 code) NOT ported (dead/experimental). Legacy-lane treecode activation
+  left as a follow-up (not trivially safe). Gate: `dolfinx-src-treecode-pytest`
+  (16 tests). [Claude Opus 4.8]
+
+- `util/pbc2d.py` (`PeriodicBoundary1D/2D`), `Simulation(pbc='1d'/'2d')`:
+  **DEFERRED by name (Task 29 candidate).** These are `dolfin.SubDomain`
+  `constrained_domain` periodic *function spaces* -- a DIFFERENT capability from
+  MacroGeometry demag; DOLFINx has no `constrained_domain`, so periodic spaces
+  need `dolfinx_mpc` (not in the env). The behavioral PBC-demag contract
+  (`demag_pbc_test.py`) uses `pbc=None` and gets periodicity from
+  `MacroGeometry`, so the demag capability is complete without `dolfinx_mpc`.
+  `pbc2d.py` stays dormant (imported only by still-deferred LLB physics).
+  [Claude Opus 4.8]
 
   Review round 1, Finding 1 (2026-07-21): the ~5e-6 residual above was
   *demonstrated*, not merely asserted, to be the oracle fixture's own frozen
@@ -668,9 +704,13 @@ Before editing the matching module in `src/finmag`, check that:
   is collective as a second guard. [Codex GPT-5.6]
 - Demag: FK (Fredkin-Koehler) demag is now ported directly to DOLFINx via the
   array-based native FK BEM routines (Task 11b; see the FK demag baseline note
-  above). The pure Python/NumPy Magpar BEM remains reference-only. PBC/treecode
-  and the GCR/2D variants are still unported and raise by name. [Codex gpt-5.5
-  high; updated Claude Opus 4.8]
+  above). Task 23 ports the treecode-accelerated FK solver
+  (`Demag(solver='Treecode')`) and periodic macro-geometry demag
+  (`MacroGeometry`/`macrogeometry=`) on the rebuilt `finmag.native.treecode_bem`
+  Cython extension. The pure Python/NumPy Magpar BEM remains reference-only.
+  The GCR and 2D (`Demag2D`) variants are still unported and raise by name; the
+  `Simulation(pbc='1d'/'2d')` constrained-domain path stays deferred (needs
+  `dolfinx_mpc`). [Codex gpt-5.5 high; updated Claude Opus 4.8]
 - DMI, cubic anisotropy, variable material parameters, regions, PBC, scheduler
   output, legacy restart files, and production integrators are not covered by
   the current prototype lane. Bulk 3D DMI and constant-axis cubic anisotropy
@@ -679,8 +719,10 @@ Before editing the matching module in `src/finmag`, check that:
   parameters, regions, PBC, scheduler output, legacy restart files, and
   production integrators remain uncovered. [GitHub Copilot / Claude Sonnet 5]
 - PBC/treecode demag depends on the separate `finmag.native.treecode_bem`
-  extension, which is still missing in the pixi path and should remain tracked
-  separately from the FK BEM baseline. [Codex gpt-5.5 high]
+  extension. Task 23 update: this extension is now BUILT for the DOLFINx env
+  (Cython/NumPy-2, dolfin-free) and consumed by the ported `TreecodeBEM` and
+  `MacroGeometry` surfaces; it is no longer missing in the pixi path. [Codex
+  gpt-5.5 high; updated Claude Opus 4.8]
 - The current traces and restart states are useful witnesses, but they are not
   replacements for Finmag's NDT, VTK/XDMF, and restart conventions. [Codex
   gpt-5.5 high]
@@ -777,11 +819,11 @@ Before editing the matching module in `src/finmag`, check that:
   and legacy's own todo notes record "the computation with the
   FixedEnergyDW class is broken") -- is converted to a curated by-name
   `NotImplementedError` deferral instead of a faithful port (Task 29 review
-  item): it always constructs `Demag(solver='Treecode')`, itself an
-  already-deferred demag-solver variant in this port
-  (`finmag.energies.demag` only ports `'FK'`), and it round-trips a hand-
-  duplicated mesh through a bespoke dolfin-XML writer/reader that legacy's
-  own docstring already flags as broken. Neither module imports legacy
+  item): it round-trips a hand-duplicated mesh through a bespoke dolfin-XML
+  writer/reader that legacy's own docstring already flags as broken. (It also
+  constructs `Demag(solver='Treecode')`, which Task 23 has since ported -- so
+  the deferral now rests solely on the broken dolfin-XML round-trip and the
+  total absence of any legacy test, not on the demag solver.) Neither module imports legacy
   `dolfin` any more; zero `finmag.energies` public names remain
   `requires_legacy_dolfin=True` (`energies/__init__.py`'s `_LAZY_EXPORTS`
   table). Legacy never wired `ThinFilmDemag` into `Simulation`/`sim_with`

@@ -149,8 +149,14 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     the designated aggregated reviewer reference; see item 2 of the Tier 1
     review). Task 11b ports the FK demag surface, so ``finmag.energies.Demag``
     now constructs a working DOLFINx ``FKDemag`` (it no longer surfaces the
-    legacy ``ModuleNotFoundError`` for ``dolfin``). ``Demag2D``/``MacroGeometry``
-    are now curated by-name ``NotImplementedError`` too.
+    legacy ``ModuleNotFoundError`` for ``dolfin``). Task 23 ports the
+    treecode-accelerated solver (``Demag(solver='Treecode')``) and the periodic
+    ``MacroGeometry`` demag (``Demag(macrogeometry=...)``) on top of the native
+    ``treecode_bem`` Cython kernels (see ``test_treecode_pbc_demag_dolfinx.py``);
+    ``MacroGeometry`` now constructs a working tiling object. ``Demag2D`` stays a
+    curated by-name ``NotImplementedError`` (heavy MeshEditor/Expression
+    coupling, no treecode dependency; Task 29 review item), and the ``GCR``
+    solver stays deferred by name.
 
     Task 13 ports ``DMI`` directly (constant scalar ``D``, ``dmi_type``
     dispatch across ``'auto'``/``'1d'``/``'2d'``/``'3d'``/``'interfacial'``);
@@ -183,9 +189,9 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     still imported raw ``dolfin`` at module scope) is now PORTED directly
     (see ``test_thin_film_demag_dolfinx.py``); constructing it directly now
     works instead of surfacing the legacy ``ModuleNotFoundError``.
-    ``FixedEnergyDW`` -- untested even on legacy master, and depending on the
-    already-deferred Treecode demag solver -- is converted to a curated
-    by-name ``NotImplementedError`` deferral (Task 29 review item; see
+    ``FixedEnergyDW`` -- untested even on legacy master, its own legacy todo
+    notes calling it broken -- is converted to a curated by-name
+    ``NotImplementedError`` deferral (Task 29 review item; see
     ``test_dw_fixed_energy_dolfinx.py`` and the module docstring in
     ``finmag/energies/dw_fixed_energy.py``) rather than a raw import error.
     No ``finmag.energies`` public name is ``requires_legacy_dolfin=True``

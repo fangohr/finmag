@@ -242,12 +242,12 @@ assert not any(
     importlib.util.find_spec("dolfinx") is None,
     reason="The curated MacroGeometry stub check requires the DOLFINx environment.",
 )
-def test_macro_geometry_top_level_export_matches_energies_curated_stub():
-    """``finmag.MacroGeometry`` and ``finmag.energies.MacroGeometry`` must raise
-    the identical curated ``NotImplementedError`` -- not the raw
-    ``ModuleNotFoundError('dolfin')`` a stale ``requires_legacy_dolfin=True``
-    lazy-export flag would otherwise surface for the top-level name alone.
-    [Claude Sonnet 5]"""
+def test_macro_geometry_top_level_export_is_ported_and_dolfin_free():
+    """``finmag.MacroGeometry`` and ``finmag.energies.MacroGeometry`` resolve to
+    the same ported class (Task 23), constructing a working tiling object
+    without pulling legacy ``dolfin`` at import (the native ``treecode_bem``
+    kernels it drives are imported lazily on demag setup, not here).
+    [Claude Sonnet 5], [Claude Opus 4.8]"""
     _run_isolated(
         """
 import sys
@@ -255,24 +255,13 @@ import finmag
 import finmag.energies as energies
 
 assert finmag.MacroGeometry is energies.MacroGeometry
-assert finmag.MacroGeometry.__module__ == "finmag.energies.demag"
+assert finmag.MacroGeometry.__module__ == "finmag.energies.demag.fk_demag_pbc"
 
-try:
-    finmag.MacroGeometry()
-except NotImplementedError as error:
-    top_level_message = str(error)
-else:
-    raise AssertionError("finmag.MacroGeometry() did not raise NotImplementedError")
+mg = finmag.MacroGeometry(nx=3, ny=1, dx=10.0, dy=10.0)
+assert len(mg.compute_Ts(None)) == 3
 
-try:
-    energies.MacroGeometry()
-except NotImplementedError as error:
-    energies_message = str(error)
-else:
-    raise AssertionError("finmag.energies.MacroGeometry() did not raise NotImplementedError")
-
-assert top_level_message == energies_message
 assert "dolfin" not in sys.modules
+assert "finmag.native.treecode_bem" not in sys.modules
 """
     )
 
@@ -302,7 +291,7 @@ import finmag.energies as energies
 
 assert Simulation.__module__ == "finmag.sim.sim"
 assert sim_with.__module__ == "finmag.sim.sim"
-assert MacroGeometry.__module__ == "finmag.energies.demag"
+assert MacroGeometry.__module__ == "finmag.energies.demag.fk_demag_pbc"
 assert NormalModeSimulation.__module__ == "finmag.sim.normal_mode_sim"
 assert normal_mode_simulation.__module__ == "finmag.sim.normal_mode_sim"
 assert set_logging_level.__module__ == "finmag.util.helpers"
