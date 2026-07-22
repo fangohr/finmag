@@ -403,3 +403,36 @@ dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
 - [x] Docs: this checklist, transition-notes "STT (Task 22)" section (formulas
   cited to C++ file:line, fixture numbers, witnesses), and porting_map update
   (STT no longer deferred; `llg_stt` decision). [Claude Opus 4.8]
+
+## Task 23: PBC and treecode demag (native slice)
+
+**Files:** `native/src/treecode_bem/` (Cython + C sources, built via its own
+`setup.py` per `native/Makefile`), `src/finmag/energies/demag/fk_demag_pbc.py`,
+`demag_treecode.py`, `treecode_bem.py`, `src/finmag/util/pbc2d.py`,
+`src/finmag/sim/sim.py` (`pbc` paths), `energies/demag/__init__.py`.
+
+- [ ] Build `finmag.native.treecode_bem` for the DOLFINx env: audit the C/
+  Cython sources for dolfin coupling (expected: none — pure C kernels +
+  numpy-facing Cython), adapt the setup.py/Makefile invocation to the
+  dolfinx per-env build conventions (Task 11b hygiene), and prove the module
+  imports dolfin-free. This was ALSO a pixi-lane gap (audit M4: "collected
+  skip in M3") — closing it may allow a legacy-lane activation too; do that
+  ONLY if trivially safe, else note it.
+- [ ] Port the Python demag modules that consume it (`demag_treecode.py`,
+  `treecode_bem.py` wrapper, `fk_demag_pbc.py` MacroGeometry/PBC path,
+  `util/pbc2d.py`) onto the ported Field/FK-demag foundations, preserving
+  the legacy `Demag(solver='Treecode')` and `MacroGeometry(...)`/`pbc=`
+  public surfaces.
+- [ ] Validation: legacy oracle references for `demag_pbc_test.py`'s
+  invariants where runnable at the oracle (note: the oracle env itself
+  skipped treecode — if no oracle numbers are obtainable, validate
+  treecode-vs-FK cross-check on the same geometry at the method's documented
+  accuracy, plus PBC physics sanity (periodic image convergence)); document
+  the validation basis explicitly.
+- [ ] Unported variants stay by-name (GCR remains a Task 29 candidate;
+  `Demag2D` decide per its dependency footprint — port or defer-by-name
+  documented).
+- [ ] New gate `dolfinx-src-treecode-pytest` folded into `verify-dolfinx-m5`.
+- [ ] Docs (verification-checklist item): plan checkboxes with outcomes,
+  transition-notes "Treecode/PBC demag (Task 23)" section incl. validation
+  basis, porting_map update. Attribution.
