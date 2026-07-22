@@ -451,3 +451,40 @@ dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
 - [x] Docs: this checklist, transition-notes "Treecode/PBC demag (Task 23)"
   section (dolfin audit, Cython/NumPy-2 inventory, validation basis + numbers,
   Demag2D/pbc decisions, legacy-lane note), porting_map update. [Claude Opus 4.8]
+
+## Task 30: Convert examples/ to the ported package (practical-parity witness)
+
+Executed out of audit order by user directive (2026-07-22), immediately after
+Task 23. Purpose: user-level end-to-end validation that the ported package
+runs real legacy workflows with MINIMAL interface changes and the same
+practical results. Interface drift discovered here is a first-class finding
+to surface, not something to paper over with rewrites.
+
+**Files:** `examples/` scripts (+ per-example run/verify wiring), a new gate.
+
+- [ ] Inventory every example and classify: (a) convertible now; (b) requires
+  an unported feature — annotate "requires Task N", do not force-port:
+  expected (b) set: `dispersion_curves` (normal modes, T25), `llb` (T24),
+  `nmag_example_2` (comparison harness, T27), `boost_python` (native demo —
+  assess/annotate).
+- [ ] Convert the (a) set with MINIMAL diffs: target = import/install story
+  and mechanically necessary touches only. Every changed line justified in
+  the report. Any example needing more than mechanical changes = an
+  interface-parity finding: record it (file, line, what the legacy API
+  expected, what the port requires) in a dedicated "interface drift"
+  section of the report and transition-notes — the user explicitly wants
+  this signal.
+- [ ] Same practical results: where an example has checked-in reference data
+  (`exchange_demag` averages/energies refs; std_prob_3/std_prob_4 known
+  µMAG results; others' printed numbers), compare at declared tolerances.
+  Where output is qualitative (VTK/plots), assert the artifacts are produced
+  and physically sane (norms, energies finite/consistent). Long-running
+  examples may run at reduced-but-honest resolution for the gate with the
+  full-resolution command documented.
+- [ ] New gate `dolfinx-src-examples-pytest` (or script-runner equivalent)
+  folded into `verify-dolfinx-m5`, runtime kept reasonable (subset/reduced
+  resolution for CI; full set runnable by a documented command).
+- [ ] Docs (verification-checklist item): plan checkboxes with outcomes,
+  transition-notes "Examples conversion (Task 30)" section incl. the
+  per-example table (converted/deferred/drift findings) and result
+  comparisons, porting_map update. Attribution.
