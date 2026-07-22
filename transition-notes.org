@@ -6044,3 +6044,100 @@ VALUES untouched, only the conversion applied before comparison. The two
 example workarounds were reverted to their legacy one-liners.
 
 [Claude Fable 5]
+
+** CI (Task 32): diagnosis, fixes and trigger scoping
+
+=dolfinx-parity= CI was diagnosed from real =gh run= logs (not guessed), on
+the HEAD commit at the time (=3b41190e=) and cross-checked against the same
+workflows on the =pixi= branch (all green there as of =ba928093=).
+
+*** What each active workflow proves
+
+- =dolfinx-m5= (pixi =dolfinx= env, native builds, editable install,
+  =dev/bin/verify-dolfinx-m5=): the headline gate. Proves every
+  =dolfinx-src-*= slice (Field, energies, LLG, restart/output, DMI, cubic
+  anisotropy, time-Zeeman, var-params, meshes, SUNDIALS, STT, treecode/PBC
+  demag, examples, ~30 named gates) still passes end-to-end against the
+  direct-source DOLFINx port. Was already green on =3b41190e=; unchanged in
+  behaviour by this task -- only its CI step now tees output to a Job Summary
+  (see below) for legibility. No change to =dev/bin/verify-dolfinx-m5= itself.
+- =dolfinx-m4= (frozen DOLFINx prototype witness): unaffected, still green;
+  untouched.
+- =python3-m1= / =python3-m2= / =python3-m3= / =python3-core-suite=: the
+  M1-M3 legacy-dolfin lanes, gating the =pixi= branch (the "FROZEN LEGACY
+  ORACLE", per =docs/superpowers/HANDOVER.md= branch lineage). Now scoped to
+  skip on =dolfinx-parity= (see table below) -- see rationale.
+- =workflow.yml= / =docker-image.yml=: pre-pixi ad hoc Docker workflows,
+  already =workflow_dispatch=-only (never auto-triggered); left as-is with a
+  dated comment explaining why, rather than deleted.
+
+*** Why M1/M2/M3/core-suite fail on this branch, and why that is not a bug
+
+Log evidence, all four lanes, same root cause:
+- =python3-m2= (run 29899800058): =pixi run barmini-construct= in the legacy
+  =default= pixi env raises =ModuleNotFoundError: No module named 'dolfinx'=
+  importing =finmag.field=.
+- =python3-m3= (run 29899799995): pytest collection of
+  =comparison/anisotropy/conftest.py= raises the same
+  =ModuleNotFoundError: No module named 'dolfinx'= via =from finmag.field
+  import Field=.
+- =python3-core-suite= (run 29899764428): the legacy dolfin-2017 Docker
+  container's pytest collection raises =ImportError: No module named
+  'dolfinx'= for the same reason.
+- =python3-m1= (run 29899800070): the legacy dolfin-2017 Docker container's
+  lazy =finmag.example= accessor (=finmag/__init__.py='s =__getattr__=)
+  converts the same underlying =ModuleNotFoundError= into
+  =AttributeError: module 'finmag' has no attribute 'example'=.
+
+=src/finmag/field.py= now does =from dolfinx import fem, io= unconditionally
+(Tasks "Port Field directly to DOLFINx" / "Port common energies directly to
+DOLFINx" on this branch) -- an intentional, permanent architectural
+commitment of the direct-source port, not a regression to fix forward. The
+legacy =default= pixi env and the dolfin-2017 Docker images never install
+=dolfinx=, and per the documented branch lineage (=master -> pixi ->
+dolfinx-port -> dolfinx-parity=), =pixi= -- not =dolfinx-parity= -- is the
+frozen oracle these four lanes exist to gate. Confirmed empirically: all four
+lanes are green on =pixi= (e.g. run 27933593829 =python3-m2=, 27933593850
+=python3-m3=, 27933593867 =python3-m1=, 27933593832 =python3-core-suite=, all
+=success=). Making them pass on =dolfinx-parity= would require giving
+=src/finmag= a legacy-dolfin code path again, which is out of scope (and
+contrary to the whole point of this branch) -- =src/finmag= was left
+untouched by this task, as required.
+
+*** Trigger-scoping table
+
+| Workflow              | Trigger before | Trigger after                                          | Rationale |
+|-----------------------+----------------+---------------------------------------------------------+-----------|
+| python3-m1            | push, PR, dispatch (unconditional) | same events; job =if:= skips when branch/head is =dolfinx-parity= | Legacy dolfin-2017 Docker lane; =dolfinx= is a hard =src/finmag= dependency on this branch now (see above) |
+| python3-m2            | push, PR, dispatch (unconditional) | same, +job =if:= skip on =dolfinx-parity=              | Legacy pixi =default= env lane; same reason |
+| python3-m3            | push, PR, dispatch (unconditional) | same, +job =if:= skip on =dolfinx-parity=              | Legacy FEniCS-2019 pytest lane; same reason |
+| python3-core-suite    | push, PR, dispatch (unconditional) | same, +job =if:= skip on =dolfinx-parity=              | Legacy dolfin-2017 Docker regression suite; same reason |
+| dolfinx-m4            | push, PR, dispatch | unchanged                                              | Frozen prototype, unaffected, still green |
+| dolfinx-m5            | push, PR, dispatch | unchanged triggers; CI step now tees + summarizes       | Headline gate; behaviour unchanged, output made legible |
+| workflow.yml          | dispatch only  | unchanged (dated comment added)                        | Already manual-only; superseded by the pixi/dolfinx workflows |
+| docker-image.yml      | dispatch only  | unchanged (dated comment added)                        | Already manual-only; probes external Docker Hub images unrelated to any branch's changes |
+
+The =if:= condition is
+=github.ref_name != 'dolfinx-parity' && github.head_ref != 'dolfinx-parity'=,
+which skips the job (shown as "skipped", not silently absent or green) for
+both direct pushes to =dolfinx-parity= and pull requests whose head branch is
+=dolfinx-parity=, while leaving every other branch (=pixi=, =master=, future
+feature branches) running exactly as before. This is scoping, not deletion:
+the workflow files, jobs, and full legacy verification logic are all still
+present and still run everywhere except this one branch line where they
+cannot pass by design.
+
+*** Usefulness upgrade: dolfinx-m5 Job Summary
+
+=.github/workflows/dolfinx-m5.yml= now tees =dev/bin/verify-dolfinx-m5='s
+output to a log file (=pipefail= keeps the job's exit code tied to the
+verifier, not the tee) and a second, =if: always()= step
+(=dev/bin/ci-summarize-dolfinx-m5=, a new additive-only script, not a change
+to the verifier) renders a Job Summary: which of the ~30 named
+=dolfinx-src-*=/=pixi run -e dolfinx= gates ran and passed, a pass/fail
+headline, a log excerpt on failure, and a pointer to
+=docs/superpowers/HANDOVER.md= (section 2) for the capability matrix. Purely
+additive: =dev/bin/verify-dolfinx-m5='s own tracked-files guard and exit-code
+behaviour are unchanged (verified by inspection -- the file was not edited).
+
+[Claude Sonnet 5]

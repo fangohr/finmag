@@ -8,6 +8,16 @@ on:
 jobs:
   python3-m2:
     runs-on: ubuntu-latest
+    # Task 32 (2026-07-22): M2 gates the pixi-packaged legacy-dolfin usability
+    # witness. `pixi` is the frozen legacy oracle for M1-M3
+    # (docs/superpowers/HANDOVER.md branch lineage). `dolfinx-parity` has ported
+    # src/finmag/field.py to import `dolfinx` unconditionally (direct-source
+    # DOLFINx port, Tasks 3-31), so `pixi run import-finmag` in the legacy
+    # `default` env can never succeed on this branch line -- confirmed by log
+    # evidence (`ModuleNotFoundError: No module named 'dolfinx'`), not a
+    # regression to chase. Scoped out here rather than left red; dolfinx-m4/
+    # dolfinx-m5 are this branch's real gates. [Claude Sonnet 5]
+    if: github.ref_name != 'dolfinx-parity' && github.head_ref != 'dolfinx-parity'
 
     steps:
     - name: Checkout repository

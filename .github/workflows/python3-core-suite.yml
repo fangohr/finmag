@@ -8,6 +8,18 @@ on:
 jobs:
   python3-core-suite:
     runs-on: ubuntu-latest
+    # Task 32 (2026-07-22): core-suite is the curated Python-3 regression
+    # baseline against legacy dolfin 2017 (docs: "using the current Python 3
+    # core gate as the main M1 regression baseline"), and `pixi` is its frozen
+    # legacy oracle (docs/superpowers/HANDOVER.md branch lineage).
+    # `dolfinx-parity` has ported src/finmag/field.py to import `dolfinx`
+    # unconditionally (direct-source DOLFINx port, Tasks 3-31), so the legacy
+    # dolfin-2017 container used here can never import `finmag` on this branch
+    # line -- confirmed by log evidence (`ImportError: No module named
+    # 'dolfinx'` from conftest collection), not a regression to chase. Scoped
+    # out here rather than left red; dolfinx-m4/dolfinx-m5 are this branch's
+    # real gates. [Claude Sonnet 5]
+    if: github.ref_name != 'dolfinx-parity' && github.head_ref != 'dolfinx-parity'
 
     steps:
     - name: Checkout repository
