@@ -247,6 +247,24 @@ module with its tests.
   `toggle_stt`). The Task 9 "STT stays deferred" and "STT" entries above are
   superseded for the in-LLG torques; only `kernel="llg_stt"` (nonlocal STT)
   remains deferred. [Claude Opus 4.8]
+  Task 26a update: `skyrmion_number`/`skyrmion_number_density_function` are no
+  longer dropped -- restored directly against DOLFINx/UFL in
+  `finmag.sim.sim_helpers` (thin `Simulation.skyrmion_number`/
+  `skyrmion_number_density_function` delegators added, matching the style of
+  the existing `sim_helpers.*` pass-throughs), transcribing legacy's
+  `-1/(4*pi) integral(m.(dm/dx x dm/dy))` formula verbatim (2D: whole domain;
+  3D: top surface only, via `dolfinx.mesh.locate_entities_boundary` +
+  `meshtags` + a `ufl.Measure("ds", ...)`, the DOLFINx equivalent of legacy's
+  `SubDomain`/`ds[markers]`). See `transition-notes.org`'s "I/O utility parity
+  (Task 26a)" section for the full validation. `initialise_helix_2D`/
+  `initialise_skyrmions`/`initialise_skyrmion_hexlattice_2D`/
+  `initialise_vortex` (from `magnetisation_patterns`) and everything else in
+  this Task 9 addendum remain dropped/untouched -- out of scope for 26a. Also
+  Task 26a: `Field.probe`/`Field.__call__` (point evaluation) and
+  `Field.get_spherical` are restored (see `field.py`'s Near-Term-Gaps entry
+  below); `Simulation.probe_field`/`probe_field_along_line` remain deferred by
+  name (they depend on region-restricted `get_field_as_dolfin_function`,
+  out of scope for 26a). [Claude Sonnet 5]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.
@@ -552,11 +570,17 @@ Before editing the matching module in `src/finmag`, check that:
   participation is required for reductions and ghost-refreshing mutations.
   The `dev` adapter remains only a frozen witness. [Codex GPT-5.6]
 - Production `Field` explicitly rejects `from_expression` (DOLFINx has no
-  legacy `Expression`/`UserExpression` equivalent), point probing and
-  point-measure arithmetic, legacy plotting, `get_spherical`, and
-  `dolfinh5tools` HDF5. XDMF is write-only here. Integration with the still
-  legacy `finmag.Simulation` is deferred to its direct port task. [Codex
-  GPT-5.6]
+  legacy `Expression`/`UserExpression` equivalent) and point-measure
+  arithmetic (`__add__`/`__mul__`/`__truediv__`/`cross`/`dot`/
+  `coerce_scalar_field`, which relied on legacy's `dP`-measure assembly), and
+  legacy plotting and `dolfinh5tools` HDF5 remain deferred. XDMF is
+  write-only here. Point probing and `get_spherical` were originally on this
+  rejected list too, but Task 26a restored both directly (see the Task 26a
+  update just below) -- do not confuse "point probing" here with the still
+  fully deferred "point-measure arithmetic" (the `Field.__add__`-family
+  stubs), which are unrelated capabilities that happen to share the word
+  "point". Integration with the still legacy `finmag.Simulation` is deferred
+  to its direct port task. [Codex GPT-5.6]
   Task 16 update: `Field.from_function` now *interpolates* a `dolfinx.fem.
   Function` into this Field's space when the two spaces differ, instead of
   only supporting an identical-space dof-for-dof copy (mirroring `from_field`,
@@ -570,6 +594,22 @@ Before editing the matching module in `src/finmag`, check that:
   `test_from_field_interpolates_between_compatible_spaces`
   (`test_field_dolfinx.py`) exercises for `from_field`; no existing test
   relied on the old hard error. [Claude Sonnet 5]
+  Task 26a update: `Field.probe(point)`/`Field.__call__(point)` and
+  `Field.get_spherical()` are restored, no longer legacy-only failures. Point
+  evaluation is a genuine mechanism restoration: DOLFINx `fem.Function`
+  objects are not directly callable at a point (the one thing DOLFINx
+  actually forced here), so a shared module-level
+  `finmag.field.evaluate_at_point(function, point)` helper (bb_tree +
+  compute_colliding_cells + `Function.eval`) reproduces the point-in-cell
+  search, usable on both a `Field` (via `.probe`/`.__call__`) and any raw
+  `dolfinx.fem.Function`. `get_spherical` needed no forced-change workaround
+  at all -- it is a pure analytic nodal computation (`theta = atan2(m_r,
+  m_z)`, `phi = atan2(m_y, m_x)`), computed directly as NumPy instead of
+  reproducing legacy's `dP`-point-measure assembly trick (mathematically
+  identical result). Neither restoration touches the still-deferred
+  point-measure-arithmetic stubs noted just above. See
+  `src/finmag/tests/test_io_utils_dolfinx.py` and transition-notes.org's "I/O
+  utility parity (Task 26a)" section for the full validation. [Claude Sonnet 5]
 - Ordered arrays and `coords_and_values()` are currently rank-local owned
   views. A separate collective, globally coordinate-sorted export should be
   added only for a concrete output/restart consumer; multi-rank ODE state is

@@ -338,8 +338,9 @@ def test_legacy_only_features_fail_precisely(spaces):
         field.set("x[0]")
     with pytest.raises(NotImplementedError, match="Expression/UserExpression"):
         field.from_expression(object())
-    with pytest.raises(NotImplementedError, match="point probing"):
-        field((0.0, 0.0))
+    # Point probing (field(x) / field.probe(x)) and get_spherical() are no
+    # longer legacy-only failures -- restored in Task 26a; see
+    # test_io_utils_dolfinx.py for their dedicated coverage.
     with pytest.raises(NotImplementedError, match="save_xdmf"):
         field.save_hdf5("field.h5")
     with pytest.raises(NotImplementedError, match="Field addition"):

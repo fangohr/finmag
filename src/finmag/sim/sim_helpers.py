@@ -3,9 +3,17 @@
 This module holds the restart persistence helpers (``save_restart_data`` /
 ``load_restart_data``) plus a handful of pure-Python simulation utilities. It is
 import-clean in the DOLFINx environment: legacy ``dolfin``, ``finmag.native``
-and ``finmag.util.meshes`` are not imported at all -- the DOLFIN-specific
-helpers that used to live here (``skyrmion_number`` etc.) were removed as part
-of this port and are not part of the ported core ``Simulation`` surface.
+and ``finmag.util.meshes`` are not imported at all.
+
+``skyrmion_number``/``skyrmion_number_density_function`` were removed outright
+during the initial port (Task 9, accepted as a judgment-call deferral -- see
+``dev/dolfinx/porting_map.md``) and were, until Task 26a, not part of the
+ported core ``Simulation`` surface. Task 26a restores both directly against
+DOLFINx/UFL (``ufl.Dx``/``cross``/``dot`` are the same UFL API legacy's
+``df.Dx``/``cross``/``dot`` used; only the DOLFINx-specific boundary-facet
+tagging for the 3D top-surface integral is new machinery, not a formula
+change). This keeps the module import-clean: no legacy ``dolfin``, only
+``dolfinx``/``ufl``/``mpi4py``.
 
 Restart format decision (deliberate deviation from the legacy npz layout,
 documented in ``transition-notes.org`` and ``dev/dolfinx/porting_map.md``):
@@ -30,8 +38,13 @@ import hashlib
 from datetime import datetime
 
 import numpy as np
+import ufl
+from dolfinx import fem, mesh as dmesh
+from mpi4py import MPI
 
 import finmag
+from finmag.energies.energy_base import _assemble_vector_owned, _nodal_volume_owned
+from finmag.field import associated_scalar_space
 
 log = logging.getLogger("finmag")
 
@@ -306,3 +319,112 @@ def compute_dmdt(t0, m0, t1, m1):
     max_dm = np.max(np.sqrt(np.sum(dm ** 2, axis=0)))  # max of L2-norm
     dt = abs(t1 - t0)
     return max_dm / dt
+
+
+# -- Task 26a: skyrmion number (topological charge) --------------------------
+#
+# Direct transcription of legacy's ``sim_helpers.skyrmion_number``/
+# ``skyrmion_number_density_function`` (pixi tip
+# ``ba9280934e188d7f3800e7b9865e70a9422f7687:src/finmag/sim/sim_helpers.py``),
+# removed outright during the initial port (Task 9) and restored here against
+# DOLFINx/UFL. Both take a ``Simulation`` instance ``self`` -- matching the
+# legacy calling convention, where these were bound onto ``Simulation`` as
+# ``skyrmion_number = sim_helpers.skyrmion_number`` (see
+# ``finmag.sim.sim.Simulation.skyrmion_number``/
+# ``skyrmion_number_density_function``, thin delegators to these functions).
+# [Claude Sonnet 5]
+
+def _skyrmion_integrand(m):
+    """The shared UFL skyrmion-number-density integrand, ``-1/(4pi) m.(dm/dx x dm/dy)``."""
+    return -0.25 / np.pi * ufl.dot(m, ufl.cross(ufl.Dx(m, 0), ufl.Dx(m, 1)))
+
+
+def skyrmion_number(self):
+    """Return the skyrmion number (topological charge) of the current state.
+
+    Legacy formula (unchanged):
+
+        S = -1/(4*pi) * integral( m . (dm/dx cross dm/dy) )
+
+    integrated over the WHOLE mesh for a 2D mesh, or over only the TOP
+    surface (``z == z_max``) for a 3D mesh -- the skyrmion-number formula is
+    only defined for a 2D spin texture, so legacy evaluates it on the top face
+    of a 3D film (see the legacy docstring's reference to the FEniCS
+    lift-drag demo for the general "functional over a mesh subset" technique).
+
+    Legacy located the top surface with a ``df.SubDomain``/``MeshFunction``
+    marking facets within ``df.DOLFIN_EPS`` (~2.22e-16) of the maximum z
+    coordinate, then integrated over ``df.ds[markers](1)``. The DOLFINx
+    equivalent is ``dolfinx.mesh.locate_entities_boundary`` +
+    ``dolfinx.mesh.meshtags`` + a ``ufl.Measure("ds", subdomain_data=...)``.
+    The bare legacy epsilon is bitwise-exact only for FEniCS's own box-mesh
+    coordinates; DOLFINx's mesh generators can differ in the last few bits
+    (the same category of FP noise documented for the drift #11
+    ``_owned_vertex_to_dof`` KDTree tolerance in ``finmag/field.py``), so a
+    small mesh-scale-relative tolerance is used instead of the bare legacy
+    epsilon. This changes robustness only, not the formula: it is exact for
+    bit-identical top faces and, because mesh layers are never spaced by
+    anywhere near this tolerance, is not looser in a way that could ever pull
+    in a second layer of vertices.
+
+    Serial-only in the same sense as the rest of the ported core: this is a
+    plain collective assembly + allreduce, so it is technically correct in
+    parallel too, but multi-rank facet tagging is not separately exercised
+    here (consistent with ``mark_regions``, which is documented serial-only).
+    """
+    m = self.m_field.f
+    integrand = _skyrmion_integrand(m)
+    domain = self.mesh
+    tdim = domain.topology.dim
+    if tdim == 3:
+        coords = domain.geometry.x
+        local_z_max = float(coords[:, 2].max()) if coords.shape[0] else -np.inf
+        z_max = domain.comm.allreduce(local_z_max, op=MPI.MAX)
+        scale = max(abs(z_max), 1.0)
+        eps = 1e-8 * scale
+        fdim = tdim - 1
+        facets = dmesh.locate_entities_boundary(
+            domain, fdim, lambda x: x[2] >= z_max - eps
+        )
+        facet_tags = dmesh.meshtags(
+            domain, fdim, facets, np.full(facets.shape, 1, dtype=np.int32)
+        )
+        ds = ufl.Measure("ds", domain=domain, subdomain_data=facet_tags)
+        form = integrand * ds(1)
+    else:
+        form = integrand * ufl.dx
+    local_value = fem.assemble_scalar(fem.form(form))
+    return domain.comm.allreduce(local_value, op=MPI.SUM)
+
+
+def skyrmion_number_density_function(self):
+    """Return the skyrmion-number density as a lumped nodal ``Function``.
+
+    Same integrand as :func:`skyrmion_number`, lumped-mass-projected onto the
+    scalar CG1 space associated with ``self.S3`` -- legacy's
+    ``nodalSkx = assemble(dot(integrand, TestFunction(S1)) * dx)`` divided by
+    ``nodal_volume(S1, unit_length)``. Legacy scaled numerator and denominator
+    by the same ``unit_length ** dim`` factor, which cancels exactly, so the
+    resulting VALUE is identical whether or not that scaling is applied; it is
+    dropped here (``_assemble_vector_owned``/``_nodal_volume_owned``, the same
+    unscaled mesh-coordinate lumped pair already used throughout
+    ``finmag.energies.energy_base`` -- e.g. ``thin_film_demag.py`` reuses the
+    identical pair for the same reason).
+
+    Returns a raw ``dolfinx.fem.Function`` (matching legacy's raw
+    ``dolfin.Function``, "to allow probing" -- see
+    ``finmag.field.evaluate_at_point``), not a ``finmag.Field``.
+    """
+    m = self.m_field.f
+    integrand = _skyrmion_integrand(m)
+    S1 = associated_scalar_space(self.S3)
+    scalar_test = ufl.TestFunction(S1)
+    nodal_form = integrand * scalar_test * ufl.dx
+    nodal_values = _assemble_vector_owned(nodal_form, S1)
+    nodal_volume = _nodal_volume_owned(S1)
+    density = nodal_values / nodal_volume
+
+    density_function = fem.Function(S1)
+    density_function.x.array[: density.size] = density
+    density_function.x.scatter_forward()
+    return density_function

@@ -238,6 +238,14 @@ dolfinx-src-stt-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 pytho
 # installed package (the practical-parity witness). The heavy muMAG /
 # long-dynamics examples run only with FINMAG_EXAMPLE_FULL=1. [Claude Opus 4.8]
 dolfinx-src-examples-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q examples/test_examples_dolfinx.py"
+# Task 26a: decision-free I/O/utility parity wins -- Field point-in-cell
+# probing (Field.probe/Field.__call__, promoted from the Task 30
+# exchange_demag density workaround into the shared
+# finmag.field.evaluate_at_point helper), Field.get_spherical (analytic
+# Cartesian<->spherical conversion), and Simulation.skyrmion_number/
+# skyrmion_number_density_function (analytic topological-charge formula,
+# restored after being dropped outright in Task 9). [Claude Sonnet 5]
+dolfinx-src-io-utils-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_io_utils_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

@@ -7,7 +7,7 @@ and the legacy ``xyz``/``xxx`` array views explicit.
 import numbers
 
 import numpy as np
-from dolfinx import fem, io
+from dolfinx import fem, geometry, io
 from mpi4py import MPI
 from ufl import dx
 
@@ -57,9 +57,15 @@ class Field:
             self.set(value, normalised=normalised)
 
     def __call__(self, x):
-        raise NotImplementedError(
-            "point probing is not yet supported by the DOLFINx Field port"
-        )
+        """Shorthand so user can do ``field(x)`` instead of ``field.f(x)``.
+
+        Legacy (pixi ``ba928093`` ``Field.__call__``) simply forwarded to
+        dolfin's ``Function.__call__``, ``return self.f(x)``. DOLFINx
+        ``fem.Function`` objects are not directly callable at a point, so
+        this restores the equivalent point-in-cell evaluation via
+        :func:`probe` (Task 26a).
+        """
+        return self.probe(x)
 
     def set(self, value, normalised=False, **kwargs):
         """Set from a scalar/vector constant, callable, Function, Field, or array."""
@@ -463,10 +469,39 @@ class Field:
             "legacy dolfinh5tools HDF5 is unavailable in the DOLFINx Field port"
         )
 
-    def probe(self, *args, **kwargs):
-        raise NotImplementedError(
-            "point probing is not yet supported by the DOLFINx Field port"
-        )
+    def probe(self, point):
+        """Evaluate the field at a physical mesh-coordinate point.
+
+        Legacy (pixi ``ba928093`` ``Field.probe``) was ``return self.f(coord)``
+        -- a thin forward to dolfin's built-in ``Function.__call__`` point
+        evaluation. DOLFINx removed that convenience (``fem.Function`` objects
+        are not callable), so this restores it via the documented DOLFINx
+        point-in-cell mechanic: a geometry bounding-box tree locates the
+        (rank-local) cell containing the point, then ``Function.eval``
+        evaluates the interpolated value there -- exactly the mechanic
+        promoted from the Task 30 exchange_demag density-comparison
+        workaround into the shared :func:`evaluate_at_point` helper (Task 26a).
+
+        Returns a Python ``float`` for a scalar field or a ``(value_dim,)``
+        NumPy array for a vector field, matching legacy's return shape.
+        Raises ``RuntimeError`` if the point is not inside this rank's local
+        mesh partition, mirroring legacy dolfin's "point not inside domain"
+        failure (legacy's default ``allow_extrapolation=False``).
+
+        Only a single point per call is supported, matching every legacy
+        call site (e.g. ``exch_energy([15, 15, i])`` called once per point in
+        a Python loop) -- legacy dolfin's ``Function.__call__`` never
+        vectorised over many points either.
+
+        Serial-only (inherited limitation, consistent with the rest of this
+        module's MPI documentation): this only searches cells owned/ghosted
+        by the calling rank, so it is not collective across ranks. In a
+        multi-rank run a point owned only by another rank raises here even
+        though it exists in the global mesh -- restrict parallel use to
+        points known to be locally resident, or run in serial as every
+        legacy call site did.
+        """
+        return evaluate_at_point(self.f, point)
 
     def plot_with_dolfin(self, *args, **kwargs):
         raise NotImplementedError("legacy dolfin plotting is unavailable under DOLFINx")
@@ -477,9 +512,54 @@ class Field:
         )
 
     def get_spherical(self):
-        raise NotImplementedError(
-            "legacy spherical-coordinate helper is not yet ported to DOLFINx"
-        )
+        """Return the (theta, phi) spherical angles of a 3-component field.
+
+        Faithful transcription of legacy's ``Field.get_spherical`` (pixi
+        ``ba928093``):
+
+        - ``theta = atan2(m_r, m_z)``, the polar angle from the +z axis, with
+          ``m_r = sqrt(m_x**2 + m_y**2)`` the cylindrical radius;
+        - ``phi = atan2(m_y, m_x)``, the azimuthal angle;
+
+        both in radians on ``numpy.arctan2``'s ``(-pi, pi]`` branch (``theta``
+        is non-negative since ``m_r >= 0``, so it in fact lies in ``[0, pi]``).
+        There is no legacy ``set_spherical``/radius surface: legacy only ever
+        computed and returned these two angles (no magnitude), so none is
+        added here either.
+
+        Legacy assembled ``dot(expr, TestFunction(S1)) * dP`` -- dolfin's
+        point measure, which for Lagrange-1 elements is EXACT node-by-node
+        evaluation (not an L2 projection: the point measure is a Dirac comb at
+        the mesh vertices, and each basis function is 1 at its own vertex and
+        0 at every other). This DOLFINx port computes the identical result
+        directly as a NumPy expression on the owned nodal array, which is
+        mathematically identical to (and cheaper than) reproducing dolfin's
+        ``dP`` trick via DOLFINx's point-measure equivalent.
+
+        Sets ``self.theta``/``self.phi`` (each a raw ``dolfinx.fem.Function``
+        on the CG1 scalar space associated with this field's function space,
+        matching legacy's raw ``dolfin.Function`` attributes -- not a
+        ``finmag.Field``) and returns the pair, exactly mirroring legacy's
+        ``return self.theta, self.phi``.
+        """
+        if self.value_dim() != 3:
+            raise ValueError(
+                "get_spherical is only defined for 3-component vector fields."
+            )
+        owned = self._owned_nodal_values()
+        mx, my, mz = owned[:, 0], owned[:, 1], owned[:, 2]
+        m_r = np.sqrt(mx * mx + my * my)
+        theta_values = np.arctan2(m_r, mz)
+        phi_values = np.arctan2(my, mx)
+
+        scalar_space = associated_scalar_space(self.functionspace)
+        self.theta = fem.Function(scalar_space)
+        self.phi = fem.Function(scalar_space)
+        self.theta.x.array[: theta_values.size] = theta_values
+        self.phi.x.array[: phi_values.size] = phi_values
+        self.theta.x.scatter_forward()
+        self.phi.x.scatter_forward()
+        return self.theta, self.phi
 
     def _owned_scalar_dofs(self):
         dofmap = self.functionspace.dofmap
@@ -560,6 +640,47 @@ class Field:
     def dot(self, other):
         del other
         self._unsupported_point_arithmetic("Field dot product")
+
+
+def evaluate_at_point(function, point):
+    """Evaluate a scalar/vector ``dolfinx.fem.Function`` at a physical point.
+
+    Restores the point-in-cell mechanic legacy got for free from dolfin's
+    ``Function.__call__`` (DOLFINx ``fem.Function`` objects are not directly
+    callable at a point): locate the containing cell with a geometry
+    bounding-box tree (``geometry.bb_tree`` + ``compute_collisions_points`` +
+    ``compute_colliding_cells``), then evaluate there with ``Function.eval``.
+
+    This is the exact mechanic proven by the Task 30 exchange_demag
+    ``_eval_scalar_function`` density-comparison workaround, promoted here
+    into a single shared helper (Task 26a) so both :meth:`Field.probe`/
+    :meth:`Field.__call__` AND any raw ``dolfinx.fem.Function`` -- such as the
+    one returned by ``EnergyBase.energy_density_function()``, which legacy
+    also returned raw "to allow probing" -- share one implementation instead
+    of each call site reinventing it.
+
+    Returns a Python ``float`` for a scalar-valued function or a
+    ``(value_size,)`` NumPy array for a vector-valued function. Raises
+    ``RuntimeError`` if the point is not inside a cell owned/ghosted by the
+    calling rank (not collective; see :meth:`Field.probe` for the parallel
+    caveat).
+    """
+    domain = function.function_space.mesh
+    point_arr = np.asarray(point, dtype=np.float64).reshape(-1)
+    padded = np.zeros(3, dtype=np.float64)
+    padded[: point_arr.size] = point_arr
+    tree = geometry.bb_tree(domain, domain.topology.dim)
+    candidates = geometry.compute_collisions_points(tree, padded.reshape(1, 3))
+    colliding = geometry.compute_colliding_cells(domain, candidates, padded.reshape(1, 3))
+    links = colliding.links(0)
+    if len(links) == 0:
+        raise RuntimeError(
+            "point {} is not inside the mesh".format(tuple(point_arr.tolist()))
+        )
+    value = np.asarray(function.eval(padded, links[0]), dtype=np.float64)
+    if value.size == 1:
+        return float(value[0])
+    return value.copy()
 
 
 def _assemble_scalar(domain, expression):

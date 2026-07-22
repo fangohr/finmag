@@ -61,6 +61,21 @@ Already pinned by name elsewhere (not duplicated here):
   deferral (Task 19, Task 29 review item) -- covered by
   ``test_dw_fixed_energy_dolfinx.py``; it no longer surfaces the raw
   ``ModuleNotFoundError`` for ``dolfin`` either.
+- ``Field.probe``/``Field.__call__`` (point evaluation), ``Field.get_spherical``
+  and ``Simulation.skyrmion_number``/``skyrmion_number_density_function`` are
+  now PORTED (Task 26a) and covered by ``test_io_utils_dolfinx.py``. Point
+  probing/``get_spherical`` used to be curated by-name ``NotImplementedError``
+  deferrals on ``Field`` (pinned by ``test_field_dolfinx.py::
+  test_legacy_only_features_fail_precisely``, now removed from that test);
+  ``skyrmion_number``/``skyrmion_number_density_function`` had instead been
+  dropped outright in Task 9 (a plain ``AttributeError``, not a by-name
+  deferral -- see ``dev/dolfinx/porting_map.md``). None of the three were
+  ever asserted as deferred *in this sweep file*, so nothing here is removed;
+  this bullet exists only to keep this file's aggregated reviewer reference
+  current. ``Simulation.probe_field``/``probe_field_along_line`` remain
+  deferred by name (they depend on region-restricted
+  ``get_field_as_dolfin_function``, out of scope for Task 26a -- see its
+  ``save_m_in_region``/``get_submesh`` siblings above).
 """
 
 import pytest

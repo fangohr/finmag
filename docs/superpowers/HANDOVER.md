@@ -47,13 +47,15 @@ Working, oracle-validated capabilities:
 | Dynamics | LLG (`run_until`, `relax`), STT (Slonczewski + Zhang-Li), SciPy AND native CVODE integrators (factory default = sundials, legacy-faithful; `Simulation` default = scipy, registered deviation) |
 | Materials | Spatially varying Ms/A/K/D/alpha; regions (`mark_regions`, per-region energies/averages) |
 | Meshes | Gmsh-bridge generators (box/sphere/cylinder/ellipsoid/nanodisk/elliptical/ring/cone/CSG combos) + legacy Netgen-CSG `.geo` files via `from_geofile` (subset parser); md5-keyed caching |
-| I/O | Restart (coordinate-aware v2), NDT tables, VTK/XDMF write, scheduler |
+| I/O | Restart (coordinate-aware v2), NDT tables, VTK/XDMF write, scheduler, point-in-cell probing (`Field.probe`/`__call__`, `finmag.field.evaluate_at_point`), `Field.get_spherical`, `Simulation.skyrmion_number`/`skyrmion_number_density_function` (Task 26a) |
 | Examples | `examples/` converted at the minimal-changes bar (Task 30): µMAG std_prob_3/4, exchange_demag vs nmag/OOMMF reference data, macrospin, precession, etc. — gated in CI |
 | Packaging | `pyproject.toml`, editable install, no `PYTHONPATH` needed |
 
 NOT yet ported (raise by name): normal modes/eigenmodes + FFT/PSD (Task 25),
 thermal SLLG/LLB (Task 24), OOMMF/Nmag/Magpar comparison harnesses (Task 27),
-plotting/visualization helpers + HDF5 read-back + point probing (Task 26),
+plotting/visualization helpers + HDF5 read-back + region field output/submesh
+extraction (Task 26b -- point probing, `get_spherical` and `skyrmion_number`
+were split out and ARE now ported, Task 26a),
 `Simulation(pbc=)` function-space PBC, MPI-parallel stepping (Task 28),
 NEB, GCR demag (accept-drop candidate).
 

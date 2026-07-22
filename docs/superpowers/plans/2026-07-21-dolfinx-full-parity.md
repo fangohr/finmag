@@ -545,19 +545,84 @@ Scoped subset of the Task 26 long tail — the cheap, mechanically-proven,
 owner-decision-free items. (HDF5 read-back, region field output, plotting
 stay in a later 26b.)
 
-- [ ] `Field.__call__`/point evaluation (`probe`): restore legacy point
+- [x] `Field.__call__`/point evaluation (`probe`): restore legacy point
   evaluation via DOLFINx point-in-cell (bb_tree + compute_colliding_cells +
   Function.eval — the mechanic already used in the Task 30 exchange_demag
   density helper). Preserve the legacy signature/return. REVERTS the
   point-probing interface drift (removes the exchange_demag workaround —
   update that example + its drift-table row to "corrected").
-- [ ] `Field.get_spherical`/`set_spherical`: restore the legacy Cartesian↔
+  OUTCOME: promoted the exact mechanic into a shared
+  `finmag.field.evaluate_at_point(function, point)` helper used by both
+  `Field.probe(point)`/`Field.__call__` and directly on a raw
+  `dolfinx.fem.Function` (matching how `energy_density_function()` returns a
+  raw Function "to allow probing", exactly as legacy did). Single point per
+  call only (matching every legacy call site); outside-mesh raises
+  `RuntimeError` (mirrors legacy's default `allow_extrapolation=False`
+  failure); serial-only (documented by name, not separately tested in
+  parallel). `examples/exchange_demag/test_exchange_demag.py`'s local
+  `_eval_scalar_function` helper removed; the example now calls
+  `evaluate_at_point` directly, one point per call, exactly as legacy's
+  `exch_energy([15, 15, i])` loop did. Drift #12 marked CORRECTED in
+  `transition-notes.org`.
+- [x] `Field.get_spherical`/`set_spherical`: restore the legacy Cartesian↔
   spherical conversion (analytic; pin against legacy formulas).
-- [ ] `skyrmion_number` (+ density function): restore the topological-charge
+  OUTCOME: `get_spherical` transcribed verbatim
+  (`theta = atan2(m_r, m_z)`, `m_r = sqrt(m_x**2+m_y**2)`;
+  `phi = atan2(m_y, m_x)`; both radians), computed directly as NumPy on the
+  owned nodal array (mathematically identical to legacy's dolfin `dP`
+  point-measure trick, which is exact nodal evaluation for Lagrange-1, not an
+  L2 projection). Returns `(self.theta, self.phi)`, each a raw
+  `dolfinx.fem.Function` on the associated CG1 scalar space, matching legacy's
+  raw `dolfin.Function` attributes exactly. Pinned against 5 analytic points
+  and a normalised-vector round-trip. There is no legacy `set_spherical` —
+  grepped the pixi-tip tree; only `get_spherical` exists (called from
+  `physics/neb_cartesian_modified.py`) — so nothing was invented for a
+  non-existent surface.
+- [x] `skyrmion_number` (+ density function): restore the topological-charge
   computation (analytic — a known-skyrmion config gives ~±1; pin it).
-- [ ] Validate each against legacy oracle fixtures or analytic references;
+  OUTCOME: `Simulation.skyrmion_number`/`skyrmion_number_density_function`
+  restored (Task 9 had dropped them outright, a judgment-call deferral, not a
+  by-name `NotImplementedError`), transcribing legacy's
+  `-1/(4*pi) * integral(m . (dm/dx x dm/dy))` formula verbatim via
+  `ufl.Dx`/`cross`/`dot` (same UFL API as legacy's `df.Dx`/`cross`/`dot`); 2D
+  mesh integrates over the whole domain, 3D mesh integrates over the top
+  surface only (`dolfinx.mesh.locate_entities_boundary` + `meshtags` +
+  `ufl.Measure("ds", subdomain_data=...)`, the DOLFINx equivalent of legacy's
+  `SubDomain`/`MeshFunction`/`ds[markers]`). Pinned: uniform state → exactly 0
+  (2D and 3D-top-surface paths); a Bloch-type skyrmion ansatz (radius 20,
+  reproduced inline as self-contained analytic test data — the legacy
+  `initialise_skyrmions` source is in the untouched, DOLFINx-unimportable
+  `magnetisation_patterns.py`, which still does `import dolfin`) converges
+  towards ±1 with mesh refinement (measured n=20 → 0.8668, n=40 → 0.9651,
+  n=80 → 0.9912); the 3D top-surface path reproduces the 2D whole-domain
+  result exactly for a z-invariant profile; the density function integrates
+  (nodal-volume-weighted sum) back to `skyrmion_number()` to ~1e-13. Did NOT
+  restore `initialise_skyrmions`/the other `magnetisation_patterns`
+  initialisers — out of scope for 26a per the plan, left untouched/deferred.
+- [x] Validate each against legacy oracle fixtures or analytic references;
   update the deferred-surfaces sweep (these leave the deferred list).
-- [ ] New gate `dolfinx-src-io-utils-pytest` folded into `verify-dolfinx-m5`.
-- [ ] Docs (verification-checklist item): plan checkboxes, transition-notes
+  OUTCOME: all three validated against analytic references (formulas transcribed
+  directly from the pixi-tip legacy source, not oracle-fixture JSON — no
+  fixture generation was needed since every check is either exact analytic
+  arithmetic or a well-known convergent limit). `test_deferred_surfaces_dolfinx.py`'s
+  module docstring updated with a bullet recording these three are now PORTED
+  (Task 26a) and pointing at their dedicated coverage; none of the three had
+  actually been asserted as a by-name deferral *in that sweep file* before
+  (point-probing/`get_spherical` were pinned in
+  `test_field_dolfinx.py::test_legacy_only_features_fail_precisely`, now
+  updated to remove those two assertions; `skyrmion_number` was a plain
+  `AttributeError`-removed surface, never a `NotImplementedError` deferral).
+- [x] New gate `dolfinx-src-io-utils-pytest` folded into `verify-dolfinx-m5`.
+  OUTCOME: `src/finmag/tests/test_io_utils_dolfinx.py` (18 tests) added;
+  `pixi.toml`'s `dolfinx-src-io-utils-pytest` task and
+  `dev/bin/verify-dolfinx-m5`'s corresponding step added (after
+  `dolfinx-src-examples-pytest`).
+- [x] Docs (verification-checklist item): plan checkboxes, transition-notes
   section, porting_map (surfaces de-deferred), interface-audit note that
   point-probing drift is reverted. Attribution.
+  OUTCOME: this checklist; `transition-notes.org`'s new "I/O utility parity
+  (Task 26a)" section and drift-table row #12 marked CORRECTED;
+  `dev/dolfinx/porting_map.md`'s Task 9 addendum and Near-Term-Gaps `field.py`
+  paragraph updated; `docs/superpowers/interface-audit.md`'s point-eval/
+  `get_spherical` rows and FORCED-changes items 2/4 updated to reflect the
+  restoration. [Claude Sonnet 5]

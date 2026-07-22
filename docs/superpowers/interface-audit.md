@@ -125,8 +125,9 @@ N = gratuitous (UNNECESSARY).
 | `set_random_values` | `(vrange=[-1, 1])` | `(vrange=(-1.0, 1.0))` | benign | Y | — (mutable-default fix; identical behaviour) |
 | `save_pvd` | `(filename)` | `(filename, t=0.0)` | superset | Y | — (backward-compatible optional arg) |
 | `from_expression` | `(expr, **kwargs)` | raises `NotImplementedError` | FORCED | Y | — (dolfin `Expression`/`UserExpression` removed) |
-| `probe` / `__call__` (point eval) | `(coord)` evaluates at a point | raises `NotImplementedError` | FORCED | Y | — (point-in-cell eval not provided; drift #4/#12) |
-| `save_hdf5` / `close_hdf5` / `plot_with_*` / `get_spherical` | (as legacy) | deferred / raise | FORCED/deferred | Y | — (dolfinh5tools / mayavi / paraview not in stack) |
+| `probe` / `__call__` (point eval) | `(coord)` evaluates at a point | identical (via `finmag.field.evaluate_at_point`) | **CORRECTED (Task 26a)** | Y | done — drift #4/#12 REVERTED; see transition-notes.org "I/O utility parity (Task 26a)" |
+| `get_spherical` | returns `(theta, phi)` raw `dolfin.Function`s | identical (returns raw `dolfinx.fem.Function`s) | **CORRECTED (Task 26a)** | Y | done — no legacy `set_spherical` exists (grepped pixi tip); nothing invented |
+| `save_hdf5` / `close_hdf5` / `plot_with_*` | (as legacy) | deferred / raise | FORCED/deferred | Y | — (dolfinh5tools / mayavi / paraview not in stack) |
 | **Public array component ORDERING** (`get_numpy_array_debug`, `get_ordered_numpy_array_xxx`, every `compute_field()`, `effective_field()`) | component-blocked `[x1..xN, y1..yN, z1..zN]` | **CORRECTED (Task 31)** back to component-blocked | REGISTERED-corrected | Y | — (drift #3/#6 de-registered; now legacy-faithful, no residual) |
 
 ### Meshes, `from_geofile`/`from_csg`, `mesh_templates`
@@ -197,15 +198,22 @@ compelled — the irreducible cost of the port:
    `UserExpression`. Consequence: `Field.from_expression` raises
    `NotImplementedError`; `TimeZeemanPython`'s 1st param was renamed
    `df_expression`→`H0_value` to name the new value contract (transition-notes:4368).
-2. **Point evaluation removed.** `Field.probe(coord)` / `Field.__call__(pt)` /
-   `energy_density_function()([x,y,z])` raise `NotImplementedError`; examples read
-   nodal data via `coords_and_values()` or explicit DOLFINx point-in-cell eval
-   (drift #4, #12).
+2. **Point evaluation — RESTORED (Task 26a), no longer forced.** `Field.probe(coord)` /
+   `Field.__call__(pt)` and any raw `dolfinx.fem.Function` (e.g.
+   `energy_density_function()([x,y,z])`) now evaluate via the shared
+   `finmag.field.evaluate_at_point` point-in-cell helper (bb_tree +
+   compute_colliding_cells + `Function.eval`); drift #4/#12 REVERTED. Only the
+   *mechanism* changed (DOLFINx has no callable-Function convenience); the
+   signature, return shape and single-point-per-call contract are legacy-faithful.
 3. **dolfin `dx` object gone.** `Field.average(dx=df.dx)` → `dx=` the ufl/DOLFINx
    measure. Same call shape, different default object.
-4. **HDF5 read-back / legacy plotting gone.** `save_hdf5`/`close_hdf5`
-   (dolfinh5tools), `plot_with_dolfin`, `plot_with_paraview`, `get_spherical`
-   are deferred/raise — those backends are not in the DOLFINx/Py-3.12 stack.
+4. **HDF5 read-back / legacy plotting gone; `get_spherical` RESTORED (Task 26a).**
+   `save_hdf5`/`close_hdf5` (dolfinh5tools), `plot_with_dolfin`,
+   `plot_with_paraview` are still deferred/raise — those backends are not in
+   the DOLFINx/Py-3.12 stack. `get_spherical` is no longer in this list: it is
+   a pure analytic nodal computation with no dolfin-specific backend
+   dependency, so it was restored directly (no forced change was ever needed
+   here — it had simply not been ported yet).
 5. **`method='box-matrix-petsc'` legacy assembly algorithms removed.** The
    NumPy-matrix / project / direct energy paths do not exist under DOLFINx; the
    only supported algorithm is `box-assemble`, which is now the default for
@@ -229,11 +237,15 @@ example was touched to accommodate U1–U6.
 Every non-mechanical example edit traces to a FORCED change or a stale example,
 not to a gratuitous src change (per the `transition-notes.org` drift table, rows
 1–12):
-- Expression rewrites (drift #2), point-probe workarounds (#4, #12), ordering
-  (#3/#6 — now CORRECTED so the examples use the legacy `reshape((3,-1))` /
-  `get_numpy_array_debug()` verbatim), `llg.m_numpy`/`llg.alpha` state access
-  (#5, #7), `hysteresis(list)` vs py2 `ndarray==[]` (#8), `mesh_info` →
-  `num_vertices` (#9) — all FORCED or unported-surface workarounds.
+- Expression rewrites (drift #2), point-probe workarounds (#4, #12 — #12 now
+  CORRECTED, Task 26a: `examples/exchange_demag/test_exchange_demag.py`'s
+  local `_eval_scalar_function` helper removed in favour of the restored
+  `finmag.field.evaluate_at_point`; #4 not reverted, see transition-notes.org),
+  ordering (#3/#6 — now CORRECTED so the examples use the legacy
+  `reshape((3,-1))` / `get_numpy_array_debug()` verbatim), `llg.m_numpy`/
+  `llg.alpha` state access (#5, #7), `hysteresis(list)` vs py2 `ndarray==[]`
+  (#8), `mesh_info` → `num_vertices` (#9) — all FORCED or unported-surface
+  workarounds.
 - The one `CubicAnisotropy` example edit
   (`examples/cubic_anisotropy/hysteresis.py`,
   `(K1,u1,K2,u2,K3,u3)`→`(u1,u2,K1,K2,K3)`) is a **stale-example fix**, not a

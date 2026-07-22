@@ -736,6 +736,29 @@ class Simulation(object):
     def probe_field_along_line(self, *args, **kwargs):
         _deferred("probe_field_along_line", "point probing")
 
+    # -- topological charge (Task 26a) --------------------------------------
+    #
+    # Restored directly against DOLFINx/UFL (removed outright in Task 9,
+    # accepted judgment-call deferral; see dev/dolfinx/porting_map.md). Thin
+    # delegators to finmag.sim.sim_helpers, matching the style already used
+    # for save_restart_data/save_ndt/etc. above (legacy bound these directly
+    # as `skyrmion_number = sim_helpers.skyrmion_number`).
+
+    def skyrmion_number(self):
+        """Skyrmion number (topological charge) of the current state.
+
+        See ``finmag.sim.sim_helpers.skyrmion_number`` for the formula and
+        the 2D/3D-top-surface integration-domain rule.
+        """
+        return sim_helpers.skyrmion_number(self)
+
+    def skyrmion_number_density_function(self):
+        """Skyrmion-number density as a lumped nodal ``dolfinx.fem.Function``.
+
+        See ``finmag.sim.sim_helpers.skyrmion_number_density_function``.
+        """
+        return sim_helpers.skyrmion_number_density_function(self)
+
     # -- relaxation / hysteresis (Task 15) ---------------------------------
     #
     # Bound exactly as the legacy ``Simulation`` did (``relax =

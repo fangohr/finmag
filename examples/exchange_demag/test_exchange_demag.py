@@ -11,15 +11,23 @@
 #   - from_geofile("bar30_30_100.geo") kept UNCHANGED (Netgen-CSG '.geo' loader
 #     ported for the examples subset, Task 30 amendment).
 #   - mesh.topology().dim() -> mesh.topology.dim (dolfinx API).
-#   - INTERFACE DRIFT (density point-evaluation): the legacy density test called
-#     the object returned by ``energy_density_function()`` as a point function,
-#     ``exch_energy([15, 15, i])``. In the DOLFINx port that method returns a
-#     ``dolfinx.fem.Function`` and ``Field.probe``/``Field.__call__`` raise
-#     NotImplementedError (point probing is not yet ported). We therefore sample
-#     the density Function along the same central z-axis line using DOLFINx's own
-#     point-in-cell evaluation (bb_tree + compute_colliding_cells + Function.eval),
-#     which is the faithful equivalent of the legacy point call. Recorded as
-#     drift #12 in the Task 30 report/transition-notes.
+#   - DRIFT #12 CORRECTED (Task 26a): the legacy density test called the object
+#     returned by ``energy_density_function()`` as a point function,
+#     ``exch_energy([15, 15, i])``. When this example was first converted
+#     (Task 30), ``dolfinx.fem.Function`` objects were not directly callable at
+#     a point and ``Field.probe``/``Field.__call__`` raised
+#     ``NotImplementedError``, so a local ``_eval_scalar_function`` helper
+#     sampled the density Function via DOLFINx's own point-in-cell evaluation
+#     (bb_tree + compute_colliding_cells + Function.eval) as a faithful
+#     equivalent of the legacy point call. Task 26a promoted that exact
+#     mechanic into ``finmag.field.evaluate_at_point`` (used by both
+#     ``Field.probe`` and directly on a raw ``Function``, matching how
+#     ``energy_density_function()`` returns one "to allow probing", exactly as
+#     legacy did) and removed the local helper here in favour of the real,
+#     restored mechanism -- one point per call, exactly as legacy's
+#     ``exch_energy([15, 15, i])`` loop did. See ``transition-notes.org``'s
+#     drift table (row #12, now marked CORRECTED) and
+#     ``docs/superpowers/interface-audit.md``.
 #   - Tolerances loosened from the legacy values with justification (the legacy
 #     reference was nmag on a fine Netgen tet mesh; here the mesh is the Gmsh
 #     OCC mesh of the same .geo at maxh=4, ~1733 vertices). Measured errors vs
@@ -45,9 +53,9 @@
 import os
 import logging
 import numpy as np
-from dolfinx import geometry
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
+from finmag.field import evaluate_at_point
 from finmag.util.meshes import from_geofile, mesh_volume
 
 logger = logging.getLogger(name='finmag')
@@ -61,28 +69,6 @@ TOL_DEMAG_ENERGY = 5e-3
 Ms = 0.86e6
 unit_length = 1e-9
 mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
-
-
-def _eval_scalar_function(f, points):
-    """Evaluate a scalar dolfinx Function at a list of physical points.
-
-    Faithful replacement for the legacy ``density_function([x, y, z])`` point
-    call: DOLFINx Functions are not directly callable at a point, so we locate
-    the containing cell via the geometry bb-tree and evaluate there. (Drift #12.)
-    """
-    domain = f.function_space.mesh
-    points = np.asarray(points, dtype=np.float64)
-    tree = geometry.bb_tree(domain, domain.topology.dim)
-    candidates = geometry.compute_collisions_points(tree, points)
-    colliding = geometry.compute_colliding_cells(domain, candidates, points)
-    values = np.empty(len(points), dtype=np.float64)
-    for i in range(len(points)):
-        links = colliding.links(i)
-        if len(links) == 0:
-            raise RuntimeError(
-                "point {} is not inside the mesh".format(points[i]))
-        values[i] = f.eval(points[i], links[0])[0]
-    return values
 
 
 def run_finmag():
@@ -111,12 +97,17 @@ def run_finmag():
 
         # Energy densities: after ten time steps, sample the exchange and demag
         # energy density along the central z-axis (x=15, y=15, z=0..99 nm).
+        # Restored (Task 26a) to the legacy per-point call form
+        # ``exch_energy([15, 15, i])``, one point per call, via the shared
+        # ``evaluate_at_point`` helper (see the module header, drift #12).
         if counter == 10:
             exch_energy = exchange.energy_density_function()
             demag_energy = demag.energy_density_function()
-            line = np.array([[15.0, 15.0, float(i)] for i in range(100)])
-            finmag_exch = _eval_scalar_function(exch_energy, line)
-            finmag_demag = _eval_scalar_function(demag_energy, line)
+            finmag_exch, finmag_demag = [], []
+            R = range(100)
+            for i in R:
+                finmag_exch.append(evaluate_at_point(exch_energy, [15, 15, i]))
+                finmag_demag.append(evaluate_at_point(demag_energy, [15, 15, i]))
             np.save(os.path.join(MODULE_DIR, "finmag_exch_density.npy"),
                     np.array(finmag_exch))
             np.save(os.path.join(MODULE_DIR, "finmag_demag_density.npy"),
@@ -186,10 +177,11 @@ def test_compare_energy_density():
     After ten time steps, compute the energy density through the center of the
     bar (seen from x and y) from z=0 to z=100, and compare with nmag.
 
-    The legacy point-call is replaced by DOLFINx point-in-cell evaluation
-    (see the module header, drift #12). The legacy exchange tolerance (3e-2)
-    is kept verbatim; the legacy demag tolerance (1e-2) is loosened to 1.1e-2
-    for the coarser Gmsh mesh (measured 1.005e-2), disclosed in the header.
+    The legacy point-call ``density_function([x, y, z])`` is restored via
+    ``finmag.field.evaluate_at_point`` (Task 26a; see the module header,
+    drift #12, CORRECTED). The legacy exchange tolerance (3e-2) is kept
+    verbatim; the legacy demag tolerance (1e-2) is loosened to 1.1e-2 for the
+    coarser Gmsh mesh (measured 1.005e-2), disclosed in the header.
     """
     # Run simulation only if not run before or changed since last time.
     if not (os.path.isfile(os.path.join(MODULE_DIR, "finmag_exch_density.npy"))):

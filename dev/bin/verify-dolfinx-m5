@@ -85,6 +85,17 @@
 # `from_geofile` deferral (Netgen-CSG '.geo' loader for the examples subset),
 # covered by new cases in `dolfinx-src-meshes-pytest`. [Claude Opus 4.8]
 #
+# Task 26a folds in the decision-free I/O/utility parity gate
+# (`dolfinx-src-io-utils-pytest`): `Field.probe`/`Field.__call__` point-in-cell
+# evaluation (promoted from the Task 30 exchange_demag density workaround --
+# now reverted -- into the shared `finmag.field.evaluate_at_point` helper),
+# `Field.get_spherical` (analytic Cartesian<->spherical conversion), and
+# `Simulation.skyrmion_number`/`skyrmion_number_density_function` (analytic
+# topological-charge formula, restored after being dropped outright in
+# Task 9). All three are decision-free: faithful mechanical ports or pure
+# analytic transcriptions of the legacy formulas, validated against analytic
+# references (no owner sign-off required). [Claude Sonnet 5]
+#
 # Usage:
 #   dev/bin/verify-dolfinx-m5
 
@@ -196,3 +207,6 @@ pixi run -e dolfinx dolfinx-src-core-smoke
 
 echo "==> pixi run -e dolfinx dolfinx-src-examples-pytest"
 pixi run -e dolfinx dolfinx-src-examples-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-io-utils-pytest"
+pixi run -e dolfinx dolfinx-src-io-utils-pytest

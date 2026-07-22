@@ -5884,7 +5884,7 @@ silently rewritten.
 | 1 | =from_geofile= deferred | =from_geofile("*.geo")= builds a mesh | Task 18 deferred it | implemented the Netgen-CSG-subset loader (see above); scripts unchanged |
 | 2 | string =Expression= dropped | =df.Expression("...", ...)= for m/axis/alpha/field | port accepts only Python callables (documented Task 3+ decision) | each Expression rewritten as a vectorized numpy callable |
 | 3 | =compute_field()= ordering | component-blocked =(xxx yyy zzz)=, =reshape(3,-1)= | coordinate-interleaved =(xyz xyz)=, =reshape(-1,3)= | *CORRECTED (Task 31)*: =compute_field()= restored to legacy component-blocked ordering on all public surfaces; the legacy =reshape((3,-1))= is used verbatim (demag/test_field.py). See "Public field-array component-ordering correction (Task 31)" below |
-| 4 | Field point-probing | =field((x,y,z))= evaluates at a point | =Field.__call__= raises NotImplementedError | read nodal values via =coords_and_values()= (spatially-varying) |
+| 4 | Field point-probing | =field((x,y,z))= evaluates at a point | *CORRECTED (Task 26a)*: =Field.__call__=/=probe= now work (see "I/O utility parity (Task 26a)" below) | the affected examples (=time-dependent-applied-field=, =spatially-varying-anisotropy=) were NOT reverted -- their =coords_and_values()= reads remain a valid, already-passing alternative; only the exchange_demag workaround (row #12) was reverted, since Task 26a's brief scoped the example revert to that one file |
 | 5 | =llg.m= state vector | attribute =llg.m= | property =llg.m_numpy= (xxx-ordered) | use =llg.m_numpy= (exchange_1D) |
 | 6 | =get_numpy_array_debug()= ordering | component-blocked (fed to =solve_for=) | raw interleaved; =solve_for= expects xxx -> corrupts state | *CORRECTED (Task 31)*: =get_numpy_array_debug()= restored to legacy component-blocked ordering (and =set_with_numpy_array_debug= kept its exact inverse); the legacy =sim.llg._m_field.get_numpy_array_debug()= odeint init is used verbatim (macrospin_alpha_rtol). See "Public field-array component-ordering correction (Task 31)" below |
 | 7 | =llg.alpha.vector().array()= | dolfin =Function.vector().array()= | =llg.alpha= already returns the node array | use =llg.alpha= directly (varying_alpha) |
@@ -5892,7 +5892,7 @@ silently rewritten.
 | 9 | =Simulation.mesh_info()= | prints mesh statistics | not ported | print =num_vertices(mesh)= instead (magnetic_grain) |
 | 10| =llg_integrator= default backend | (native) sundials | CORRECTED: the sundials factory default WORKS (Task 20 restored the native sundials backend); no override is needed | use the factory default (time-dependent field); the legacy omega-fit assertion passes verbatim (rel err ~1.0e-4) |
 | 11| coordinate<->vertex matching BUG | worked on any mesh | =_owned_vertex_to_dof= used exact 12-decimal rounding -> crashed on Gmsh/=from_geofile= meshes (FP noise straddles rounding boundary) | *src fix*: tolerance-based nearest-vertex match (KDTree), exact for create_box, robust for generated meshes -- see below |
-| 12| density Function point-eval | =energy_density_function()([x,y,z])= point-callable | returns a =dolfinx.fem.Function=; =Field.probe=/=__call__= raise NotImplementedError | evaluate along the sampling line with DOLFINx point-in-cell eval (bb_tree + compute_colliding_cells + Function.eval) -- exchange_demag density comparison |
+| 12| density Function point-eval | =energy_density_function()([x,y,z])= point-callable | *CORRECTED (Task 26a)*: =Field.probe=/=__call__=/=finmag.field.evaluate_at_point= now restore point-in-cell evaluation (bb_tree + compute_colliding_cells + Function.eval); no workaround needed any more | the exchange_demag density comparison calls =evaluate_at_point(exch_energy, [15, 15, i])= directly, one point per call, matching the legacy =exch_energy([15, 15, i])= loop verbatim -- see "I/O utility parity (Task 26a)" below |
 
 *** SRC FIXES beyond the from_geofile exception (flagged for review)
 
@@ -6143,3 +6143,153 @@ behaviour are unchanged (verified by inspection -- the file was not edited).
 [Claude Sonnet 5]
 
 Interface hygiene (Task 34): reverted 6 gratuitous parameter renames to legacy names -- see interface-audit.md. [Claude Sonnet 5]
+
+** I/O utility parity (Task 26a)
+
+Decision-free subset of the Task 26 long tail: three legacy capabilities
+restored with no owner sign-off required, because each is either a faithful
+mechanical port of a mechanic already proven elsewhere in this branch, or a
+pure analytic transcription of legacy's own formula. HDF5 read-back,
+region-restricted field output, and legacy plotting remain deferred (Task 26b).
+
+*** Point evaluation: =Field.probe=/=Field.__call__= (drift #12 CORRECTED)
+
+Legacy (pixi =ba928093=) =Field.__call__=/=Field.probe= were both a one-line
+forward to dolfin's own =Function.__call__=: =return self.f(x)=/
+=return self.f(coord)=. DOLFINx =fem.Function= objects are not directly
+callable at a point, so the Task 30 =examples/exchange_demag/
+test_exchange_demag.py= conversion carried a local
+=_eval_scalar_function= workaround (bb_tree + compute_colliding_cells +
+Function.eval) to sample =energy_density_function()='s raw =Function=
+along a line -- recorded as drift #12 in the table below.
+
+Task 26a promotes that exact mechanic into a single shared helper,
+=finmag.field.evaluate_at_point(function, point)=, used by both:
+- =Field.probe(point)=/=Field.__call__(point)= (restores the legacy
+  signature and return shape: a Python =float= for a scalar field, a
+  =(value_dim,)= NumPy array for a vector field), and
+- directly on any raw =dolfinx.fem.Function= -- e.g. the one
+  =EnergyBase.energy_density_function()= returns, matching legacy's own
+  contract exactly (legacy's docstring: "return a dolfin function to allow
+  probing" -- it deliberately returned the raw dolfin =Function=, not a
+  =finmag.Field=, precisely so callers could point-call it directly).
+
+Only a single point per call is supported -- legacy's own call sites (e.g.
+=exch_energy([15, 15, i])=, called once per point in a Python =for= loop)
+never vectorised over many points either, so this is not a narrowing.
+Outside-mesh points raise =RuntimeError= ("point ... is not inside the
+mesh"), mirroring legacy dolfin's default (=allow_extrapolation=False=)
+failure mode -- grepped the pixi-tip tree; nothing in this codebase set
+=allow_extrapolation=True=. Serial-only, consistent with the rest of
+=Field='s MPI documentation: a bounding-box-tree point-in-cell search only
+sees the calling rank's local (owned+ghost) cells, so it is not collective
+and a point owned only by another rank raises even though it exists in the
+global mesh; this is a documented-by-name limitation, not separately tested
+in parallel.
+
+=examples/exchange_demag/test_exchange_demag.py= REVERTED: the local
+=_eval_scalar_function= helper is deleted; the example now calls
+=evaluate_at_point= directly, one point per call, in the exact legacy loop
+shape (=for i in R: finmag_exch.append(evaluate_at_point(exch_energy,
+[15, 15, i]))=). All three of that example's tests still pass
+(=test_compare_averages=, =test_compare_energies=,
+=test_compare_energy_density=) with the same tolerances as before the
+revert -- the numeric results are identical (same underlying eval
+mechanic), only the workaround/plumbing changed.
+
+*** Spherical conversion: =Field.get_spherical=
+
+Transcribed verbatim from legacy: =theta = atan2(m_r, m_z)= (the polar angle
+from the +z axis, =m_r = sqrt(m_x**2 + m_y**2)= the cylindrical radius) and
+=phi = atan2(m_y, m_x)= (the azimuthal angle), both in radians on
+=numpy.arctan2='s =(-pi, pi]= branch (=theta= is non-negative since
+=m_r >= 0=, so it lies in =[0, pi]=). Legacy assembled
+=dot(expr, TestFunction(S1)) * dP= -- dolfin's point measure, which for
+Lagrange-1 elements is EXACT node-by-node evaluation (a Dirac comb at the
+vertices; each basis function is 1 at its own vertex, 0 elsewhere), not an
+L2 projection. The DOLFINx port computes the mathematically identical
+result directly as a NumPy expression on the owned nodal array -- same
+numbers, no FEM assembly needed to reproduce a pointwise identity.
+
+Returns =(self.theta, self.phi)=, each a raw =dolfinx.fem.Function= on the
+CG1 scalar space associated with the field's function space -- matching
+legacy's raw =dolfin.Function= attributes exactly (not a =finmag.Field=).
+Pinned against 5 analytic points (+z, x, y, -z, and a 45-degree xy vector)
+and a normalised-vector round-trip
+(=m = (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))= reconstructs the
+original unit vector to 1e-10).
+
+There is no legacy =set_spherical=: the pixi-tip tree was grepped
+end-to-end and only =get_spherical= exists (called from
+=physics/neb_cartesian_modified.py='s
+=theta0, phi0 = self.sim._m_field.get_spherical()=). Nothing was invented
+for a surface legacy never had.
+
+*** Topological charge: =Simulation.skyrmion_number=/=skyrmion_number_density_function=
+
+Task 9 had dropped these outright during the initial port (an accepted
+judgment-call deferral -- a plain =AttributeError=, not a by-name
+=NotImplementedError=; see =dev/dolfinx/porting_map.md=). Task 26a restores
+both, transcribing legacy's formula verbatim:
+
+  S = -1/(4*pi) * integral( m . (dm/dx cross dm/dy) )
+
+via =ufl.Dx=/=cross=/=dot= -- the identical UFL API legacy's
+=df.Dx=/=cross=/=dot= used, so this is not a formula change. For a 2D mesh
+the integral runs over the whole domain; for a 3D mesh (the formula is only
+defined for a 2D spin texture) it runs over the TOP surface only
+(=z == z_max=), matching legacy's own top-surface restriction (legacy's
+docstring cites the FEniCS lift-drag demo for the general "functional over a
+mesh subset" technique). Legacy located the top surface with a
+=df.SubDomain=/=MeshFunction= marking facets within =df.DOLFIN_EPS=
+(~2.22e-16) of the mesh's maximum z coordinate, then integrated over
+=df.ds[markers](1)=; the DOLFINx equivalent is
+=dolfinx.mesh.locate_entities_boundary= + =meshtags= + a
+=ufl.Measure("ds", subdomain_data=...)=. The bare legacy epsilon is
+bitwise-exact only for FEniCS's own box-mesh coordinates; DOLFINx's mesh
+generators can differ in the last few bits (the same category of FP noise
+as the drift #11 =_owned_vertex_to_dof= KDTree tolerance), so a small
+mesh-scale-relative tolerance is used instead -- exact for bit-identical top
+faces, and never loose enough to pull in an adjacent mesh layer.
+
+=skyrmion_number_density_function= lumped-mass-projects the same integrand
+onto the CG1 space associated with =self.S3=, reusing
+=_assemble_vector_owned=/=_nodal_volume_owned= from
+=finmag.energies.energy_base= (the same unscaled mesh-coordinate lumped
+pair =thin_film_demag.py= already reuses for the same reason). Legacy scaled
+numerator and denominator by the same =unit_length ** dim= factor, which
+cancels exactly, so dropping that scaling changes nothing about the
+resulting VALUE. Returns a raw =dolfinx.fem.Function= (matching legacy's raw
+=dolfin.Function=, "to allow probing"), not a =finmag.Field=.
+
+Pinned analytically (no legacy oracle fixture needed -- the checks below are
+either exact arithmetic or a well-known convergent limit, not a
+mesh-specific legacy number to match bit-for-bit):
+- a uniform state gives exactly 0 (both the 2D whole-domain and 3D
+  top-surface code paths);
+- a compactly-supported Bloch-type skyrmion ansatz (radius 20 mesh units,
+  core =m_z=-1= at the centre, =m_z=+1= background -- reproduced inline in
+  the test as self-contained analytic data, since the legacy
+  =initialise_skyrmions= profile lives in the untouched, DOLFINx-unimportable
+  =finmag.sim.magnetisation_patterns= module, which still does
+  =import dolfin= at module scope and is off the core import graph) converges
+  towards the analytic +/-1 topological charge as the mesh is refined:
+  measured n=20 -> 0.8668, n=40 -> 0.9651, n=80 -> 0.9912;
+- the 3D top-surface integration path reproduces the 2D whole-domain result
+  exactly (to 1e-8) for a z-invariant profile with a matching xy
+  footprint/resolution;
+- the density function, weighted by nodal volume and summed, reproduces
+  =skyrmion_number()= to ~1e-13 (both derive from the same lumped machinery,
+  so this is an internal-consistency check, not an independent validation).
+
+=initialise_skyrmions=/the other =magnetisation_patterns= initialisers were
+NOT restored -- explicitly out of scope for 26a (26b territory), left
+untouched/unimportable as before.
+
+*** New gate
+
+=dolfinx-src-io-utils-pytest= (=src/finmag/tests/test_io_utils_dolfinx.py=,
+18 tests) folded into =dev/bin/verify-dolfinx-m5= right after
+=dolfinx-src-examples-pytest=.
+
+[Claude Sonnet 5]
