@@ -163,10 +163,14 @@ module with its tests.
   coordinate-ordered oracle fixtures (`slonczewski_rhs.json`, `zhangli_rhs.json`
   -- the latter also pins the discrete `H_gradm`), analytic direction/scaling
   pins, a Zhang-Li domain-wall-displacement witness, a Slonczewski tilt-sign
-  witness, and a scipy-vs-sundials cross-backend check. The only remaining
-  by-name `LLG` item is the multi-rank ODE state guard. The separate NONLOCAL
-  STT class `llg_stt.LLG_STT` (native `calc_llg_nonlocal_stt_dmdt`; reached only
-  via `Simulation(kernel="llg_stt")`) stays deferred by name -- a distinct
+  witness, and a scipy-vs-sundials cross-backend check. Note: the port uses
+  coordinate-ordered arrays throughout (legacy had raw dof-ordered `J`/`Ms`/`p`
+  alongside coordinate-ordered `m`/`H`/`alpha`, a latent inconsistency); this is
+  a DELIBERATE DEVIATION with identical results for all pinned cases
+  (documented in `transition-notes.org` Task 22). The only remaining by-name
+  `LLG` item is the multi-rank ODE state guard. The separate NONLOCAL STT class
+  `llg_stt.LLG_STT` (native `calc_llg_nonlocal_stt_dmdt`; reached only via
+  `Simulation(kernel="llg_stt")`) stays deferred by name -- a distinct
   spin-accumulation capability, Task 29-registered. [Claude Opus 4.8]
 - Task 7 addendum: legacy `set_pins` logged `logger.error(...)` for
   out-of-range pin indices and silently kept the previous `_pins` array

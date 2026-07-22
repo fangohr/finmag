@@ -5406,6 +5406,29 @@ Tolerances are tight enough that a sign or prefactor error cannot hide (the
 dmdt magnitudes are ~1e11 1/s with abs tol 1.0; H_gradm ~1e20 1/m with rel tol
 1e-9).
 
+*** Documented deviations (deliberate design choices)
+
+The following implementation choices are deliberate deviations representing
+design trade-offs accepted during the port:
+
+- *Mutual exclusivity of STT flags*: the ported =use_slonczewski=/=use_zhangli=
+  each disable the other flag (last call wins); legacy set only its own flag and
+  its =solve= dispatch made Slonczewski win if both were enabled. Corner-case
+  behavioural deviation, deliberate. [Claude Haiku 4.5]
+
+- *Ordering self-consistency*: legacy passed raw dof-ordered =J=/=Ms=/=p= arrays
+  into the native STT kernels alongside coordinate-ordered =m=/=H=/=alpha= (a
+  latent legacy inconsistency, invisible for uniform parameters); the port uses
+  coordinate-ordered arrays throughout. Identical results for all pinned cases;
+  for spatially varying =J=/=Ms=/=p= under legacy dolfin dof reordering, legacy
+  and port would differ --- the port is the self-consistent physics. DELIBERATE
+  DEVIATION. [Claude Haiku 4.5]
+
+- *Known pin limit*: the 1D Zhang-Li =H_gradm= fixture cannot distinguish the
+  lumped-box FEM gradient operator from a plain finite-difference scheme (they
+  coincide in 1D); the implementation is form-based like legacy, so 2D/3D
+  generalisation matches legacy by construction. [Claude Haiku 4.5]
+
 *** Analytic pins and dynamics witnesses (=test_stt_dolfinx.py=)
 
 - Slonczewski torque is linear in =J= (=t(2J)==2 t(J)=), flips sign with =J=,
