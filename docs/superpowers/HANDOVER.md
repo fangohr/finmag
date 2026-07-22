@@ -29,8 +29,15 @@ master (b5015c5a)      original Python 2 / dolfin-2017 code — the functionalit
 ```
 pixi run -e dolfinx dolfinx-install-editable   # editable install (see README INSTALL section)
 pixi run -e dolfinx dolfinx-native-build       # builds bem_arrays.so, sundials.so, treecode_bem
-dev/bin/verify-dolfinx-m5                      # the aggregate gate (~21 sub-gates), must be green
+dev/bin/verify-dolfinx-m5                      # the aggregate gate (~22 sub-gates), must be green
 ```
+
+CI: `.github/workflows/dolfinx-m5.yml` runs the full verifier on every push/PR
+to this branch and writes a per-gate pass/fail Job Summary (via
+`dev/bin/ci-summarize-dolfinx-m5`) so humans can see exactly what works.
+Legacy-lane workflows (python3-m1/m2/m3/core-suite) are honestly scoped to
+skip on this branch (they gate the `pixi` oracle, whose runs are green) —
+dated rationale comments in each workflow file. Verified green 2026-07-22.
 
 Working, oracle-validated capabilities:
 
