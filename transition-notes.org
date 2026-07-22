@@ -6141,3 +6141,5 @@ additive: =dev/bin/verify-dolfinx-m5='s own tracked-files guard and exit-code
 behaviour are unchanged (verified by inspection -- the file was not edited).
 
 [Claude Sonnet 5]
+
+Interface hygiene (Task 34): reverted 6 gratuitous parameter renames to legacy names -- see interface-audit.md. [Claude Sonnet 5]

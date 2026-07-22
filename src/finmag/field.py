@@ -96,31 +96,31 @@ class Field:
             self.normalise()
         return self
 
-    def from_callable(self, function):
+    def from_callable(self, func):
         """Collectively interpolate a vectorized or point-at-a-time callable."""
-        self.f.interpolate(self._interpolation_callable(function))
+        self.f.interpolate(self._interpolation_callable(func))
         self.f.x.scatter_forward()
         return self
 
-    def from_constant(self, value):
+    def from_constant(self, constant):
         """Interpolate a scalar or vector constant."""
-        if isinstance(value, fem.Constant):
-            value = value.value
-        constant = np.asarray(value, dtype=np.float64)
+        if isinstance(constant, fem.Constant):
+            constant = constant.value
+        constant_arr = np.asarray(constant, dtype=np.float64)
         if self.is_scalar_field():
-            if constant.size != 1:
+            if constant_arr.size != 1:
                 raise ValueError("cannot set scalar field with vector value")
-            scalar = float(constant.reshape(-1)[0])
+            scalar = float(constant_arr.reshape(-1)[0])
             self.f.interpolate(lambda x: np.full(x.shape[1], scalar))
         else:
-            if constant.ndim != 1 or constant.size != self.value_dim():
+            if constant_arr.ndim != 1 or constant_arr.size != self.value_dim():
                 raise ValueError(
                     "vector value has {} components, but the field expects {}".format(
-                        constant.size, self.value_dim()
+                        constant_arr.size, self.value_dim()
                     )
                 )
             self.f.interpolate(
-                lambda x: np.repeat(constant[:, None], x.shape[1], axis=1)
+                lambda x: np.repeat(constant_arr[:, None], x.shape[1], axis=1)
             )
         self.f.x.scatter_forward()
         return self
@@ -155,17 +155,17 @@ class Field:
             self.f.x.scatter_forward()
         return self
 
-    def from_array(self, array):
+    def from_array(self, arr):
         """Collectively set flat owned backend-order dofs and refresh ghosts."""
-        array = np.asarray(array, dtype=np.float64)
+        arr = np.asarray(arr, dtype=np.float64)
         expected = (self._owned_scalar_dofs(),)
-        if array.shape != expected:
+        if arr.shape != expected:
             raise ValueError(
                 "from_array expects the raw dof array (owned) shape {}, got {}".format(
-                    expected, array.shape
+                    expected, arr.shape
                 )
             )
-        self.f.x.array[: expected[0]] = array
+        self.f.x.array[: expected[0]] = arr
         self.f.x.scatter_forward()
         return self
 
@@ -180,8 +180,8 @@ class Field:
             "legacy GenericVector assignment is unavailable; pass an owned NumPy array"
         )
 
-    def from_sequence(self, sequence):
-        return self.from_constant(sequence)
+    def from_sequence(self, seq):
+        return self.from_constant(seq)
 
     def set_with_numpy_array_debug(self, value, normalised=False):
         """Set from a legacy component-blocked (``xxx``) owned-vertex array.

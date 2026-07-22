@@ -672,11 +672,11 @@ class Simulation(object):
 
     # -- regions (Task 16) --------------------------------------------------
 
-    def mark_regions(self, fun):
-        """Partition the mesh into regions by a function ``fun(pt) -> id``.
+    def mark_regions(self, fun_regions):
+        """Partition the mesh into regions by a function ``fun_regions(pt) -> id``.
 
-        ``fun`` maps a point (a length-3 coordinate array) to a hashable region
-        id; each *cell* is assigned the region of its midpoint. This builds:
+        ``fun_regions`` maps a point (a length-3 coordinate array) to a hashable
+        region id; each *cell* is assigned the region of its midpoint. This builds:
 
         - ``self.region_ids``: an ordered ``{user_id: contiguous_int}`` map
           (matching the legacy ``mark_regions`` contiguous remap);
@@ -697,7 +697,7 @@ class Simulation(object):
         n_cells = self.mesh.topology.index_map(tdim).size_local
         cell_indices = np.arange(n_cells, dtype=np.int32)
         midpoints = dmesh.compute_midpoints(self.mesh, tdim, cell_indices)
-        raw_ids = [fun(pt) for pt in midpoints]
+        raw_ids = [fun_regions(pt) for pt in midpoints]
 
         ordered_ids = list(dict.fromkeys(raw_ids))
         self.region_ids = {region: i for i, region in enumerate(ordered_ids)}

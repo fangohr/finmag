@@ -522,7 +522,7 @@ def _build_mesh(parser, csg_key, maxh, save_result, filename, directory):
                                filename, directory)
 
 
-def from_csg(csg_string, save_result=True, filename='', directory='', *, maxh=None):
+def from_csg(csg, save_result=True, filename='', directory='', *, maxh=None):
     """Build a ``dolfinx.mesh`` from a Netgen ``algebraic3d`` CSG string.
 
     Supports the subset documented in this module's docstring. ``maxh`` (if
@@ -534,8 +534,8 @@ def from_csg(csg_string, save_result=True, filename='', directory='', *, maxh=No
     the port-only extension and is therefore keyword-only, so a legacy positional
     ``from_csg(text, False)`` binds ``save_result`` as before.
     """
-    parser = _Parser(_tokenize(csg_string)).parse()
-    return _build_mesh(parser, csg_string, maxh, save_result, filename, directory)
+    parser = _Parser(_tokenize(csg)).parse()
+    return _build_mesh(parser, csg, maxh, save_result, filename, directory)
 
 
 def from_geofile(geofile, save_result=True, filename='', directory='', *, maxh=None):

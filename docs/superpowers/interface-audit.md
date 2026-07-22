@@ -28,15 +28,18 @@ consolidated).
 | NO-CHANGE (interface identical to legacy) | 31 |
 | FORCED (DOLFINx/Py-3.12 genuinely removed the legacy mechanism) | 5 |
 | REGISTERED-DEVIATION (already in the acceptance register / drift table) | 3 |
-| **UNNECESSARY (gratuitous — the findings)** | **6** |
+| **UNNECESSARY (gratuitous — the findings)** | **0 (REVERTED — see §3)** |
 | PRE-EXISTING / stale-example (not introduced by the port) | 1 (CubicAnisotropy) |
 
-**Headline:** there ARE gratuitous changes, but they are all of ONE benign kind —
-**six first-positional-parameter RENAMES** with **zero practical blast radius**
-(every caller in `examples/` and the test-suite passes them positionally; not a
-single keyword caller exists). No argument was reordered, no default that changes
-behaviour was flipped without registration, no method silently renamed on a
-surface a user relies on. The port is overwhelmingly interface-faithful.
+**Headline:** there WERE six gratuitous changes, but they were all of ONE benign
+kind — **six first-positional-parameter RENAMES** with **zero practical blast
+radius** (every caller in `examples/` and the test-suite, including internal
+`src/finmag` callers, passed them positionally; not a single keyword caller
+existed). No argument was reordered, no default that changes behaviour was
+flipped without registration, no method silently renamed on a surface a user
+relies on. All six have since been REVERTED to their legacy names (commit
+"Revert 6 gratuitous parameter renames to legacy names", see §3) — the port is
+now fully interface-faithful on this axis.
 
 **CubicAnisotropy — the user's specific concern — is a MISATTRIBUTION.** The
 class constructor is **byte-identical at all three commits**:
@@ -105,16 +108,16 @@ N = gratuitous (UNNECESSARY).
 | `toggle_stt` | `(new_state=None)` | identical | NO-CHANGE | Y | — |
 | `set_zhangli` | `(J_profile=(1e10,0,0), P=0.5, beta=0.01, using_u0=False, with_time_update=None)` | identical | NO-CHANGE | Y | — |
 | `relax` / `hysteresis` / `hysteresis_loop` | (bound to legacy `sim_relax.py`/`hysteresis.py`) | signatures preserved | NO-CHANGE | Y | — (no-re-relax legacy defect preserved, register #4) |
-| `mark_regions` | `(fun_regions)` | `(fun)` | **UNNECESSARY** | **N** | rename `fun` → `fun_regions` |
+| `mark_regions` | `(fun_regions)` | `(fun_regions)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
 
 ### Field public API
 
 | Surface | Legacy (pixi) | Ported | Class | Needed? | Revert |
 |---|---|---|---|---|---|
-| `from_callable` | `(func)` | `(function)` | **UNNECESSARY** | **N** | `function` → `func` |
-| `from_constant` | `(constant)` | `(value)` | **UNNECESSARY** | **N** | `value` → `constant` |
-| `from_array` | `(arr)` | `(array)` | **UNNECESSARY** | **N** | `array` → `arr` |
-| `from_sequence` | `(seq)` | `(sequence)` | **UNNECESSARY** | **N** | `sequence` → `seq` |
+| `from_callable` | `(func)` | `(func)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
+| `from_constant` | `(constant)` | `(constant)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
+| `from_array` | `(arr)` | `(arr)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
+| `from_sequence` | `(seq)` | `(seq)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
 | `from_field` | `(field)` | identical | NO-CHANGE | Y | — |
 | `from_function` | `(function)` | identical (interpolation superset added, register #7) | NO-CHANGE | Y | — |
 | `set` / `set_with_numpy_array_debug` / `as_array` / `as_vector` / `is_constant` / `as_constant` / `mesh*` / `value_dim` / `coords_and_values` / `cross` / `dot` / `coerce_scalar_field` | (as legacy) | identical | NO-CHANGE | Y | — |
@@ -132,31 +135,38 @@ N = gratuitous (UNNECESSARY).
 |---|---|---|---|---|---|
 | `box`, `sphere`, `cylinder`, `nanodisk`, `elliptic_cylinder`, `elliptical_nanodisk`, `ellipsoid`, `ring`, `truncated_cone`, `pair_of_disks` | `(...geom, maxh, save_result=True, filename='', directory='')` (+ `ring` `with_middle_plane=False`) | identical | NO-CHANGE | Y | — |
 | `from_geofile` | `(geofile, save_result=True)` | `(geofile, save_result=True, filename='', directory='', *, maxh=None)` | superset | Y | — (added optional args; `from_geofile(f, False)` still binds `save_result`; maxh keyword-only by design) |
-| `from_csg` | `(csg, save_result=True, filename='', directory='')` | `(csg_string, save_result=True, filename='', directory='', *, maxh=None)` | **UNNECESSARY** (1st param) | **N** | `csg_string` → `csg` (the added keyword-only `maxh` is fine) |
+| `from_csg` | `(csg, save_result=True, filename='', directory='')` | `(csg, save_result=True, filename='', directory='', *, maxh=None)` | **REVERTED** (1st param) | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" (the added keyword-only `maxh` is fine and unaffected) |
 | `mesh_templates`: `MeshTemplate`, `MeshSum`, `MeshDifference`, `Sphere`, `Box`, `EllipticalNanodisk`, `Nanodisk` | (as legacy) | identical | NO-CHANGE | Y | — |
 | deferred generators (`elliptical_nanodisk_with_cuboid_shell`, `sphere_inside_box`, `disk_with_internal_layers`, `regular_polygon*`, `line_mesh`, `embed3d`, …) | present | not ported (out of scope) | deferred | Y | — (unported, not a change to a preserved surface) |
 
 ---
 
-## 3. UNNECESSARY findings (the actionable output)
+## 3. UNNECESSARY findings (the actionable output) — REVERTED
 
-All six are the **same benign class**: the FIRST POSITIONAL parameter of a
+**Status: all six REVERTED.** See commit "Revert 6 gratuitous parameter renames
+to legacy names" (branch `dolfinx-parity`, on top of `70df2938`). The ported
+public signatures now match the legacy oracle (pixi `ba928093`) exactly for all
+six surfaces below; each revert touched the `def` line plus in-body uses (and,
+for `Field.from_constant`, a body-local variable was renamed from `constant` to
+`constant_arr` to avoid shadowing the now-restored `constant` parameter — an
+implementation-only detail, not part of the public interface).
+
+All six had been the **same benign class**: the FIRST POSITIONAL parameter of a
 method was renamed for no reason DOLFINx required. Nothing was reordered.
-**Blast radius is zero in practice** — `grep` across `examples/` and the entire
-test-suite finds **no keyword caller** of any of these params; every call site
-passes the argument positionally (verified: no
-`fun_regions=`/`func=`/`constant=`/`arr=`/`seq=`/`csg=` keyword call exists).
-Reverting each to the legacy name is therefore safe and requires editing only the
-`def` line (plus in-body references) — no example or test would need to change.
+**Blast radius was zero in practice** — `grep` across `examples/` and the entire
+test-suite (including internal `src/finmag` callers) found **no keyword caller**
+of any of these params; every call site passed the argument positionally
+(verified: no `fun_regions=`/`func=`/`constant=`/`arr=`/`seq=`/`csg=` keyword
+call existed before or after the revert). No caller needed updating.
 
-| # | Surface | File:line (ported) | Change | Exact revert | Blast radius |
+| # | Surface | File:line (ported) | Change | Status | Blast radius |
 |---|---|---|---|---|---|
-| U1 | `Simulation.mark_regions` | `src/finmag/sim/sim.py:675` | `fun_regions` → `fun` | rename param `fun` back to `fun_regions` (and its 2 in-body uses) | none — ported tests call positionally (`test_variable_params_dolfinx.py`, `test_simulation_dolfinx.py`); legacy `sim_test.py:1729` passes a positional variable named `fun_regions` |
-| U2 | `Field.from_callable` | `src/finmag/field.py:99` | `func` → `function` | `function` → `func` | none |
-| U3 | `Field.from_constant` | `src/finmag/field.py:105` | `constant` → `value` | `value` → `constant` | none |
-| U4 | `Field.from_array` | `src/finmag/field.py:158` | `arr` → `array` | `array` → `arr` | none |
-| U5 | `Field.from_sequence` | `src/finmag/field.py:183` | `seq` → `sequence` | `sequence` → `seq` | none |
-| U6 | `from_csg` | `src/finmag/util/geofile.py:525` | `csg` → `csg_string` | `csg_string` → `csg` | none |
+| U1 | `Simulation.mark_regions` | `src/finmag/sim/sim.py:675` | `fun` → `fun_regions` | REVERTED | none — ported tests call positionally (`test_variable_params_dolfinx.py`, `test_simulation_dolfinx.py`); legacy `sim_test.py:1729` passes a positional variable named `fun_regions` |
+| U2 | `Field.from_callable` | `src/finmag/field.py:99` | `function` → `func` | REVERTED | none |
+| U3 | `Field.from_constant` | `src/finmag/field.py:105` | `value` → `constant` | REVERTED | none |
+| U4 | `Field.from_array` | `src/finmag/field.py:158` | `array` → `arr` | REVERTED | none |
+| U5 | `Field.from_sequence` | `src/finmag/field.py:183` | `sequence` → `seq` | REVERTED | none |
+| U6 | `from_csg` | `src/finmag/util/geofile.py:525` | `csg_string` → `csg` | REVERTED | none |
 
 Note: these are cosmetic and defensible as "clearer names," but under the strict
 parity contract they are interface deltas that DOLFINx did not force, so they are
