@@ -361,30 +361,45 @@ every capability not already formally dropped is treated as PORT.
 dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
 (`set_stt`/`set_zhangli` pass-throughs), their tests.
 
-- [ ] Establish the legacy STT surface at the pixi tip: `LLG.set_stt`
-  (Slonczewski: current density, polarisation, thickness, direction) and
-  `set_zhangli` (adiabatic/non-adiabatic in-plane torque), the exact dm/dt
-  term forms (native `calc_llg_stt_dmdt`/related kernels in `native/src/llg`
-  — read the C++ for the formulas, as Task 7 did), and the `llg_stt.py`
-  module's role vs the in-LLG flags.
-- [ ] Port the deterministic STT terms into the ported LLG's NumPy RHS,
-  transcribing the native formulas exactly (Task 7 protocol: derive from the
-  C++ source, never from docstrings); native STT kernels are NOT rebuilt —
-  this is a NumPy transcription slice (document that decision).
-- [ ] Coordinate-ordered legacy oracle fixtures: one Slonczewski case and one
-  Zhang-Li case (m, parameters, dm/dt), per the fixture schema; analytic
-  sanity pins (torque direction/scaling with current density).
-- [ ] `sundials`/scipy integration with STT active: a short dynamics witness
-  per torque type asserting a physical effect (domain-wall/spin-torque tilt),
-  cross-checked between backends at declared tolerance.
-- [ ] Preserve `do_slonczewski`/`do_zhangli`-era public semantics where the
-  ported LLG exposes them (Task 9 dropped the bare flags — restore the
-  set_* API surface faithfully; document any surface that stays deferred,
-  Task 29-registered).
-- [ ] `llg_stt.py` (the separate STT-LLG class): port if its capability is
-  distinct from the in-LLG flags (read legacy usage); else defer by name
-  with documentation.
-- [ ] New gate `dolfinx-src-stt-pytest` folded into `verify-dolfinx-m5`.
-- [ ] Docs (verification-checklist item, not optional): plan checkboxes with
-  outcomes, transition-notes "STT (Task 22)" section with formulas cited to
-  C++ lines + fixture numbers, porting_map update. Attribution.
+- [x] Establish the legacy STT surface at the pixi tip. DONE: legacy
+  `LLG.use_slonczewski(J, P, d, p, Lambda, epsilonprime, with_time_update)` and
+  `use_zhangli(J_profile, P, beta, using_u0, with_time_update)` (with
+  `Simulation.set_stt`/`toggle_stt`/`set_zhangli` pass-throughs) read at the
+  oracle. The compiled kernels are `calc_llg_slonczewski_dmdt` (using
+  `slonczewski_xiao_i`, NOT `slonczewski_i`) and `calc_llg_zhang_li_dmdt` in
+  `native/src/llg/llg.cc`; `llg_stt.py`'s `LLG_STT` is the SEPARATE nonlocal-STT
+  class (`calc_llg_nonlocal_stt_dmdt`, reached only via `kernel="llg_stt"`),
+  distinct from the in-LLG flags. [Claude Opus 4.8]
+- [x] Port the deterministic STT terms into the ported LLG's NumPy RHS. DONE:
+  `_dmdt_slonczewski_numpy` (llg.cc:207,252) and `_dmdt_zhangli_numpy`
+  (llg.cc:406) transcribe the native kernels term-for-term with native physical
+  constants (llg.cc:21-25); precession is unconditional as in the compiled
+  kernels. The Zhang-Li `(J.grad)m` operator (`_compute_zhangli_gradient`) is
+  the legacy lumped-box functional (`compute_gradient_matrix`), and per-node
+  `Ms` (`_ms_nodal`) is the legacy lumped CG1 projection. Native STT kernels NOT
+  rebuilt (NumPy transcription slice, documented in transition-notes). [Claude Opus 4.8]
+- [x] Coordinate-ordered legacy oracle fixtures + analytic pins. DONE:
+  `slonczewski_rhs.json` (gen_slonczewski_rhs.py) and `zhangli_rhs.json`
+  (gen_zhangli_rhs.py; also pins the discrete `H_gradm`), both 1D IntervalMesh,
+  schema v1, generated via `dev/bin/run-legacy-oracle`. Analytic pins: STT
+  linear in J, sign-flip with J, Slonczewski vanishing at `m || p`, Zhang-Li
+  vanishing for uniform m. [Claude Opus 4.8]
+- [x] scipy/sundials integration with STT active + dynamics witnesses. DONE:
+  Zhang-Li domain-wall-displacement witness (port of legacy
+  `zhang_li_test.test_zhangli`), Slonczewski tilt-sign witness (m_z change flips
+  with J), and scipy-vs-sundials cross-backend agreement on the Zhang-Li case
+  (rtol=1e-4, atol=1e-6). [Claude Opus 4.8]
+- [x] Preserve `do_slonczewski`/`do_zhangli`-era public semantics. DONE: the
+  ported `LLG` re-exposes `do_slonczewski`/`do_zhangli` flags (set by `use_*`,
+  toggled by `Simulation.toggle_stt`); `set_stt`/`set_zhangli` pass-throughs
+  restore the legacy signatures faithfully, including the `with_time_update`
+  callable contract. Only `kernel="llg_stt"` stays deferred. [Claude Opus 4.8]
+- [x] `llg_stt.py` (the separate STT-LLG class): DEFERRED by name. `LLG_STT` is
+  the nonlocal spin-accumulation model (distinct capability, reached only via
+  `Simulation(kernel="llg_stt")`, already a by-name deferral); Task 29-registered.
+  Documented in transition-notes + porting_map. [Claude Opus 4.8]
+- [x] New gate `dolfinx-src-stt-pytest` (14 tests) folded into
+  `verify-dolfinx-m5`. DONE; full m5 green end-to-end. [Claude Opus 4.8]
+- [x] Docs: this checklist, transition-notes "STT (Task 22)" section (formulas
+  cited to C++ file:line, fixture numbers, witnesses), and porting_map update
+  (STT no longer deferred; `llg_stt` decision). [Claude Opus 4.8]

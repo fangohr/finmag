@@ -47,6 +47,13 @@
 # scipy-vs-sundials cross-backend agreement. scipy remains the DOLFINx default
 # backend; sundials is a fully validated opt-in. [Claude Opus 4.8]
 #
+# Task 22 folds in the spin-transfer-torque port gate
+# (`dolfinx-src-stt-pytest`): the Slonczewski/Xiao and Zhang-Li torques
+# transcribed into the ported LLG NumPy RHS (compiled STT kernels NOT rebuilt),
+# coordinate-ordered legacy oracle fixtures (dm/dt + Zhang-Li discrete gradient),
+# analytic direction/scaling pins, Simulation pass-throughs, dynamics witnesses
+# and a scipy-vs-sundials cross-backend STT check. [Claude Opus 4.8]
+#
 # Task 21 makes this gate run against an INSTALLED editable package instead of
 # `PYTHONPATH=src` (`pyproject.toml`, src-layout, setuptools). It adds three
 # steps right after `dolfinx-versions`: `dolfinx-install-editable` (`pip
@@ -156,6 +163,9 @@ pixi run -e dolfinx dolfinx-src-meshes-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-sundials-pytest"
 pixi run -e dolfinx dolfinx-src-sundials-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-stt-pytest"
+pixi run -e dolfinx dolfinx-src-stt-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
 pixi run -e dolfinx dolfinx-src-core-smoke

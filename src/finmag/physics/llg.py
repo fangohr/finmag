@@ -23,18 +23,23 @@ Scope of this slice: scalar ``Ms``, scalar or spatially varying ``alpha``
 registry. The state vector for ``solve``/``solve_for``/``m`` setters is the
 component-blocked, coordinate-ordered ``xxx`` array (rank-local owned dofs);
 ``H_eff`` is routed into the identical ordering before the node-local update.
-Native Sundials/CVODE preconditioning and Jacobian paths, spin-transfer torque
-(Slonczewski, Zhang-Li), thermal dynamics, and multi-rank ODE state are out of
-scope and raise ``NotImplementedError`` by name when requested.
+Thermal dynamics and multi-rank ODE state are out of scope and raise
+``NotImplementedError`` by name when requested.
 
 Task 16 adds spatially varying Gilbert damping ``alpha`` (per-node in both the
-damping term and ``gamma_LL``). [Claude Opus 4.8]
+damping term and ``gamma_LL``). Task 22 adds the Slonczewski/Xiao and Zhang-Li
+spin-transfer torques (``use_slonczewski`` / ``use_zhangli``) as NumPy
+transcriptions of the native ``calc_llg_slonczewski_dmdt`` /
+``calc_llg_zhang_li_dmdt`` kernels; the compiled STT kernels are not rebuilt for
+the DOLFINx lane. [Claude Opus 4.8]
 """
 
 import logging
+import math
 
 import numpy as np
-from dolfinx import fem
+import ufl
+from dolfinx import fem, la
 
 import finmag.util.consts as consts
 from finmag.field import Field
@@ -42,6 +47,29 @@ from finmag.physics.effective_field import EffectiveField
 
 # default settings for logger 'finmag' set in __init__.py
 logger = logging.getLogger(name="finmag")
+
+# Physical constants transcribed verbatim from ``native/src/llg/llg.cc``
+# (lines 21-25) so the STT NumPy transcription reproduces the compiled kernels
+# bit-for-bit rather than drifting to scipy's CODATA values. [Claude Opus 4.8]
+_E_CHARGE = 1.602176565e-19       # elementary charge, As      (llg.cc:21)
+_H_BAR = 1.054571726e-34          # reduced Planck constant, Js (llg.cc:22)
+_MU_B = 9.27400968e-24            # Bohr magneton               (llg.cc:24)
+_MU_0 = math.pi * 4e-7            # vacuum permeability, Vs/(Am)(llg.cc:25)
+
+
+def _assemble_owned_vector(form_expr, function_space):
+    """Assemble a linear form and return its owned rank-local dof array.
+
+    Mirrors ``finmag.energies.energy_base._assemble_vector_owned`` so the STT
+    lumped-box gradient/projection assemblies use the identical owner+ghost
+    accumulation the ported energies use.
+    """
+    vector = fem.assemble_vector(fem.form(form_expr))
+    vector.scatter_reverse(la.InsertMode.add)
+    vector.scatter_forward()
+    dofmap = function_space.dofmap
+    owned = dofmap.index_map.size_local * dofmap.index_map_bs
+    return vector.array[:owned].copy()
 
 
 class LLG(object):
@@ -87,6 +115,14 @@ class LLG(object):
         self._m_field = Field(self.S3, name="m")
         self._dmdt = Field(self.S3, name="dmdt")
         self._pins = np.array([], dtype="int")
+
+        # Spin-transfer-torque state (Task 22). Both flags default off, exactly
+        # as the legacy ``LLG.__init__`` did; ``use_slonczewski``/``use_zhangli``
+        # set the corresponding flag and populate the parameters below.
+        self.do_slonczewski = False
+        self.do_zhangli = False
+        self.fun_slonczewski_time_update = None
+        self.fun_zhangli_time_update = None
 
     # -- pinning ------------------------------------------------------------
 
@@ -251,7 +287,27 @@ class LLG(object):
         m = self._m_field.get_ordered_numpy_array_xxx().reshape((3, -1))
         H = H_eff_field.get_ordered_numpy_array_xxx().reshape((3, -1))
 
-        dmdt = self._dmdt_numpy(m, H)
+        # Spin-transfer-torque dispatch, mirroring the legacy ``solve``:
+        # Slonczewski and Zhang-Li are mutually exclusive extra torques added
+        # on top of the deterministic precession/damping/relaxation update.
+        if self.do_slonczewski:
+            if self.fun_slonczewski_time_update is not None:
+                # Legacy contract: the callback returns a spatially uniform
+                # current density (a number), broadcast over every node.
+                self.J[:] = self.fun_slonczewski_time_update(t)
+            self._Ms_node = self._ms_nodal()
+            dmdt = self._dmdt_slonczewski_numpy(m, H)
+        elif self.do_zhangli:
+            if self.fun_zhangli_time_update is not None:
+                # Legacy contract: the callback returns a new J profile; rebuild
+                # the current-density field (the discrete gradient below then
+                # picks it up, as the legacy gradient-matrix rebuild did).
+                self._J.set(self.fun_zhangli_time_update(t))
+            self._Ms_node = self._ms_nodal()
+            H_gradm = self._compute_zhangli_gradient()
+            dmdt = self._dmdt_zhangli_numpy(m, H, H_gradm)
+        else:
+            dmdt = self._dmdt_numpy(m, H)
 
         if self._pins.size:
             dmdt[:, self._pins] = 0.0
@@ -420,17 +476,253 @@ class LLG(object):
 
         return np.vstack((jt0, jt1, jt2))
 
-    def use_slonczewski(self, *args, **kwargs):
-        raise NotImplementedError(
-            "Slonczewski spin-transfer torque is out of scope for the "
-            "deterministic DOLFINx LLG slice"
-        )
+    # -- spin-transfer torque (Task 22) -------------------------------------
+    #
+    # NumPy transcription of the native STT kernels (``native/src/llg/llg.cc``);
+    # the compiled ``calc_llg_slonczewski_dmdt`` / ``calc_llg_zhang_li_dmdt``
+    # kernels are NOT rebuilt for the DOLFINx lane -- the physics is transcribed
+    # term-for-term into ``_dmdt_slonczewski_numpy`` / ``_dmdt_zhangli_numpy``
+    # (same protocol as ``_dmdt_numpy`` transcribes ``calc_llg_dmdt``). Both
+    # kernels add precession unconditionally (llg.cc:289 / :464), so the STT
+    # right-hand sides include precession regardless of ``do_precession``,
+    # matching the compiled behaviour. [Claude Opus 4.8]
 
-    def use_zhangli(self, *args, **kwargs):
-        raise NotImplementedError(
-            "Zhang-Li spin-transfer torque is out of scope for the "
-            "deterministic DOLFINx LLG slice"
+    def _ms_nodal(self):
+        """Per-owned-vertex saturation magnetisation, aligned with m columns.
+
+        Transcribes the legacy ``Ms`` setter (``llg.py`` lines 140-142 at the
+        oracle): a lumped-mass projection of the DG0 ``Ms`` onto the scalar CG1
+        nodes, ``assemble(Ms * v_S1 * dx) / assemble(v_S1 * dx)``. Returned in
+        coordinate-ordered (owned-vertex) layout so ``Ms_node[i]`` matches
+        node column ``i`` of the ``(3, N)`` m/H arrays. For a spatially uniform
+        ``Ms`` this is exactly the constant at every node.
+        """
+        v1 = ufl.TestFunction(self.S1)
+        lumped = _assemble_owned_vector(self._Ms_dg.f * v1 * ufl.dx, self.S1)
+        volume = _assemble_owned_vector(v1 * ufl.dx, self.S1)
+        ms_dof = lumped / volume
+        ms_field = Field(self.S1)
+        ms_field.from_array(ms_dof)
+        return ms_field.get_ordered_numpy_array()
+
+    def use_slonczewski(self, J, P, d, p, Lambda=2, epsilonprime=0.0,
+                        with_time_update=None):
+        """Activate the Slonczewski/Xiao spin-transfer torque in the LLG.
+
+        Parameters mirror the legacy ``use_slonczewski`` exactly:
+
+        - ``J``: current density in A/m^2 -- a number, callable ``x -> J``,
+          :class:`~finmag.field.Field`, or ``dolfinx.fem.Function`` (placed
+          into the scalar CG1 space). Legacy string ``Expression`` values are
+          not supported; pass a callable.
+        - ``P``: polarisation in [0, 1].
+        - ``d``: free-layer thickness in m.
+        - ``p``: polarisation direction (3-tuple/callable), normalised to unit
+          length per node.
+        - ``Lambda``: the Lambda parameter in the Slonczewski/Xiao term.
+        - ``epsilonprime``: strength of the secondary (field-like) torque.
+        - ``with_time_update``: optional ``J(t)`` returning a spatially uniform
+          current density (a number), broadcast over every node each RHS eval.
+        """
+        self.do_slonczewski = True
+        self.do_zhangli = False
+        self.fun_slonczewski_time_update = with_time_update
+
+        self.Lambda = Lambda
+        self.epsilonprime = epsilonprime
+
+        J_field = Field(self.S1)
+        J_field.set(J)
+        self._J_slon = J_field
+        # Coordinate-ordered (owned-vertex) current density, mutated in place by
+        # the time-update callback, matching the legacy ``self.J[:] = J_new``.
+        self.J = J_field.get_ordered_numpy_array()
+
+        assert 0.0 <= P <= 1.0
+        self.P = P
+        self.d = d
+
+        p_field = Field(self.S3)
+        p_field.set(p)
+        p_field.normalise()
+        self.p = p_field.get_ordered_numpy_array_xxx().reshape((3, -1))
+        return self
+
+    def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01,
+                    using_u0=False, with_time_update=None):
+        """Activate the Zhang-Li spin-transfer torque in the LLG.
+
+        Mirrors the legacy ``use_zhangli``: ``J_profile`` is any value accepted
+        by :meth:`finmag.field.Field.set` for the vector CG1 space (constant
+        triple, callable, Field, Function). ``u0 = P * mu_B / e``; with
+        ``using_u0`` false (default) the ``1 / (1 + beta**2)`` factor is applied.
+        ``with_time_update`` is an optional ``J(t)`` returning a new J profile.
+        """
+        self.do_zhangli = True
+        self.do_slonczewski = False
+        self.fun_zhangli_time_update = with_time_update
+
+        J_field = Field(self.S3)
+        J_field.set(J_profile)
+        self._J = J_field
+
+        self.P = P
+        self.beta = beta
+
+        u0 = P * _MU_B / _E_CHARGE  # P g mu_B / (2 e Ms), g = 2 for electrons
+        self.u0 = u0 if using_u0 else u0 / (1.0 + beta ** 2)
+
+        # Precompute the lumped nodal volume used to divide the assembled
+        # gradient functional. Legacy: ``nodal_volume(S3) * unit_length`` (a
+        # single unit_length power converts the one spatial derivative from
+        # mesh units to physical units); see ``compute_gradient_matrix``.
+        self.dim = self.mesh.topology.dim
+        sigma = ufl.TestFunction(self.S3)
+        ones = fem.Constant(self.mesh, np.ones(3))
+        raw_volume = _assemble_owned_vector(
+            ufl.inner(sigma, ones) * ufl.dx, self.S3
         )
+        self._nodal_volume_S3 = raw_volume * self.unit_length
+        return self
+
+    def _compute_zhangli_gradient(self):
+        """Discrete ``(J . grad) m`` field, transcribing the legacy operator.
+
+        Legacy ``compute_gradient_matrix`` assembles the matrix ``gradM`` from
+        ``sum_k J_k * dot(grad(tau)[:, k], sigma) * dx`` and forms
+        ``H_gradm = gradM @ m / nodal_volume_S3``. Because ``gradM @ m`` is
+        exactly the linear functional evaluated at the current ``m``, this
+        assembles that functional directly (no stored matrix), giving an
+        identical result and picking up any time-updated ``J`` automatically.
+
+        Returns a ``(3, N)`` coordinate-ordered array aligned with the m/H
+        node columns.
+        """
+        sigma = ufl.TestFunction(self.S3)
+        grad_m = ufl.grad(self._m_field.f)  # shape (3, gdim)
+        integrand = self._J.f[0] * ufl.dot(grad_m[:, 0], sigma)
+        for k in range(1, self.dim):
+            integrand = integrand + self._J.f[k] * ufl.dot(grad_m[:, k], sigma)
+        assembled = _assemble_owned_vector(integrand * ufl.dx, self.S3)
+        h_gradm = assembled / self._nodal_volume_S3
+        hg_field = Field(self.S3)
+        hg_field.from_array(h_gradm)
+        return hg_field.get_ordered_numpy_array_xxx().reshape((3, -1))
+
+    def _dmdt_slonczewski_numpy(self, m, H):
+        """Slonczewski dm/dt; transcribed from ``calc_llg_slonczewski_dmdt``
+        (llg.cc:252) and ``slonczewski_xiao_i`` (llg.cc:207).
+
+        ``m`` and ``H`` are ``(3, N)`` component-blocked owned nodal arrays.
+        The base precession/damping/relaxation terms match ``_dmdt_numpy``
+        (precession forced on, as the compiled kernel does at llg.cc:289).
+        """
+        alpha = self._alpha_node
+        gamma_LL = self.gamma / (1.0 + alpha * alpha)
+
+        m0, m1, m2 = m
+        h0, h1, h2 = H
+        mh = m0 * h0 + m1 * h1 + m2 * h2
+        mm = m0 * m0 + m1 * m1 + m2 * m2
+
+        # damping_i (llg.cc:35)
+        damping_coeff = -alpha * gamma_LL
+        dm0 = damping_coeff * (m0 * mh - h0 * mm)
+        dm1 = damping_coeff * (m1 * mh - h1 * mm)
+        dm2 = damping_coeff * (m2 * mh - h2 * mm)
+
+        # relaxation_i (llg.cc:105); coeff 0.1/char_time == self.c
+        relax_coeff = self.c * (1.0 - mm)
+        dm0 += relax_coeff * m0
+        dm1 += relax_coeff * m1
+        dm2 += relax_coeff * m2
+
+        # precession_i (llg.cc:74) -- unconditional in the STT kernel
+        dm0 += -gamma_LL * (m1 * h2 - m2 * h1)
+        dm1 += -gamma_LL * (m2 * h0 - m0 * h2)
+        dm2 += -gamma_LL * (m0 * h1 - m1 * h0)
+
+        # slonczewski_xiao_i (llg.cc:207)
+        p0, p1, p2 = self.p
+        Ms = self._Ms_node
+        lambda_sq = self.Lambda * self.Lambda
+        beta = self.J * _H_BAR / (_MU_0 * Ms * _E_CHARGE * self.d)  # llg.cc:216
+        mp = m0 * p0 + m1 * p1 + m2 * p2                            # llg.cc:220
+        epsilon = self.P * lambda_sq / (
+            lambda_sq + 1.0 + (lambda_sq - 1.0) * mp                # llg.cc:217
+        )
+        perpendicular = alpha * epsilon - self.epsilonprime          # llg.cc:223
+        parallel = epsilon - alpha * self.epsilonprime               # llg.cc:224
+        cross0 = m1 * p2 - m2 * p1
+        cross1 = m2 * p0 - m0 * p2
+        cross2 = m0 * p1 - m1 * p0
+        coeff = gamma_LL * beta
+        # dm += gamma_LL*beta*(perp * m x p - par * m x (m x p)),
+        # with m x (m x p) = mp*m - mm*p  (llg.cc:225-227)
+        dm0 += coeff * (perpendicular * cross0 - parallel * (mp * m0 - mm * p0))
+        dm1 += coeff * (perpendicular * cross1 - parallel * (mp * m1 - mm * p1))
+        dm2 += coeff * (perpendicular * cross2 - parallel * (mp * m2 - mm * p2))
+
+        return np.vstack((dm0, dm1, dm2))
+
+    def _dmdt_zhangli_numpy(self, m, H, H_gradm):
+        """Zhang-Li dm/dt; transcribed from ``calc_llg_zhang_li_dmdt``
+        (llg.cc:406).
+
+        ``m``, ``H`` and ``H_gradm`` are ``(3, N)`` component-blocked owned
+        nodal arrays. The adiabatic + non-adiabatic STT term is written first
+        (assignment, llg.cc:457-459), then precession/damping/relaxation are
+        added (precession forced on, as the compiled kernel does at llg.cc:464).
+        """
+        alpha = self._alpha_node
+        gamma_LL = self.gamma / (1.0 + alpha * alpha)
+        Ms = self._Ms_node
+
+        m0, m1, m2 = m
+        h0, h1, h2 = H
+        hg0, hg1, hg2 = H_gradm
+
+        # coeff_stt = u0/(1+alpha^2)/Ms, zero where Ms == 0 (llg.cc:439-445)
+        coeff_stt = self.u0 / (1.0 + alpha * alpha)
+        coeff_stt = np.where(Ms == 0.0, 0.0, coeff_stt / np.where(Ms == 0.0, 1.0, Ms))
+
+        # project H_gradm perpendicular to m (llg.cc:447-451)
+        mht = m0 * hg0 + m1 * hg1 + m2 * hg2
+        hp0 = hg0 - mht * m0
+        hp1 = hg1 - mht * m1
+        hp2 = hg2 - mht * m2
+
+        # m x hp (llg.cc:453-455)
+        mth0 = m1 * hp2 - m2 * hp1
+        mth1 = m2 * hp0 - m0 * hp2
+        mth2 = m0 * hp1 - m1 * hp0
+
+        beta = self.beta
+        # dm = coeff*((1+alpha*beta) hp - (beta-alpha) m x hp) (llg.cc:457-459)
+        dm0 = coeff_stt * ((1.0 + alpha * beta) * hp0 - (beta - alpha) * mth0)
+        dm1 = coeff_stt * ((1.0 + alpha * beta) * hp1 - (beta - alpha) * mth1)
+        dm2 = coeff_stt * ((1.0 + alpha * beta) * hp2 - (beta - alpha) * mth2)
+
+        # damping_i (llg.cc:462)
+        mh = m0 * h0 + m1 * h1 + m2 * h2
+        mm = m0 * m0 + m1 * m1 + m2 * m2
+        damping_coeff = -alpha * gamma_LL
+        dm0 += damping_coeff * (m0 * mh - h0 * mm)
+        dm1 += damping_coeff * (m1 * mh - h1 * mm)
+        dm2 += damping_coeff * (m2 * mh - h2 * mm)
+
+        # relaxation_i (llg.cc:463)
+        relax_coeff = self.c * (1.0 - mm)
+        dm0 += relax_coeff * m0
+        dm1 += relax_coeff * m1
+        dm2 += relax_coeff * m2
+
+        # precession_i (llg.cc:464) -- unconditional in the STT kernel
+        dm0 += -gamma_LL * (m1 * h2 - m2 * h1)
+        dm1 += -gamma_LL * (m2 * h0 - m0 * h2)
+        dm2 += -gamma_LL * (m0 * h1 - m1 * h0)
+
+        return np.vstack((dm0, dm1, dm2))
 
     def _require_serial(self, what):
         if self.comm.size > 1:

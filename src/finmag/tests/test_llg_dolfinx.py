@@ -220,13 +220,22 @@ def test_solve_for_sets_state_and_returns_matching_rhs():
 # by-name deferrals -- the native Sundials/CVODE backend is ported, so these are
 # real implementations (analytic Jacobian-times-vector + identity
 # preconditioner). Their behaviour is validated in
-# test_sundials_driver_dolfinx.py. Only the spin-transfer-torque surfaces remain
-# out of scope for the deterministic DOLFINx LLG slice. [Claude Opus 4.8]
-@pytest.mark.parametrize("method", ["use_slonczewski", "use_zhangli"])
-def test_deferred_surfaces_raise_by_name(method):
-    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
-    with pytest.raises(NotImplementedError):
-        getattr(llg, method)()
+# test_sundials_driver_dolfinx.py.
+#
+# Task 22: the spin-transfer-torque surfaces (``use_slonczewski``/
+# ``use_zhangli``) are now ported as NumPy transcriptions of the native STT
+# kernels; they activate the corresponding torque instead of raising. Full
+# behavioural + oracle coverage lives in test_stt_dolfinx.py; this only asserts
+# they no longer raise ``NotImplementedError`` by name and set the right flag.
+# [Claude Opus 4.8]
+def test_stt_surfaces_are_ported_not_deferred():
+    llg = _macrospin_llg((0.6, 0.0, 0.8), 8.6e5)
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert llg.do_slonczewski is True and llg.do_zhangli is False
+
+    llg = _macrospin_llg((0.6, 0.0, 0.8), 8.6e5)
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert llg.do_zhangli is True and llg.do_slonczewski is False
 
 
 def test_sundials_cvode_hooks_are_ported_not_deferred():

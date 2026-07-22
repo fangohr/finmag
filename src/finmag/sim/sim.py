@@ -752,14 +752,45 @@ class Simulation(object):
     def run_normal_modes_computation(self, *args, **kwargs):
         _deferred("run_normal_modes_computation", "normal-mode analysis")
 
-    def set_stt(self, *args, **kwargs):
-        _deferred("set_stt", "Slonczewski spin-transfer torque")
+    def set_stt(self, current_density, polarisation, thickness, direction,
+                Lambda=2, epsilonprime=0.0, with_time_update=None):
+        """Activate the Slonczewski spin-transfer torque in the LLG (Task 22).
 
-    def toggle_stt(self, *args, **kwargs):
-        _deferred("toggle_stt", "Slonczewski spin-transfer torque")
+        Pass-through to :meth:`finmag.physics.llg.LLG.use_slonczewski`, faithful
+        to the legacy signature: current density in A/m^2 (number, callable,
+        Field or Function), polarisation in [0, 1], free-layer thickness in m,
+        polarisation direction (normalised), the Slonczewski/Xiao ``Lambda`` and
+        secondary-torque ``epsilonprime``, and an optional ``J(t)`` returning a
+        spatially uniform current density.
+        """
+        self.llg.use_slonczewski(
+            current_density, polarisation, thickness, direction,
+            Lambda=Lambda, epsilonprime=epsilonprime,
+            with_time_update=with_time_update)
 
-    def set_zhangli(self, *args, **kwargs):
-        _deferred("set_zhangli", "Zhang-Li spin-transfer torque")
+    def toggle_stt(self, new_state=None):
+        """Toggle the Slonczewski spin-transfer torque (legacy semantics).
+
+        With no argument the ``do_slonczewski`` flag is flipped; pass a boolean
+        to set it explicitly.
+        """
+        if new_state:
+            self.llg.do_slonczewski = new_state
+        else:
+            self.llg.do_slonczewski = not self.llg.do_slonczewski
+
+    def set_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01,
+                    using_u0=False, with_time_update=None):
+        """Activate the Zhang-Li spin-transfer torque in the LLG (Task 22).
+
+        Pass-through to :meth:`finmag.physics.llg.LLG.use_zhangli`. ``J_profile``
+        is any value accepted by the vector CG1 space (constant triple, callable,
+        Field, Function); with ``using_u0`` false the ``1/(1+beta**2)`` factor is
+        applied to ``u0 = P mu_B / e``.
+        """
+        self.llg.use_zhangli(
+            J_profile=J_profile, P=P, beta=beta, using_u0=using_u0,
+            with_time_update=with_time_update)
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,

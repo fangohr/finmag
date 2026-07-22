@@ -32,14 +32,18 @@ Already pinned by name elsewhere (not duplicated here):
   ``test_restart_output_dolfinx.py`` and
   ``test_simulation_dolfinx.py::test_scheduler_api_is_available`` /
   ``::test_restart_and_output_are_available``; they are no longer deferred.
-- STT (``set_stt``/``set_zhangli``) --
-  ``test_simulation_dolfinx.py::test_stt_is_deferred``
+- STT (``set_stt``/``set_zhangli``/``toggle_stt``) are now PORTED (Task 22) as
+  NumPy transcriptions of the native Slonczewski/Zhang-Li kernels; they are no
+  longer deferred and are covered by ``test_stt_dolfinx.py`` and
+  ``test_simulation_dolfinx.py::test_stt_is_ported_not_deferred`` /
+  ``test_llg_dolfinx.py::test_stt_surfaces_are_ported_not_deferred``. The
+  separate nonlocal-STT ``kernel="llg_stt"`` class (``LLG_STT``) stays deferred
+  by name (distinct capability, Task 29-registered).
 - ``kernel="sllg"``/``kernel="llg_stt"`` and ``parallel=True`` --
   ``test_simulation_dolfinx.py::test_nonstandard_kernels_are_deferred`` and
   ``::test_parallel_flag_is_deferred``
-- multi-rank/native Sundials/STT/thermal ``LLG`` state paths --
-  ``test_llg_dolfinx.py::test_deferred_surfaces_raise_by_name`` and
-  ``::test_multi_rank_state_paths_raise_serial_guard``
+- multi-rank/thermal ``LLG`` state paths --
+  ``test_llg_dolfinx.py::test_multi_rank_state_paths_raise_serial_guard``
 - ``backend="sundials"`` at the ``llg_integrator`` factory --
   ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``
 - ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/

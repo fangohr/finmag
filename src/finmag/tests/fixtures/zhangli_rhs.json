@@ -1,0 +1,283 @@
+{
+  "coordinates": {
+    "ordering": "lexicographic_xyz",
+    "unit": "mesh_coordinate",
+    "values": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        2.0,
+        0.0,
+        0.0
+      ],
+      [
+        3.0,
+        0.0,
+        0.0
+      ],
+      [
+        4.0,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  "description": "Deterministic LLG dm/dt with the Zhang-Li spin-transfer torque on a 1D interval mesh: spatially VARYING m so the (J.grad)m adiabatic term is nonzero, plus Exchange + Zeeman. Includes the discrete gradient field H_gradm so the legacy gradient operator is pinned directly. 1D connectivity is identical in dolfin and dolfinx.",
+  "mesh": {
+    "parameters": {
+      "cells": 4,
+      "x0": 0.0,
+      "x1": 4.0
+    },
+    "recipe": "dolfin.IntervalMesh(4, 0.0, 4.0)"
+  },
+  "oracle": {
+    "command": [
+      "dev/bin/run-legacy-oracle",
+      "--",
+      "pixi",
+      "run",
+      "--locked",
+      "env",
+      "PYTHONPATH=src",
+      "python",
+      "<abs-path-to>/gen_zhangli_rhs.py"
+    ],
+    "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+    "generator": "src/finmag/tests/fixtures/gen_zhangli_rhs.py",
+    "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle (the script does not exist inside the detached oracle checkout, so it is supplied by absolute path). The RHS itself is computed by the frozen finmag LLG.solve with do_zhangli active (native calc_llg_zhang_li_dmdt); H_gradm is the frozen LLG.compute_gradient_field output. The driver only sorts and serialises coordinate-paired nodal values."
+  },
+  "physical_parameters": {
+    "A": {
+      "unit": "J/m",
+      "value": 1.3e-11
+    },
+    "H_zeeman": {
+      "unit": "A/m",
+      "value": [
+        10000.0,
+        20000.0,
+        -5000.0
+      ]
+    },
+    "J_profile": {
+      "unit": "A/m^2",
+      "value": [
+        1000000000000.0,
+        0.0,
+        0.0
+      ]
+    },
+    "Ms": {
+      "unit": "A/m",
+      "value": 860000.0
+    },
+    "P": {
+      "unit": "1",
+      "value": 0.5
+    },
+    "alpha": {
+      "unit": "1",
+      "value": 0.1
+    },
+    "beta": {
+      "unit": "1",
+      "value": 0.02
+    },
+    "c": {
+      "unit": "1/s",
+      "value": 100000000000.0
+    },
+    "do_precession": {
+      "unit": "1",
+      "value": true
+    },
+    "gamma": {
+      "unit": "m/(A*s)",
+      "value": 221017.3
+    },
+    "m_expression": {
+      "unit": "1",
+      "value": [
+        "cos(0.4*x[0])",
+        "sin(0.4*x[0])",
+        "0.5"
+      ]
+    },
+    "u0": {
+      "unit": "m/s",
+      "value": 2.8930336898843135e-05
+    },
+    "unit_length": {
+      "unit": "m",
+      "value": 1e-09
+    },
+    "using_u0": {
+      "unit": "1",
+      "value": false
+    }
+  },
+  "quantities": [
+    {
+      "name": "m",
+      "tolerances": {
+        "absolute": 1e-12,
+        "relative": 1e-12
+      },
+      "unit": "1",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          0.8944271909999159,
+          0.0,
+          0.4472135954999579
+        ],
+        [
+          0.8238219976055908,
+          0.34830635403496996,
+          0.4472135954999579
+        ],
+        [
+          0.62315342499218,
+          0.6416227933299404,
+          0.4472135954999579
+        ],
+        [
+          0.32410262847360816,
+          0.8336411015637953,
+          0.4472135954999579
+        ],
+        [
+          -0.026116846710481152,
+          0.8940458099660783,
+          0.4472135954999579
+        ]
+      ]
+    },
+    {
+      "name": "effective_field",
+      "tolerances": {
+        "absolute": 0.001,
+        "relative": 1e-09
+      },
+      "unit": "A/m",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          -3387282.6041083485,
+          16779321.242203616,
+          -5000.0
+        ],
+        [
+          -3119104.492248738,
+          -1302964.1600458883,
+          -5000.0
+        ],
+        [
+          -2356909.5838306965,
+          -2417061.3685641102,
+          -5000.0
+        ],
+        [
+          -1221031.6957473601,
+          -3146400.1731055044,
+          -5000.0
+        ],
+        [
+          16861374.147761937,
+          -2886469.83877261,
+          -5000.0
+        ]
+      ]
+    },
+    {
+      "name": "H_gradm",
+      "tolerances": {
+        "absolute": 0.001,
+        "relative": 1e-09
+      },
+      "unit": "1/m",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          -7.060519339432507e+19,
+          3.4830635403496994e+20,
+          0.0
+        ],
+        [
+          -1.3563688300386797e+20,
+          3.208113966649702e+20,
+          0.0
+        ],
+        [
+          -2.4985968456599133e+20,
+          2.4266737376441264e+20,
+          0.0
+        ],
+        [
+          -3.2463513585133054e+20,
+          1.262115083180689e+20,
+          0.0
+        ],
+        [
+          -3.502194751840893e+20,
+          6.0404708402282955e+19,
+          0.0
+        ]
+      ]
+    },
+    {
+      "name": "dmdt",
+      "tolerances": {
+        "absolute": 1.0,
+        "relative": 1e-09
+      },
+      "unit": "1/s",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          1626412622184.2566,
+          709232331727.884,
+          -3252825244368.513
+        ],
+        [
+          -145749980266.46704,
+          309438221636.14,
+          27487404767.30121
+        ],
+        [
+          -254837059493.6194,
+          227309453304.7035,
+          28969736584.675343
+        ],
+        [
+          -323283860099.3872,
+          109222026804.2118,
+          30690431148.15911
+        ],
+        [
+          74041714828.90826,
+          -1654383709621.4937,
+          3311680536285.8
+        ]
+      ]
+    }
+  ],
+  "schema_version": 1
+}

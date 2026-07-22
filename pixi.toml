@@ -204,6 +204,15 @@ dolfinx-src-meshes-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 py
 # WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered on first native
 # import) from rewriting the tracked version file. [Claude Opus 4.8]
 dolfinx-src-sundials-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_sundials_driver_dolfinx.py"
+# Task 22: the Slonczewski/Xiao and Zhang-Li spin-transfer torques transcribed
+# into the ported LLG NumPy right-hand side (the compiled STT kernels are NOT
+# rebuilt), coordinate-ordered legacy oracle fixtures (dm/dt + Zhang-Li discrete
+# gradient field), analytic direction/scaling pins, Simulation pass-throughs,
+# dynamics witnesses (Zhang-Li domain-wall displacement, Slonczewski tilt sign)
+# and a scipy-vs-sundials cross-backend check. WRITE_FINMAG_VERSION=0 keeps the
+# native `make` (triggered by the sundials cross-check) from rewriting the
+# tracked version file. [Claude Opus 4.8]
+dolfinx-src-stt-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_stt_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"

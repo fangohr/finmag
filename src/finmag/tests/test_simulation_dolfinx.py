@@ -401,12 +401,19 @@ def test_scheduler_api_is_available():
         sim.schedule("no_such_action", every=1e-12)
 
 
-def test_stt_is_deferred():
+def test_stt_is_ported_not_deferred():
+    """Task 22: ``set_stt``/``set_zhangli``/``toggle_stt`` are ported
+    pass-throughs to the LLG STT surfaces (was ``test_stt_is_deferred``). Full
+    behavioural + oracle coverage lives in ``test_stt_dolfinx.py``; this only
+    asserts the surfaces no longer raise ``NotImplementedError`` by name."""
     sim = _make_sim()
-    with pytest.raises(NotImplementedError):
-        sim.set_stt(1e12, 0.5, 2e-9, (1.0, 0.0, 0.0))
-    with pytest.raises(NotImplementedError):
-        sim.set_zhangli()
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1e12, 0.5, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    sim.toggle_stt()
+    assert sim.llg.do_slonczewski is False
+    sim.set_zhangli()
+    assert sim.llg.do_zhangli is True
 
 
 def test_restart_and_output_are_available():

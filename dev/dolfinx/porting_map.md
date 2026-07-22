@@ -152,6 +152,22 @@ module with its tests.
   remaining by-name items unchanged from this list: Slonczewski/Zhang-Li STT
   (`use_slonczewski`/`use_zhangli`) and the multi-rank ODE state guard.
   [Claude Sonnet 5]
+  Task 22 update: Slonczewski/Zhang-Li STT (`use_slonczewski`/`use_zhangli`) are
+  no longer by-name deferrals -- both are ported as pure-NumPy transcriptions of
+  the native `calc_llg_slonczewski_dmdt`/`slonczewski_xiao_i` and
+  `calc_llg_zhang_li_dmdt` kernels (`native/src/llg/llg.cc`; the compiled STT
+  kernels are NOT rebuilt, same decision as the Task 7 `_dmdt_numpy` and Task 20
+  `_jtimes_numpy` transcriptions). The Zhang-Li `(J.grad)m` gradient is the
+  legacy lumped-box operator (`compute_gradient_matrix`) assembled as a linear
+  functional; per-node `Ms` is the legacy lumped CG1 projection. Pinned by two
+  coordinate-ordered oracle fixtures (`slonczewski_rhs.json`, `zhangli_rhs.json`
+  -- the latter also pins the discrete `H_gradm`), analytic direction/scaling
+  pins, a Zhang-Li domain-wall-displacement witness, a Slonczewski tilt-sign
+  witness, and a scipy-vs-sundials cross-backend check. The only remaining
+  by-name `LLG` item is the multi-rank ODE state guard. The separate NONLOCAL
+  STT class `llg_stt.LLG_STT` (native `calc_llg_nonlocal_stt_dmdt`; reached only
+  via `Simulation(kernel="llg_stt")`) stays deferred by name -- a distinct
+  spin-accumulation capability, Task 29-registered. [Claude Opus 4.8]
 - Task 7 addendum: legacy `set_pins` logged `logger.error(...)` for
   out-of-range pin indices and silently kept the previous `_pins` array
   unchanged; the ported `set_pins` instead raises `ValueError` for the same
@@ -219,6 +235,14 @@ module with its tests.
   `set_stt`/`set_zhangli` raising by name). They now raise a plain
   `AttributeError` rather than a by-name `NotImplementedError`, accepted by
   review as a judgment-call deferral. [Claude Sonnet 5]
+  Task 22 update: STT is no longer deferred at the `Simulation` surface either.
+  `set_stt`/`toggle_stt`/`set_zhangli` are ported pass-throughs to the LLG
+  `use_slonczewski`/`do_slonczewski` toggle/`use_zhangli` surfaces (restoring
+  the legacy signatures faithfully), and the ported `LLG` re-exposes the
+  `do_slonczewski`/`do_zhangli` flags (set by the `use_*` methods and toggled by
+  `toggle_stt`). The Task 9 "STT stays deferred" and "STT" entries above are
+  superseded for the in-LLG torques; only `kernel="llg_stt"` (nonlocal STT)
+  remains deferred. [Claude Opus 4.8]
 - Energy assembly: `exchange_energy`, `zeeman_energy`, and
   `uniaxial_anisotropy_energy` exercise representative form assembly, MPI
   reduction, unit-length scaling, and zero-coefficient edge cases.

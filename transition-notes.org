@@ -5309,3 +5309,155 @@ The supported, and only, install path for this lane is the editable install
 above.
 
 [Claude Sonnet 5]
+
+** STT (Task 22)
+
+The Slonczewski/Xiao and Zhang-Li spin-transfer torques are ported into the
+ported deterministic ~LLG~ as pure-NumPy transcriptions of the native STT
+kernels. The compiled STT kernels are NOT rebuilt for the DOLFINx lane -- same
+decision, and same rationale, as the =_dmdt_numpy= transcription of
+=calc_llg_dmdt= in Task 7 and the =_jtimes_numpy= transcription in Task 20:
+the node-local physics is a handful of vector ops, so a faithful NumPy copy
+keyed to the C++ source lines is simpler, dolfin-free, and just as exact as
+re-linking the OpenMP kernel. Gate: new =dolfinx-src-stt-pytest= (14 tests),
+folded into =dev/bin/verify-dolfinx-m5=.
+
+*** Formula transcription (native line -> NumPy line)
+
+All citations are to =native/src/llg/llg.cc= at the oracle
+(=ba9280934e188d7f3800e7b9865e70a9422f7687=). Physical constants
+(=e=1.602176565e-19=, =h_bar=1.054571726e-34=, =mu_B=9.27400968e-24=,
+=mu_0=pi*4e-7=) are transcribed verbatim from llg.cc:21-25 into module-level
+constants in =llg.py=, deliberately NOT from scipy CODATA, so the RHS matches
+the compiled kernel bit-for-bit.
+
+Slonczewski (=slonczewski_xiao_i=, llg.cc:207; driver =calc_llg_slonczewski_dmdt=,
+llg.cc:252) -> =LLG._dmdt_slonczewski_numpy=:
+- =gamma_LL = gamma/(1+alpha^2)= (llg.cc:214).
+- =beta = J*h_bar/(mu_0*Ms*e*d)= (llg.cc:216). =Ms= is PER NODE (see below).
+- =epsilon = P*lambda^2/(lambda^2+1+(lambda^2-1)*(m.p))= (llg.cc:217).
+- =perpendicular = alpha*epsilon - epsilonprime= (llg.cc:223);
+  =parallel = epsilon - alpha*epsilonprime= (llg.cc:224).
+- =dm += gamma_LL*beta*(perp * (m x p) - par * (mp*m - mm*p))= (llg.cc:225-227),
+  where =mp*m - mm*p= is the BAC-CAB expansion of =m x (m x p)=.
+- The driver adds =damping_i= (llg.cc:35), =relaxation_i= (llg.cc:105) and
+  =precession_i= (llg.cc:74) around the torque; precession is UNCONDITIONAL in
+  the STT kernel (llg.cc:289), so the STT RHS includes precession regardless of
+  =do_precession=. Transcribed identically.
+
+Zhang-Li (=calc_llg_zhang_li_dmdt=, llg.cc:406) -> =LLG._dmdt_zhangli_numpy=:
+- =coeff_stt = u0/(1+alpha^2)/Ms=, zero where =Ms==0= (llg.cc:439-445).
+- perpendicular projection of the gradient field: =mht = m.H_gradm=,
+  =hp = H_gradm - mht*m= (llg.cc:447-451).
+- =mth = m x hp= (llg.cc:453-455).
+- =dm = coeff_stt*((1+alpha*beta)*hp - (beta-alpha)*mth)= (llg.cc:457-459),
+  followed by damping/relaxation/precession (precession unconditional,
+  llg.cc:464).
+- =u0 = P*mu_B/e=, divided by =1+beta^2= unless =using_u0= (=use_zhangli=,
+  matching the legacy =u0= computation).
+
+*** The Zhang-Li discrete gradient operator
+
+=H_gradm = (J.grad) m= is the one place the physics is not node-local, so its
+discretization must be transcribed, not reinvented (textbook central
+differences would be a different operator). Legacy =compute_gradient_matrix=
+assembles the matrix =gradM= from the bilinear form
+=sum_k J_k * dot(grad(tau)[:,k], sigma) * dx= (=tau= trial, =sigma= test, both
+on the vector CG1 space; =J_k= the k-th component of the current-density
+Function), then forms =H_gradm = gradM @ m / nodal_volume_S3=. Because
+=gradM @ m= is exactly that linear form evaluated at the current =m=, the port
+(=LLG._compute_zhangli_gradient=) assembles the linear functional
+=sum_k J_k * dot(grad(m.f)[:,k], sigma) * dx= directly -- no stored matrix,
+identical result, and it automatically picks up a time-updated =J=. The
+lumped divisor is =nodal_volume(S3) * unit_length= (llg legacy
+=compute_gradient_matrix=): the single =unit_length= power converts the one
+spatial derivative from mesh units to physical units (assemble uses
+mesh-coordinate =dx= and =grad=). This is pinned DIRECTLY by the =H_gradm=
+quantity in the Zhang-Li oracle fixture (see below), independent of the dm/dt
+pin.
+
+*** Per-node Ms
+
+The native STT kernels index =Ms[i]= per NODE, but the ported =LLG._Ms= is the
+DG0 (per-cell) array. =LLG._ms_nodal= reproduces the legacy =Ms= setter
+(=llg.py:140-142= at the oracle): a lumped-mass projection of the DG0 =Ms= onto
+the scalar CG1 nodes, =assemble(Ms*v_S1*dx)/assemble(v_S1*dx)=, returned in
+coordinate-ordered (owned-vertex) layout aligned with the m/H node columns. For
+a spatially uniform =Ms= this is exactly the constant at every node.
+
+*** Oracle fixtures
+
+Both generated at the frozen FEniCS-2019 oracle via
+=dev/bin/run-legacy-oracle=, 1D =IntervalMesh(4, 0, 4)= (identical connectivity
+in dolfin and dolfinx, isolating STT physics from tetrahedralisation), schema
+v1, coordinate-sorted:
+- =src/finmag/tests/fixtures/slonczewski_rhs.json= (generator
+  =gen_slonczewski_rhs.py=): uniform =m=(0.6,0,0.8)= at an angle to =p=(0,0,1)=
+  (=m.p=0.8=, not parallel), =J=1e12=, =P=0.4=, =d=2e-9=, =Lambda=2=,
+  =epsilonprime=0.1= (nonzero secondary torque), plus Zeeman. Pins =m=,
+  =effective_field=, =dmdt= (dmdt tol abs=1.0, rel=1e-9).
+- =src/finmag/tests/fixtures/zhangli_rhs.json= (generator =gen_zhangli_rhs.py=):
+  spatially varying =m=(cos0.4x, sin0.4x, 0.5)= so =(J.grad)m != 0=,
+  =J=(1e12,0,0)=, =P=0.5=, =beta=0.02=, plus Exchange + Zeeman. Pins =m=,
+  =effective_field=, the discrete =H_gradm= (tol abs=1e-3, rel=1e-9), and
+  =dmdt= (tol abs=1.0, rel=1e-9), plus a =u0= scalar pin.
+
+Tolerances are tight enough that a sign or prefactor error cannot hide (the
+dmdt magnitudes are ~1e11 1/s with abs tol 1.0; H_gradm ~1e20 1/m with rel tol
+1e-9).
+
+*** Analytic pins and dynamics witnesses (=test_stt_dolfinx.py=)
+
+- Slonczewski torque is linear in =J= (=t(2J)==2 t(J)=), flips sign with =J=,
+  and VANISHES exactly when =m || p= (both =m x p= and =m x (m x p)= are zero,
+  llg.cc:225-227, even with =epsilonprime != 0=) -- preserving what the native
+  kernel does at the singular alignment.
+- Zhang-Li STT vanishes for uniform =m= (gradient zero), is linear in =J=, and
+  flips sign with =J=.
+- Zhang-Li DOMAIN-WALL displacement witness: direct port of the legacy
+  =zhang_li_test.test_zhangli= invariant (=IntervalMesh(50,0,100)=, Exchange +
+  UniaxialAnisotropy, =alpha=0.01=, =J=1e12=, =beta=0.02=): after
+  =run_until(2e-12)= the wall moves along +u so =m_average[0]= drops from ~0 to
+  a resolvably negative value (=< -1e-3=).
+- Slonczewski TILT witness: for =m= near =p=+z=, the change in =m_z= over a
+  short run has OPPOSITE sign for +J and -J (the anti-damping/damping character
+  of the torque flips with current), the classic spin-torque behaviour.
+- scipy-vs-sundials cross-backend agreement on the Zhang-Li domain-wall case
+  (=m_average= agree to rtol=1e-4, atol=1e-6).
+
+*** =llg_stt.py= (=LLG_STT=): deferred by name, distinct capability
+
+=src/finmag/physics/llg_stt.py= is the NONLOCAL spin-transfer-torque class
+(=set_parameters(D, lambda_sf, lambda_J, ...)=, native
+=calc_llg_nonlocal_stt_dmdt=, llg.cc:472) -- a spin-accumulation model with an
+auxiliary field =delta_m= and a =2*nxyz= state vector, NOT the in-LLG
+Slonczewski/Zhang-Li flags. It is reached only via =Simulation(kernel="llg_stt")=,
+which is already a by-name deferral (=test_nonstandard_kernels_are_deferred=).
+Task 22 therefore leaves =LLG_STT= deferred by name (distinct capability,
+Task 29-registered), and ports only the in-LLG =use_slonczewski= /
+=use_zhangli= surfaces and their =Simulation= pass-throughs
+(=set_stt=/=toggle_stt=/=set_zhangli=).
+
+*** Time-dependent current
+
+Both legacy =set_*= accepted a =with_time_update= callback and Task 22 preserves
+it: Slonczewski's =fun_slonczewski_time_update(t)= returns a spatially uniform
+current density (a number) broadcast over =self.J[:]= each RHS eval;
+Zhang-Li's =fun_zhangli_time_update(t)= returns a new =J= profile, re-set on the
+current-density Field so the next gradient assembly picks it up (the legacy
+gradient-matrix rebuild). Both match the legacy =solve= dispatch exactly.
+
+*** Test-count deltas
+
+- New gate =dolfinx-src-stt-pytest=: 14 tests.
+- =test_llg_dolfinx.py=: 17 -> 16. The 2-case parametrized
+  =test_deferred_surfaces_raise_by_name[use_slonczewski|use_zhangli]= (STT
+  raising by name) is replaced by the single ported witness
+  =test_stt_surfaces_are_ported_not_deferred= (both surfaces now activate their
+  flag). Net -1, as expected for a deferral->port flip.
+- =test_simulation_dolfinx.py=: 32 -> 32. =test_stt_is_deferred= became
+  =test_stt_is_ported_not_deferred= (same count).
+- =test_deferred_surfaces_dolfinx.py=: 1p/4s unchanged (the ported-surfaces
+  docstring inventory updated to move STT to the ported list).
+
+[Claude Opus 4.8]
