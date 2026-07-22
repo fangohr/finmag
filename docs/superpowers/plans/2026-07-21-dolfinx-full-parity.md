@@ -435,19 +435,32 @@ dm/dt terms), `src/finmag/physics/llg_stt.py`, `src/finmag/sim/sim.py`
 - [x] Validation: cross-method + analytic (documented as the plan's accepted
   evidence exception -- the oracle env never built treecode, so NO oracle
   numbers exist). DONE: single-tile periodic BEM == golden dense FK BEM
-  bit-for-bit (3.5e-17); treecode-vs-dense-FK cross-check (<1e-6 direct-sum,
-  ~4e-5 at legacy default mac=0.3/p=3); sphere demag factor ~1/3; periodic
-  image-sum convergence (-0.334->-0.165->-0.125->-0.109) + analytic
+  bit-for-bit (3.5e-17); treecode-vs-dense-FK cross-check (<1e-6 direct-sum on
+  a cube -- machine precision, since compact convex boundaries never enter the
+  multipole approximation regime at any practical mac/p/num_limit, see
+  round-1 review fix below); sphere demag factor ~1/3; periodic image-sum
+  convergence (-0.334->-0.165->-0.125->-0.109, trend-only) + analytic
   out-of-plane thin-film Nz->1 limit. The legacy `demag_pbc_test` finite-bar
-  1.2% numbers (a SKIP on every modern lane) are NOT reproduced/asserted -- the
-  periodic sum converges to the infinite-array limit, a different quantity;
-  documented. [Claude Opus 4.8]
+  1.2% numbers (a SKIP on every modern lane) are NOT reproduced/asserted --
+  EMPIRICALLY VERIFIED reason: `mesh_1`'s inferred tile spacing coincides
+  exactly with its own extent, triggering coincident-node ill-conditioning
+  (row sums -> -2, one exact NaN); documented in transition-notes.org.
+  [Claude Opus 4.8]
+  **Round-1 review fix ([Claude Sonnet 5]):** the original "~4e-5 at legacy
+  default mac=0.3/p=3" figure above was overclaimed -- unreproducible on the
+  box/sphere geometries the encoded tests use (always machine precision
+  there). A genuine approximation-regime witness (a 50:1 aspect-ratio bar)
+  DOES reach ~4.6e-5 at mac=0.3, confirming the figure on the right geometry;
+  see transition-notes.org and porting_map.md for the full investigation
+  (C-source citations, mac/p/correct_factor roles) and
+  `test_treecode_pbc_demag_dolfinx.py` for the new encoded witness tests.
 - [x] Unported variants stay by-name. DONE: `GCR` deferred (Task 29 candidate);
   `Demag2D` DEFERRED (decision: heavy MeshEditor/Expression coupling, no
   treecode dependency -- documented in porting_map + transition-notes). [Claude
   Opus 4.8]
-- [x] New gate `dolfinx-src-treecode-pytest` (16 tests) folded into
-  `verify-dolfinx-m5`; full m5 green end-to-end. [Claude Opus 4.8]
+- [x] New gate `dolfinx-src-treecode-pytest` (20 tests -- 16 baseline + 4
+  round-1 review additions) folded into `verify-dolfinx-m5`; full m5 green
+  end-to-end. [Claude Opus 4.8] [Claude Sonnet 5]
 - [x] Docs: this checklist, transition-notes "Treecode/PBC demag (Task 23)"
   section (dolfin audit, Cython/NumPy-2 inventory, validation basis + numbers,
   Demag2D/pbc decisions, legacy-lane note), porting_map update. [Claude Opus 4.8]

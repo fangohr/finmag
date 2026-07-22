@@ -469,13 +469,34 @@ module with its tests.
   BEM. Validation is cross-method + analytic (NO treecode oracle fixtures
   exist -- the oracle env never built the module): single-tile periodic BEM ==
   golden dense FK BEM bit-for-bit (3.5e-17); treecode-vs-dense-FK cross-check
-  (<1e-6 direct-sum, ~4e-5 at legacy default mac=0.3/p=3); sphere demag factor
-  ~1/3; periodic image-sum convergence + analytic out-of-plane thin-film limit.
+  at `<1e-6` in the direct-sum limit on a cube.
+
+  **Round-1 review correction ([Claude Sonnet 5]):** the approximation-regime
+  claim here previously read "~4e-5 at legacy default mac=0.3/p=3" without
+  qualification; that number is NOT reproducible on the box/sphere geometries
+  the encoded tests actually use -- on those *compact convex* boundaries
+  treecode-vs-FK agreement is machine precision (`~1e-14`) at every
+  `mac`/`p`/`num_limit` combination swept (boundaries up to 1178 nodes),
+  because the octree's far-field acceptance test
+  (`treecode_bem_I.c: mac_square * R > tree->radius_square`) is never
+  satisfied when query points sit on the same compact surface every cluster
+  is bounded by (near-field covers the whole sum; see transition-notes.org for
+  the full C-source citation). The figure IS reproducible on a genuine
+  approximation-regime witness -- a 50:1 aspect-ratio bar -- where it measures
+  `4.628e-05` at `mac=0.3` (monotonic with `mac` over `{0.7,0.5,0.3,0.1}`);
+  `p` is confirmed (from source: the multipole arrays are hard-coded to a
+  fixed 35-term/4th-order expansion regardless of the `p` argument) and
+  empirically to have zero effect on accuracy. Sphere demag factor ~1/3;
+  periodic image-sum convergence (trend-only, no closed-form plateau exists;
+  see transition-notes.org) + analytic out-of-plane thin-film limit; two
+  `Simulation.add(Demag(...))` end-to-end smokes (Treecode solver,
+  non-coincident `MacroGeometry`).
   `Demag2D` DEFERRED (heavy MeshEditor/Expression coupling, no treecode
   dependency; Task 29). `demag_treecode.py` (uses the never-built `fast_sum_lib`,
   Python-2 code) NOT ported (dead/experimental). Legacy-lane treecode activation
   left as a follow-up (not trivially safe). Gate: `dolfinx-src-treecode-pytest`
-  (16 tests). [Claude Opus 4.8]
+  (20 tests -- 16 baseline + 4 round-1 review additions). [Claude Opus 4.8]
+  [Claude Sonnet 5]
 
 - `util/pbc2d.py` (`PeriodicBoundary1D/2D`), `Simulation(pbc='1d'/'2d')`:
   **DEFERRED by name (Task 29 candidate).** These are `dolfin.SubDomain`

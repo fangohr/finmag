@@ -5561,14 +5561,74 @@ FK demag (Task 11b) plus analytic limits:
 2. *Treecode field cross-checks the dense FK demag.* On a 30nm cube the
    treecode demag field matches the dense FK field to =rel < 1e-6= in the
    direct-sum limit (=mac=0.7=; the octree accepts no multipole approximation
-   and evaluates the boundary sum exactly). At the legacy default knobs
-   (=mac=0.3, p=3=) the agreement is =~4e-5= (test bound 5e-3), the documented
-   treecode accuracy. Convergence trend on a 1538-node boundary: =mac>=0.5=
-   (direct) -> =3.4e-15=; =mac=0.3= -> =4.0e-5=. NOTE the multipole order =p= does
-   not move the error at these tile counts -- the near-field =correct_factor=
-   correction, not the expansion order, sets the accuracy floor; this is
-   documented rather than asserted as a clean p-convergence (which this kernel
-   does not exhibit).
+   and evaluates the boundary sum exactly).
+
+   **Round-1 review correction (approximation-regime witness, [Claude Sonnet
+   5]).** The original claim here -- "at the legacy default knobs (mac=0.3,
+   p=3) the agreement is ~4e-5, the documented treecode accuracy" -- was
+   overclaimed: it was never reproduced on the *box* geometries actually used
+   by the encoded tests, and a review sweep (=mac \in {0.2..0.9}=, =p \in
+   {1,3,5,8}=, =num_limit \in {1,5,20,100}=, boundaries up to 1178 nodes)
+   confirmed treecode-vs-FK stays at machine precision (=~1e-14=) for *every*
+   combination on compact convex boundaries (cubes/spheres) -- the multipole
+   approximation is simply never entered on those geometries at these knobs,
+   so the test's 5e-3 bound was vacuous.
+
+   *Why* (cited from =native/src/treecode_bem/=): the far-field acceptance
+   test in =treecode_bem_I.c= (=bulid_indices_single_I= and
+   =compute_potential_single_target_I=, e.g. line 18/175:
+   =plan->mac_square * R > tree->radius_square=) compares the squared distance
+   =R= from a query point to an octree cluster's centre against that cluster's
+   own bounding =radius_square=. On a compact convex boundary, every
+   evaluation point sits ON the same surface whose diameter bounds every
+   cluster's distance from any other point on it, so no cluster can ever be
+   "far enough" relative to its own size at any reasonable =mac< 1= -- the
+   near-field sparse matrix built once by =bulid_indices_I= (the exact Lindholm
+   sum for every rejected cluster) ends up covering the *entire* sum, and the
+   multipole/moment path in =compute_potential_single_target_I= is never
+   exercised. This is a property of compact convex geometry, not a porting
+   defect, and it is reproducible with the ported code (confirmed
+   independently here, not merely inferred).
+
+   *Genuine approximation-regime witness (measured, replaces the
+   unreproducible figure).* A 50:1 aspect-ratio bar (6nm x 6nm x 300nm, 490
+   boundary nodes) gives the octree well-separated end clusters and DOES enter
+   the approximation regime. Measured on this exact geometry (=p=3,
+   num_limit=100, correct_factor=10= -- legacy defaults except =mac=):
+   =mac=0.7 -> 8.818e-4=; =mac=0.5 -> 3.230e-4=; =mac=0.3 -> 4.628e-5=;
+   =mac=0.1 -> 3.059e-7=. This reproduces (on the *correct* geometry) the
+   originally-claimed =~4e-5 at mac=0.3= figure almost exactly, and the trend
+   over this range is monotonic: tightening =mac= (smaller value, stricter
+   far-field acceptance) strictly improves accuracy. Encoded as
+   =test_treecode_approximation_regime_reachable_on_elongated_bar= in
+   =test_treecode_pbc_demag_dolfinx.py=.
+
+   *A mac non-monotonicity, documented not hidden.* =mac= also gates the
+   octree's *subdivision*-stopping criterion in =common.c='s =create_tree=
+   (line ~569: =tree->num_particle > plan->num_limit && r2*(1-plan->mac) >=
+   plan->r_eps*plan->mac=). As =mac -> 1= this condition stops the tree from
+   subdividing at all (single-node root), so the near-field path again covers
+   everything and accuracy jumps back to machine precision regardless of
+   geometry -- measured =mac=0.9 -> 9.377e-15= on the same bar. This is a
+   degenerate case outside the monotonic range asserted in the test (=mac \in
+   {0.1,0.3,0.5,0.7}=), not a counterexample to the trend; =mac= plays a dual
+   role (subdivision threshold AND far-field acceptance threshold) that is
+   worth knowing about but does not need its own witness.
+
+   *=p= confirmed dead, from source and empirically.* The multipole expansion
+   in =compute_coefficient_directly=/=compute_moment_directly= (=common.c=,
+   ~lines 916-993) is hard-coded to a fixed 35-term (4th order) array --
+   literally commented "Always suppose N=35, n=5,
+   size=n*(n+1)*(n+2)/6" -- and never indexes past =a[20]=/=mom[35]= using the
+   =p= argument threaded through the API. Measured =p \in {1,3,5,8}= at
+   =mac=0.3= on the bar witness: identical =rel=4.628e-05= to 9+ significant
+   figures for every =p=. The near-field =correct_factor= (which sets =r_eps=
+   and therefore where subdivision stops, hence how large the residual leaves
+   are and how much of the sum multipole ever touches) DOES move accuracy --
+   measured on the same bar at =mac=0.3=: =correct_factor=1 -> 2.006e-4=;
+   ==5 -> 2.006e-4=; ==10 (default) -> 4.628e-5=; ==20 -> 1.2e-5=; ==50 ->
+   9.377e-15= (back to the direct-sum limit, same mechanism as the =mac->1=
+   case above: a larger =r_eps= stops subdivision earlier).
 3. *Analytic checks.* A uniformly-magnetised sphere (generated mesh) gives the
    treecode demag factor =Nz ~ 1/3= (within 0.05). A thin film tiled
    periodically in-plane and magnetised out of plane converges to the analytic
@@ -5576,7 +5636,26 @@ FK demag (Task 11b) plus analytic limits:
 4. *Periodic image-sum convergence* (the plan's named PBC sanity). A cube tiled
    along x approaches an infinite chain: =<Hx>/Ms= descends monotonically
    =-0.334 -> -0.165 -> -0.125 -> -0.109= for =nx = 1,3,5,9= with shrinking
-   increments toward a stable limit (~-0.10 at nx=31).
+   increments toward a stable limit.
+
+   **Round-1 review note on the plateau value ([Claude Sonnet 5]).** The
+   encoded test (=test_pbc_image_sum_converges_1d=) asserts only the
+   monotonic-decrease trend up to =nx=9=, deliberately, and does not pin a
+   numeric plateau: there is no independent closed-form expression for the
+   =nx -> infinity= limit of a periodic array of finite cubes, so any pinned
+   number would just be this same method run at higher image counts, not
+   independent validation. For context (not asserted, not encoded as a fast
+   test -- image count does not blow up mesh DOFs, so this ran in a few
+   seconds per point, but is not worth adding to the hot gate): extending the
+   same sweep to =nx=51,71,101,151,251,351= on this mesh gives =-0.10101,
+   -0.10089, -0.10083, -0.10080, -0.10078, -0.10077=, consistent with a slow
+   =~1/nx= approach to a plateau near =-0.1007= (least-squares =a + b/nx= fit).
+   This is an extrapolation of the same numerical method, not an
+   independently-derived limit -- it corroborates the originally-documented
+   "~-0.10 at nx=31" figure (still directionally correct) without over-pinning
+   precision the port cannot independently justify. The MacroGeometry path's
+   actual independent analytic anchor is item 3 above (the thin-film =Nz -> 1=
+   limit), which the test docstring now says explicitly.
 
 *** Periodic-BEM faithfulness and a documented conditional-convergence caveat
 
@@ -5587,18 +5666,45 @@ single-tile case is bit-for-bit identical to the oracle-validated dense BEM and
 the multi-tile summation is the identical algorithm, the port is faithful to
 legacy. Two honest caveats, both inherent to the finite periodic dipole sum
 (not port defects):
-- The legacy =demag_pbc_test.py::test_field_1d= asserted a tiled small sample
-  matches a finite long bar to 1.2%. That is NOT reproduced and NOT asserted
-  here: the periodic image sum converges to the infinite-array limit, which is
-  a *different* physical quantity from a finite bar, and the legacy numbers
-  were never green on any modern numeric stack. The convergence-with-image-count
-  witness replaces it, per the brief.
+- The legacy =demag_pbc_test.py::test_field_1d= asserted a 3-tile periodic
+  sample (=mesh_1=, a 20nm cube, =nx=3=) matches a finite long bar (=mesh_3=, a
+  60nm x 20nm x 20nm bar, =nx=1=) to 1.2%. That is NOT reproduced and NOT
+  asserted here.
+
+  **Round-1 review correction ([Claude Sonnet 5]).** The prior headline here
+  -- "the periodic image sum converges to the infinite-array limit, which is a
+  *different* physical quantity from a finite bar" -- was imprecise: =mesh_1=
+  with =nx=3= is a *finite* 3-image periodic sum, not an infinite-array limit,
+  and it is being compared against another finite quantity (a genuinely 3x
+  longer, non-periodic bar), so "different physical quantity" overstates the
+  case: both sides approximate the same finite-bar-like configuration, just by
+  different constructions. The REAL and now EMPIRICALLY VERIFIED reason the
+  legacy numbers are not reproduced/asserted is the *next* bullet:
+  =mesh_1='s inferred tile spacing (=dx=20=, from the mesh's own bounding-box
+  extent) exactly equals its own extent, i.e. =nx=3= tiles it with adjacent
+  tiles' boundary faces touching -- exactly the coincident-node
+  ill-conditioning case documented below. Directly probing
+  =BMatrixPBC(mesh_1, Ts=compute_Ts(...))= at this spacing confirms it: of 98
+  boundary DOFs, 74 have the expected solid-angle row sum =~-1=, 5 are near
+  =-2= (measured minimum =-1.9999999999999996=, i.e. shared-face nodes'
+  solid angles double-counted by two overlapping tiles), and 1 is an exact
+  =NaN= (a doubly-coincident corner vertex hitting the Lindholm kernel's
+  zero-distance singularity: a genuine =0/0=, not a large-but-finite number).
+  A non-coincident control (=dx=30>20=, a real gap between tiles) gives clean
+  row sums of =-1.0 +/- 1e-15= for all 98 DOFs. So the legacy 1.2%/2% numbers
+  were never a reliable target: they were measured at a spacing the algorithm
+  is analytically ill-conditioned at, not merely "a different physical
+  quantity". The convergence-with-image-count witness (this section, item 4
+  above) and the thin-film analytic limit replace it, per the brief, using
+  non-coincident (or self-consistently centred) geometries throughout.
 - When the tile spacing exactly equals the sample extent, adjacent-tile boundary
   nodes coincide and the double-layer sum is ill-conditioned (row sums reach -2
-  on shared faces; a coarse mesh can then diverge). The robust witnesses avoid
+  on shared faces, or exactly =NaN= at doubly-coincident corners -- both
+  confirmed above; a coarse mesh can then diverge). The robust witnesses avoid
   this by construction (out-of-plane thin film; a centred-cube 1D chain that
-  stays well-conditioned). Documented as a method property of the finite
-  periodic BEM.
+  stays well-conditioned; the new =Simulation.add= end-to-end MacroGeometry
+  test below uses an explicit non-coincident =dx=). Documented as a method
+  property of the finite periodic BEM.
 
 *** Demag2D decision (checklist item 4)
 
@@ -5645,6 +5751,20 @@ left untouched.
 
 - New gate =dolfinx-src-treecode-pytest=: 16 tests
   (=test_treecode_pbc_demag_dolfinx.py=), folded into =verify-dolfinx-m5=.
+  **Round-1 review fix: 16 -> 20** ([Claude Sonnet 5]). Added
+  =test_treecode_approximation_regime_reachable_on_elongated_bar= and
+  =test_treecode_p_order_does_not_affect_accuracy= (the genuine
+  approximation-regime witness and its C-source-confirmed =p=-invariance, see
+  above); =test_treecode_default_accuracy_cross_check= renamed
+  =test_treecode_default_knobs_machine_precision_on_compact_box= and its bound
+  tightened =5e-3 -> 1e-10= to match what it actually proves (kernel/orientation
+  machine-precision equivalence on a compact boundary, not treecode
+  approximation accuracy); and two =Simulation.add=-level end-to-end tests
+  (=test_simulation_add_treecode_demag_runs_end_to_end=,
+  =test_simulation_add_macrogeometry_demag_runs_end_to_end=) confirming both
+  ported demag surfaces produce finite fields and participate in
+  =run_until=/=effective_field= through the public =Simulation= API, not just
+  through direct =FKDemag.setup()=/=compute_field()= calls.
 - =test_fk_demag_dolfinx.py=: the Task 11b fail-forward pins flip to ported
   behavior -- =test_deferred_demag_solvers_raise_by_name= drops the Treecode
   assertion (keeps GCR); =test_demag2d_and_macrogeometry_raise_by_name= becomes

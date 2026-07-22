@@ -12,14 +12,30 @@ Accuracy knobs (legacy surface preserved):
 
 - ``mac``: multipole acceptance criterion.  In the direct-sum limit the
   treecode evaluates the boundary sum exactly (matches dense FK to machine
-  precision); at the legacy default ``mac=0.3`` it approximates it to ``~1e-4``.
-- ``p``: multipole expansion order; ``num_limit``: max particles per leaf;
-  ``correct_factor``: near-field correction radius; ``type_I``: index scheme.
+  precision). Whether tightening/loosening ``mac`` from there measurably moves
+  the error is GEOMETRY-DEPENDENT: on a compact convex boundary (a cube or
+  sphere) the octree's far-field acceptance test is never satisfied at any
+  practical ``mac``, so accuracy stays at machine precision regardless of
+  ``mac``/``p``/``num_limit`` (verified by sweep, see
+  ``test_treecode_pbc_demag_dolfinx.py`` and ``transition-notes.org``); on an
+  elongated, well-separated geometry the approximation regime genuinely
+  activates and the legacy default ``mac=0.3`` measures ``~4.6e-5`` there.
+- ``p``: multipole expansion order -- confirmed (from the C source and
+  empirically) to have NO effect on accuracy: the moment/coefficient arrays in
+  ``common.c`` are hard-coded to a fixed 35-term (4th order) expansion
+  regardless of ``p``.
+- ``num_limit``: max particles per leaf; ``correct_factor``: sets the
+  near-field length scale (``r_eps``) that governs where octree subdivision
+  stops -- this one DOES move accuracy (a larger ``correct_factor`` shrinks the
+  fraction of the sum ever handled by the multipole path).
+- ``type_I``: index scheme.
 
-Validation is by cross-method comparison against the dense FK demag on the same
-geometry (there are no treecode oracle fixtures -- the frozen oracle env never
-built the module); see ``test_treecode_pbc_demag_dolfinx.py`` and
-``transition-notes.org``. [Claude Opus 4.8]
+Validation is by cross-method comparison against the dense FK demag (there are
+no treecode oracle fixtures -- the frozen oracle env never built the module);
+see ``test_treecode_pbc_demag_dolfinx.py`` and ``transition-notes.org`` for the
+full accuracy-regime investigation (round-1 review item) including the C-source
+citations and the elongated-bar approximation-regime witness numbers.
+[Claude Opus 4.8] [Claude Sonnet 5]
 """
 
 import logging
