@@ -2,8 +2,11 @@
 #
 # Cubic anisotropy + spin-transfer torque on a disk. Expensive (2000 ps of
 # dynamics); run under FINMAG_EXAMPLE_FULL. The legacy script used no dolfin
-# symbols and no Python-2 print, so the only change is the header note plus a
-# tiny __main__ guard so the (very long) run only happens on explicit request.
+# symbols and no Python-2 print, so the only changes are: the header note, a
+# tiny __main__ guard so the (very long) run only happens on explicit request,
+# and a physical-sanity assertion on the final state. The legacy schedules
+# (save_m every 10 ps and save_averages every 100 ps) are kept UNCHANGED --
+# both are ported (Simulation.save_m / save_averages).
 # CubicAnisotropy(u1, u2, K1) matches the ported signature; set_stt(...) is the
 # ported Slonczewski/Zhang-Li torque (Task 22); cylinder(...) is the ported Gmsh
 # generator (Task 18). [Claude Opus 4.8]
@@ -57,6 +60,7 @@ def run():
     sim.add(CubicAnisotropy(u1, u2, K1))
     sim.set_tol(reltol=1e-8, abstol=1e-8)
 
+    sim.schedule('save_m', every=10 * ps)
     sim.schedule('save_averages', every=100 * ps)
     sim.run_until(2000 * ps)
 

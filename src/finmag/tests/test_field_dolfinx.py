@@ -349,3 +349,52 @@ def test_coordinate_order_rejects_non_vertex_space():
 
     with pytest.raises(ValueError, match="one dof per mesh vertex"):
         field.coords_and_values()
+
+
+def test_owned_vertex_to_dof_raises_when_no_match_within_tolerance():
+    """The tolerance-based vertex<->dof match must still fail loudly when the
+    dof coordinates cannot be paired with the mesh vertices within tolerance
+    (guarding the drift #11 fix against silently mis-ordering unrelated
+    coordinates). A shim shifts every dof coordinate far from its vertex so no
+    match is within the scale-relative tolerance."""
+    from finmag.field import _owned_vertex_to_dof
+
+    domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
+    scalar = fem.functionspace(domain, ("Lagrange", 1))
+
+    class _ShiftedSpace:
+        def __init__(self, base, shift):
+            self._base = base
+            self._shift = shift
+            self.mesh = base.mesh
+            self.dofmap = base.dofmap
+
+        def tabulate_dof_coordinates(self):
+            return self._base.tabulate_dof_coordinates() + self._shift
+
+    # An exact (unshifted) shim still matches -- baseline for the guard.
+    assert _owned_vertex_to_dof(_ShiftedSpace(scalar, 0.0)) is not None
+    with pytest.raises(ValueError, match="could not match DOLFINx dofs"):
+        _owned_vertex_to_dof(_ShiftedSpace(scalar, 100.0))
+
+
+def test_field_coordinate_roundtrip_on_generated_mesh():
+    """Regression for drift #11: on a Gmsh/from_csg-generated mesh (which
+    carries ~1e-13 coordinate FP noise) the tolerance-based vertex<->dof match
+    must round-trip a set field through ``coords_and_values`` without raising."""
+    from finmag.util.geofile import from_csg
+
+    domain = from_csg(
+        "algebraic3d\nsolid c = orthobrick(0,0,0;10,10,10) -maxh=4.0;\ntlo c;\n",
+        save_result=False,
+    )
+    vector = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    field = Field(vector)
+    field.set(lambda x: np.stack(
+        [np.ones(x.shape[1]), np.zeros(x.shape[1]), np.zeros(x.shape[1])]))
+
+    coords, values = field.coords_and_values()
+    assert coords.shape[0] == values.shape[0]
+    assert coords.shape[0] == domain.geometry.index_map().size_local
+    assert np.allclose(values[:, 0], 1.0)
+    assert np.allclose(values[:, 1:], 0.0)

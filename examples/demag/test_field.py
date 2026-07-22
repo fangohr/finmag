@@ -25,7 +25,7 @@ def test_field():
     Test the demag field.
 
     H_demag should be equal to -1/3 M, and with m = (1, 0 ,0)
-    and Ms = 1, this should give H_demag = (-1/3, 0, 0).
+    and Ms = 1,this should give H_demag = (-1/3, 0, 0).
 
     """
     # Using mesh with radius 10 nm (nmag ex. 1)
@@ -37,10 +37,14 @@ def test_field():
     demag.setup(m, Field(fem.functionspace(mesh, ("DG", 0)), Ms), unit_length=1e-9)
 
     # Compute demag field.
-    # INTERFACE-DRIFT: the legacy compute_field() returned component-blocked
+    # INTERFACE-DRIFT (#3): the legacy compute_field() returned component-blocked
     # order (xxx...yyy...zzz), reshaped as (3, -1). The DOLFINx port returns
     # coordinate-interleaved order (xyz xyz ...), so we reshape as (-1, 3) and
     # take columns. (Cf. src/finmag/tests/test_fk_demag_dolfinx.py:256.)
+    # Task 30 WORKAROUND, to be REVERTED in Task 31 (component-ordering
+    # restoration): the controller decision is that Task 31 restores the
+    # component-blocked ordering, after which the legacy `reshape((3, -1))` line
+    # (x, y, z = H_demag[0], H_demag[1], H_demag[2]) is used verbatim again.
     H_demag = demag.compute_field().reshape(-1, 3)
     x, y, z = H_demag[:, 0], H_demag[:, 1], H_demag[:, 2]
 
@@ -53,7 +57,7 @@ def test_field():
     print("Average values in direction")
     print("x: %g,  y: %g,  z: %g" % (x, y, z))
 
-    # Compute relative errors
+    # Compute relative erros
     x = abs((x + 1. / 3 * Ms) / Ms)
     y = abs(y / Ms)
     z = abs(z / Ms)

@@ -10,6 +10,8 @@
 #     reference values in doc.rst. The full single-domain-limit bisection and
 #     the documentation table are run only when FINMAG_EXAMPLE_FULL=1 (the
 #     legacy behaviour; ~30 min).
+#   - The legacy run artifacts data_m.txt / data_energies.txt / data_diffs.txt
+#     are restored, written only on the FULL path (all gitignored).
 # [Claude Opus 4.8]
 import os
 import time
@@ -74,6 +76,13 @@ def run_simulation(lfactor, m_init, m_init_name="", divisions=None):
     e_total = e_exc + e_anis + e_demag
 
     if FULL:
+        # Restored legacy run artifacts (data_m.txt + data_energies.txt),
+        # written only on the FULL path (gitignored). data_m.txt records the
+        # relaxed average magnetisation for each (state, lfactor).
+        mx, my, mz = sim.m_average
+        with open(os.path.join(MODULE_DIR, "data_m.txt"), "a") as f:
+            f.write("{} {} {} {} {} {}\n".format(
+                m_init_name, lfactor, mx, my, mz, time.asctime()))
         with open(os.path.join(MODULE_DIR, "data_energies.txt"), "a") as f:
             f.write("{} {} {} {} {} {} {}\n".format(
                 m_init_name, lfactor, e_total, e_exc, e_anis, e_demag,
@@ -85,7 +94,14 @@ def energy_difference(lfactor):
     print("Running the two simulations for lfactor={}.".format(lfactor))
     e_vortex = run_simulation(lfactor, vortex_init, "vortex")["total"]
     e_flower = run_simulation(lfactor, flower_init, "flower")["total"]
-    return e_vortex - e_flower
+    diff = e_vortex - e_flower
+    if FULL:
+        # Restored legacy artifact (gitignored): the per-lfactor energy gap
+        # that the single-domain-limit bisection consumes.
+        with open(os.path.join(MODULE_DIR, "data_diffs.txt"), "a") as f:
+            f.write("{} {} {} {} {}\n".format(
+                lfactor, e_vortex, e_flower, diff, time.asctime()))
+    return diff
 
 
 def _gate():

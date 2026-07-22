@@ -7,7 +7,7 @@
 #     K2, K3) and computes u3 = cross(u1, u2) internally (the explicit u3 the
 #     example passed, (-1,0,0), equals cross(u1,u2), so the physics is
 #     unchanged). See the Task 30 report "stale examples" note.
-#   - Gate mode: the field sweep is 25 points by default (fast); the full
+#   - Gate mode: the field sweep is 6 points by default (fast); the full
 #     250-point one-way sweep runs when FINMAG_EXAMPLE_FULL=1.
 # The sim.hysteresis(fields, fun) API is unchanged (Task 15).
 # [Claude Opus 4.8]
@@ -30,9 +30,9 @@ A = 1.46e-11  # J/m
 
 K1 = -8608726
 K2 = -13744132
-K3 = 1100269
+K3 =  1100269
 u1 = (0, -0.7071, 0.7071)
-u2 = (0, 0.7071, 0.7071)
+u2 = (0,  0.7071, 0.7071)
 
 npoints = 250 if os.environ.get("FINMAG_EXAMPLE_FULL") == "1" else 6
 

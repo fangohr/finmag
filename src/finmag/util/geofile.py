@@ -176,8 +176,15 @@ class _And(_Node):
         solids = [o for o in self.operands
                   if not getattr(o, "is_plane", False) and not isinstance(o, _Not)]
 
-        # A cylinder present in the chain absorbs axis-aligned capping planes.
-        if any(isinstance(s, _Cylinder) for s in solids):
+        # A cylinder present in the chain is already finite (its two axis points
+        # bound it). Netgen still spells the caps as explicit half-spaces, so a
+        # capping plane that coincides with a cylinder axis endpoint is redundant
+        # and dropped. A plane offset from those endpoints would actually
+        # truncate the cylinder -- that construct is not ported, so fail forward
+        # (name it) rather than silently ignoring the truncation.
+        cylinders = [s for s in solids if isinstance(s, _Cylinder)]
+        if cylinders and planes:
+            _validate_cylinder_caps(cylinders, planes)
             planes = []
 
         if planes:
@@ -213,6 +220,50 @@ class _Or(_Node):
                                [(3, t) for t in other])
             tags = [t for (_d, t) in tags]
         return tags
+
+
+def _cylinder_axis_extent(cyl):
+    """Return ``(axis, lo, hi, length)`` for an axis-aligned cylinder."""
+    d = tuple(b - a for a, b in zip(cyl.p0, cyl.p1))
+    nz = [i for i, c in enumerate(d) if c != 0.0]
+    if len(nz) != 1:
+        raise NotImplementedError(
+            "from_geofile: only axis-aligned cylinders can have their capping "
+            "planes validated (got axis direction {}). Oblique cylinders are "
+            "not ported.".format(d))
+    axis = nz[0]
+    lo = min(cyl.p0[axis], cyl.p1[axis])
+    hi = max(cyl.p0[axis], cyl.p1[axis])
+    return axis, lo, hi, hi - lo
+
+
+def _validate_cylinder_caps(cylinders, planes):
+    """Confirm each dropped capping plane coincides with a cylinder end.
+
+    A plane is a redundant cap only if its axis is parallel to a cylinder's axis
+    and its bound coincides (within a length-relative tolerance) with one of that
+    cylinder's two axis endpoints. Any other plane truncates the cylinder away
+    from its ends -- a construct outside the ported subset -- so it raises
+    ``NotImplementedError`` naming ``offset-plane-truncated-cylinder``.
+    """
+    extents = [_cylinder_axis_extent(cyl) for cyl in cylinders]
+    for plane in planes:
+        axis, _sign, value = plane.axis_bound()
+        coincides = False
+        for caxis, lo, hi, length in extents:
+            if caxis != axis:
+                continue
+            tol = 1e-9 * max(abs(length), 1.0)
+            if abs(value - lo) <= tol or abs(value - hi) <= tol:
+                coincides = True
+                break
+        if not coincides:
+            raise NotImplementedError(
+                "from_geofile: an offset-plane-truncated-cylinder construct was "
+                "found (a 'plane' half-space bounded at {:g} along axis {} does "
+                "not coincide with any cylinder axis endpoint). Capping planes "
+                "that truncate a cylinder away from its axis endpoints are not "
+                "ported.".format(value, axis))
 
 
 def _box_from_planes(planes):
@@ -275,14 +326,15 @@ class _Parser(object):
         return (x, y, z)
 
     def parse(self):
-        # optional leading 'algebraic3d'
-        if self._peek() == ("name", "algebraic3d"):
+        # optional leading 'algebraic3d' (Netgen keywords are case-insensitive)
+        peeked = self._peek()
+        if peeked[0] == "name" and peeked[1].lower() == "algebraic3d":
             self._next()
         while self.i < len(self.toks):
             kind, val = self._peek()
-            if kind == "name" and val == "solid":
+            if kind == "name" and val.lower() == "solid":
                 self._parse_solid()
-            elif kind == "name" and val == "tlo":
+            elif kind == "name" and val.lower() == "tlo":
                 self._parse_tlo()
             else:
                 raise GeoFileError(
@@ -291,7 +343,8 @@ class _Parser(object):
 
     def _parse_solid(self):
         self._next()  # 'solid'
-        name = self._expect("name")[1]
+        # Netgen identifiers are case-insensitive; store/look up folded.
+        name = self._expect("name")[1].lower()
         self._expect("=")
         node = self._parse_expr()
         maxh = self._maybe_maxh()
@@ -300,7 +353,7 @@ class _Parser(object):
 
     def _parse_tlo(self):
         self._next()  # 'tlo'
-        name = self._expect("name")[1]
+        name = self._expect("name")[1].lower()
         maxh = self._maybe_maxh()
         self._expect(";")
         self.tlos.append((name, maxh))
@@ -320,14 +373,15 @@ class _Parser(object):
         mode = "and"
         while True:
             kind, val = self._peek()
-            if kind == "name" and val == "and":
+            if kind == "name" and val.lower() == "and":
                 self._next()
-                if self._peek() == ("name", "not"):
+                nxt = self._peek()
+                if nxt[0] == "name" and nxt[1].lower() == "not":
                     self._next()
                     and_ops.append(_Not(self._parse_term()))
                 else:
                     and_ops.append(self._parse_term())
-            elif kind == "name" and val == "or":
+            elif kind == "name" and val.lower() == "or":
                 self._next()
                 # flush current 'and' group as one operand of the 'or'
                 or_ops.append(self._collapse_and(and_ops))
@@ -357,24 +411,25 @@ class _Parser(object):
             node = self._parse_expr()
             self._expect(")")
             return node
-        if kind == "name" and val == "not":
+        low = val.lower() if kind == "name" else val
+        if kind == "name" and low == "not":
             self._next()
             return _Not(self._parse_term())
-        if kind == "name" and val in _PRIMITIVES:
+        if kind == "name" and low in _PRIMITIVES:
             self._next()  # consume the primitive keyword
-            return _PRIMITIVES[val](self)
-        if kind == "name" and val in ("multitranslate", "multitranslatexyz",
+            return _PRIMITIVES[low](self)
+        if kind == "name" and low in ("multitranslate", "multitranslatexyz",
                                       "ellipsoid", "cone", "revolution",
                                       "extrusion", "torus", "polyhedron"):
             raise NotImplementedError(
                 "from_geofile: the Netgen CSG construct '{}' is not supported "
                 "by the DOLFINx port's CSG subset.".format(val))
         if kind == "name":
-            # reference to a previously named solid
+            # reference to a previously named solid (case-insensitive)
             self._next()
-            if val not in self.solids:
+            if low not in self.solids:
                 raise GeoFileError("unknown solid reference {!r}".format(val))
-            return self.solids[val][0]
+            return self.solids[low][0]
         raise GeoFileError("unexpected token {!r} in expression".format(val))
 
 
@@ -467,24 +522,34 @@ def _build_mesh(parser, csg_key, maxh, save_result, filename, directory):
                                filename, directory)
 
 
-def from_csg(csg_string, maxh=None, save_result=True, filename='', directory=''):
+def from_csg(csg_string, save_result=True, filename='', directory='', *, maxh=None):
     """Build a ``dolfinx.mesh`` from a Netgen ``algebraic3d`` CSG string.
 
     Supports the subset documented in this module's docstring. ``maxh`` (if
     given) overrides any ``-maxh`` in the text. Caching mirrors the legacy
     contract: the CSG text is the md5 cache key when ``filename`` is empty.
+
+    ``save_result`` keeps the legacy positional slot (legacy ``from_csg`` was
+    ``from_csg(csg, save_result=True, filename='', directory='')``); ``maxh`` is
+    the port-only extension and is therefore keyword-only, so a legacy positional
+    ``from_csg(text, False)`` binds ``save_result`` as before.
     """
     parser = _Parser(_tokenize(csg_string)).parse()
     return _build_mesh(parser, csg_string, maxh, save_result, filename, directory)
 
 
-def from_geofile(geofile, maxh=None, save_result=True, filename='', directory=''):
+def from_geofile(geofile, save_result=True, filename='', directory='', *, maxh=None):
     """Build a ``dolfinx.mesh`` from a Netgen ``.geo`` file.
 
     Ported subset of the legacy ``from_geofile`` (Task 18 deferral partially
     lifted, Task 30). The mesh is cached next to the ``.geo`` file (keyed on the
     file's *content*, mirroring the legacy behaviour of caching a compiled mesh
     beside the geometry); pass ``save_result=False`` to skip the cache.
+
+    ``save_result`` keeps the legacy positional slot (legacy ``from_geofile`` was
+    ``from_geofile(geofile, save_result=True)``); ``maxh`` is the port-only
+    extension and is therefore keyword-only, so a legacy positional
+    ``from_geofile(f, False)`` binds ``save_result`` as before.
     """
     with open(geofile, "r") as f:
         text = f.read()

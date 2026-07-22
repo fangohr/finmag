@@ -86,18 +86,27 @@ def run_simulation(stop_when_mx_eq_zero):
     Hz = 0
     sim.add(Zeeman((Hx, Hy, Hz)))
 
+    # The first zero-crossing of <m_x> is recorded whether or not we stop there,
+    # so the full 2 ns trace (for plot_averages.py) can be produced while still
+    # asserting the crossing time.
+    crossing = {}
+
     def check_if_crossed(sim):
         mx, _, _ = sim.m_average
         if mx <= 0:
-            print("The average m_x first crossed zero at t = {}.".format(sim.t))
-            np.save(m_at_crossing_file, sim.m)
+            if "time" not in crossing:
+                crossing["time"] = sim.t
+                print("The average m_x first crossed zero at t = {}.".format(sim.t))
+                np.save(m_at_crossing_file, sim.m)
+            # Return True -> "event done, keep running" (full trace);
+            # return False -> stop the simulation at the crossing.
             return not stop_when_mx_eq_zero
 
     sim.schedule(check_if_crossed, every=1e-12)
     sim.schedule('save_averages', every=10e-12, at_end=True)
     sim.schedule('save_vtk', every=10e-12, at_end=True, overwrite=True)
     sim.run_until(2.0e-9)
-    return sim.t
+    return sim.t, crossing.get("time")
 
 
 def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
@@ -106,7 +115,10 @@ def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
         create_initial_s_state()
 
     print("Running simulation...")
-    t_0 = run_simulation(stop_when_mx_eq_zero)
+    final_t, t_cross = run_simulation(stop_when_mx_eq_zero)
+    # When stop_when_mx_eq_zero is False the sim runs the full 2 ns, so the
+    # crossing time (not the final time) is the quantity to compare.
+    t_0 = t_cross if t_cross is not None else final_t
 
     t_ref_martinez = 0.13949e-9  # http://www.ctcms.nist.gov/~rdm/std4/Torres.html
     print("crossing time = {} s (Martinez reference {} s)".format(t_0, t_ref_martinez))
@@ -117,5 +129,8 @@ def test_std_prob_4_field_1(stop_when_mx_eq_zero=True):
 
 
 if __name__ == "__main__":
-    test_std_prob_4_field_1(stop_when_mx_eq_zero=True)
+    # stop_when_mx_eq_zero=False (legacy __main__): run the full 2 ns so the
+    # complete <m>(t) trace is written for plot_averages.py; the crossing-time
+    # assertion still runs against the recorded first crossing.
+    test_std_prob_4_field_1(stop_when_mx_eq_zero=False)
     print("std_prob_4: average m_x crosses zero within the muMAG switching window.")

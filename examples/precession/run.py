@@ -1,8 +1,10 @@
 # DOLFINx port (Task 30): converted from the legacy dolfin example.
 # Changes vs legacy (all mechanically necessary for the ported package):
 #   - dolfin.BoxMesh(dolfin.Point(...)) -> dolfinx.mesh.create_box.
-#   - matplotlib plotting removed (deferred, Task 26); replaced by physical
-#     sanity assertions so the example self-validates in the gate.
+#   - physical sanity assertions added so the example self-validates in the
+#     gate; the pure-matplotlib plotting is restored (Agg backend, savefig only)
+#     and runs on the __main__/save path under FINMAG_EXAMPLE_FULL, so the fast
+#     gate stays quick and artifact-free -- disclosed, not deleted.
 #   - py3: xrange -> range; zip(*...) materialised via np.array.
 #   - reduced the number of sampled times (50 -> 16) so the gate stays fast;
 #     the full-resolution sweep is the commented `ts` below.
@@ -38,6 +40,29 @@ def run_simulation(do_precession):
     return np.array(averages)
 
 
+def plot(m_without, m_with):
+    """Restored legacy plot: m(t) with and without precession -> precession.png."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    IMAGE = os.path.join(MODULE_DIR, 'precession.png')
+    subfigures = ("without precession", "with precession")
+    data = (m_without, m_with)
+    figure, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
+    for i, subfigure_name in enumerate(subfigures):
+        m = data[i]
+        for dim in range(3):
+            axes[i].plot(ts, m[:, dim], label="m{}".format(chr(120 + dim)))
+            axes[i].legend()
+        axes[i].set_title(subfigure_name)
+        axes[i].set_xlabel("time (s)")
+        axes[i].set_ylabel("unit magnetisation")
+        axes[i].set_ylim([-0.1, 1.0])
+    figure.savefig(IMAGE)
+    plt.close(figure)
+
+
 if __name__ == "__main__":
     m_without = run_simulation(False)
     m_with = run_simulation(True)
@@ -56,4 +81,7 @@ if __name__ == "__main__":
     # Precession makes the two trajectories differ (transient m_y differs).
     assert np.max(np.abs(m_with[:, 1] - m_without[:, 1])) > 1e-3, \
         "with/without precession trajectories are indistinguishable"
+
+    if os.environ.get("FINMAG_EXAMPLE_FULL") == "1":
+        plot(m_without, m_with)
     print("precession: dynamics finite, |m|<=1, and precession changes the path.")

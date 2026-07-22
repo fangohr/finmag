@@ -605,3 +605,75 @@ def test_from_geofile_oblique_plane_raises(tmp_path):
            "tlo p;\n")
     with pytest.raises(NotImplementedError, match="axis-aligned"):
         from_csg(csg, save_result=False)
+
+
+# --------------------------------------------------------------------------
+# Fix round 1 (dual-review): cylinder cap validation, keyword-only maxh,
+# case-insensitive CSG keywords. [Claude Opus 4.8]
+# --------------------------------------------------------------------------
+
+def test_cylinder_redundant_caps_are_dropped(tmp_path):
+    """Capping planes coinciding with the cylinder axis endpoints are redundant
+    and dropped -- the geometry is the full finite cylinder (mirrors the
+    film.geo idiom, isolated to a single cylinder for an analytic check)."""
+    os.chdir(str(tmp_path))
+    csg = ("algebraic3d\n"
+           "solid c = cylinder(0,0,0;0,0,20;10)\n"
+           "  and plane(0,0,0;0,0,-1)\n"
+           "  and plane(0,0,20;0,0,1) -maxh=2.0;\n"
+           "tlo c;\n")
+    mesh = from_csg(csg, save_result=False)
+    _check_volume(mesh, pi * 10.0 ** 2 * 20.0, TOL1)
+
+
+def test_cylinder_offset_cap_raises_by_name(tmp_path):
+    """A capping plane offset from the cylinder axis endpoints would truncate
+    the cylinder; that construct is not ported and must fail forward rather than
+    be silently dropped (was silent-wrong before the fix)."""
+    os.chdir(str(tmp_path))
+    csg = ("algebraic3d\n"
+           "solid c = cylinder(0,0,0;0,0,10;3)\n"
+           "  and plane(0,0,0;0,0,-1)\n"
+           "  and plane(0,0,7;0,0,1) -maxh=2.0;\n"
+           "tlo c;\n")
+    with pytest.raises(NotImplementedError, match="offset-plane-truncated-cylinder"):
+        from_csg(csg, save_result=False)
+
+
+def test_from_geofile_positional_save_result_binds_like_legacy(tmp_path):
+    """Legacy positional ``from_geofile(f, False)`` must bind ``save_result``
+    (not the port-only ``maxh``), so no cache file is written beside the .geo."""
+    geo = tmp_path / "cube.geo"
+    geo.write_text("algebraic3d\nsolid c = orthobrick(0,0,0;1,1,1) -maxh=0.5;\ntlo c;\n")
+    mesh = from_geofile(str(geo), False)          # positional -> save_result
+    _check_volume(mesh, 1.0, TOL3)
+    # save_result was False, so nothing is cached next to the .geo.
+    assert not any(p.suffix in (".xdmf", ".h5") for p in tmp_path.iterdir())
+
+
+def test_from_csg_maxh_keyword_overrides_text(tmp_path):
+    """``maxh`` is keyword-only and overrides the ``-maxh`` in the CSG text
+    (a finer maxh yields more vertices)."""
+    os.chdir(str(tmp_path))
+    csg = "algebraic3d\nsolid c = orthobrick(0,0,0;10,10,10) -maxh=8.0;\ntlo c;\n"
+    coarse = from_csg(csg, save_result=False)     # uses text -maxh=8.0
+    fine = from_csg(csg, save_result=False, maxh=1.5)
+    assert num_vertices(fine) > num_vertices(coarse)
+
+
+def test_csg_keywords_are_case_insensitive(tmp_path):
+    """Netgen keywords/primitives are case-insensitive; a mixed-case CSG string
+    meshes identically to its lowercase form."""
+    os.chdir(str(tmp_path))
+    lower = ("algebraic3d\n"
+             "solid s = orthobrick(0,0,0;10,10,10)\n"
+             "  and not orthobrick(0,0,0;5,5,5) -maxh=4.0;\n"
+             "tlo s;\n")
+    mixed = ("AlgebraIC3D\n"
+             "Solid S = OrthoBrick(0,0,0;10,10,10)\n"
+             "  AND NOT OrthoBrick(0,0,0;5,5,5) -maxh=4.0;\n"
+             "TLO S;\n")
+    vol_lower = mesh_volume(from_csg(lower, save_result=False))
+    vol_mixed = mesh_volume(from_csg(mixed, save_result=False))
+    assert np.isclose(vol_lower, vol_mixed, rtol=TOL3)
+    _check_volume(from_csg(mixed, save_result=False), 10 ** 3 - 5 ** 3, TOL3)
