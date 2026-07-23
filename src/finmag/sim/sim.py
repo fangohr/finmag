@@ -74,6 +74,18 @@ from finmag.scheduler import scheduler
 
 log = logging.getLogger(name="finmag")
 
+# Backend provenance values ``Simulation.restart`` accepts in a v2 archive.
+# ``save_restart_data`` writes the integrator backend actually used, so both
+# ported backend names must be accepted. ``'cvode'`` is the legacy name for the
+# native Sundials driver and is retained *only* so this gate's existing
+# behaviour is unchanged -- no v2 producer writes it: ``save_restart_data``
+# records ``sim.integrator_backend``, which is 'scipy' or 'sundials' and never
+# 'cvode'. It can therefore only appear in a hand-written or legacy-derived
+# file. This is provenance only -- it never selects a backend. Legacy *v1
+# raw-dof* files are still rejected outright, earlier, by
+# ``sim_helpers.load_restart_data``. [Claude Opus 4.8]
+_KNOWN_RESTART_DRIVERS = ("scipy", "sundials", "cvode")
+
 
 def _deferred(name, detail):
     """Raise a uniform, by-name ``NotImplementedError`` for a deferred surface."""
@@ -130,6 +142,14 @@ class Simulation(object):
         self.mesh = mesh
         self.unit_length = unit_length
         self.integrator_backend = integrator_backend
+        # Public reporting surface for the driver in use. Legacy hard-coded it
+        # to ``'cvode'``, its only driver, and the port carried that shape over
+        # as a hard-coded ``'scipy'``, which contradicted itself the moment a
+        # simulation ran on Sundials. It is now initialised from, and kept in
+        # step with, the backend actually selected (see ``create_integrator``).
+        # It stays an ordinary writable attribute, as before: it reports a
+        # backend, it never selects one. [Claude Opus 4.8]
+        self.driver = integrator_backend
         self.pbc = None
         self._integrator = None
 
@@ -180,7 +200,6 @@ class Simulation(object):
             fem.form(fem.Constant(mesh, 1.0) * ufl.dx))
         self.Volume = mesh.comm.allreduce(vol_local, op=MPI.SUM)
 
-        self.driver = "scipy"
         self.reltol = 1e-6
         self.abstol = 1e-6
         self.parallel = False
@@ -387,6 +406,10 @@ class Simulation(object):
     def create_integrator(self, backend=None, **kwargs):
         if backend is not None:
             self.integrator_backend = backend
+            # Keep the reported driver in step with the backend change, so it
+            # cannot go stale against the archive provenance written by
+            # ``sim_helpers.save_restart_data``. [Claude Opus 4.8]
+            self.driver = self.integrator_backend
 
         if self.has_integrator():
             log.warning(
@@ -490,13 +513,19 @@ class Simulation(object):
         magnetisation is remapped onto the current mesh by coordinate; a mesh
         mismatch raises ``ValueError`` rather than silently misassigning. The
         restart time is taken from the file unless ``t0`` overrides it.
+
+        Only the magnetisation and the clock are restored: the file's recorded
+        ``driver`` is provenance, and does *not* select or change this
+        simulation's ``integrator_backend`` (unchanged behaviour). Both ported
+        backend names are accepted, plus the legacy ``'cvode'`` name; anything
+        else is rejected by name.
         """
         if filename is None:
             filename = sim_helpers.canonical_restart_filename(self)
         log.debug("Loading restart data from {}.".format(filename))
 
         data = sim_helpers.load_restart_data(filename)
-        if data.get("driver") not in ("scipy", "cvode"):
+        if data.get("driver") not in _KNOWN_RESTART_DRIVERS:
             raise NotImplementedError(
                 "Unknown driver {!r} for restarting.".format(data.get("driver")))
 

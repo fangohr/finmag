@@ -132,7 +132,14 @@ def save_restart_data(sim, filename=None):
     - ``simtime``/``datetime``/``simname``/``driver``/``format_version``.
     """
     datetimetuple = datetime.now()
-    drivertype = 'scipy'  # the ported DOLFINx default backend
+    # Truthful backend provenance: record the integrator backend that actually
+    # produced this state ('scipy' or 'sundials'), not a hard-coded constant.
+    # The legacy code hard-coded 'cvode' with an explicit "we should deduce
+    # this from sim object XXX" note, and the port carried that shape over as a
+    # hard-coded 'scipy'; a simulation running on the native Sundials backend
+    # therefore saved an archive that claimed to be SciPy-produced. [Claude
+    # Opus 4.8]
+    drivertype = sim.integrator_backend
     simtime = sim.t
 
     if filename is None:
