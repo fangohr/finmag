@@ -56,6 +56,7 @@ Deliberate deviations from the legacy module (all documented in
 [Claude Opus 4.8], [Claude Sonnet 5]
 """
 
+import itertools
 import logging
 
 import numpy as np
@@ -824,11 +825,71 @@ class Simulation(object):
     def get_submesh(self, *args, **kwargs):
         _deferred("get_submesh", "region/material machinery")
 
-    def probe_field(self, *args, **kwargs):
-        _deferred("probe_field", "point probing")
+    def probe_field(self, field_type, pts, region=None):
+        """Probe the field ``field_type`` at point(s) ``pts``.
 
-    def probe_field_along_line(self, *args, **kwargs):
-        _deferred("probe_field_along_line", "point probing")
+        ``pts`` is a NumPy-array-like of one or more points whose **last axis**
+        has dimension 3; the point coordinates are given in **mesh coordinates**
+        (``unit_length`` is NOT applied), matching the legacy contract and
+        ``set_m(callable)``. ``field_type`` is any name accepted by
+        :meth:`get_field_as_dolfin_function` (``"m"`` or a registered
+        interaction such as ``"Exchange"``/``"Demag"``).
+
+        Returns a ``numpy.ma.masked_array`` of shape ``pts.shape[:-1] + (3,)``:
+        a single ``(3,)`` vector for one point, or the stacked per-point values
+        for an array of points. Points lying outside this rank's local mesh
+        partition are masked out -- mirroring legacy dolfin's masking of points
+        that raise for being outside the domain.
+
+        Restores the legacy behaviour (``helpers.probe`` over dolfin's
+        ``Function.__call__``) by looping the already-ported
+        :func:`finmag.field.evaluate_at_point` over the points. Serial/rank-local
+        (see :meth:`finmag.field.Field.probe`). Region-restricted probing is not
+        part of this slice and raises by name; ``region=None`` is the ported path.
+        """
+        if region is not None:
+            _deferred("probe_field", "region-restricted point probing")
+
+        from finmag.field import evaluate_at_point
+
+        function = self.get_field_as_dolfin_function(field_type)
+        points = np.asarray(pts, dtype=float)
+        if points.shape[-1] != 3:
+            raise ValueError(
+                "Argument 'pts' must be an array of 3D points, i.e. the last "
+                "axis must have dimension 3. Shape of 'pts' is: {}".format(
+                    points.shape))
+
+        res = np.ma.empty(points.shape[:-1] + (3,))
+        res.mask = np.zeros_like(res, dtype=bool)
+        for idx in itertools.product(*map(range, points.shape[:-1])):
+            try:
+                res[idx] = evaluate_at_point(function, points[idx])
+            except RuntimeError:
+                res.mask[idx] = True
+        return res
+
+    def probe_field_along_line(self, field_type, pt_start, pt_end, N=100,
+                               region=None):
+        """Probe ``field_type`` at ``N`` equidistant points along the straight
+        line from ``pt_start`` to ``pt_end`` (coordinates in mesh units).
+
+        Returns a pair ``(pts, vals)`` where ``pts`` is the ``(N, 3)`` array of
+        probing points and ``vals`` is the ``numpy.ma.masked_array`` of probed
+        values (shape ``(N, 3)``), masking any point outside the local mesh --
+        matching the legacy ``helpers.probe_along_line`` contract. Delegates to
+        :meth:`probe_field`. Region-restricted probing is deferred and raises
+        by name.
+        """
+        if region is not None:
+            _deferred(
+                "probe_field_along_line", "region-restricted point probing")
+        pt_start = np.asarray(pt_start, dtype=float)
+        pt_end = np.asarray(pt_end, dtype=float)
+        pts = np.array(
+            [(1 - t) * pt_start + t * pt_end for t in np.linspace(0, 1, N)])
+        vals = self.probe_field(field_type, pts)
+        return pts, vals
 
     # -- topological charge (Task 26a) --------------------------------------
     #

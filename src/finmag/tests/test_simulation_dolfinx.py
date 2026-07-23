@@ -819,3 +819,120 @@ def test_indexed_pins_unchanged_by_callable_support():
     sim = _pin_box_sim()
     sim.pins = [0, 2]
     assert sim.llg.pins.tolist() == [0, 2]
+
+
+# --------------------------------------------------------------------------
+# point probing -- probe_field / probe_field_along_line (SR1 P4-probe)
+# --------------------------------------------------------------------------
+#
+# The ``region=None`` path is fully ported: ``get_field_as_dolfin_function``
+# returns the field as a DOLFINx ``Function`` and ``field.evaluate_at_point``
+# restores dolfin's point-in-cell evaluation. Coordinates are MESH units (the
+# legacy docstring: "point coordinates must be specified in mesh coordinates"),
+# NOT metres -- ``unit_length`` is never applied, matching ``set_m(callable)``.
+
+_PROBE_LEN = 4.0  # box edge in mesh units; vertices land on integer z in 0..4
+
+
+def _probe_box():
+    return mesh.create_box(
+        MPI.COMM_WORLD,
+        [(0.0, 0.0, 0.0), (_PROBE_LEN, _PROBE_LEN, _PROBE_LEN)],
+        [4, 4, 4],
+        mesh.CellType.tetrahedron,
+    )
+
+
+def _m_analytic(z):
+    """A spatially varying, unit-norm magnetisation rotating in the xy plane
+    with height ``z``: (1,0,0) at z==0, (0,1,0) at z==_PROBE_LEN. Unit norm
+    everywhere so ``set_m`` normalisation is a no-op and the CG1 nodal value at
+    each mesh vertex equals this profile exactly (allowing exact per-point
+    assertions). Nonlinear in z, so a wrong-point/units bug cannot pass."""
+    angle = (z / _PROBE_LEN) * (np.pi / 2.0)
+    return np.array([np.cos(angle), np.sin(angle), 0.0])
+
+
+def _probe_sim():
+    sim = Simulation(_probe_box(), 8.6e5, unit_length=1e-9, name="probe_sim")
+    sim.set_m(lambda pt: tuple(_m_analytic(pt[2])))
+    return sim
+
+
+def test_probe_field_single_point_returns_magnetisation():
+    """probe_field('m', pt) at a mesh vertex returns the analytic m there."""
+    sim = _probe_sim()
+    val = sim.probe_field("m", [2.0, 2.0, 3.0])
+    assert np.asarray(val).shape == (3,)
+    assert np.allclose(val, _m_analytic(3.0), atol=1e-12)
+
+
+def test_probe_field_array_of_points_returns_per_point_values():
+    """probe_field('m', [p0, p1, p2]) returns the (3, 3) stack of per-point
+    values, each matching the analytic profile at that point's z."""
+    sim = _probe_sim()
+    pts = [[2.0, 2.0, 0.0], [2.0, 2.0, 2.0], [2.0, 2.0, 4.0]]
+    vals = sim.probe_field("m", pts)
+    assert np.asarray(vals).shape == (3, 3)
+    for pt, val in zip(pts, vals):
+        assert np.allclose(val, _m_analytic(pt[2]), atol=1e-12)
+
+
+def test_probe_field_along_line_matches_analytic_profile():
+    """probe_field_along_line returns (pts, vals): N vertex samples along z,
+    each matching the analytic ramp, endpoints exactly (1,0,0) and (0,1,0)."""
+    sim = _probe_sim()
+    a = [2.0, 2.0, 0.0]
+    b = [2.0, 2.0, 4.0]
+    pts, vals = sim.probe_field_along_line("m", a, b, N=5)
+    assert np.asarray(vals).shape == (5, 3)
+    assert np.allclose(pts[0], a)
+    assert np.allclose(pts[-1], b)
+    for pt, val in zip(pts, vals):
+        assert np.allclose(val, _m_analytic(pt[2]), atol=1e-12)
+    # explicit endpoint checks against the closed-form values
+    assert np.allclose(vals[0], [1.0, 0.0, 0.0], atol=1e-12)
+    assert np.allclose(vals[-1], [0.0, 1.0, 0.0], atol=1e-12)
+
+
+def test_probe_field_of_exchange_is_zero_for_uniform_magnetisation():
+    """Probing a computed effective-field interaction ('Exchange') at an
+    interior point is finite, vector-shaped, and analytically zero for a
+    uniform magnetisation."""
+    sim = Simulation(_probe_box(), 8.6e5, unit_length=1e-9, name="probe_ex")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.add(Exchange(13.0e-12))
+    val = sim.probe_field("Exchange", [2.0, 2.0, 2.0])
+    assert np.asarray(val).shape == (3,)
+    assert np.all(np.isfinite(val))
+    assert np.allclose(val, [0.0, 0.0, 0.0], atol=1e-6)
+
+
+def test_probe_field_region_is_deferred_by_name_while_none_works():
+    """A non-None ``region`` raises a clear by-name NotImplementedError
+    (region-restricted probing deferred); ``region=None`` works."""
+    sim = _probe_sim()
+    with pytest.raises(NotImplementedError, match="probe_field"):
+        sim.probe_field("m", [2.0, 2.0, 2.0], region="core")
+    with pytest.raises(NotImplementedError, match="probe_field_along_line"):
+        sim.probe_field_along_line("m", [2, 2, 0], [2, 2, 4], region="core")
+    # region=None still returns a value
+    val = sim.probe_field("m", [2.0, 2.0, 2.0], region=None)
+    assert np.allclose(val, _m_analytic(2.0), atol=1e-12)
+
+
+def test_probe_field_coordinates_are_mesh_units_not_metres():
+    """Guard against a ``* unit_length`` regression. The probe point [2,2,3] is
+    in MESH units and must return the analytic profile at z==3. A spurious
+    ``* unit_length`` (1e-9) would collapse the point onto the origin corner
+    (z~3e-9, still inside the [0,4] box) and return the z==0 profile ~(1,0,0)
+    instead -- a value clearly distinguishable from _m_analytic(3.0)."""
+    sim = _probe_sim()
+    val = sim.probe_field("m", [2.0, 2.0, 3.0])
+    assert not np.ma.is_masked(val)
+    # correct mesh-unit interpretation
+    assert np.allclose(val, _m_analytic(3.0), atol=1e-12)
+    # the two profiles are far apart, so a scaled (metres) interpretation cannot
+    # masquerade as the mesh-unit one
+    assert not np.allclose(_m_analytic(3.0), _m_analytic(0.0), atol=0.1)
+    assert not np.allclose(val, _m_analytic(0.0), atol=0.1)
