@@ -154,8 +154,24 @@ The ticks and status text above are the dated owner-meeting snapshot; they are
 not silently rewritten as implementation lands. Since that meeting, P1.1 and
 P1.2 fixed the three meeting-time lifecycle/restart boundaries: backend-neutral
 reset/reinitialisation, Sundials restart, and truthful restart-driver
-provenance. P1.3 (restore Sundials as the public default) is the next slice.
-See `capability-status.md` and `acceptance-register.md` for current status and
-the conditional D8 decision.
+provenance. The following dated addendum records the completed P1.3 result;
+see `capability-status.md` and `acceptance-register.md` for the canonical
+current status and D8 disposition.
+
+## Post-meeting implementation addendum (2026-07-23)
+
+P1.3 is complete in `81fab481`. It restores native Sundials as the public
+default for `Simulation` and `sim_with`, discharging D8's conditional approval.
+The actual native `SundialsIntegrator` is constructed and advanced by the
+default path; the core smoke records `"integrator_backend": "sundials"` at
+`t=1e-12`. Explicit `integrator_backend="scipy"` remains fully supported.
+
+Focused P1.3 evidence: Simulation 37 passed, Sundials 22 passed, SciPy 21
+passed/2 skipped, restart/output 27 passed. The final clean main-worktree
+aggregate on `81fab481` had all 32 steps green; fast examples were 14
+passed/3 skipped in 246.36s
+(`/tmp/finmag-p1-default-m5.log`). This does not alter the meeting snapshot or
+make the frozen P0.2 FULL lane green: that lane remains blocked at 12
+passed/5 failed.
 
 [Codex GPT-5]

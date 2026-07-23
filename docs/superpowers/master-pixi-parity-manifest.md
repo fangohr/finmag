@@ -115,9 +115,9 @@ workflow, and **qualitative** shows plausibility without establishing parity.
 
 ### Post-baseline lifecycle resolution (not a rewrite of frozen P0 states)
 
-The N30/N32/N33/N34 states above describe the frozen P0 baseline at
+The N30/N32/N33/N34/N35 states above describe the frozen P0 baseline at
 `f1a1344c`. The subsequent P1 commits resolve their named lifecycle contracts;
-P1.3/D8 public-default work remains separate.
+this is a post-baseline resolution record, not a rewrite of those frozen rows.
 
 | Frozen row | Resolution commit | Post-baseline evidence |
 |---|---|---|
@@ -125,6 +125,7 @@ P1.3/D8 public-default work remains separate.
 | N32 Sundials reset | `3f4ed4ea` | backend-neutral factory passes `t0`; SciPy positional slots preserved; continuity regression passes |
 | N33 Sundials restart | `17f24413` | immediate and uninterrupted-vs-restarted Sundials trajectory checks pass |
 | N34 restart provenance | `17f24413` | archive records truthful `sim.integrator_backend`; writable `sim.driver` remains synchronized |
+| N35 public Sundials default | `81fab481` | `Simulation` and `sim_with` default to native Sundials; regression witnesses native construct/advance and explicit SciPy support; core smoke reports `integrator_backend: sundials` at `t=1e-12`; final clean main aggregate is 32/32 green (`/tmp/finmag-p1-default-m5.log`) |
 
 ## Converted examples lane
 

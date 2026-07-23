@@ -132,7 +132,9 @@ module with its tests.
   is a separate default and deliberately stays `"scipy"` -- DELIBERATE
   DEVIATION, USER ACCEPTANCE PENDING (see the register entry in the Task 9
   update below and `transition-notes.org`'s "Native Sundials/CVODE on DOLFINx
-  (Task 20)" section). [Claude Sonnet 5]
+  (Task 20)" section). **Superseded by `81fab481` (P1.3): native Sundials is
+  now the public `Simulation`/`sim_with` default; D8 is discharged and SciPy
+  remains an explicit opt-in.** [Claude Sonnet 5]
 - Task 7 update: `physics/llg.py` is no longer an unported `xxx` consumer. The
   direct DOLFINx port makes `solve`/`solve_for` and the `m` setters
   unambiguously component-blocked coordinate-ordered `xxx`, and routes the
@@ -229,7 +231,9 @@ module with its tests.
   (Task 20)" section and the Task 20 section of
   `docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md`; cross-referenced
   from `test_simulation_dolfinx.py::test_construction_core_state`'s docstring.
-  [Claude Sonnet 5]
+  **Superseded by `81fab481` (P1.3): native Sundials is now the public
+  `Simulation`/`sim_with` default; D8 is discharged and SciPy remains an
+  explicit opt-in.** [Claude Sonnet 5]
 - Task 9 removed-surfaces addendum: a handful of legacy `Simulation` public
   names were dropped outright rather than deferred by name --
   `initialise_helix_2D`, `initialise_skyrmions`,
@@ -829,7 +833,15 @@ Before editing the matching module in `src/finmag`, check that:
   rejection, metadata handling and mesh-mismatch semantics were deliberately
   unchanged. Focused P1.1: 76 passed/2 skipped. P1.2: restart 27,
   Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16; aggregate
-  verifier 32 steps green. P1.3 alone may restore the public Sundials default.
+  verifier 32 steps green. `81fab481` (P1.3) then restores native Sundials as
+  the public `Simulation`/`sim_with` default, while retaining explicit SciPy
+  support. The default genuinely constructs and advances `SundialsIntegrator`;
+  the core smoke JSON records `"integrator_backend": "sundials"` at `t=1e-12`.
+  Focused P1.3: Simulation 37, Sundials 22, SciPy 21 passed/2 skipped,
+  restart/output 27; final clean main-worktree aggregate 32 steps green. The
+  final fast lane was 14 passed/3 skipped in 246.36s
+  (`/tmp/finmag-p1-default-m5.log`). The frozen P0.2 FULL lane
+  remains 12 passed/5 failed.
   [Codex GPT-5.6]
 
 - `src/finmag/util/meshes.py` and `src/finmag/util/mesh_templates.py` are now

@@ -6350,6 +6350,28 @@ environment restoration was required.
 
 [Codex GPT-5.6]
 
+** P1.3 public Sundials default completion (2026-07-23)
+
+Commit =81fab481= discharges D8's conditional approval and restores native
+Sundials as the public default for both =Simulation= and =sim_with=, matching
+legacy. The implementation is deliberately limited to the public defaults and
+directly affected documentation/tests. SciPy remains a fully supported explicit
+opt-in (=integrator_backend="scipy"=) and the always-available driver where the
+native extension is absent.
+
+The default is not merely configured: a regression constructs and advances the
+native =SundialsIntegrator=, and the core smoke JSON records
+="integrator_backend": "sundials"= at =t=1e-12=. Focused gates: Simulation
+=37 passed=, Sundials =22 passed=, SciPy =21 passed, 2 skipped=, restart/output
+=27 passed=, cubic anisotropy =25 passed=, time-Zeeman =28 passed= and varying
+parameters =33 passed=. The final clean main-worktree aggregate on =81fab481=
+exited =0= with all =32= steps green; its fast lane reported =14 passed, 3
+skipped= in =246.36s=. The final log is
+=/tmp/finmag-p1-default-m5.log=. This does not rerun or change the frozen P0.2
+FULL outcome (12 passed, 5 failed).
+
+[Codex GPT-5.6]
+
 ** P1.1/P1.2 lifecycle completion (2026-07-23)
 
 P1.1 commit =3f4ed4ea= resolves the backend-specific reset defect without
@@ -6370,8 +6392,9 @@ passed=.
 
 The combined main-worktree =dev/bin/verify-dolfinx-m5= run exited =0= with all
 =32= steps green; its fast examples reported =14 passed, 3 skipped=. Log:
-=/tmp/finmag-p1-lifecycle-m5.log=. P1.3 is intentionally not included here:
-D8 remains conditionally approved and the public =Simulation=/=sim_with=
-default remains SciPy until its separately reviewed default-change slice.
+=/tmp/finmag-p1-lifecycle-m5.log=. This P1.1/P1.2 historical record predates
+P1.3: at that point D8 remained conditionally approved and the public
+=Simulation=/=sim_with= default remained SciPy. It is superseded by =81fab481=,
+which discharges D8 and restores native Sundials as the current default.
 
 [Codex GPT-5.6]

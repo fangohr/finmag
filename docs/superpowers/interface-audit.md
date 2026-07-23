@@ -103,8 +103,8 @@ N = gratuitous (UNNECESSARY).
 
 | Surface | Legacy (pixi) | Ported | Class | Needed? | Revert if UNNECESSARY |
 |---|---|---|---|---|---|
-| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | same but `integrator_backend='scipy'` | REGISTERED | Y | — (D8 conditionally approved; P1.1/P1.2 lifecycle complete, P1.3 still changes the public default) |
-| `sim_with` | `(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend='sundials', A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None, nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name='unnamed', pbc=None, sim_class=Simulation)` | same but `integrator_backend='scipy'` and `demag_solver_params=None` | REGISTERED (backend) + benign | Y | — (backend is D8/P1.3; `{}`→`None` is a mutable-default-arg fix, behaviourally identical) |
+| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | **Historical signature snapshot (`b9006786`):** same but `integrator_backend='scipy'`. **Current (`81fab481`):** identical legacy Sundials default | REGISTERED at snapshot; resolved | Y | D8 discharged by P1.3; explicit SciPy remains supported |
+| `sim_with` | `(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend='sundials', A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None, nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name='unnamed', pbc=None, sim_class=Simulation)` | **Historical signature snapshot (`b9006786`):** same but `integrator_backend='scipy'` and `demag_solver_params=None`. **Current (`81fab481`):** Sundials default; `demag_solver_params=None` remains the benign mutable-default-arg fix | REGISTERED at snapshot; backend resolved | Y | D8 discharged by P1.3; SciPy explicit opt-in remains supported |
 | `set_m` | `(value, normalise=True, **kwargs)` | identical | NO-CHANGE | Y | — |
 | `add` | `(interaction, with_time_update=None)` | identical | NO-CHANGE | Y | — |
 | `run_until` | `(t)` | identical | NO-CHANGE | Y | — |
@@ -230,10 +230,11 @@ remain later work or owner decisions in the current registers.
    `Exchange`/`UniaxialAnisotropy`/`DMI`/`EnergyBase`. Every other `method=` value
    raises `NotImplementedError`. (Registered, Task 5 — porting_map.md:261-266.)
 
-Registered deviations that are NOT strictly forced but are documented + pinned +
-awaiting sign-off: `Simulation.integrator_backend` default `'scipy'` (register
-D8; factory default is legacy `'sundials'`). See the current acceptance register
-for the complete, expanded set.
+At this historical audit snapshot, the `Simulation.integrator_backend` default
+`'scipy'` was a registered deviation awaiting D8 sign-off. It was superseded by
+`81fab481`: D8 is discharged and the current `Simulation`/`sim_with` default
+is native Sundials, while SciPy remains an explicit opt-in. See the current
+acceptance register for the complete, expanded set.
 
 ---
 
@@ -319,8 +320,9 @@ its snapshot:
 - `sim_with` still rejects non-FK demag and legacy macrogeometry arguments even
   though direct treecode/MacroGeometry demag is now ported;
 - backend lifecycle: `3f4ed4ea`/`17f24413` resolved the SciPy-only reset
-  assumption and both-backend restart integrity; the remaining registered D8
-  difference is the public SciPy default until P1.3;
+  assumption and both-backend restart integrity; `81fab481` (P1.3) discharged
+  D8 by restoring native Sundials as the current public `Simulation`/`sim_with`
+  default, while retaining explicit SciPy support;
 - restart format/state semantics, pins, STT precedence, snapshot format, and
   other behavioral differences are pending in `acceptance-register.md`;
 - thermal solvers, normal modes, FFT/PSD, MPI stepping, function-space PBC,

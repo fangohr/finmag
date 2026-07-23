@@ -68,16 +68,17 @@ SR1 is complete when all of the following are true:
   implementation slices but is an SR1 completion gate.
 
 The owner has approved correcting D3 (stale discrete-field energy) and D4
-(hysteresis no-re-relax), and restoring Sundials as the default under D8 after
-lifecycle parity is demonstrated. These are now implementation and validation
-tasks, not open policy questions. SR1 cannot be declared complete until the
-approved corrections are implemented and green.
+(hysteresis no-re-relax). D8's condition is discharged: `81fab481` restores
+native Sundials as the public default after the P1.1/P1.2 lifecycle and restart
+evidence. SciPy remains a fully supported explicit opt-in. SR1 cannot be
+declared complete until the approved D3/D4 corrections are implemented and
+green.
 
 ## Current capability matrix
 
 | ID | Capability | Status | Current evidence and boundary | SR1 |
 |---|---|---|---|---|
-| C01 | Install, native build, provenance, aggregate CI | **ported** | Editable pixi install; BEM, CVODE and treecode native builds; 32-step `dev/bin/verify-dolfinx-m5`; push and PR CI green at the reconciled commit | required, green |
+| C01 | Install, native build, provenance, aggregate CI | **ported** | Editable pixi install; BEM, CVODE and treecode native builds; final clean main-worktree `dev/bin/verify-dolfinx-m5` on `81fab481` exited 0 with all 32 steps green (fast examples 14 passed/3 skipped in 246.36s; `/tmp/finmag-p1-default-m5.log`) | required, green |
 | C02 | Package import and top-level compatibility exports | **partial** | Core `Simulation`, `sim_with`, `Field`, energies, versions and configuration import. `NormalModeSimulation`, `normal_mode_simulation`, `set_logging_level`, and `example` can still fail through raw `dolfin` imports | everyday exports are blockers; normal-mode exports later |
 | C03 | Mesh generation | **partial** | Common Gmsh/OCC generators, template CSG, caching, and a subset of legacy Netgen `.geo` parsing have analytic/regression coverage. Netgen binary/nmesh and specialist generators remain unavailable | common subset required; probe Netgen need before any port; specialist generators not now |
 | C04 | `Field` data model and inspection | **partial** | Constants/callables/arrays and component ordering have regression coverage; point probing, spherical conversion and topology have the focused `dolfinx-src-io-utils-pytest` gate. `from_generic_vector`, arithmetic (`cross`, `dot`, coercion), HDF5, plotting and VTK/XDMF readback remain unavailable | owner selected these missing operations for SR1; blockers |
@@ -85,7 +86,7 @@ approved corrections are implemented and green.
 | C06 | Deterministic energy interactions | **partial** | Exchange, Zeeman family, uniaxial/cubic anisotropy, DMI and ThinFilmDemag have oracle/analytic/regression coverage. The varying-K2 witness deliberately pins divergence from the legacy indexing bug; varying cubic axes are missing. Legacy matrix/project/direct methods and string-expression compatibility are not required for SR1; D2D is later and FixedEnergyDW not now | common interactions and varying cubic axes required; selected legacy surfaces deferred |
 | C07 | Demagnetisation | **partial** | FK is oracle-validated; treecode/MacroGeometry is analytic and cross-method validated. `sim_with` exposes only FK and rejects its legacy MacroGeometry arguments; GCR, Demag2D and specialist solver paths remain unavailable | wire MacroGeometry through FK now; Treecode factory exposure later/review |
 | C08 | Deterministic serial LLG and composed dynamics | **ported** | `Simulation`, `run_until`, `relax`, effective-field composition, pins by index and deterministic trajectories have analytic/oracle/regression coverage. Callable pin masks are not ported | required core green; missing pin form explicit |
-| C09 | SciPy and native Sundials integration | **partial** | Both backends now advance, reset/reinitialise, and satisfy immediate plus trajectory restart checks. `3f4ed4ea` made reset backend-neutral; `17f24413` completed truthful restart provenance/integrity. The remaining D8 public-default difference is intentional until P1.3 | P1.3 default change remains |
+| C09 | SciPy and native Sundials integration | **ported** | `81fab481` restores native Sundials as the public `Simulation`/`sim_with` default. Both backends construct, advance, reset/reinitialise, schedule, save and satisfy immediate plus trajectory restart checks. The default's native construction and advance are directly witnessed; the core smoke reports `integrator_backend: sundials` at `t=1e-12`. SciPy remains a fully supported explicit opt-in. Final clean main aggregate: 32/32 green (`/tmp/finmag-p1-default-m5.log`) | required, green; D8 discharged |
 | C10 | Spin-transfer torque | **partial** | Slonczewski and Zhang-Li local terms run separately with oracle/analytic/cross-backend witnesses. D11 approves an explicit error for conflicting configuration, but current source still silently makes the last call win. Separate nonlocal `LLG_STT` is deferred | blocker until D11 error semantics land; nonlocal not now |
 | C11 | Time-dependent fields and hysteresis | **partial** | Time-dependent Zeeman family, relaxation and hysteresis are exercised. The stale-energy and no-re-relax defects remain in source, but their corrections are owner-approved under D3/D4 | blocker until approved fixes land |
 | C12 | Scheduler and output | **partial** | Scheduler, NDT, coordinate-table `.npy` snapshots and VTK/XDMF write have regression/end-to-end tests. The current `.npy` contract is PASS but additional snapshot work is owner-Later. HDF5 and VTK/XDMF readback, plotting and region/submesh output are unavailable; historical movie helpers are separate | HDF5, plotting and region output are SR1 blockers; movie wrapper later/review |
@@ -122,9 +123,10 @@ still follows the per-slice protocol and receives an independent review.
 | Slice | Scope and non-goals | Required evidence |
 |---|---|---|
 | SR1-L1 | **Completed in `3f4ed4ea` and `17f24413`:** backend-neutral reset/reinitialisation, truthful restart provenance and both-backend restart integrity. D8/public default and D16 metadata scope were not changed. | P1.1 focused 76 passed/2 skipped; P1.2 restart 27, Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16; aggregate 32 green |
+| P1.3 | **Completed in `81fab481`:** restore native Sundials as the public `Simulation`/`sim_with` default; preserve explicit SciPy support. No scheduler, restart-format or physics change. | Simulation 37; Sundials 22; SciPy 21 passed/2 skipped; restart 27; core smoke witness `sundials` at `t=1e-12`; final clean main aggregate 32/32 green, examples 14 passed/3 skipped in 246.36s (`/tmp/finmag-p1-default-m5.log`) |
 | SR1-A1 | Repair the top-level import/error boundary: make the SR1 convenience exports work and make deferred families fail by feature name. Do not port normal modes in this slice. | `dolfinx-src-import-pytest`, clean-process probes, aggregate verifier |
 | SR1-A2 | Wire the already-ported dense-FK MacroGeometry path through legacy `sim_with` nx/ny/spacing arguments. Do not add Treecode factory exposure or change demag algorithms. | RED factory tests, `dolfinx-src-treecode-pytest`, `dolfinx-src-simulation-pytest`, aggregate verifier |
 | SR1-V1 | Run `FINMAG_EXAMPLE_FULL=1`; diagnose failures and make only separately reviewed minimal fixes. Treat std_prob4's broad crossing window as a qualitative workflow witness, not parity evidence. | Recorded full-lane result plus separately scoped mesh-matched oracle or convergence/quantitative trajectory evidence, then aggregate verifier |
-| SR1-O1 | **Owner direction recorded:** fix D3/D4; D8 conditionally approves Sundials as the default. P1.1/P1.2 satisfied the lifecycle/restart validation condition; P1.3 has not yet changed the public default. | Owner-meeting dispositions recorded in `acceptance-register.md` on 2026-07-23; P1 evidence in `3f4ed4ea`/`17f24413` |
+| SR1-O1 | **Owner direction recorded:** fix D3/D4; D8 conditionally approved Sundials as the default. P1.1/P1.2 supplied the lifecycle/restart condition and P1.3 discharged it. | D8 implementation/evidence in `81fab481`; D3/D4 remain separately required |
 
 [Codex GPT-5]

@@ -87,12 +87,23 @@ not deleted and not an accepted permanent exception.
   restart 27, Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16;
   aggregate: 32 green steps.
 
-### [ ] P1.3 Restore Sundials as public default — next
+### [x] P1.3 Restore Sundials as public default
 
-- Change only public defaults and directly affected tests/docs after P1.1/P1.2
-  prove equal lifecycle support.
-- **Non-goal:** no removal of SciPy.
-- **Gates:** signature/default tests, both lifecycle gates, examples, aggregate.
+- **Completed in `81fab481`:** `Simulation` and `sim_with` now default to
+  native Sundials, matching legacy. The default is witnessed constructing and
+  advancing the native `SundialsIntegrator`; the core smoke records
+  `"integrator_backend": "sundials"` at `t=1e-12`.
+- **SciPy remains supported:** `integrator_backend="scipy"` is a fully
+  supported explicit opt-in and remains the always-available driver when the
+  native extension is absent.
+- **Evidence:** Simulation 37 passed; Sundials 22 passed; SciPy 21
+  passed/2 skipped; restart/output 27 passed; cubic anisotropy 25 passed;
+  time-Zeeman 28 passed; varying parameters 33 passed; fast examples 14
+  passed/3 skipped. The final clean main-worktree `dev/bin/verify-dolfinx-m5`
+  run on `81fab481` exited 0 with all 32 steps green; its fast lane was 14
+  passed/3 skipped in 246.36s
+  (log `/tmp/finmag-p1-default-m5.log`). The P0.2 FULL baseline remains
+  blocked (12 passed, 5 failed) and was not rerun or reclassified by this slice.
 
 ## Priority 2 — Everyday API and approved physics corrections
 

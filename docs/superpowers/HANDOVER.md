@@ -61,9 +61,10 @@ validated”. The exact boundaries are in `capability-status.md`.
 
 Important current limitations:
 
-- SciPy and Sundials reset/reinitialise and restart through the same lifecycle;
-  the public `Simulation`/`sim_with` default remains SciPy until P1.3 applies
-  D8's conditional approval.
+- Native Sundials is the public `Simulation`/`sim_with` default, as in legacy;
+  its native construct/advance is witnessed in the core smoke. SciPy remains a
+  fully supported explicit opt-in, and both backends share reset/reinitialise
+  and restart lifecycle support.
 - several compatibility exports still fail through raw legacy-`dolfin`
   imports;
 - `sim_with` does not yet wire the already-ported dense-FK MacroGeometry path;
@@ -92,12 +93,16 @@ The aggregate verifier already performs editable install, native build and
 provenance before its focused gates; do not run all three commands redundantly
 unless diagnosing an install/build failure.
 
-At the reconciled commit, the dirty-doc aggregate baseline passed all 32 steps
+At the frozen P0.2 commit, the dirty-doc aggregate baseline passed all 32 steps
 on Python 3.12.13 and DOLFINx 0.10.0; its fast lane reported 14 passed and 3
 skipped. The clean detached FULL baseline then reported 12 passed and 5 failed
-in 42:37. Its three timeouts are harness evidence, not physics failures; the
-two immediate defects are the scheduler `save_m` keyword and raw `dolfin`
-import above. See the manifest for exact logs and environment versions.
+in 42:37. P1.3's final clean main-worktree aggregate on `81fab481` exited 0
+with all 32 steps green; its fast lane was 14 passed/3 skipped in 246.36s
+(`/tmp/finmag-p1-default-m5.log`), and its core smoke witnesses the native
+Sundials default at `t=1e-12`. It does not rerun or make green the frozen FULL
+lane: its three timeouts are harness evidence, and the two immediate defects
+are the scheduler `save_m` keyword and raw `dolfin` import above. See the
+manifest for exact logs and environment versions.
 
 ## Safe execution protocol
 
@@ -124,8 +129,9 @@ import above. See the manifest for exact logs and environment versions.
 
 The canonical bounded slices and gates are in
 [`capability-status.md`](capability-status.md#bounded-sr1-work-slices). The
-recommended next slice is P1.3 (restore Sundials as the public default), then
-SR1-A1 (top-level error boundary) and SR1-A2 (`sim_with` MacroGeometry wiring).
+P1.3 (restore Sundials as the public default) is complete. The recommended next
+slices are SR1-A1 (top-level error boundary) and SR1-A2 (`sim_with`
+MacroGeometry wiring).
 SR1-V1 now has its baseline failure inventory; rerun it only after separately
 reviewed fixes, including the scheduler and raw-import defects, have landed.
 SR1-O1 is now decided: fix the stale energy and hysteresis defects, and restore
