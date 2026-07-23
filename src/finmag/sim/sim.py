@@ -360,10 +360,16 @@ class Simulation(object):
 
     def __set_pins(self, nodes):
         if callable(nodes):
-            _deferred(
-                "pins",
-                "callable pin masks (coordinate->dof mapping)",
-            )
+            # Legacy contract: resolve the callable here (sim layer), not in
+            # ``LLG.set_pins``. The callable receives one raw-mesh-unit
+            # coordinate triple at a time (``unit_length`` is NOT applied), a
+            # truthy return marks that node pinned, and the resulting index is
+            # the position in the owned-node ``xxx`` coordinate ordering that
+            # ``LLG._pins`` consumes. ``coords_and_values()[0]`` is that
+            # canonical ordering.
+            coords, _ = self.llg._m_field.coords_and_values()
+            mask = np.array([bool(nodes(c)) for c in coords], dtype=bool)
+            nodes = np.where(mask)[0]
         self.llg.pins = nodes
 
     pins = property(__get_pins, __set_pins)

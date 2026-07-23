@@ -702,3 +702,120 @@ def test_hysteresis_is_ported_not_deferred():
     than raising."""
     sim = _make_sim()
     assert sim.hysteresis([]) is None
+
+
+# --------------------------------------------------------------------------
+# SR1 P2.3: callable pin masks (coordinate -> dof selection)
+#
+# Legacy resolved a callable pin mask in ``Simulation.__set_pins`` (sim layer):
+# the callable receives ONE raw-mesh-unit coordinate triple at a time (NOT
+# scaled by ``unit_length``), a truthy return marks that node pinned, and the
+# resulting index is the position in the owned-node ``xxx`` coordinate ordering
+# that ``LLG._pins`` consumes. ``LLG.set_pins`` stays index-only.
+# --------------------------------------------------------------------------
+
+
+def _pin_box_sim():
+    """A [0,30]x[0,10]x[0,10] (mesh-unit) box sim matching the P2.3 probe.
+
+    16 owned vertices; the z==0 face is the site the callable tests select.
+    """
+    box = mesh.create_box(
+        MPI.COMM_WORLD,
+        [np.array([0.0, 0.0, 0.0]), np.array([30.0, 10.0, 10.0])],
+        [3, 1, 1],
+        mesh.CellType.tetrahedron,
+    )
+    sim = Simulation(box, 8.6e5, unit_length=1e-9, name="pin_sim")
+    sim.alpha = 0.5
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Exchange(13.0e-12))
+    sim.add(Zeeman((0.0, 0.0, 1e5)))
+    return sim
+
+
+def test_callable_pins_intended_sites_and_holds_them():
+    """A callable pins exactly the physical sites it selects, and those nodes'
+    magnetisation is held exactly constant while unpinned nodes evolve."""
+    sim = _pin_box_sim()
+    coords, _ = sim.llg._m_field.coords_and_values()
+
+    zmin = coords[:, 2].min()
+    eps = 1e-6
+
+    # Independently recompute the index set the callable selects, from the same
+    # owned-node coordinate array ``_pins`` is indexed against.
+    hand_indices = np.where(coords[:, 2] <= zmin + eps)[0]
+    assert hand_indices.size > 0  # the z-min face is non-empty
+
+    sim.pins = lambda c: c[2] <= zmin + eps
+
+    assert set(sim.llg.pins.tolist()) == set(hand_indices.tolist())
+    # Every pinned node really is on the z==zmin face.
+    assert np.allclose(coords[sim.llg.pins, 2], zmin)
+
+    m0 = sim.llg._m_field.get_ordered_numpy_array_xxx().reshape((3, -1)).copy()
+    sim.run_until(2e-12)
+    m1 = sim.llg._m_field.get_ordered_numpy_array_xxx().reshape((3, -1)).copy()
+
+    pinned = sim.llg.pins.tolist()
+    unpinned = [i for i in range(m0.shape[1]) if i not in set(pinned)]
+
+    # Pinned nodes are held exactly constant (measured delta 0.0).
+    for i in pinned:
+        assert np.linalg.norm(m1[:, i] - m0[:, i]) == 0.0
+    # At least some unpinned nodes moved (probe measured max delta ~0.0384).
+    unpinned_deltas = [np.linalg.norm(m1[:, i] - m0[:, i]) for i in unpinned]
+    assert max(unpinned_deltas) > 1e-3
+
+
+def test_callable_pin_coordinates_are_mesh_units_not_metres():
+    """The callable receives raw mesh-unit coordinates (0..10 in z), NOT metres
+    (0..1e-8). A threshold of ``z <= 0 + tol`` in mesh units selects the z==0
+    face; the same numeric threshold in metres would select every node."""
+    sim = _pin_box_sim()
+    coords, _ = sim.llg._m_field.coords_and_values()
+    tol = 1e-6
+
+    sim.pins = lambda c: c[2] <= 0.0 + tol
+
+    selected = set(sim.llg.pins.tolist())
+    expected = set(np.where(coords[:, 2] <= 0.0 + tol)[0].tolist())
+    assert selected == expected
+
+    # Guard against a future ``* unit_length`` regression: if the coordinates
+    # were scaled to metres (~1e-8), the threshold 0+tol would select ALL nodes.
+    assert 0 < len(selected) < coords.shape[0]
+
+
+def test_callable_selecting_nothing_yields_no_pins():
+    sim = _pin_box_sim()
+    sim.pins = lambda c: False
+    assert sim.llg.pins.size == 0
+
+
+def test_callable_and_index_list_are_equivalent():
+    """A callable and the explicit index list it resolves to produce identical
+    ``sim.llg.pins``."""
+    coords, _ = _pin_box_sim().llg._m_field.coords_and_values()
+    zmin = coords[:, 2].min()
+    eps = 1e-6
+    hand_indices = np.where(coords[:, 2] <= zmin + eps)[0]
+
+    sim_callable = _pin_box_sim()
+    sim_callable.pins = lambda c: c[2] <= zmin + eps
+
+    sim_indexed = _pin_box_sim()
+    sim_indexed.pins = list(hand_indices)
+
+    assert np.array_equal(
+        np.sort(sim_callable.llg.pins), np.sort(sim_indexed.llg.pins)
+    )
+
+
+def test_indexed_pins_unchanged_by_callable_support():
+    """Regression guard: setting an explicit index list still works exactly as
+    before the callable path was added."""
+    sim = _pin_box_sim()
+    sim.pins = [0, 2]
+    assert sim.llg.pins.tolist() == [0, 2]
