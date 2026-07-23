@@ -9,7 +9,11 @@ DOLFINx-native contract instead; see each class's docstring and
 ``transition-notes.org`` (Task 15) for the exact input-type deviation. Legacy
 behavior (including two documented legacy quirks -- ``t_off=0.0`` being
 falsy-disabled, and ``DiscreteTimeZeeman`` never advancing its update clock)
-is preserved bit-for-bit rather than "fixed". [Claude Sonnet 5]
+is preserved bit-for-bit rather than "fixed". The one exception is the
+``DiscreteTimeZeeman`` stale-energy defect (``compute_energy()`` used to freeze
+at the setup-time field after an interval update), which is CORRECTED under
+acceptance register D3 (approved 2026-07-23); see ``DiscreteTimeZeeman``'s
+docstring. [Claude Sonnet 5]
 """
 
 import logging
@@ -280,7 +284,7 @@ class DiscreteTimeZeeman(TimeZeeman):
     has passed since the last refresh (``dt_update=None`` together with
     ``t_off`` gives a field that stays constant until it is switched off).
 
-    Preserved legacy quirks (transcribed verbatim, not fixed --
+    Preserved legacy quirk (transcribed verbatim, not fixed --
     see ``transition-notes.org``):
 
     1. legacy's ``update`` never advances ``self.t_last_update`` after the
@@ -290,23 +294,33 @@ class DiscreteTimeZeeman(TimeZeeman):
        initial value until ``t`` first reaches ``dt_update``, and from then
        on every subsequent ``update(t)`` call refreshes the field again
        (rather than only every ``dt_update`` thereafter).
-    2. legacy's ``update`` refreshes ``self.H`` by assigning a *brand-new*
-       ``Field`` object directly (bypassing ``set_value()``, which the base
-       ``TimeZeeman.update`` uses and which also rebuilds the cached energy
-       form ``self.E``). Because ``self.E`` was only ever built once, in
-       ``setup()``, against the *original* ``H`` ``Function`` object,
-       ``compute_energy()`` silently keeps returning the energy of the very
-       first (setup-time) field value forever after the first interval
-       update, even though ``compute_field()``/``energy_density()`` (which
-       read ``self.H``'s current array directly) correctly reflect the
-       updated field. This field/energy inconsistency was discovered while
-       building the Task 15 oracle fixture (see
-       ``fixtures/timezeeman_oracle.json``'s ``discrete_time_zeeman`` case,
-       where ``energy`` stays exactly the setup-time value across every
-       snapshot even as ``H_vertex`` visibly changes) and is a genuine,
-       previously-undocumented legacy defect. It is transcribed verbatim
-       here (DELIBERATE PRESERVATION, USER ACCEPTANCE PENDING) rather than
-       silently fixed.
+
+    Corrected legacy defect (acceptance register D3, approved 2026-07-23):
+
+    legacy's ``update`` refreshed ``self.H`` by assigning a *brand-new*
+    ``Field`` object directly (bypassing ``set_value()``, which the base
+    ``TimeZeeman.update`` uses and which also rebuilds the cached energy form
+    ``self.E``). Because ``self.E`` was only ever built once, in ``setup()``,
+    against the *original* ``H`` ``Function`` object, ``compute_energy()``
+    silently kept returning the energy of the very first (setup-time) field
+    value forever after the first interval update, even though
+    ``compute_field()``/``energy_density()`` (which read ``self.H``'s current
+    array directly) correctly reflected the updated field. This field/energy
+    inconsistency -- a genuine, previously-undocumented legacy defect
+    discovered while building the Task 15 oracle fixture -- is CORRECTED here
+    under register D3 by routing the refresh through ``set_value`` (which writes
+    ``self.H`` in place and re-forms ``self.E``). The correction changes no
+    field value whatsoever (measured max|dH| = 0.0 at every step, so dynamics /
+    effective field / ``.ndt`` output stay bit-identical); it only makes
+    ``compute_energy()`` track the current field. The divergence from the legacy
+    stale value is pinned by
+    ``test_discrete_time_zeeman_energy_diverges_from_legacy_stale_value`` and the
+    corrected physical value by
+    ``test_discrete_time_zeeman_energy_tracks_field_after_interval_update``.
+    (The committed ``fixtures/timezeeman_oracle.json`` ``discrete_time_zeeman``
+    case does not discriminate this correction -- its correct energies are
+    ~1e-37 J against an absolute tolerance of 1e-18 -- so it still passes
+    unchanged.) Quirk 1 above is unaffected and remains preserved.
     """
 
     def __init__(self, field_expression, dt_update=None, t_off=None,
@@ -329,14 +343,16 @@ class DiscreteTimeZeeman(TimeZeeman):
         if self.dt_update is not None:
             dt_since_last_update = t - self.t_last_update
             if dt_since_last_update >= self.dt_update:
-                # Preserved legacy quirk 2 (see class docstring): assigns a
-                # brand-new Field to self.H directly, like legacy's own
-                # ``self.H = Field(..., self.value, name='H_ext')`` --
-                # *not* ``self.set_value(...)`` -- so the cached ``self.E``
-                # energy form (built once in ``setup()``) is never rebuilt.
-                self.H = Field(
-                    self.m.functionspace, self.field_function(t),
-                    name="H_ext")
+                # D3 fix (acceptance register D3, approved 2026-07-23): route
+                # the interval refresh through ``set_value`` -- exactly as the
+                # base ``TimeZeeman.update`` does -- so the field is written
+                # *in place* into the existing ``self.H`` and the cached energy
+                # form ``self.E`` is re-formed against it. This changes no field
+                # value (measured max|dH| = 0.0), but corrects the previously
+                # stale ``compute_energy()``, which used to keep assembling the
+                # discarded setup-time field. See the D3 divergence pin
+                # ``test_discrete_time_zeeman_energy_diverges_from_legacy_stale_value``.
+                self.set_value(self.field_function(t))
                 log.debug(
                     "At t={}, after dt={}, update external field "
                     "again.".format(t, dt_since_last_update)
