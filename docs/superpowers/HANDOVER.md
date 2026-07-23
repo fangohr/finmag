@@ -1,132 +1,133 @@
-# Finmag DOLFINx Port — Status, Usability & Agent Handover
+# Finmag DOLFINx Port — Handover
 
-**Date:** 2026-07-22 · **Branch:** `dolfinx-parity` · **Maintainer contact:** Sam Holt
+**Reconciled:** 2026-07-23
 
-This is the single entry point for any agent or human taking over the port.
-Read this, then the progress ledger, then the plan files — in that order.
+**Active branch:** `dolfinx-parity`
 
-## 1. What this project is
+**Source baseline audited:** `f1a1344c423e74687ddf820c1fafc056a6271fe1`
 
-Finmag (legacy micromagnetics code, Python 2 + dolfin 2017) is being ported to
-DOLFINx 0.10 / Python 3.12 with a hard contract: **the final repo must have the
-same functionality as the original `master`, with no silent behavior changes.**
-Every deviation is documented, test-pinned, and awaits explicit user acceptance.
+**Maintainer contact:** Sam Holt
 
-Branch lineage (verified):
+This is the short entry point for a human or agent resuming the port. Read, in
+order:
 
+1. [`capability-status.md`](capability-status.md) — canonical current scope,
+   evidence, known failures, and the interim release target;
+2. [`owner-porting-checklist.md`](owner-porting-checklist.md) — completed owner
+   triage record and printable functionality checklist;
+3. [`acceptance-register.md`](acceptance-register.md) — approved and pending
+   behavior/deferment decisions;
+4. [`master-pixi-parity-manifest.md`](master-pixi-parity-manifest.md) — atomic
+   owner-Now evidence map, the pytest-discoverable inventory, and the complete
+   original example inventory (retired non-discoverable tests remain decisions);
+5. [`plans/2026-07-23-sr1-prioritised-plan.md`](plans/2026-07-23-sr1-prioritised-plan.md)
+   — owner-informed SR1 execution order and gates;
+6. [`plans/2026-07-21-dolfinx-full-parity.md`](plans/2026-07-21-dolfinx-full-parity.md)
+   — historical execution detail and remaining full-parity work;
+7. [`../../transition-notes.org`](../../transition-notes.org) and
+   [`../../dev/dolfinx/porting_map.md`](../../dev/dolfinx/porting_map.md) —
+   chronological engineering evidence; later entries supersede earlier ones.
+
+Do not depend on `.superpowers/sdd/progress.md`: it is useful local session
+memory but is git-ignored and therefore unavailable in a clean clone.
+
+## Goal and present milestone
+
+The final contract is functionality and public-interface parity with original
+`master` (`b5015c5a`). A deviation is not accepted until the repository owner
+records a disposition in the acceptance register.
+
+The next interim goal is **SR1: a serial deterministic simulator release
+candidate**. It must be installable, scientifically testable, useful through
+the familiar `Simulation`/`sim_with` API, and explicit about every unavailable
+surface. Thermal solvers, normal modes, MPI stepping, legacy NEB, live external
+comparison harnesses, and specialist I/O outside the selected owner-Now rows
+can follow SR1 without being dropped from final parity. Checked-in external
+reference data remains part of SR1 validation. No public GNEB API/workflow was found on master, so it is not
+an interface-parity condition; possible overlap with legacy spherical/modified
+NEB algorithms must be inventoried with the NEB slice.
+
+## What works now
+
+The port already has a broad serial deterministic core: common energy terms,
+FK and direct treecode/MacroGeometry demag, spatially varying parameters,
+regions, local Slonczewski and Zhang-Li STT, SciPy and native CVODE trajectory
+integration, scheduling, restart v2, NDT and field output, point/topology
+utilities, common Gmsh mesh generation, editable packaging, and converted
+examples. Validation is a mixture of frozen-oracle, analytic, cross-method,
+regression, MPI ownership probes, and end-to-end tests; it is not all “oracle
+validated”. The exact boundaries are in `capability-status.md`.
+
+Important current limitations:
+
+- Sundials advance works, but its `Simulation.reset_time()` and restart path
+  fail because the implementation assumes a SciPy-only `.ode` attribute.
+- several compatibility exports still fail through raw legacy-`dolfin`
+  imports;
+- `sim_with` does not yet wire the already-ported dense-FK MacroGeometry path;
+  that wiring is required now, while a Treecode factory selector is deferred;
+- the clean FULL baseline is recorded (12 passed, 5 failed): three unchanged
+  wrapper timeouts, a missing scheduler `save_m` keyword, and a raw legacy
+  `dolfin` import through `finmag.util.helpers`. It is not an all-green
+  acceptance run, and std_prob4's broad switching window is only qualitative;
+- normal modes, thermal SLLG/LLB, MPI stepping, function-space PBC, legacy NEB,
+  external harnesses, and long-tail I/O/visualisation remain unported.
+
+## Install and verify the supported environment
+
+```sh
+pixi run -e dolfinx dolfinx-install-editable
+pixi run -e dolfinx dolfinx-native-build
 ```
-master (b5015c5a)      original Python 2 / dolfin-2017 code — the functionality yardstick
-  └─ pixi (ba928093)   Python 3 + FEniCS 2019 transition (M1-M3) — the FROZEN LEGACY ORACLE
-       └─ dolfinx-port (ce60ae3e)   Phase 1: core DOLFINx port (Tasks 1-12) — awaiting human review
-            └─ dolfinx-parity      Phase 2 (Tasks 13-16) + Phase 3 (Tasks 17-31) — ACTIVE
+
+For a complete developer verification, run one command:
+
+```sh
+dev/bin/verify-dolfinx-m5
 ```
 
-## 2. How usable is it right now?
+The aggregate verifier already performs editable install, native build and
+provenance before its focused gates; do not run all three commands redundantly
+unless diagnosing an install/build failure.
 
-**Usable today, serial, via the legacy API** (`import finmag`; `sim_with` /
-`Simulation`). Install:
+At the reconciled commit, the dirty-doc aggregate baseline passed all 32 steps
+on Python 3.12.13 and DOLFINx 0.10.0; its fast lane reported 14 passed and 3
+skipped. The clean detached FULL baseline then reported 12 passed and 5 failed
+in 42:37. Its three timeouts are harness evidence, not physics failures; the
+two immediate defects are the scheduler `save_m` keyword and raw `dolfin`
+import above. See the manifest for exact logs and environment versions.
 
-```
-pixi run -e dolfinx dolfinx-install-editable   # editable install (see README INSTALL section)
-pixi run -e dolfinx dolfinx-native-build       # builds bem_arrays.so, sundials.so, treecode_bem
-dev/bin/verify-dolfinx-m5                      # the aggregate gate (~22 sub-gates), must be green
-```
+## Safe execution protocol
 
-CI: `.github/workflows/dolfinx-m5.yml` runs the full verifier on every push/PR
-to this branch and writes a per-gate pass/fail Job Summary (via
-`dev/bin/ci-summarize-dolfinx-m5`) so humans can see exactly what works.
-Legacy-lane workflows (python3-m1/m2/m3/core-suite) are honestly scoped to
-skip on this branch (they gate the `pixi` oracle, whose runs are green) —
-dated rationale comments in each workflow file. Verified green 2026-07-22.
+- Use the frozen Python-3/FEniCS-2019 oracle at
+  `ba9280934e188d7f3800e7b9865e70a9422f7687` through
+  `dev/bin/run-legacy-oracle`. Prefer analytic physics where it is stronger,
+  and label cross-method checks honestly.
+- Probe uncertain DOLFINx mechanics under `dev/dolfinx`; implement accepted
+  behavior once, minimally, in the existing `src/finmag` module.
+- For every slice: state the API and scientific invariant, obtain RED evidence,
+  make the smallest source change, run focused and aggregate gates, update the
+  capability/decision documents, and obtain an independent review.
+- Preserve public names and defaults unless forced or owner-approved. Every
+  unavailable current API must fail by feature name, not through an incidental
+  import or unrelated attribute error.
+- Do not combine unrelated cleanup with a parity fix. Do not dispatch new
+  implementation work until the user chooses the next slice.
+- Before running the legacy oracle, inspect `git worktree list`. At this
+  reconciliation a disposable partial oracle worktree remained registered at
+  `/tmp/finmag-legacy-oracle.omGAF8/checkout`; it is not project state. Remove
+  it only after confirming it contains no needed probe output.
 
-Working, oracle-validated capabilities:
+## Recommended next decision
 
-| Area | Status |
-|---|---|
-| Energies | Exchange, DMI (all documented variants), Zeeman + full time-dependent family, uniaxial + cubic anisotropy (both field paths), ThinFilmDemag, FK demag (compiled BEM), treecode/PBC demag via `MacroGeometry` |
-| Dynamics | LLG (`run_until`, `relax`), STT (Slonczewski + Zhang-Li), SciPy AND native CVODE integrators (factory default = sundials, legacy-faithful; `Simulation` default = scipy, registered deviation) |
-| Materials | Spatially varying Ms/A/K/D/alpha; regions (`mark_regions`, per-region energies/averages) |
-| Meshes | Gmsh-bridge generators (box/sphere/cylinder/ellipsoid/nanodisk/elliptical/ring/cone/CSG combos) + legacy Netgen-CSG `.geo` files via `from_geofile` (subset parser); md5-keyed caching |
-| I/O | Restart (coordinate-aware v2), NDT tables, VTK/XDMF write, scheduler, point-in-cell probing (`Field.probe`/`__call__`, `finmag.field.evaluate_at_point`), `Field.get_spherical`, `Simulation.skyrmion_number`/`skyrmion_number_density_function` (Task 26a) |
-| Examples | `examples/` converted at the minimal-changes bar (Task 30): µMAG std_prob_3/4, exchange_demag vs nmag/OOMMF reference data, macrospin, precession, etc. — gated in CI |
-| Packaging | `pyproject.toml`, editable install, no `PYTHONPATH` needed |
+The canonical bounded slices and gates are in
+[`capability-status.md`](capability-status.md#bounded-sr1-work-slices). The
+recommended next slice is SR1-L1 (Sundials reset/restart), followed by SR1-A1
+(top-level error boundary) and SR1-A2 (`sim_with` MacroGeometry wiring). SR1-V1
+now has its baseline failure inventory; rerun it only after separately reviewed
+fixes, including the scheduler and raw-import defects, have landed.
+SR1-O1 is now decided: fix the stale energy and hysteresis defects, and restore
+Sundials as the default after lifecycle validation. The detailed, superseding
+sequence is in `plans/2026-07-23-sr1-prioritised-plan.md`.
 
-NOT yet ported (raise by name): normal modes/eigenmodes + FFT/PSD (Task 25),
-thermal SLLG/LLB (Task 24), OOMMF/Nmag/Magpar comparison harnesses (Task 27),
-plotting/visualization helpers + HDF5 read-back + region field output/submesh
-extraction (Task 26b -- point probing, `get_spherical` and `skyrmion_number`
-were split out and ARE now ported, Task 26a),
-`Simulation(pbc=)` function-space PBC, MPI-parallel stepping (Task 28),
-NEB, GCR demag (accept-drop candidate).
-
-## 3. Where execution stands
-
-- Phase 1 (Tasks 1-12): DONE, sealed by a whole-branch review; branch
-  `dolfinx-port` awaits the human merge review.
-- Phase 2 Tier 1 (Tasks 13-16): DONE, sealed by a critical whole-branch
-  (Fable) review with a composed-physics guard test.
-- Phase 3 (audited plan, Tasks 17-29 + inserted 30/31): 18, 19, 20, 21(=17),
-  22, 23, 30 DONE and review-approved. Task 31 (public array
-  component-ordering correction, user-directed) is IMPLEMENTED at `1b06420a`
-  (all 22 gates green; dedicated ordering gate RED pre-fix incl. the
-  double-conversion catch; ~20-consumer audit in the task-31 report) and its
-  Opus review is APPROVED — the ordering drift is corrected and
-  de-registered; the Fable re-review stays on the backlog.
-- Remaining after 31: 24 (SLLG/LLB), 25 (normal modes/NEB/FFT — user cares;
-  may be pulled ahead of 24), 26 (I/O long tail), 27 (harnesses), 28 (MPI +
-  CI), 29 (accept-drop sign-off).
-- **Execution is PAUSED (Task 31 closed 2026-07-22) by user directive.** Do
-  not dispatch further slices without user go-ahead.
-
-## 4. The acceptance-pending register (user must sign off; Task 29)
-
-All documented in `transition-notes.org` + `dev/dolfinx/porting_map.md`,
-each test-pinned: (1) DMI `D2D` variant deferred; (2) legacy K2 native-field
-typo not reproduced (correct field shipped; dormant for constant K2, live
-divergence pin for varying K2); (3) `DiscreteTimeZeeman` stale-energy legacy
-bug preserved; (4) hysteresis no-re-relax legacy defect preserved; (5)
-`TimeZeemanPython` vector-`time_fun` deferred by name; (6) constant-axis
-normalisation (cosine contract restored) vs varying-axis as-given; (7)
-`Field.from_function` interpolation superset; (8) `Simulation` default
-backend scipy vs legacy sundials (factory default IS sundials); (9) STT
-spatially-varying input ordering made self-consistent (legacy fed raw-dof);
-(10) Task 30 drift-table rows still open after Task 31 closes rows #3/#6
-(ordering) — see the drift table. Plus the audit's accept-drop candidates
-(GCR, compiled Equation backend, nsim, Mercurial helper, Paraview movie
-export, 3 historical xfails, batch_task) consolidated in plan Task 29.
-
-## 5. Working conventions (binding for any successor agent)
-
-- **Per-slice protocol**: `docs/superpowers/plans/2026-07-06-dolfinx-core-port.md`.
-  Oracle = `dev/bin/run-legacy-oracle` at pixi tip `ba928093…`; fixture schema
-  `docs/superpowers/specs/legacy-oracle-fixtures.md`; formulas from C++/legacy
-  source, never docstrings; deviations by-name + documented + registered;
-  TDD RED-first; docs (plan checkboxes, transition-notes, porting_map) IN the
-  slice commit (verify with `git show --stat`).
-- **Plans**: `2026-07-21-dolfinx-full-parity.md` (Tasks 13-31) +
-  `2026-07-21-master-parity-audit.md` (the two-layer gap register).
-- **Progress ledger** (git-ignored, authoritative session memory):
-  `.superpowers/sdd/progress.md` — read it fully before resuming; per-task
-  reports/briefs live beside it.
-- **Gate**: every slice adds a `dolfinx-src-*` pixi gate folded into
-  `dev/bin/verify-dolfinx-m5`; the whole thing must stay green; the
-  cleanliness guard forbids tests dirtying tracked files.
-- **Orchestration ladder** (user-set): Sonnet default; Opus for hard slices
-  AND all difficult reviews. **FABLE IS SUSPENDED (2026-07-22, token budget)**
-  — do not dispatch it; append candidates to the FABLE REVIEW BACKLOG in the
-  ledger instead (current backlog: Task 31 ordering re-review, Task 24
-  stochastic validation, Phase 3 whole-branch review). Every slice:
-  implement → independent review → fix round → re-review before closing.
-- **User's standing requirements**: minimal changes (especially examples);
-  no silent behavior changes; full master parity as end state; pause points
-  respected.
-
-## 6. Known open threads (beyond the plan tasks)
-
-- Verify std_prob_4 FULL-resolution runtime on the next `FINMAG_EXAMPLE_FULL=1` run.
-- `_owned_vertex_to_dof` distinctness guard correct-by-inspection but untested.
-- Legacy-lane treecode activation (pixi-era skip) left as follow-up.
-- Accumulated per-task Minors are listed in the ledger at each "deferred to
-  roll-up" line — sweep them at the next whole-branch review.
-- Phase 3 whole-branch Fable review still to be scheduled (after remaining
-  slices or at the user's request).
+[Codex GPT-5]

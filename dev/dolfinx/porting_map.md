@@ -1,5 +1,11 @@
 # DOLFINx Compatibility Porting Map
 
+> **Chronological evidence map.** This file contains valuable per-slice
+> mechanics and source links, but earlier gap lists are not necessarily current.
+> Later addenda supersede earlier entries. Use
+> `../../docs/superpowers/capability-status.md` for current status and
+> `../../docs/superpowers/acceptance-register.md` for owner decisions. [Codex GPT-5]
+
 This map links the isolated `dev/dolfinx` exploration lane back to the legacy
 Finmag design that the real DOLFINx port should preserve where practical. It is
 not an implementation plan for a clean-room rewrite. It is a checklist for

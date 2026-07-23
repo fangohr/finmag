@@ -1,5 +1,10 @@
 # Finmag DOLFINx Direct-Port Implementation Plan
 
+> **Completed Phase-1 plan.** Tasks 1-12 are closed. Its “Migration Complete”
+> checklist means completion of the first core source port, not full-master
+> parity. Current status is maintained in `../capability-status.md`; later
+> work is in `2026-07-21-dolfinx-full-parity.md`.
+
 ## Goal
 
 Port Finmag to DOLFINx by validating uncertain FEM mechanics under
@@ -265,7 +270,9 @@ PBC/treecode demag remains a separate native slice.
 
 - [x] Define restart ownership and mesh/parameter metadata before implementation.
 - [x] Store owned values in a stable coordinate-aware format.
-- [x] Round-trip magnetization, time, material parameters, and interactions.
+- [x] Round-trip magnetisation and time; store material/interaction metadata
+  for inspection. Metadata is not currently reapplied or validated, and that
+  limitation is tracked in the acceptance register.
 - [x] Port NDT output needed by accepted workflows.
 - [x] Port required VTK/XDMF output with explicit read/write capabilities.
 - [x] Add scheduler integration only after the underlying outputs work directly.
@@ -284,9 +291,14 @@ Select independently after the core, FK demag, restart, and output gates:
 
 ## Definition of Migration Complete
 
-- [ ] Accepted workflows import and run from `src/finmag` on DOLFINx.
-- [ ] Compiled FK demag, restart, and required output are green.
-- [ ] Scientific comparisons meet explicit tolerances.
+- [x] Accepted core workflows import and run from `src/finmag` on DOLFINx.
+- [x] Compiled FK demag, restart, and required core output are green.
+- [x] Core scientific comparisons meet explicit tolerances.
 - [ ] Unsupported historical behavior is documented and accepted.
-- [ ] `dev/dolfinx` contains only useful probes and reference-generation tools.
-- [ ] There is no duplicate `finmag` package and no final promotion/move diff.
+- [x] `dev/dolfinx` contains only useful probes and reference-generation tools.
+- [x] There is no duplicate `finmag` package and no final promotion/move diff.
+
+The unchecked owner-acceptance item is intentionally inherited by the full
+parity plan; it does not reopen Tasks 1-12.
+
+[Codex GPT-5]

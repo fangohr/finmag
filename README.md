@@ -104,7 +104,8 @@ pixi install -e dolfinx
 #    linked against).
 pixi run -e dolfinx dolfinx-install-editable
 
-# 3. Build the native extensions (bem_arrays.so, sundials.so) via the
+# 3. Build the native extensions (bem_arrays.so, sundials.so and
+#    treecode_bem) via the
 #    existing native/Makefile. Optional up front -- `finmag.native` triggers
 #    the same `make` as an import side effect -- but recommended so a broken
 #    native toolchain fails fast and visibly instead of inside the first test
@@ -139,6 +140,32 @@ aggregated `dev/bin/verify-dolfinx-m5` witness run against this installed
 package. The immutable legacy-oracle comparison lane
 (`dev/bin/run-legacy-oracle`) is unaffected: its reference checkouts predate
 `pyproject.toml` and do not need it.
+
+### Current DOLFINx status and limitations
+
+The DOLFINx branch is an in-progress compatibility port, not yet a full Finmag
+release. It already provides a useful serial deterministic simulator with the
+common energy terms, FK and treecode demag, varying materials, regions, local
+spin-transfer torque, SciPy/native-CVODE integration, scheduling and common
+output. The aggregate test gate being green means that this **ported subset**
+passes; it does not mean every original Finmag feature is available.
+
+Major work still outstanding includes thermal SLLG/LLB, normal modes and
+FFT/PSD, legacy NEB, general MPI time stepping, `Simulation(pbc=)`, nonlocal
+STT, external comparison harnesses, HDF5 readback, plotting and specialist
+utilities. Some top-level compatibility names still expose legacy `dolfin`
+imports, and the Sundials reset/restart lifecycle has a known open defect.
+
+For the exact tested boundary and known failures, see
+[`docs/superpowers/capability-status.md`](docs/superpowers/capability-status.md).
+For behavior changes that still need an owner decision, see
+[`docs/superpowers/acceptance-register.md`](docs/superpowers/acceptance-register.md).
+For the file-by-file master/pixi test and example mapping, see
+[`docs/superpowers/master-pixi-parity-manifest.md`](docs/superpowers/master-pixi-parity-manifest.md).
+For a printable functionality-by-functionality owner discussion, use
+[`docs/superpowers/owner-porting-checklist.md`](docs/superpowers/owner-porting-checklist.md).
+Unavailable public surfaces should raise a feature-specific error; a raw
+`dolfin` import failure is a tracked port bug, not an installation instruction.
 
 ## Binder
 

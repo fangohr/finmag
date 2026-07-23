@@ -1,5 +1,14 @@
 # Finmag Project Notes
 
+> **Current direction (2026-07-23):** milestones 1-3 below are completed
+> history and the active work is the DOLFINx master-parity port. Start at
+> `docs/superpowers/HANDOVER.md`, then use
+> `docs/superpowers/capability-status.md` as current truth and
+> `docs/superpowers/acceptance-register.md` for owner decisions. The immediate
+> milestone is a usable serial deterministic simulator release candidate; the
+> final target remains original-master functionality unless the owner accepts
+> an explicit exception.
+
 ## High-Level Summary
 
 Finmag is a finite-element micromagnetics codebase built on top of FEniCS/dolfin. The public entry point is the `Simulation` class, which orchestrates:
@@ -12,18 +21,21 @@ Finmag is a finite-element micromagnetics codebase built on top of FEniCS/dolfin
 
 ## Strategic Milestones
 
-The project now has four explicit transition milestones:
+The project has four transition milestones; the first three are complete and
+the fourth is active:
 
 1. make Finmag usable under Python 3 on the current legacy `dolfin 2017.1.0`
    transition stack;
 2. provide a non-container install path, preferably via `pixi`;
 3. migrate from legacy `dolfin 2017.1.0` to legacy FEniCS/`dolfin 2019.1.0`;
-4. later prototype and expand a separate `dolfinx` port.
+4. complete the direct `src/finmag` DOLFINx port to master parity, using a
+   serial deterministic simulator release candidate as the next stopping point.
 
 Working rule for future agent effort:
 
-- do not revive historical features or clean up old xfails unless that work
-  directly advances one of those milestones.
+- do not revive a historical feature merely because it exists; inventory it
+  for final parity, schedule it after the usable simulator milestone when
+  appropriate, and require owner approval before treating it as dropped.
 - use `dev/dolfinx` only for bounded mechanics probes and reference generation;
   do not create a duplicate `finmag` package under `dev`
 - after a probe and its legacy contract are validated, port the capability by
@@ -47,13 +59,26 @@ Current model-label convention:
   labels from earlier sessions and should not be treated as the current
   runtime model, nor copied forward by new sessions
 
-This repository contains many research-era features that may never be needed
-again. The transition should optimize for usable scientific workflows, not for
-maximum historical surface area.
+This repository contains many research-era features. Prioritise usable
+scientific workflows, but do not silently discard historical surface area:
+port it later or record an explicit owner-approved exception.
 
 ## Project Documents
 
-The transition work uses three top-level project notes with distinct roles:
+The current control documents have distinct roles:
+
+- `docs/superpowers/HANDOVER.md` — short clean-clone entry point;
+- `docs/superpowers/capability-status.md` — canonical current capability and
+  SR1 acceptance status;
+- `docs/superpowers/owner-porting-checklist.md` — printable owner triage sheet;
+- `docs/superpowers/acceptance-register.md` — formal owner dispositions.
+- `docs/superpowers/master-pixi-parity-manifest.md` — atomic SR1 evidence map,
+  pytest-discoverable original-test inventory, and complete example inventory;
+  retired non-discoverable tests remain explicit decision items.
+- `docs/superpowers/plans/2026-07-23-sr1-prioritised-plan.md` — active SR1
+  sequencing, P0 baseline protocol, and completion gates.
+
+The older transition notes retain these historical roles:
 
 - `plan.org`
   - forward-looking roadmap
@@ -67,7 +92,7 @@ The transition work uses three top-level project notes with distinct roles:
   - repository summary, architecture pointers, local rules, and collaboration
     guidance
 
-Short version:
+Historical short version:
 
 - `plan.org` = intent
 - `transition-notes.org` = evidence

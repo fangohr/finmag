@@ -1,5 +1,17 @@
 * Finmag Resurrection Plan
 
+#+begin_quote
+Historical M1-M5 roadmap/evidence. The legacy milestones are complete; the active DOLFINx
+roadmap is =docs/superpowers/plans/2026-07-23-sr1-prioritised-plan.md=, with
+=docs/superpowers/capability-status.md= as current capability truth and
+=docs/superpowers/acceptance-register.md= as owner-decision authority. The
+historical =2026-07-21-dolfinx-full-parity.md= plan supplies background only.
+The next milestone is the serial deterministic simulator release candidate
+(SR1), while final master parity remains the end goal. Later entries and the
+tracked capability/decision documents supersede stale "immediate next step"
+text below.
+#+end_quote
+
 ** Goal
 
 Make Finmag usable again in a controlled sequence:

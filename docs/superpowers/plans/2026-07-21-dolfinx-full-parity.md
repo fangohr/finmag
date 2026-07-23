@@ -6,8 +6,9 @@ Continue the direct DOLFINx port from the completed core
 (`2026-07-06-dolfinx-core-port.md`, Tasks 1-12, branch `dolfinx-port` at
 `ce60ae3e`) toward full functional parity with the original legacy Finmag.
 The end state of the repository must offer the same functionality it
-originally did; any exception requires explicit user acceptance and
-documentation. Work happens on branch `dolfinx-parity`.
+originally did; any exception requires explicit acceptance and documentation
+by the repository owner. Work happens on branch
+`dolfinx-parity`.
 
 All Phase 1 conventions remain binding: the Per-Slice Protocol, the frozen
 FEniCS-2019 oracle (`ba9280934e188d7f3800e7b9865e70a9422f7687`,
@@ -17,6 +18,21 @@ FEniCS-2019 oracle (`ba9280934e188d7f3800e7b9865e70a9422f7687`,
 yet ported, TDD, per-slice pixi gates folded into `dev/bin/verify-dolfinx-m5`,
 and documentation updates (plan checkboxes, `transition-notes.org`,
 `dev/dolfinx/porting_map.md`) in every slice.
+
+> **Reconciliation note (2026-07-23).** This file is both an execution record
+> and a remaining-work plan; task numbers reflect the order in which work was
+> proposed, not the best current order. Tasks 13-23, 30, 31, and 26a are
+> complete. Current truth is in `../capability-status.md`, owner decisions are
+> in `../acceptance-register.md`, and the active SR1 sequence is
+> [`2026-07-23-sr1-prioritised-plan.md`](2026-07-23-sr1-prioritised-plan.md).
+> Do not resume at Task 24 merely because it is the lowest unchecked historical
+> number.
+
+## Interim milestone: Serial Simulator Release Candidate (SR1)
+
+The single acceptance definition and bounded slice IDs are maintained in
+`../capability-status.md`. This plan records ordering only; do not copy or check
+off a second version of the criteria here.
 
 ## Task 13: Port DMI directly
 
@@ -201,19 +217,19 @@ this task's outcome, delivered under the Task 21 label.
 ## Definition of Full Parity
 
 - [ ] Every capability of the original legacy Finmag either works on DOLFINx
-  or has an explicit, user-accepted, documented exception.
+  or has an explicit, owner-accepted, documented exception.
 - [ ] The legacy test suite's invariants are ported or accounted for
   file-by-file (tracked in porting_map).
 - [ ] `verify-dolfinx-m5` (or its successor) covers all ported capabilities.
-- [ ] Packaging allows installation and use without `PYTHONPATH=src`.
+- [x] Packaging allows installation and use without `PYTHONPATH=src`.
 
 ## Phase 3: full master parity (Tasks 18-29)
 
-Approved 2026-07-21. The authoritative register and per-task detail live in
-`2026-07-21-master-parity-audit.md`; tasks execute in the audited order
-18→19→20→21(packaging, resumes Task 17)→22→23→24→25→26→27→28→29. All
-accept-drop decisions are DEFERRED to Task 29 by user instruction — until then
-every capability not already formally dropped is treated as PORT.
+> **Superseded ordering record.** On 2026-07-21 the master-parity audit proposed
+> 18→19→20→21→22→23→24→25→26→27→28→29. It is retained as history, not as the
+> current dispatch order. Use the SR1 slice table in
+> `../capability-status.md`; owner decisions live only in
+> `../acceptance-register.md`.
 
 ## Task 18: Mesh tooling bridge (Netgen/Gmsh → DOLFINx)
 
@@ -324,6 +340,11 @@ every capability not already formally dropped is treated as PORT.
   build, a larger re-validation deliberately deferred) — registered as
   **USER ACCEPTANCE PENDING** in `transition-notes.org` and
   `dev/dolfinx/porting_map.md`. [Claude Sonnet 5]
+
+  Reconciliation: “fully working opt-in” above meant construction and advance
+  on the tested trajectories. It did not cover the complete `Simulation`
+  lifecycle; Sundials reset/restart are currently broken and tracked as
+  SR1-L1. [Codex GPT-5]
 - [x] Validation: the legacy `sundials_ode` test invariants (simple/stiff),
   analytic macrospin trajectory vs closed form, cross-backend agreement
   (sundials vs scipy on the Task 9/10 core workflow within declared
@@ -496,8 +517,11 @@ to surface, not something to paper over with rewrites.
 - [x] Same practical results. DONE: exchange_demag vs checked-in nmag refs
   (averages 2.9e-3, demag E 3.5e-3, exch E 2.8e-2 at honest tolerances);
   macrospin & demag field/energy analytic; std_prob_3 flower E_total 0.2985 vs
-  µMAG 0.302; std_prob_4 µMAG switching window (FULL); the rest physical-sanity.
-  Reduced-resolution loosenings documented in transition-notes. [Claude Opus 4.8]
+  µMAG 0.302; and a std_prob_4 broad-window qualitative switching test on the
+  changed Gmsh mesh. A complete `FINMAG_EXAMPLE_FULL=1` lane and tight
+  std_prob_4 behavioral-parity result were **not** established and remain
+  SR1-V1 work. Reduced-resolution loosenings are documented in
+  transition-notes. [Claude Opus 4.8] [Codex GPT-5]
 - [x] New gate `dolfinx-src-examples-pytest` folded into `verify-dolfinx-m5`:
   14 fast subprocess-run examples (~3-4 min) + 3 FULL-only (FINMAG_EXAMPLE_FULL=1
   documented per-script). [Claude Opus 4.8]
@@ -626,3 +650,34 @@ stay in a later 26b.)
   paragraph updated; `docs/superpowers/interface-audit.md`'s point-eval/
   `get_spherical` rows and FORCED-changes items 2/4 updated to reflect the
   restoration. [Claude Sonnet 5]
+
+## Reconciled remaining work and sequence
+
+The old Phase-3 audit grouped several independent research capabilities into
+Task 25. They should not be implemented or reviewed as one slice. After SR1,
+use these roadmap epics, each requiring a fresh file/caller inventory and a
+bounded subplan before dispatch:
+
+1. **Thermal dynamics:** plan SLLG/random-field and LLB/material-law/native
+   work as separate slices (historical Task 24).
+2. **Linear normal-mode core:** linearisation, eigensolver/eigenproblem
+   adapters, eigenmode output and analytic eigenfrequency validation.
+3. **Ringdown analysis:** `NormalModeSimulation`, FFT/PSD and dispersion
+   workflows, depending on the linear core only where genuinely necessary.
+4. **Path methods:** restore and inventory all legacy NEB variants and their
+   native kernel as a separate physics slice. No public GNEB API/workflow was
+   found; decide algorithmic overlap during that inventory.
+5. **I/O and utility long tail (26b):** HDF5 readback, plotting,
+   region/submesh field output, initialisers and audited Field/mesh helpers.
+6. **External comparisons:** useful OOMMF/Nmag/Magpar workflows, preferring
+   checked-in data over obsolete live toolchains.
+7. **Parallel/periodic surfaces:** plan MPI stepping and
+   `Simulation(pbc=)` as separate slices.
+8. **Owner decisions:** close only the exact rows in
+   `../acceptance-register.md`; do not accept a grouped drop implicitly.
+
+Before those epics, complete the bounded SR1 slices in
+`../capability-status.md`. This produces a usable package early without
+weakening the full-parity target.
+
+[Codex GPT-5]

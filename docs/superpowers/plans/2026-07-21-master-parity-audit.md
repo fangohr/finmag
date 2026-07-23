@@ -3,6 +3,14 @@
 **Date:** 2026-07-21   **Branch audited:** `dolfinx-parity` @ `2ecd5041` (read-only)
 **Author:** static audit (no code changed; this document is the only write)
 
+> **Historical snapshot.** This was the planning audit at `2ecd5041`, not the
+> current capability ledger. By `f1a1344c` Tasks 18-23, 30, 31 and 26a had
+> substantially changed its states, packaging/CI existed, and several grouped
+> tasks needed decomposition. Use `../capability-status.md` for current status
+> and `../acceptance-register.md` for owner decisions. Counts and estimates
+> below describe this snapshot only. Its `M` numbers are this audit's local
+> namespace, not acceptance-register `M` identifiers.
+
 > Scope: definitive gap register for reaching FULL functional parity between the
 > DOLFINx port (`dolfinx-parity` HEAD) and the original `master` Finmag, plus a
 > prioritised Phase-3 task plan. Two layers: (1) HEAD vs the pixi branch's
@@ -166,7 +174,8 @@ rebuild), `energies/random_thermal.py`, `sim.py` `kernel="sllg"`. Size: L. Valid
 legacy oracle (`sllg_test`, `llb_test`) — stochastic, so distributional/seeded checks.
 Closes: **L3, M6**.
 
-**Task 25 — Normal modes, NEB, FFT/PSD analysis.** Files: `normal_modes/`,
+**Task 25 — Normal modes, NEB, FFT/PSD analysis (historical epic; do not execute
+as one slice).** Files: `normal_modes/`,
 `sim/normal_mode_sim.py`, `physics/neb*.py`, `native/src/neb`, `util/fft.py`,
 `util/dispersion.py`, `example/normal_modes/disk.py`. Size: L (largest). Validation:
 analytic eigenfrequencies + legacy oracle (`neb_test`, `eigenproblems_test`). Closes:
@@ -191,8 +200,8 @@ gather/scatter (the design note for this already exists in `porting_map.md`). Si
 Validation: 2-rank `test_sim_parallel` equivalence vs serial. Closes: **L17, M10**. Also:
 add a `dolfinx-m5.yml` CI workflow gating `verify-dolfinx-m5` (currently ungated).
 
-**Task 29 — FORMALLY-ACCEPT-DROP decision (single user-decision task).** Present these for
-explicit user sign-off; on approval, replace by-name stubs with documented "accepted
+**Task 29 — FORMALLY-ACCEPT-DROP decision (single owner-decision task).** Present these for
+explicit repository-owner sign-off; on approval, replace by-name stubs with documented "accepted
 exception" notes and close the parity checklist:
 - **M2** GCR demag (unsound legacy formulation; FK is the correct path) — Layer-1 L6 GCR part.
 - **M3** compiled `Equation` backend (Python fallback works; port only if perf demanded).
@@ -217,7 +226,7 @@ packaging wraps a settled native-extension set rather than being redone.
 
 ## 5. Counts summary
 
-- **Total register items: 34** — Layer 1: 21 (L1-L21); Layer 2: 13 (M1-M13).
+- **Historical total register items: 34** — Layer 1: 21 (L1-L21); Layer 2: 13 (M1-M13).
 - **Portable (recommend PORT): ~22** — Layer 1 L1-L19 (19 portable capability groups; L20/L21 are drop candidates) + Layer 2 M3/M4/M5/M6 that are distinct native-build ports (the remaining M-items either equal Layer-1 rows or are accept-drops).
 - **Accept-drop candidates: ~11** — M1, M2, M7, M8, M9, M11, M12 + L20 (5 named sub-items) + L21, all consolidated into **Task 29**.
 - **Estimated slices to full parity: ~12** — Tasks 18-29 (11 build/port tasks + 1 decision task). Weight concentrated in 5 L-sized native/physics slices (Tasks 20, 23, 24, 25, 28); the rest are S/M.

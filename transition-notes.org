@@ -1,5 +1,13 @@
 * Finmag Transition Notes
 
+#+begin_quote
+Chronological engineering evidence, not a current-status summary. Later
+entries supersede earlier statements. For the reconciled DOLFINx state use
+=docs/superpowers/HANDOVER.md= and
+=docs/superpowers/capability-status.md=; for unresolved behavior/drop choices
+use =docs/superpowers/acceptance-register.md=. [Codex GPT-5]
+#+end_quote
+
 ** Purpose
 
 This file records concrete environment and packaging findings relevant to the
@@ -6293,3 +6301,51 @@ untouched/unimportable as before.
 =dolfinx-src-examples-pytest=.
 
 [Claude Sonnet 5]
+
+** P0.2 frozen DOLFINx baseline evidence (2026-07-23)
+
+P0.2 recorded baseline evidence without source edits at
+=dolfinx-parity= =f1a1344c423e74687ddf820c1fafc056a6271fe1=. This is a
+failure inventory, not a claim of FULL example acceptance.
+
+The main dirty-documentation worktree ran:
+
+#+begin_src bash
+dev/bin/verify-dolfinx-m5
+#+end_src
+
+with exit =0= and all =32= steps green. Its fast example gate reported
+=14 passed, 3 skipped=. The log is
+=/tmp/finmag-p0-baseline-m5.log=. Reported versions: Python =3.12.13=,
+DOLFINx =0.10.0=, NumPy =2.4.6=, SciPy =1.18.0=, mpi4py =4.1.2= with
+OpenMPI =5.0.10=, and PETSc =3.25.2=.
+
+A clean detached worktree at
+=/tmp/finmag-p0-full-f1a1344c=, at the same exact commit, proved its import
+provenance from that worktree's =src/= through =PYTHONPATH=temp/src= and ran:
+
+#+begin_src bash
+FINMAG_EXAMPLE_FULL=1 pytest -q examples/test_examples_dolfinx.py
+#+end_src
+
+It exited =1=: =12 passed, 5 failed= in =2557.64s= (=42:37=). The log is
+=/tmp/finmag-p0-baseline-full-examples-clean.log=. Failures were:
+
+- =cubic_anisotropy/hysteresis.py= wrapper timeout at =240s=;
+- =std_prob_3/run.py= wrapper timeout at =240s=;
+- =std_prob_4/test_std_prob_4.py= wrapper timeout at =1800s=;
+- =cubic_anisotropy/sim.py= immediate =KeyError= for scheduler keyword
+  =save_m=;
+- =magnetic_grain/suess_2001.py= immediate =ModuleNotFoundError: dolfin=
+  through =finmag.util.helpers=.
+
+The three timeouts are unchanged-wrapper/harness evidence, not physics
+failures. Any timeout scaling or wrapper change must be a separately reviewed
+slice after this evidence, before an all-green FULL result can be meaningful.
+The clean worktree had empty =git status=/diff after execution; tracked
+=examples/magnetic_grain/mz.png= and =examples/std_prob_3/doc_table.rst=
+were unchanged. The main editable import still resolved to
+=/home/sam/repos/finmag/src/finmag/__init__.py= afterwards, so no editable
+environment restoration was required.
+
+[Codex GPT-5.6]

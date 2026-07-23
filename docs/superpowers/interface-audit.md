@@ -1,7 +1,14 @@
 # Public Interface Audit — Finmag DOLFINx Port
 
-**Scope:** every public interface surface a user or `examples/` script touches,
-across `src/finmag` and `examples/`.
+> **Historical focused audit, not an exhaustive API inventory.** This document
+> examined 45 selected surfaces at port commit `b9006786`. It was reconciled on
+> 2026-07-23 against `f1a1344c`, but it must not be read as proof that every
+> public interface matches master. Current status and open surfaces live in
+> [`capability-status.md`](capability-status.md); owner decisions live in
+> [`acceptance-register.md`](acceptance-register.md).
+
+**Scope:** selected high-use interfaces touched by the port or converted
+examples, across `src/finmag` and `examples/`.
 **Yardstick:** the parity contract — the ported package exposes the SAME public
 interface as legacy, changing it ONLY where DOLFINx/Py-3.12 forces it, each such
 change documented + accepted.
@@ -10,7 +17,7 @@ change documented + accepted.
   (Python 3 + FEniCS 2019).
 - Original master `b5015c5a` (Python 2 + dolfin-2017) — consulted where a
   "change" might predate the port.
-- Ported: `dolfinx-parity` HEAD `b9006786`.
+- Ported snapshot: `dolfinx-parity` commit `b9006786`.
 
 Read-only audit. No source was modified. Evidence is `git show <commit>:<path>`.
 
@@ -18,7 +25,7 @@ Read-only audit. No source was modified. Evidence is `git show <commit>:<path>`.
 
 ## 1. Summary verdict
 
-**Surfaces audited: 45** (14 energy/demag constructors + families, 13 Simulation
+**Surfaces audited in this focused snapshot: 45** (14 energy/demag constructors + families, 13 Simulation
 methods/ctor + `sim_with`, 12 Field public methods + the ordering contract, 11
 mesh generators + `from_geofile`/`from_csg` + `mesh_templates`; overlapping rows
 consolidated).
@@ -31,7 +38,7 @@ consolidated).
 | **UNNECESSARY (gratuitous — the findings)** | **0 (REVERTED — see §3)** |
 | PRE-EXISTING / stale-example (not introduced by the port) | 1 (CubicAnisotropy) |
 
-**Headline:** there WERE six gratuitous changes, but they were all of ONE benign
+**Snapshot headline:** there WERE six gratuitous changes, but they were all of ONE benign
 kind — **six first-positional-parameter RENAMES** with **zero practical blast
 radius** (every caller in `examples/` and the test-suite, including internal
 `src/finmag` callers, passed them positionally; not a single keyword caller
@@ -96,7 +103,7 @@ N = gratuitous (UNNECESSARY).
 
 | Surface | Legacy (pixi) | Ported | Class | Needed? | Revert if UNNECESSARY |
 |---|---|---|---|---|---|
-| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | same but `integrator_backend='scipy'` | REGISTERED | Y | — (register #8 / Task 20, USER ACCEPTANCE PENDING; factory default IS sundials) |
+| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | same but `integrator_backend='scipy'` | REGISTERED | Y | — (register D8 / Task 20, OWNER DECISION PENDING; factory default IS sundials) |
 | `sim_with` | `(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend='sundials', A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None, nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name='unnamed', pbc=None, sim_class=Simulation)` | same but `integrator_backend='scipy'` and `demag_solver_params=None` | REGISTERED (backend) + benign | Y | — (backend = register #8; `{}`→`None` is a mutable-default-arg fix, behaviourally identical) |
 | `set_m` | `(value, normalise=True, **kwargs)` | identical | NO-CHANGE | Y | — |
 | `add` | `(interaction, with_time_update=None)` | identical | NO-CHANGE | Y | — |
@@ -120,7 +127,8 @@ N = gratuitous (UNNECESSARY).
 | `from_sequence` | `(seq)` | `(seq)` | **REVERTED** | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" |
 | `from_field` | `(field)` | identical | NO-CHANGE | Y | — |
 | `from_function` | `(function)` | identical (interpolation superset added, register #7) | NO-CHANGE | Y | — |
-| `set` / `set_with_numpy_array_debug` / `as_array` / `as_vector` / `is_constant` / `as_constant` / `mesh*` / `value_dim` / `coords_and_values` / `cross` / `dot` / `coerce_scalar_field` | (as legacy) | identical | NO-CHANGE | Y | — |
+| `set` / `set_with_numpy_array_debug` / `as_array` / `as_vector` / `is_constant` / `as_constant` / `mesh*` / `value_dim` / `coords_and_values` | (as legacy) | identical for the audited subset | NO-CHANGE | Y | — |
+| `from_generic_vector` / `cross` / `dot` / `coerce_scalar_field` | present | raise `NotImplementedError` by name | deferred gap | N | Port or obtain an owner-approved exception |
 | `average` | `(dx=df.dx)` | `(dx=dx)` (ufl `dx`) | FORCED | Y | — (dolfin `dx` object removed) |
 | `set_random_values` | `(vrange=[-1, 1])` | `(vrange=(-1.0, 1.0))` | benign | Y | — (mutable-default fix; identical behaviour) |
 | `save_pvd` | `(filename)` | `(filename, t=0.0)` | superset | Y | — (backward-compatible optional arg) |
@@ -138,7 +146,7 @@ N = gratuitous (UNNECESSARY).
 | `from_geofile` | `(geofile, save_result=True)` | `(geofile, save_result=True, filename='', directory='', *, maxh=None)` | superset | Y | — (added optional args; `from_geofile(f, False)` still binds `save_result`; maxh keyword-only by design) |
 | `from_csg` | `(csg, save_result=True, filename='', directory='')` | `(csg, save_result=True, filename='', directory='', *, maxh=None)` | **REVERTED** (1st param) | Y | done — see "Revert 6 gratuitous parameter renames to legacy names" (the added keyword-only `maxh` is fine and unaffected) |
 | `mesh_templates`: `MeshTemplate`, `MeshSum`, `MeshDifference`, `Sphere`, `Box`, `EllipticalNanodisk`, `Nanodisk` | (as legacy) | identical | NO-CHANGE | Y | — |
-| deferred generators (`elliptical_nanodisk_with_cuboid_shell`, `sphere_inside_box`, `disk_with_internal_layers`, `regular_polygon*`, `line_mesh`, `embed3d`, …) | present | not ported (out of scope) | deferred | Y | — (unported, not a change to a preserved surface) |
+| deferred generators (`elliptical_nanodisk_with_cuboid_shell`, `sphere_inside_box`, `disk_with_internal_layers`, `regular_polygon*`, `line_mesh`, `embed3d`, …) | present | not ported | deferred gap | N | Inventory callers; port or obtain an owner-approved exception |
 
 ---
 
@@ -186,16 +194,18 @@ called out for transparency, not action):
 
 ---
 
-## 4. FORCED changes (the minimal TRUE interface delta)
+## 4. Snapshot hypotheses about forced changes
 
-These are the only user-visible interface changes DOLFINx/Py-3.12 genuinely
-compelled — the irreducible cost of the port:
+At the audit snapshot these looked like forced changes. They are not approved
+final exceptions: HDF5/plotting, assembly methods and expression-family gaps
+remain later work or owner decisions in the current registers.
 
 1. **String `Expression` → Python callable.** Anywhere legacy accepted a dolfin
    `df.Expression("...")` (initial `m`, anisotropy `axis`, `alpha`, applied
    field, `TimeZeeman.field_expression`, `Field.from_expression`), the port
-   accepts only a vectorised NumPy callable. DOLFINx has no `Expression`/
-   `UserExpression`. Consequence: `Field.from_expression` raises
+   accepts only a vectorised NumPy callable. DOLFINx has an `Expression` type,
+   but no drop-in equivalent of the legacy runtime string/UserExpression
+   contract. Consequence: `Field.from_expression` raises
    `NotImplementedError`; `TimeZeemanPython`'s 1st param was renamed
    `df_expression`→`H0_value` to name the new value contract (transition-notes:4368).
 2. **Point evaluation — RESTORED (Task 26a), no longer forced.** `Field.probe(coord)` /
@@ -222,8 +232,8 @@ compelled — the irreducible cost of the port:
 
 Registered deviations that are NOT strictly forced but are documented + pinned +
 awaiting sign-off: `Simulation.integrator_backend` default `'scipy'` (register
-#8; factory default is legacy `'sundials'`), plus the behavioural-quirk register
-entries (#1–#10) that do not alter signatures.
+D8; factory default is legacy `'sundials'`). See the current acceptance register
+for the complete, expanded set.
 
 ---
 
@@ -294,3 +304,32 @@ port-introduced interface change; user confirmed keep-as-is.**
 concurrent revert slice and was discarded by that slice's clean-tree guard;
 re-committed here on a clean tree. Lesson logged: the controller must not edit
 tracked files while an implementer subagent owns the working tree.)
+
+## Current reconciliation addendum (2026-07-23, `f1a1344c`)
+
+The focused audit achieved its immediate purpose: it found and reverted six
+gratuitous parameter renames and established that the CubicAnisotropy concern
+was a stale-example issue. It did **not** establish complete interface parity.
+The following important surfaces were outside its table or have changed since
+its snapshot:
+
+- top-level lazy exports: `NormalModeSimulation`, `normal_mode_simulation`,
+  `set_logging_level`, and `example` can still expose raw legacy-`dolfin`
+  import failures;
+- `sim_with` still rejects non-FK demag and legacy macrogeometry arguments even
+  though direct treecode/MacroGeometry demag is now ported;
+- backend lifecycle: Sundials advances but `Simulation.reset_time()` and
+  restart fail through a SciPy-only `.ode` assumption;
+- restart format/state semantics, pins, STT precedence, snapshot format, and
+  other behavioral differences are pending in `acceptance-register.md`;
+- thermal solvers, normal modes, FFT/PSD, MPI stepping, function-space PBC,
+  legacy NEB, nonlocal STT, external harnesses and specialist utility surfaces
+  still need their own interface slices.
+
+Accordingly, “no unnecessary findings” above means no remaining unnecessary
+change among the **45 selected rows at that snapshot**. It is not a statement
+that the whole master API has been audited. Full parity requires a generated or
+file-by-file master public-surface inventory plus tests that every unavailable
+current name fails explicitly.
+
+[Codex GPT-5]
