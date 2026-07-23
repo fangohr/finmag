@@ -522,6 +522,13 @@ class LLG(object):
         - ``with_time_update``: optional ``J(t)`` returning a spatially uniform
           current density (a number), broadcast over every node each RHS eval.
         """
+        if self.do_zhangli:
+            raise ValueError(
+                "Cannot enable the Slonczewski spin-transfer torque: the "
+                "Zhang-Li torque is already active. The two local STT modes "
+                "are mutually exclusive; disable Zhang-Li first (e.g. set "
+                "llg.do_zhangli = False) before configuring Slonczewski."
+            )
         self.do_slonczewski = True
         self.do_zhangli = False
         self.fun_slonczewski_time_update = with_time_update
@@ -556,6 +563,13 @@ class LLG(object):
         ``using_u0`` false (default) the ``1 / (1 + beta**2)`` factor is applied.
         ``with_time_update`` is an optional ``J(t)`` returning a new J profile.
         """
+        if self.do_slonczewski:
+            raise ValueError(
+                "Cannot enable the Zhang-Li spin-transfer torque: the "
+                "Slonczewski torque is already active. The two local STT modes "
+                "are mutually exclusive; disable Slonczewski first (e.g. set "
+                "llg.do_slonczewski = False) before configuring Zhang-Li."
+            )
         self.do_zhangli = True
         self.do_slonczewski = False
         self.fun_zhangli_time_update = with_time_update

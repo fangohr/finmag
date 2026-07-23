@@ -301,6 +301,89 @@ def test_simulation_set_zhangli_activates_zhangli():
 
 
 # --------------------------------------------------------------------------
+# D11 (SR1 P2.6): the two local STT modes are mutually exclusive
+#
+# Configuring both Slonczewski and Zhang-Li on one object must raise a clear
+# by-name ``ValueError`` (not silently let the last call win). Re-configuring
+# the SAME mode, using either mode alone, and disable-then-switch must all
+# still work.
+# --------------------------------------------------------------------------
+
+def test_slonczewski_then_zhangli_raises_valueerror():
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    with pytest.raises(ValueError) as exc:
+        llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    # the message must name both modes so it is specific and actionable,
+    # not an incidental/unrelated ValueError
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    # the guard runs before any mutation: the first mode is left untouched
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+
+
+def test_zhangli_then_slonczewski_raises_valueerror():
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    with pytest.raises(ValueError) as exc:
+        llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+
+
+def test_slonczewski_alone_still_activates_and_contributes():
+    # regression guard: the single-mode path must stay intact and produce a
+    # nonzero STT dm/dt contribution.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+    assert np.linalg.norm(llg.solve(0.0)) > 0.0
+
+
+def test_zhangli_alone_still_activates_and_contributes():
+    llg = _zhangli_interval(J=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+    assert np.linalg.norm(llg.solve(0.0)) > 0.0
+
+
+def test_slonczewski_same_mode_reconfigure_is_allowed():
+    # re-tuning the SAME mode (change J and P) must NOT be rejected: the guard
+    # keys only on the OTHER mode's flag.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    llg.use_slonczewski(2.0e12, 0.5, 2e-9, (0.0, 0.0, 1.0))
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+    assert llg.J[0] == pytest.approx(2.0e12)
+    assert llg.P == pytest.approx(0.5)
+
+
+def test_zhangli_same_mode_reconfigure_is_allowed():
+    llg = _zhangli_interval(J=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    llg.use_zhangli(J_profile=(2.0e12, 0.0, 0.0), P=0.6, beta=0.03)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+    assert llg.P == pytest.approx(0.6)
+    assert llg.beta == pytest.approx(0.03)
+
+
+def test_disable_then_switch_mode_is_allowed():
+    # disable the active mode via its dispatch flag (the flag the guard reads),
+    # then the other mode may be configured -- the guard permits it.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    llg.do_slonczewski = False
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+
+
+# --------------------------------------------------------------------------
 # dynamics witnesses
 # --------------------------------------------------------------------------
 
