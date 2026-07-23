@@ -684,15 +684,20 @@ def test_restart_and_output_are_available():
 
 
 def test_regions_are_ported_not_deferred():
-    """Task 16: mark_regions + per-region energy/magnetisation accounting are
-    ported (see test_variable_params_dolfinx.py). Region-restricted submesh
-    field output remains deferred by name."""
+    """Task 16 + SR1 P4-region: mark_regions + per-region energy/magnetisation
+    accounting are ported (see test_variable_params_dolfinx.py), and
+    ``save_m_in_region`` now registers a per-region ``<m>`` column in the .ndt
+    table (faithful legacy behaviour -- NOT a field-to-file write). The
+    region-restricted submesh field extraction path stays deferred by name."""
     sim = _make_sim()
     sim.set_m((1.0, 0.0, 0.0))
     ids = sim.mark_regions(lambda pt: 1 if pt[0] < 2.5 else 2)
     assert set(ids) == {1, 2}
-    with pytest.raises(NotImplementedError, match="save_m_in_region"):
-        sim.save_m_in_region(1)
+    sim.save_m_in_region(1)  # registers an ndt column; no longer raises
+    assert any(
+        name.startswith("region_") for name in sim.tablewriter._entities)
+    with pytest.raises(NotImplementedError, match="get_submesh"):
+        sim.get_submesh(1)
 
 
 def test_hysteresis_is_ported_not_deferred():

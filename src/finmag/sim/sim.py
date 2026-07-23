@@ -779,10 +779,11 @@ class Simulation(object):
         - a subdomain-restricted measure (see :meth:`region_measure`).
 
         Per-region energy and magnetisation accounting then work through
-        :meth:`compute_energy` (``region=...``) and
-        :meth:`m_average_in_region`. Region-restricted *field extraction* and
+        :meth:`compute_energy` (``region=...``), :meth:`m_average_in_region`,
+        and :meth:`save_m_in_region` (which registers a per-region ``<m>``
+        column in the .ndt table). Region-restricted *field extraction* and
         submesh output (``get_field_as_dolfin_function(region=...)``,
-        ``save_m_in_region``, ``get_submesh``) remain deferred by name.
+        ``get_submesh``) remain deferred by name.
 
         Serial only, consistent with the rest of the DOLFINx state contract.
         """
@@ -819,8 +820,32 @@ class Simulation(object):
         """Volume-averaged magnetisation over a marked ``region``."""
         return self.llg.m_average_fun(dx=self.region_measure(region))
 
-    def save_m_in_region(self, *args, **kwargs):
-        _deferred("save_m_in_region", "region-restricted submesh field output")
+    def save_m_in_region(self, region, name="unnamed"):
+        """Register a per-region average-magnetisation column in the .ndt table.
+
+        Faithful port of the legacy ``save_m_in_region``
+        (``b5015c5a:src/finmag/sim/sim.py``): this does **not** write a field to
+        file. It adds the columns ``<name>_m_x``/``_m_y``/``_m_z`` to the .ndt
+        table whose values are the volume-averaged magnetisation over ``region``,
+        computed by :meth:`m_average_in_region` (the legacy getter was
+        ``m_average_fun(dx=self.dx(region_id))``). ``region`` must be an id
+        previously passed to :meth:`mark_regions`; ``name`` defaults to
+        ``region_<internal_id>`` (the legacy default naming).
+
+        The legacy region-restricted *field* paths (``get_submesh``,
+        ``get_field_as_dolfin_function(region=...)``) required ``mark_regions``,
+        which itself raised on modern dolfin, so they remain deferred by name.
+        """
+        # Validate the region (raises RuntimeError/KeyError by name, reusing the
+        # ported region-average machinery).
+        self.region_measure(region)
+        if name == "unnamed":
+            name = "region_" + str(self.region_ids[region])
+        self.tablewriter.add_entity(name, {
+            "unit": "<>",
+            "get": lambda sim, region=region: sim.m_average_in_region(region),
+            "header": (name + "_m_x", name + "_m_y", name + "_m_z"),
+        })
 
     def get_submesh(self, *args, **kwargs):
         _deferred("get_submesh", "region/material machinery")

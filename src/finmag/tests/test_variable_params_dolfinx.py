@@ -69,6 +69,14 @@ def _m_cossin_L8(x):
                       0.8 * np.sin(2 * np.pi * x[0] / 8.0)))
 
 
+def _m_linear_L8(x):
+    # Globally linear (CG1-exact) vector field: over any cell interval the FEM
+    # volume average equals the value at the midpoint, so region averages are
+    # exact by hand. Region 1 = [0, 4] -> value at x=2; region 2 = [4, 8] -> x=6.
+    n = x.shape[1]
+    return np.vstack((x[0] / 8.0, 1.0 - x[0] / 8.0, 0.5 * np.ones(n)))
+
+
 def _ms_var(x):
     return 8.6e5 * (1.0 + 0.3 * x[0] / 8.0)
 
@@ -727,11 +735,79 @@ def test_region_measure_before_mark_regions_raises():
         sim.region_measure(1)
 
 
+def test_save_m_in_region_registers_ndt_column_with_region_average(tmp_path):
+    """SR1 P4-region: faithful port of legacy ``save_m_in_region``
+    (``b5015c5a:src/finmag/sim/sim.py``). It does NOT write a field to file; it
+    registers a per-region ``<m>`` column in the .ndt table whose value is the
+    volume-averaged magnetisation over the region (legacy set
+    ``tablewriter.entities[name]`` to ``m_average_fun(dx=self.dx(region_id))``).
+
+    m is globally linear, so the FEM average over a region equals the value at
+    that region's midpoint (exact by hand)."""
+    from finmag.util.fileio import Tablereader
+    domain = _interval8()
+    sim = Simulation(domain, 8.6e5, unit_length=1e-9, name="regions_ndt")
+    sim.set_m(_m_linear_L8, normalise=False)
+    sim.mark_regions(lambda pt: 1 if pt[0] < 4.0 else 2)
+    sim.ndtfilename = str(tmp_path / "regions.ndt")
+
+    sim.save_m_in_region(1, name="left")
+    sim.save_m_in_region(2, name="right")
+    sim.save_averages()
+
+    reader = Tablereader(sim.ndtfilename)
+    left = np.array(
+        [reader["left_m_x"][0], reader["left_m_y"][0], reader["left_m_z"][0]])
+    right = np.array(
+        [reader["right_m_x"][0], reader["right_m_y"][0], reader["right_m_z"][0]])
+    # Region 1 = [0, 4], midpoint x=2 -> (2/8, 1-2/8, 0.5) = (0.25, 0.75, 0.5).
+    np.testing.assert_allclose(left, [0.25, 0.75, 0.5], atol=1e-12)
+    # Region 2 = [4, 8], midpoint x=6 -> (6/8, 1-6/8, 0.5) = (0.75, 0.25, 0.5).
+    np.testing.assert_allclose(right, [0.75, 0.25, 0.5], atol=1e-12)
+    # The column reproduces the ported, tested region-average computation.
+    np.testing.assert_allclose(left, sim.m_average_in_region(1), atol=1e-14)
+    np.testing.assert_allclose(right, sim.m_average_in_region(2), atol=1e-14)
+
+
+def test_save_m_in_region_two_regions_do_not_mix(tmp_path):
+    """Two regions carrying DIFFERENT magnetisation: each region's column must
+    reflect ONLY its own cells (region-mixup guard). Also pins the legacy
+    default column name ``region_<internal_id>``."""
+    from finmag.util.fileio import Tablereader
+    domain = _interval8()
+    sim = Simulation(domain, 8.6e5, unit_length=1e-9, name="regions_mix")
+    sim.set_m(_m_linear_L8, normalise=False)
+    ids = sim.mark_regions(lambda pt: 1 if pt[0] < 4.0 else 2)
+    sim.ndtfilename = str(tmp_path / "regions_mix.ndt")
+
+    sim.save_m_in_region(1)  # default name region_<region_ids[1]>
+    sim.save_m_in_region(2)
+    sim.save_averages()
+
+    reader = Tablereader(sim.ndtfilename)
+    n1 = "region_{}".format(ids[1])
+    n2 = "region_{}".format(ids[2])
+    left = np.array(
+        [reader[n1 + "_m_x"][0], reader[n1 + "_m_y"][0], reader[n1 + "_m_z"][0]])
+    right = np.array(
+        [reader[n2 + "_m_x"][0], reader[n2 + "_m_y"][0], reader[n2 + "_m_z"][0]])
+    np.testing.assert_allclose(left, sim.m_average_in_region(1), atol=1e-14)
+    np.testing.assert_allclose(right, sim.m_average_in_region(2), atol=1e-14)
+    np.testing.assert_allclose(left, [0.25, 0.75, 0.5], atol=1e-12)
+    np.testing.assert_allclose(right, [0.75, 0.25, 0.5], atol=1e-12)
+    # Region magnetisations genuinely differ -> a mixup would be caught.
+    assert not np.allclose(left, right)
+
+
 def test_region_restricted_field_output_still_deferred_by_name():
+    """``save_m_in_region`` is now ported (per-region .ndt column; see
+    ``test_save_m_in_region_*``). The region-restricted *field / submesh* paths
+    (``get_submesh``, ``get_field_as_dolfin_function(region=...)``) stay deferred
+    by name: legacy gated them behind ``mark_regions``, which itself raised on
+    modern dolfin (>= 1.5), so they were never functional there."""
     sim = _region_sim()
     sim.mark_regions(lambda pt: 0)
-    with pytest.raises(NotImplementedError, match="save_m_in_region"):
-        sim.save_m_in_region(0)
+    sim.save_m_in_region(0)  # registers an ndt column; no longer raises
     with pytest.raises(NotImplementedError, match="get_submesh"):
         sim.get_submesh(0)
     with pytest.raises(NotImplementedError):
