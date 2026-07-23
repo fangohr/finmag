@@ -22,7 +22,8 @@ the plan's accepted cross-method + analytic evidence exception):
    geometry, in the direct-sum limit *and* in a genuine multipole-approximation
    regime;
 3. periodic-image convergence and the analytic thin-film demag limit for the
-   MacroGeometry path;
+   MacroGeometry path (out-of-plane Nz -> 1 *and* in-plane Nx -> 0, at a
+   non-coincident tile pitch -- see the P2.2a note below);
 4. one ``Simulation.add(Demag(...))`` end-to-end smoke for each of the
    Treecode solver and the non-coincident ``MacroGeometry`` path.
 
@@ -50,6 +51,20 @@ test's docstring and ``transition-notes.org`` for the numbers.
 ``test_treecode_p_order_does_not_affect_accuracy`` confirms from the C source
 (and empirically) that the multipole order ``p`` is a dead parameter in this
 kernel.
+
+*Correction, SR1 P2.2a — an invalid witness was removed.* The original
+``test_pbc_out_of_plane_thin_film_analytic_limit`` used the *touching*
+``MacroGeometry`` default (tile pitch == mesh extent) and asserted
+``|Nz - 1| < 1e-3``.  It passed because that configuration produces a periodic
+BEM with non-finite entries, the phi_2 Krylov solve fails
+(``KSP_DIVERGED_NANORINF``), phi_2 stays zero and ``H = -grad(phi_1) = -M``
+exactly -- which satisfies the assertion trivially while simultaneously giving
+the unphysical ``Nx = 1`` in plane.  The analytic-limit tests now use a
+non-coincident pitch (a 1e-6 relative gap), assert BEM finiteness and the
+row-sum identity as explicit preconditions, and assert monotonic approach; the
+touching configuration's expectation is retained as a strict ``xfail`` and its
+defect is pinned directly by
+``test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.
 
 [Claude Opus 4.8] [Claude Sonnet 5]
 """
@@ -317,9 +332,9 @@ def test_demag_factory_treecode_returns_treecodebem():
 # 5. periodic (MacroGeometry) FK demag physics
 # --------------------------------------------------------------------------
 
-def _pbc_field_avg(mesh, m_vec, Ms, nx=1, ny=1):
+def _pbc_field_avg(mesh, m_vec, Ms, nx=1, ny=1, dx=None, dy=None):
     m, Ms_f = _fields(mesh, m_vec, Ms)
-    demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny))
+    demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny, dx=dx, dy=dy))
     demag.setup(m, Ms_f, unit_length=1e-9)
     # Task 31: component-blocked field -> owned-vertex per-node rows.
     H = demag.compute_field().reshape((3, -1)).T
@@ -386,16 +401,125 @@ def test_pbc_image_sum_converges_1d():
     assert abs(hx[0] + 1.0 / 3.0) < 0.02               # nx=1 is the cube 1/3
 
 
+_THIN_FILM_EXTENT = 40.0
+# Tile PITCH (centre-to-centre), not gap.  A pitch of exactly the mesh extent
+# makes neighbouring image tiles share boundary nodes, which the periodic BEM
+# assembly does not handle -- see
+# `test_pbc_coincident_tile_spacing_produces_a_non_finite_bem` below, which pins
+# that defect.  A 1e-6 relative gap removes the node coincidence while leaving
+# the tiling physically indistinguishable from a continuous film, so the
+# analytic thin-film limit below is a genuine witness rather than an artefact of
+# a failed solve.  [Claude Opus 4.8]
+_THIN_FILM_PITCH = _THIN_FILM_EXTENT * (1.0 + 1e-6)
+
+
+def _thin_film_mesh():
+    return _box(6, 6, 1, _THIN_FILM_EXTENT, _THIN_FILM_EXTENT, 2.0)
+
+
 def test_pbc_out_of_plane_thin_film_analytic_limit():
     # A thin film tiled periodically in-plane and magnetised out of plane has
-    # demag factor Nz -> 1, i.e. <Hz> -> -Ms.  The periodic image sum reproduces
-    # this analytic limit to high accuracy already at a modest tile count.
+    # demag factor Nz -> 1, i.e. <Hz> -> -Ms.  Measured on this mesh:
+    # Nz = 0.709851 -> 0.983976 -> 0.990758 for nx=ny = 1, 3, 5.
+    #
+    # HISTORY (SR1 P2.2a): until this commit this test used the *touching*
+    # MacroGeometry default (dx=dy=None -> the 40nm mesh extent) and asserted
+    # |Nz - 1| < 1e-3.  It passed for entirely the wrong reason: that
+    # configuration yields a periodic BEM with 6 non-finite entries, the phi_2
+    # Krylov solve fails with KSP_DIVERGED_NANORINF (reason -9, 0 iterations),
+    # phi_2 stays identically zero and H = -grad(phi_1) = -M *exactly*, which
+    # satisfies |Nz - 1| < 1e-3 trivially (measured 2.085e-10) while also
+    # reporting the unphysical Nx = 1.000000 for in-plane m.  The witness was
+    # therefore invalid.  It is replaced here by the non-coincident pitch plus
+    # an explicit BEM-finiteness precondition and a monotonic-approach
+    # assertion; the touching configuration's defect is pinned separately
+    # below.  [Claude Opus 4.8]
     Ms = 8.6e5
-    mesh = _box(6, 6, 1, 40.0, 40.0, 2.0)
-    e1 = abs(_pbc_field_avg(mesh, (0, 0, 1), Ms, nx=1, ny=1)[2] / Ms + 1.0)
-    e3 = abs(_pbc_field_avg(mesh, (0, 0, 1), Ms, nx=3, ny=3)[2] / Ms + 1.0)
-    assert e3 < e1              # tiling drives Nz toward the analytic 1
-    assert e3 < 1e-3, e3       # converged to the thin-film out-of-plane limit
+    mesh = _thin_film_mesh()
+    P = _THIN_FILM_PITCH
+    mg = MacroGeometry(nx=3, ny=3, dx=P, dy=P)
+    bem = BMatrixPBC(mesh, Ts=mg.compute_Ts(mesh)).bm
+    # precondition: the solve this test's conclusion rests on is well posed.
+    assert np.all(np.isfinite(bem)), "periodic BEM has non-finite entries"
+    np.testing.assert_allclose(bem.sum(axis=1), -np.ones(len(bem)),
+                               rtol=0, atol=1e-10)
+    e = [abs(_pbc_field_avg(mesh, (0, 0, 1), Ms, nx=n, ny=n, dx=P, dy=P)[2] / Ms
+             + 1.0) for n in (1, 3, 5)]
+    assert e[0] > e[1] > e[2], e     # monotonic approach to the analytic limit
+    assert e[2] < 2e-2, e
+
+
+def test_pbc_in_plane_thin_film_demag_factor_tends_to_zero():
+    # Companion falsifier for the test above: an in-plane magnetised infinite
+    # film has Nx -> 0.  The failed-solve signature H = -M shows up here as
+    # Nx = 1, i.e. the *opposite* limit, so this test cannot be satisfied by the
+    # degenerate answer that made the old thin-film witness green.  Measured:
+    # Nx = 0.054464 -> 0.007920 -> 0.004588 for nx=ny = 1, 3, 5.
+    # [Claude Opus 4.8]
+    Ms = 8.6e5
+    mesh = _thin_film_mesh()
+    P = _THIN_FILM_PITCH
+    Nx = [-_pbc_field_avg(mesh, (1, 0, 0), Ms, nx=n, ny=n, dx=P, dy=P)[0] / Ms
+          for n in (1, 3, 5)]
+    assert Nx[0] > Nx[1] > Nx[2], Nx
+    assert Nx[2] < 1e-2, Nx
+
+
+def test_pbc_coincident_tile_spacing_produces_a_non_finite_bem():
+    """Pin the coincident-node defect in the periodic BEM assembly (P2.2a).
+
+    With the *touching* MacroGeometry default (tile pitch == mesh extent, so
+    neighbouring image tiles share boundary nodes) `build_periodic_bem` returns
+    a matrix containing non-finite entries on a flat slab, and the BEM row-sum
+    identity (sum_j B_ij == -1) is violated even where the entries are finite
+    (row sums reach -2 on a cube, i.e. the solid angle is double counted).
+    Downstream this makes the phi_2 solve fail with KSP_DIVERGED_NANORINF and
+    silently return H = -M.
+
+    This is a RECORDED, NAMED latent defect, not accepted behaviour: the native
+    kernel has an explicit coincident branch (`solid_angle_single_reduced`,
+    native/src/treecode_bem/common.c:151-183) so the case was intended to be
+    supported.  Fixing it is a demag-algorithm change and is out of scope for
+    SR1 P2.2; `sim_with` refuses the configuration by name instead.  If this
+    test ever starts failing because the BEM became finite, the defect has been
+    fixed -- re-check the row sums and the xfail below.  [Claude Opus 4.8]
+    """
+    mesh = _thin_film_mesh()
+    mg = MacroGeometry(nx=3, ny=3)          # touching: dx = dy = mesh extent
+    Ts = mg.compute_Ts(mesh)
+    assert np.isclose(mg.dx, _THIN_FILM_EXTENT)
+    bem = BMatrixPBC(mesh, Ts=Ts).bm
+    assert not np.all(np.isfinite(bem))
+
+    # ... and on a mesh where it stays finite, the row-sum identity breaks.
+    cube = _centred_box(4, 10.0)
+    mg_c = MacroGeometry(nx=3, ny=1)        # touching: dx = 20 = cube extent
+    bem_c = BMatrixPBC(cube, Ts=mg_c.compute_Ts(cube)).bm
+    assert np.all(np.isfinite(bem_c))
+    assert np.abs(bem_c.sum(axis=1) + 1.0).max() > 0.5
+
+
+@pytest.mark.xfail(strict=True, reason="coincident-node defect in the periodic "
+                   "BEM assembly for touching tiles (pitch == mesh extent); "
+                   "see test_pbc_coincident_tile_spacing_produces_a_non_finite_"
+                   "bem. SR1 P2.2a")
+def test_pbc_out_of_plane_thin_film_analytic_limit_touching_tiles():
+    """The legacy-default (touching) tiling ought to reach the same limit.
+
+    This is the expectation the old `test_pbc_out_of_plane_thin_film_analytic_
+    limit` appeared to witness.  It is marked xfail(strict) so that the
+    expectation stays visible and is no longer counted as a passing witness,
+    and so that fixing the coincident-node defect makes this file fail loudly.
+    [Claude Opus 4.8]
+    """
+    Ms = 8.6e5
+    mesh = _thin_film_mesh()
+    bem = BMatrixPBC(mesh, Ts=MacroGeometry(nx=3, ny=3).compute_Ts(mesh)).bm
+    assert np.all(np.isfinite(bem))
+    Nz = -_pbc_field_avg(mesh, (0, 0, 1), Ms, nx=3, ny=3)[2] / Ms
+    Nx = -_pbc_field_avg(mesh, (1, 0, 0), Ms, nx=3, ny=3)[0] / Ms
+    assert abs(Nz - 1.0) < 2e-2
+    assert Nx < 1e-2
 
 
 def test_pbc_translation_symmetry_of_ts():
