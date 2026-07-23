@@ -170,13 +170,13 @@ source/test commit plus a separate documentation commit, and integrated on
   fast examples 14 passed/3 skipped in 222.03s, core smoke
   `integrator_backend: sundials` at `t=1e-12`; log `/tmp/finmag-p2-final-m5.log`).
 
-Two owner decisions were newly recorded and remain *pending owner decision* in
-[`acceptance-register.md`](acceptance-register.md): **D17** (the touching/
-overlapping macro-geometry pitch refusal — decide whether the by-name refusal is
-the accepted SR1 contract or the coincident-node BEM kernel must be fixed) and
-**D18** (the `toggle_stt` back-door that bypasses the D11 guard, plus its
-`toggle_stt(False)` flip-not-force-off quirk — decide whether to harden it in a
-follow-up slice).
+Two owner decisions were newly recorded in
+[`acceptance-register.md`](acceptance-register.md). **D17** (the touching/
+overlapping macro-geometry pitch refusal) is now **approved 2026-07-23**: the
+by-name refusal is the accepted SR1 contract, and the coincident-node BEM kernel
+fix is deferred to a separate later slice. **D18** (the `toggle_stt` back-door
+that bypasses the D11 guard, plus its `toggle_stt(False)` flip-not-force-off
+quirk) is being taken up as a hardening slice.
 
 The recommended next work is **Priority 3** (serial function-space PBC probe,
 `Field.cross`/`dot`/coercion, `from_generic_vector`, varying cubic axes) and the
