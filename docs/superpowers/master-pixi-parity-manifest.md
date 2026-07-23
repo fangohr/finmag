@@ -113,6 +113,19 @@ workflow, and **qualitative** shows plausibility without establishing parity.
 | N68 | VTK/XDMF files can be read back into the documented Field contract | no positive current gate | round-trip | MISSING |
 | N69 | Each selected legacy pytest file is ported in a feature-family slice, or explicitly linked to a Later/Not-now decision | no positive current gate | migration sequencing | MISSING |
 
+### Post-baseline lifecycle resolution (not a rewrite of frozen P0 states)
+
+The N30/N32/N33/N34 states above describe the frozen P0 baseline at
+`f1a1344c`. The subsequent P1 commits resolve their named lifecycle contracts;
+P1.3/D8 public-default work remains separate.
+
+| Frozen row | Resolution commit | Post-baseline evidence |
+|---|---|---|
+| N30 SciPy restart trajectory | `17f24413` | immediate and uninterrupted-vs-restarted SciPy trajectory checks pass |
+| N32 Sundials reset | `3f4ed4ea` | backend-neutral factory passes `t0`; SciPy positional slots preserved; continuity regression passes |
+| N33 Sundials restart | `17f24413` | immediate and uninterrupted-vs-restarted Sundials trajectory checks pass |
+| N34 restart provenance | `17f24413` | archive records truthful `sim.integrator_backend`; writable `sim.driver` remains synchronized |
+
 ## Converted examples lane
 
 The current gate is `pixi run -e dolfinx dolfinx-src-examples-pytest`. It is a

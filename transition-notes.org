@@ -6349,3 +6349,29 @@ were unchanged. The main editable import still resolved to
 environment restoration was required.
 
 [Codex GPT-5.6]
+
+** P1.1/P1.2 lifecycle completion (2026-07-23)
+
+P1.1 commit =3f4ed4ea= resolves the backend-specific reset defect without
+changing public defaults. =Simulation.reset_time= now passes =t0= through the
+driver factory, preserving the SciPy factory's positional slots. A trajectory
+continuity regression proves reset/reinitialisation does not introduce a state
+discontinuity. Focused P1.1 result: =76 passed, 2 skipped=.
+
+P1.2 commit =17f24413= makes v2 restart provenance truthful and verifies
+integrity on both backends. Archives record =sim.integrator_backend= rather
+than a hard-coded SciPy driver; writable =sim.driver= remains synchronized.
+The slice retains v2-only rejection and deliberately leaves metadata
+reapplication/validation and mesh-mismatch semantics unchanged. It adds both
+immediate restart and uninterrupted-vs-restarted trajectory checks for SciPy
+and Sundials. Focused results: restart/output =27 passed=, Simulation =33
+passed=, Sundials =22 passed=, SciPy =21 passed, 2 skipped=, and LLG =16
+passed=.
+
+The combined main-worktree =dev/bin/verify-dolfinx-m5= run exited =0= with all
+=32= steps green; its fast examples reported =14 passed, 3 skipped=. Log:
+=/tmp/finmag-p1-lifecycle-m5.log=. P1.3 is intentionally not included here:
+D8 remains conditionally approved and the public =Simulation=/=sim_with=
+default remains SciPy until its separately reviewed default-change slice.
+
+[Codex GPT-5.6]

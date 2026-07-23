@@ -103,8 +103,8 @@ N = gratuitous (UNNECESSARY).
 
 | Surface | Legacy (pixi) | Ported | Class | Needed? | Revert if UNNECESSARY |
 |---|---|---|---|---|---|
-| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | same but `integrator_backend='scipy'` | REGISTERED | Y | — (register D8 / Task 20, OWNER DECISION PENDING; factory default IS sundials) |
-| `sim_with` | `(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend='sundials', A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None, nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name='unnamed', pbc=None, sim_class=Simulation)` | same but `integrator_backend='scipy'` and `demag_solver_params=None` | REGISTERED (backend) + benign | Y | — (backend = register #8; `{}`→`None` is a mutable-default-arg fix, behaviourally identical) |
+| `Simulation.__init__` | `(mesh, Ms, unit_length=1, name='unnamed', kernel='llg', integrator_backend='sundials', pbc=None, average=False, parallel=False)` | same but `integrator_backend='scipy'` | REGISTERED | Y | — (D8 conditionally approved; P1.1/P1.2 lifecycle complete, P1.3 still changes the public default) |
+| `sim_with` | `(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend='sundials', A=None, K1=None, K1_axis=None, H_ext=None, demag_solver='FK', demag_solver_type=None, nx=None, ny=None, spacing_x=None, spacing_y=None, demag_solver_params={}, D=None, name='unnamed', pbc=None, sim_class=Simulation)` | same but `integrator_backend='scipy'` and `demag_solver_params=None` | REGISTERED (backend) + benign | Y | — (backend is D8/P1.3; `{}`→`None` is a mutable-default-arg fix, behaviourally identical) |
 | `set_m` | `(value, normalise=True, **kwargs)` | identical | NO-CHANGE | Y | — |
 | `add` | `(interaction, with_time_update=None)` | identical | NO-CHANGE | Y | — |
 | `run_until` | `(t)` | identical | NO-CHANGE | Y | — |
@@ -318,8 +318,9 @@ its snapshot:
   import failures;
 - `sim_with` still rejects non-FK demag and legacy macrogeometry arguments even
   though direct treecode/MacroGeometry demag is now ported;
-- backend lifecycle: Sundials advances but `Simulation.reset_time()` and
-  restart fail through a SciPy-only `.ode` assumption;
+- backend lifecycle: `3f4ed4ea`/`17f24413` resolved the SciPy-only reset
+  assumption and both-backend restart integrity; the remaining registered D8
+  difference is the public SciPy default until P1.3;
 - restart format/state semantics, pins, STT precedence, snapshot format, and
   other behavioral differences are pending in `acceptance-register.md`;
 - thermal solvers, normal modes, FFT/PSD, MPI stepping, function-space PBC,

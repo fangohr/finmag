@@ -144,9 +144,18 @@ legacy energy assembly. Section 4’s per-behaviour decisions are canonical for
 the meeting record; the acceptance register is canonical for approved
 corrections and compatibility changes.
 
-**P0.2 and next engineering slice:**
+**P0.2 baseline:**
 
-P0.2 baseline evidence was recorded on 2026-07-23. Next is SR1-L1: Sundials
-reset/restart lifecycle (P1.1/P1.2).
+P0.2 baseline evidence was recorded on 2026-07-23.
+
+## Post-meeting implementation status (2026-07-23)
+
+The ticks and status text above are the dated owner-meeting snapshot; they are
+not silently rewritten as implementation lands. Since that meeting, P1.1 and
+P1.2 fixed the three meeting-time lifecycle/restart boundaries: backend-neutral
+reset/reinitialisation, Sundials restart, and truthful restart-driver
+provenance. P1.3 (restore Sundials as the public default) is the next slice.
+See `capability-status.md` and `acceptance-register.md` for current status and
+the conditional D8 decision.
 
 [Codex GPT-5]

@@ -154,7 +154,8 @@ Major work still outstanding includes thermal SLLG/LLB, normal modes and
 FFT/PSD, legacy NEB, general MPI time stepping, `Simulation(pbc=)`, nonlocal
 STT, external comparison harnesses, HDF5 readback, plotting and specialist
 utilities. Some top-level compatibility names still expose legacy `dolfin`
-imports, and the Sundials reset/restart lifecycle has a known open defect.
+imports. Sundials reset/restart lifecycle parity is now validated; restoring
+Sundials as the public default remains the separately gated P1.3 change.
 
 For the exact tested boundary and known failures, see
 [`docs/superpowers/capability-status.md`](docs/superpowers/capability-status.md).

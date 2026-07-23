@@ -64,22 +64,30 @@ not deleted and not an accepted permanent exception.
 
 ## Priority 1 — Trustworthy simulator lifecycle
 
-### P1.1 Sundials reset and reinitialisation
+### [x] P1.1 Sundials reset and reinitialisation
 
 - Remove the SciPy-only `.ode` assumption through the smallest backend-neutral
   lifecycle change.
 - Verify existing tolerance/scheduling behavior before modifying it.
-- **Gates:** new RED regression; Sundials, Simulation and aggregate gates.
+- **Completed:** `3f4ed4ea` makes reset backend-neutral: `Simulation` passes
+  `t0` through the driver factory, preserves SciPy positional factory slots,
+  and has a trajectory-continuity regression. Focused result: 76 passed,
+  2 skipped. Aggregate: 32 green steps.
 
-### P1.2 Restart integrity on both backends
+### [x] P1.2 Restart integrity on both backends
 
 - Correct saved backend provenance.
 - Compare uninterrupted and checkpoint/restart trajectories through the same
   final time on SciPy and Sundials.
 - Retain v2-only rejection of legacy raw-dof archives.
-- **Gates:** restart/output, both backend gates and aggregate verifier.
+- **Completed:** `17f24413` archives truthful `sim.integrator_backend`, keeps
+  writable `sim.driver` in sync, retains v2-only restart, and adds immediate
+  plus uninterrupted-vs-restarted trajectory checks on SciPy and Sundials.
+  Metadata and mesh-mismatch semantics are unchanged. Focused results:
+  restart 27, Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16;
+  aggregate: 32 green steps.
 
-### P1.3 Restore Sundials as public default
+### [ ] P1.3 Restore Sundials as public default — next
 
 - Change only public defaults and directly affected tests/docs after P1.1/P1.2
   prove equal lifecycle support.
@@ -88,34 +96,34 @@ not deleted and not an accepted permanent exception.
 
 ## Priority 2 — Everyday API and approved physics corrections
 
-### P2.1 Core import boundary
+### [ ] P2.1 Core import boundary
 
 - Make `finmag.example`/barmini and selected everyday conveniences import.
 - Deferred normal-mode families must fail explicitly by feature name.
 - **Non-goal:** no normal-mode implementation.
 
-### P2.2 `sim_with` MacroGeometry
+### [ ] P2.2 `sim_with` MacroGeometry
 
 - Wire nx/ny/spacing arguments to the existing dense-FK MacroGeometry path.
 - **Non-goals:** no Treecode selector, GCR or Demag2D work.
 
-### P2.3 Callable pin masks
+### [ ] P2.3 Callable pin masks
 
 - Restore coordinate-to-dof callable pin selection without changing indexed
   pins or adding MPI stepping.
 
-### P2.4 Correct discrete-time Zeeman energy
+### [ ] P2.4 Correct discrete-time Zeeman energy
 
 - Rebuild/update the energy consistently with the field after interval changes.
 - Preserve an explicit regression showing the legacy stale-energy behavior.
 
-### P2.5 Correct hysteresis stage relaxation
+### [ ] P2.5 Correct hysteresis stage relaxation
 
 - Ensure every applied-field stage independently relaxes.
 - Test switching/loop physics, not merely result lengths.
 - Document why corrected output differs from master.
 
-### P2.6 Reject conflicting STT modes
+### [ ] P2.6 Reject conflicting STT modes
 
 - Keep each mode independently working.
 - Raise a clear error when configuration would enable both modes.
@@ -151,20 +159,20 @@ Implement as separate reviewable slices:
 
 ## Priority 5 — Mesh and external-reference validation
 
-### P5.1 Netgen necessity probe
+### [ ] P5.1 Netgen necessity probe
 
 - Identify a selected test/geometry that Gmsh and the `.geo` subset cannot
   represent or validate.
 - If none exists, leave Netgen deferred. If one exists, propose a separate
   conversion design before source edits.
 
-### P5.2 Comparison data
+### [ ] P5.2 Comparison data
 
 - Restore OOMMF, Nmag and Magpar comparisons separately using checked-in data.
 - Compare by coordinates and physical invariants, not raw node ordering.
 - Do not resurrect `nsim` merely to reproduce historical execution.
 
-### P5.3 Legacy tests
+### [ ] P5.3 Legacy tests
 
 - Port tests in small feature-family clusters driven by P0.1.
 - Skip/xfail only after the positive replacement test is ported, or for a named

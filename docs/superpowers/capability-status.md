@@ -85,11 +85,11 @@ approved corrections are implemented and green.
 | C06 | Deterministic energy interactions | **partial** | Exchange, Zeeman family, uniaxial/cubic anisotropy, DMI and ThinFilmDemag have oracle/analytic/regression coverage. The varying-K2 witness deliberately pins divergence from the legacy indexing bug; varying cubic axes are missing. Legacy matrix/project/direct methods and string-expression compatibility are not required for SR1; D2D is later and FixedEnergyDW not now | common interactions and varying cubic axes required; selected legacy surfaces deferred |
 | C07 | Demagnetisation | **partial** | FK is oracle-validated; treecode/MacroGeometry is analytic and cross-method validated. `sim_with` exposes only FK and rejects its legacy MacroGeometry arguments; GCR, Demag2D and specialist solver paths remain unavailable | wire MacroGeometry through FK now; Treecode factory exposure later/review |
 | C08 | Deterministic serial LLG and composed dynamics | **ported** | `Simulation`, `run_until`, `relax`, effective-field composition, pins by index and deterministic trajectories have analytic/oracle/regression coverage. Callable pin masks are not ported | required core green; missing pin form explicit |
-| C09 | SciPy and native Sundials integration | **partial** | Both advance trajectories and have cross-backend tests. **Known blocker:** Sundials `Simulation.reset_time()` accesses a SciPy-only `.ode` attribute, so Sundials restart also fails. Default-backend difference is D8 | blocker |
+| C09 | SciPy and native Sundials integration | **partial** | Both backends now advance, reset/reinitialise, and satisfy immediate plus trajectory restart checks. `3f4ed4ea` made reset backend-neutral; `17f24413` completed truthful restart provenance/integrity. The remaining D8 public-default difference is intentional until P1.3 | P1.3 default change remains |
 | C10 | Spin-transfer torque | **partial** | Slonczewski and Zhang-Li local terms run separately with oracle/analytic/cross-backend witnesses. D11 approves an explicit error for conflicting configuration, but current source still silently makes the last call win. Separate nonlocal `LLG_STT` is deferred | blocker until D11 error semantics land; nonlocal not now |
 | C11 | Time-dependent fields and hysteresis | **partial** | Time-dependent Zeeman family, relaxation and hysteresis are exercised. The stale-energy and no-re-relax defects remain in source, but their corrections are owner-approved under D3/D4 | blocker until approved fixes land |
 | C12 | Scheduler and output | **partial** | Scheduler, NDT, coordinate-table `.npy` snapshots and VTK/XDMF write have regression/end-to-end tests. The current `.npy` contract is PASS but additional snapshot work is owner-Later. HDF5 and VTK/XDMF readback, plotting and region/submesh output are unavailable; historical movie helpers are separate | HDF5, plotting and region output are SR1 blockers; movie wrapper later/review |
-| C13 | Restart | **partial** | Coordinate-aware v2 restores magnetisation and time on SciPy. Sundials restart fails through C09; archives hard-code `driver='scipy'`; metadata is not reapplied; v1 is rejected; tests do not compare restarted and uninterrupted final trajectories | blocker |
+| C13 | Restart | **partial** | Coordinate-aware v2 restores magnetisation/time on both backends; archives record truthful `sim.integrator_backend`, writable `sim.driver` stays in sync, v1 is rejected, and immediate plus uninterrupted-vs-restarted trajectory tests pass. Metadata reapplication/validation and full-state reconstruction remain separate D16 questions | metadata boundary remains |
 | C14 | Point/topology utilities | **ported** | Point evaluation, `get_spherical`, skyrmion number and density have analytic/regression coverage in `dolfinx-src-io-utils-pytest` | required, green |
 | C15 | Converted examples | **partial** | Aggregate baseline: 32 green steps; fast lane 14 passed, 3 skipped. Clean FULL baseline: 12 passed, 5 failed — three unchanged-wrapper timeouts (not physics failures), one missing scheduler `save_m` keyword, and one raw `dolfin` import through `finmag.util.helpers`. `FINMAG_EXAMPLE_FULL=1` runs the fourteen fast plus three slow entries. The std_prob4 0.10–0.18 ns crossing window is qualitative, not unchanged-behavior evidence | blocker |
 | C16 | Thermal SLLG and LLB | **deferred** | Legacy surface remains tied to unported modules/native code | Not now; retain for later full-parity decision/work |
@@ -100,18 +100,15 @@ approved corrections are implemented and green.
 | C21 | Legacy utilities and specialist workflows | **partial** | Common helpers used by ported workflows work. Owner-selected initialisers, HDF5/plotting/visualisation, probing and simulation helpers are missing; unselected research-era surfaces still require inventory or owner decision | selected checklist rows are SR1 work; unselected long tail later/not now |
 | C22 | Full public-interface parity | **partial** | A focused 45-surface audit corrected six parameter names and ordering. It was not exhaustive; top-level exports, `sim_with`, backend lifecycle, Field long tail and unported master modules remain open | supported SR1 names required; exhaustive audit for full parity |
 
-## Known high-priority failures at the reconciliation point
+## Current high-priority failures
 
-1. `Simulation(..., integrator_backend="sundials").reset_time(t)` raises
-   `AttributeError: 'SundialsIntegrator' object has no attribute 'ode'`.
-   `Simulation.restart()` calls `reset_time`, so it fails on Sundials too.
-2. Accessing `finmag.NormalModeSimulation`, `finmag.normal_mode_simulation`,
+1. Accessing `finmag.NormalModeSimulation`, `finmag.normal_mode_simulation`,
    `finmag.set_logging_level`, or `finmag.example` can expose raw
    `ModuleNotFoundError: No module named 'dolfin'` instead of either working or
    failing by feature name.
-3. `sim_with` rejects treecode and MacroGeometry arguments although the direct
+2. `sim_with` rejects treecode and MacroGeometry arguments although the direct
    `Demag(solver='Treecode')` and `MacroGeometry` implementation is ported.
-4. The recorded clean FULL lane has three wrapper timeouts (`cubic_anisotropy`
+3. The recorded clean FULL lane has three wrapper timeouts (`cubic_anisotropy`
    hysteresis, std_prob3 and std_prob4), an immediate missing scheduler
    `save_m` keyword in `cubic_anisotropy/sim.py`, and a raw legacy-`dolfin`
    import through `finmag.util.helpers` in `magnetic_grain/suess_2001.py`.
@@ -124,10 +121,10 @@ still follows the per-slice protocol and receives an independent review.
 
 | Slice | Scope and non-goals | Required evidence |
 |---|---|---|
-| SR1-L1 | Make Sundials reset, reinitialisation and restart obey the existing `Simulation` lifecycle; correct backend provenance. Verify tolerance, schedule and save behavior first; do not change them without RED evidence. Do not decide D8 or redesign restart format. | New RED regression; uninterrupted-vs-restarted final-m agreement on each backend; `dolfinx-src-sundials-pytest`; `dolfinx-src-restart-output-pytest`; aggregate verifier |
+| SR1-L1 | **Completed in `3f4ed4ea` and `17f24413`:** backend-neutral reset/reinitialisation, truthful restart provenance and both-backend restart integrity. D8/public default and D16 metadata scope were not changed. | P1.1 focused 76 passed/2 skipped; P1.2 restart 27, Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16; aggregate 32 green |
 | SR1-A1 | Repair the top-level import/error boundary: make the SR1 convenience exports work and make deferred families fail by feature name. Do not port normal modes in this slice. | `dolfinx-src-import-pytest`, clean-process probes, aggregate verifier |
 | SR1-A2 | Wire the already-ported dense-FK MacroGeometry path through legacy `sim_with` nx/ny/spacing arguments. Do not add Treecode factory exposure or change demag algorithms. | RED factory tests, `dolfinx-src-treecode-pytest`, `dolfinx-src-simulation-pytest`, aggregate verifier |
 | SR1-V1 | Run `FINMAG_EXAMPLE_FULL=1`; diagnose failures and make only separately reviewed minimal fixes. Treat std_prob4's broad crossing window as a qualitative workflow witness, not parity evidence. | Recorded full-lane result plus separately scoped mesh-matched oracle or convergence/quantitative trajectory evidence, then aggregate verifier |
-| SR1-O1 | **Owner direction recorded:** fix D3/D4; D8 conditionally approves Sundials as the default after SR1-L1/RST validation. Implementation and D8's validation condition remain open. | Owner-meeting dispositions recorded in `acceptance-register.md` on 2026-07-23 |
+| SR1-O1 | **Owner direction recorded:** fix D3/D4; D8 conditionally approves Sundials as the default. P1.1/P1.2 satisfied the lifecycle/restart validation condition; P1.3 has not yet changed the public default. | Owner-meeting dispositions recorded in `acceptance-register.md` on 2026-07-23; P1 evidence in `3f4ed4ea`/`17f24413` |
 
 [Codex GPT-5]

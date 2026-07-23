@@ -52,7 +52,8 @@ NEB algorithms must be inventoried with the NEB slice.
 The port already has a broad serial deterministic core: common energy terms,
 FK and direct treecode/MacroGeometry demag, spatially varying parameters,
 regions, local Slonczewski and Zhang-Li STT, SciPy and native CVODE trajectory
-integration, scheduling, restart v2, NDT and field output, point/topology
+integration, backend-neutral reset/reinitialisation, truthful v2 restart on
+both backends, scheduling, NDT and field output, point/topology
 utilities, common Gmsh mesh generation, editable packaging, and converted
 examples. Validation is a mixture of frozen-oracle, analytic, cross-method,
 regression, MPI ownership probes, and end-to-end tests; it is not all “oracle
@@ -60,8 +61,9 @@ validated”. The exact boundaries are in `capability-status.md`.
 
 Important current limitations:
 
-- Sundials advance works, but its `Simulation.reset_time()` and restart path
-  fail because the implementation assumes a SciPy-only `.ode` attribute.
+- SciPy and Sundials reset/reinitialise and restart through the same lifecycle;
+  the public `Simulation`/`sim_with` default remains SciPy until P1.3 applies
+  D8's conditional approval.
 - several compatibility exports still fail through raw legacy-`dolfin`
   imports;
 - `sim_with` does not yet wire the already-ported dense-FK MacroGeometry path;
@@ -122,10 +124,10 @@ import above. See the manifest for exact logs and environment versions.
 
 The canonical bounded slices and gates are in
 [`capability-status.md`](capability-status.md#bounded-sr1-work-slices). The
-recommended next slice is SR1-L1 (Sundials reset/restart), followed by SR1-A1
-(top-level error boundary) and SR1-A2 (`sim_with` MacroGeometry wiring). SR1-V1
-now has its baseline failure inventory; rerun it only after separately reviewed
-fixes, including the scheduler and raw-import defects, have landed.
+recommended next slice is P1.3 (restore Sundials as the public default), then
+SR1-A1 (top-level error boundary) and SR1-A2 (`sim_with` MacroGeometry wiring).
+SR1-V1 now has its baseline failure inventory; rerun it only after separately
+reviewed fixes, including the scheduler and raw-import defects, have landed.
 SR1-O1 is now decided: fix the stale energy and hysteresis defects, and restore
 Sundials as the default after lifecycle validation. The detailed, superseding
 sequence is in `plans/2026-07-23-sr1-prioritised-plan.md`.

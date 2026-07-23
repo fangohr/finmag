@@ -198,7 +198,8 @@ module with its tests.
   environment. Deliberate deviations: `integrator_backend` defaults to
   `"scipy"`; `m`/`dmdt` return component-blocked `xxx` arrays; `t` reports
   `0.0` until an integrator exists (no lazy-create-to-read-clock); `set_tol`
-  reinits the SciPy driver; `reset_time` reseeds it (no `t0` kwarg); `Volume`
+  reinits the SciPy driver; `reset_time` reseeds it (no `t0` kwarg; superseded
+  for backend-neutral reset semantics by the P1.1 entry below); `Volume`
   uses a DOLFINx assemble. Deferred by name when requested (import and core
   paths stay clean): PBC, `parallel=True`, `sllg`/`llg_stt` kernels, `sim_with`
   demag (default `"FK"`, pass `demag_solver=None`) and DMI (`D`), STT,
@@ -817,6 +818,19 @@ Before editing the matching module in `src/finmag`, check that:
   skyrmion/submesh/normal-mode helpers, already dropped from the ported
   `Simulation` in Task 9, were removed). Gate:
   `dolfinx-src-restart-output-pytest`. [Claude Opus 4.8]
+
+- P1 lifecycle resolution: `3f4ed4ea` (P1.1) removes the SciPy-only reset
+  assumption by passing `t0` through the driver factory without disturbing
+  SciPy's positional factory slots; a trajectory-continuity regression pins
+  reset semantics. `17f24413` (P1.2) writes truthful
+  `sim.integrator_backend` provenance to v2 archives, keeps writable
+  `sim.driver` synchronized, and validates immediate plus
+  uninterrupted-vs-restarted trajectories on SciPy and Sundials. V2-only
+  rejection, metadata handling and mesh-mismatch semantics were deliberately
+  unchanged. Focused P1.1: 76 passed/2 skipped. P1.2: restart 27,
+  Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16; aggregate
+  verifier 32 steps green. P1.3 alone may restore the public Sundials default.
+  [Codex GPT-5.6]
 
 - `src/finmag/util/meshes.py` and `src/finmag/util/mesh_templates.py` are now
   the direct DOLFINx port of the mesh-generation surface (Task 18). The Netgen
