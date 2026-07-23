@@ -569,6 +569,32 @@ def test_sim_with_touching_macro_geometry_tiles_are_deferred_by_name():
              nx=3, spacing_x=5.0 * (1 + 1e-6), name="mg_touching_gap")
 
 
+def test_sim_with_overlapping_macro_geometry_tiles_are_deferred_by_name():
+    """Overlapping tiles (pitch < mesh extent) are as broken as touching ones.
+
+    The periodic BEM is correct only for ``pitch > extent`` (any positive gap).
+    A pitch strictly *below* the extent makes neighbouring image tiles
+    interpenetrate and the BEM row sums diverge further from -1 (row-sum maxdev
+    1.0 at ``0.9*extent`` -- row sums -2 -- and 2.0 at ``0.5*extent`` -- row
+    sums -3), giving a silently wrong demag field.  Before this commit the guard
+    rejected only the exactly-touching pitch (``pitch == extent``) and let these
+    overlapping pitches slip through; it now rejects ``pitch <= extent`` on every
+    active axis.  [Claude Opus 4.8]"""
+    box = _box(2, 5.0)  # 5nm extent along each axis
+    with pytest.raises(NotImplementedError, match="touching|overlap"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 nx=3, spacing_x=0.9 * 5.0)
+    with pytest.raises(NotImplementedError, match="touching|overlap"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 nx=3, spacing_x=0.5 * 5.0)
+    with pytest.raises(NotImplementedError, match="touching|overlap"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 ny=3, spacing_y=0.9 * 5.0)
+    # a genuinely larger gap (pitch > extent) must still be accepted
+    sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+             nx=3, spacing_x=5.0 * (1 + 1e-6), name="mg_overlap_ok")
+
+
 def test_sim_with_treecode_demag_is_still_deferred_by_name():
     """The Treecode factory selector is out of scope for SR1 P2.2 and stays
     deferred even now that the macro-geometry arguments are wired."""

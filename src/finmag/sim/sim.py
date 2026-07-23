@@ -98,23 +98,37 @@ def _deferred(name, detail):
 
 
 def _reject_touching_macro_geometry(mesh, macrogeometry):
-    """Refuse the exactly-touching macro-geometry tiling (SR1 P2.2).
+    """Refuse touching *and* overlapping macro-geometry tilings (SR1 P2.2).
 
-    Divergence 2 from the legacy contract, deliberate and documented. Legacy
-    ``sim_with(nx=3)`` with no ``spacing_x`` meant "the tiles touch": the image
-    lattice pitch defaults to the mesh bounding-box extent, so neighbouring
-    tiles share boundary nodes. The ported periodic BEM assembly does not
-    handle those coincident nodes -- the solid angle is double counted (BEM row
-    sums reach -2 instead of -1), giving a ~158% error on a cube, and on a flat
-    slab the matrix acquires non-finite entries so the phi_2 solve fails with
-    ``KSP_DIVERGED_NANORINF`` and the returned field is silently ``-M``. See
-    ``test_treecode_pbc_demag_dolfinx.py::
+    Divergence 2 from the legacy contract, deliberate and documented. The
+    ported periodic BEM is correct only when the tile pitch is strictly larger
+    than the mesh extent along each tiled axis (``pitch > extent``, i.e. any
+    positive gap between neighbouring image tiles). It is broken for
+    ``pitch <= extent``:
+
+    * ``pitch == extent`` is the legacy "tiles touch" default (what
+      ``sim_with(nx=3)`` with no ``spacing_x`` means -- the image lattice pitch
+      defaults to the mesh bounding-box extent). Neighbouring tiles share
+      boundary nodes; the BEM assembly double-counts the solid angle (row sums
+      reach -2 instead of -1), giving a ~158% error on a cube, and on a flat
+      slab the matrix acquires non-finite entries so the phi_2 solve fails with
+      ``KSP_DIVERGED_NANORINF`` and the returned field is silently ``-M``.
+    * ``pitch < extent`` makes neighbouring image tiles interpenetrate; the row
+      sums diverge further from -1 (maxdev 1.0 at ``0.9*extent`` -- row sums -2
+      -- and 2.0 at ``0.5*extent`` -- row sums -3), again a silently wrong
+      field. This case previously slipped past the exact-equality guard.
+
+    See ``test_treecode_pbc_demag_dolfinx.py::
     test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.
 
     Fixing that is a demag-algorithm change (explicit non-goal of this slice),
-    so ``sim_with`` refuses the configuration by name rather than exposing a
+    so ``sim_with`` refuses ``pitch <= extent`` by name rather than exposing a
     silently wrong field. One ULP of gap already restores the correct answer,
-    hence the suggested ``extent * (1 + 1e-6)`` pitch. [Claude Opus 4.8]
+    hence the suggested ``extent * (1 + 1e-6)`` pitch. The threshold keeps a
+    conservative one-sided tolerance (``extent * (1 + 1e-9)``): a genuinely
+    larger gap like ``extent * (1 + 1e-6)`` is accepted, while the
+    near-coincident band stays rejected with the same "use a larger pitch"
+    message. [Claude Opus 4.8]
     """
     extents = macrogeometry.find_mesh_info(mesh)
     axes = (("x", "nx", "spacing_x", macrogeometry.nx, macrogeometry.dx),
@@ -126,16 +140,19 @@ def _reject_touching_macro_geometry(mesh, macrogeometry):
         # `pitch is None` is the legacy "tiles touch" default: compute_Ts would
         # infer exactly this extent from the mesh bounding box.
         effective = extent if pitch is None else float(pitch)
-        if abs(effective - extent) <= 1e-9 * max(abs(extent), 1.0):
+        # Reject touching (pitch == extent) AND overlapping (pitch < extent):
+        # the periodic BEM is valid only for a strictly larger pitch. The
+        # one-sided tolerance keeps `extent * (1 + 1e-6)` acceptable.
+        if effective <= extent * (1.0 + 1e-9):
             raise NotImplementedError(
-                "sim_with({}={!r}, {}={!r}): the exactly-touching "
-                "macro-geometry tiling (tile pitch equal to the mesh extent "
+                "sim_with({}={!r}, {}={!r}): the touching-or-overlapping "
+                "macro-geometry tiling (tile pitch at or below the mesh extent "
                 "{!r} along {}) is not available in the DOLFINx port -- "
-                "coincident tile boundary nodes make the periodic BEM "
-                "assembly return a silently wrong (or non-finite) demag "
-                "field. Pass a slightly larger pitch, e.g. {}={!r}. "
-                "(Deliberate divergence from the legacy default; see "
-                "dev/dolfinx/porting_map.md.)".format(
+                "coincident or interpenetrating tile boundary nodes make the "
+                "periodic BEM assembly return a silently wrong (or non-finite) "
+                "demag field. Pass a pitch strictly larger than the mesh "
+                "extent, e.g. {}={!r}. (Deliberate divergence from the legacy "
+                "default; see dev/dolfinx/porting_map.md.)".format(
                     n_name, n_tiles, s_name, pitch, extent, axis,
                     s_name, extent * (1.0 + 1e-6)))
 
