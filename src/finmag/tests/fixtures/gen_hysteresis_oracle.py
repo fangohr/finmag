@@ -2,13 +2,15 @@
 
 Runs at the immutable FEniCS-2019 oracle, using the legacy *default*
 (native Sundials) integrator backend -- the true legacy ``Simulation``
-default, not the DOLFINx port's temporary SciPy default (Task 8). The
-per-stage adaptive step timeline built by ``sim_relax.relax`` (see that
+default. When this oracle was generated the DOLFINx port still carried the
+temporary SciPy default (Task 8); SR1 P1.3 restored ``"sundials"`` as the
+port's public default too, so the consuming test now compares like with like.
+The per-stage adaptive step timeline built by ``sim_relax.relax`` (see that
 module) is governed entirely by pure-Python scheduler logic independent of
 the ODE backend, so the stage *times* are expected to reproduce exactly;
 only the relaxed ``m_average`` values are expected to show small
-solver/floating-point-noise-level disagreement against the DOLFINx (SciPy)
-port.
+solver/floating-point-noise-level disagreement against the DOLFINx port on
+either backend.
 
 Important finding recorded here (see ``transition-notes.org`` Task 15 and
 the class docstrings on ``finmag.sim.hysteresis``): legacy's own

@@ -6,11 +6,15 @@ convention of the existing ``*_mpi_probe.py`` witnesses.
 
 This builds the Task 9 core ``Simulation`` on a small 3D box with the three
 ported interactions (Exchange, Zeeman, UniaxialAnisotropy) on the default
-SciPy backend, advances to ``1e-12`` s with ``run_until`` (the SciPy/VODE
-driver steps adaptively rather than with a fixed dt), and prints a short JSON
+backend, advances to ``1e-12`` s with ``run_until`` (both ported drivers step
+adaptively rather than with a fixed dt), and prints a short JSON
 witness: the final time reached, the average magnetisation, and the maximum
 nodal deviation from unit norm. A failing physics/tolerance check is a plain
 ``assert``, which raises and makes the module exit with a nonzero status.
+
+SR1 P1.3: the default backend is now the native Sundials/CVODE driver, so this
+smoke also pins the witnessed backend provenance -- it is the end-to-end
+witness that the flipped public default really steps. [Claude Opus 4.8]
 """
 
 import json
@@ -56,6 +60,14 @@ def main():
         "integrator_backend": sim.integrator_backend,
     }
 
+    assert sim.integrator_backend == "sundials", (
+        "default integrator backend is not the restored native Sundials "
+        "default: {}".format(witness)
+    )
+    assert type(sim.integrator).__name__ == "SundialsIntegrator", (
+        "default backend did not instantiate the native Sundials driver: "
+        "{}".format(type(sim.integrator).__name__)
+    )
     assert sim.t >= T_TARGET, (
         "run_until did not reach the requested time: {}".format(witness)
     )

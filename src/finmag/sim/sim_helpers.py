@@ -132,8 +132,10 @@ def save_restart_data(sim, filename=None):
     - ``simtime``/``datetime``/``simname``/``driver``/``format_version``.
     """
     datetimetuple = datetime.now()
-    # Truthful backend provenance: record the integrator backend that actually
-    # produced this state ('scipy' or 'sundials'), not a hard-coded constant.
+    # Truthful backend provenance: record the integrator backend this
+    # simulation is configured to use ('scipy' or 'sundials'), not a hard-coded
+    # constant. This is the requested/configured backend, not evidence that an
+    # integrator was constructed or stepped.
     # The legacy code hard-coded 'cvode' with an explicit "we should deduce
     # this from sim object XXX" note, and the port carried that shape over as a
     # hard-coded 'scipy'; a simulation running on the native Sundials backend

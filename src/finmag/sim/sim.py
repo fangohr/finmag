@@ -20,16 +20,18 @@ Deliberate deviations from the legacy module (all documented in
 
 - ``mesh`` is a ``dolfinx.mesh.Mesh``; the CG1 scalar/vector spaces are built
   with ``dolfinx.fem.functionspace`` and there is no ``constrained_domain``.
-- ``integrator_backend`` defaults to ``"scipy"`` (was ``"sundials"``). Task 20
-  ported and fully validated the native Sundials/CVODE extension on DOLFINx
-  (``integrator_backend="sundials"`` now works end-to-end when the extension
-  is built, and ``llg_integrator``'s own factory default was restored to
-  ``"sundials"``), but ``Simulation.integrator_backend``'s default is
-  deliberately kept at ``"scipy"`` -- USER ACCEPTANCE PENDING, see
-  ``transition-notes.org`` ("Native Sundials/CVODE on DOLFINx (Task 20)") and
-  ``dev/dolfinx/porting_map.md``. Without the native extension built,
-  ``integrator_backend="sundials"`` still raises ``ImportError`` by name via
-  ``llg_integrator``.
+- ``integrator_backend`` defaults to ``"sundials"``, as legacy did, on both
+  ``Simulation`` and ``sim_with``. Task 20 ported and validated the native
+  Sundials/CVODE extension on DOLFINx and restored ``llg_integrator``'s own
+  factory default; SR1 P1.1/P1.2 then made ``reset_time``/``reinit_integrator``
+  backend-neutral and the saved restart provenance truthful, discharging the
+  owner's condition on the public default (SR1 P1.3). SciPy is not removed: it
+  remains a fully supported explicit opt-in (``integrator_backend="scipy"``),
+  and the ported ``ScipyIntegrator`` is still the always-available driver in
+  environments where the native extension is not built. Without that extension,
+  the default ``integrator_backend="sundials"`` raises ``ImportError`` by name
+  via ``llg_integrator`` (unchanged failure mode, now triggered by the default
+  rather than an explicit request).
 - ``m`` and ``dmdt`` return the component-blocked coordinate-ordered ``xxx``
   arrays (matching the ``LLG`` state-vector contract), not raw backend dofs.
 - ``t`` reports ``0.0`` until an integrator exists rather than lazily creating
@@ -104,7 +106,7 @@ class Simulation(object):
     instances = {}
 
     def __init__(self, mesh, Ms, unit_length=1, name="unnamed", kernel="llg",
-                 integrator_backend="scipy", pbc=None, average=False,
+                 integrator_backend="sundials", pbc=None, average=False,
                  parallel=False):
         """Create a core micromagnetic simulation.
 
@@ -120,11 +122,10 @@ class Simulation(object):
 
           kernel : only ``'llg'`` is ported (``'sllg'``/``'llg_stt'`` deferred)
 
-          integrator_backend : ``'scipy'`` (default) or ``'sundials'`` (Task 20:
-            fully ported and supported when the native extension is built;
-            raises ``ImportError`` by name otherwise). The ``"scipy"`` default
-            here is temporary -- see the Task 20 "USER ACCEPTANCE PENDING"
-            register entry in ``transition-notes.org``.
+          integrator_backend : ``'sundials'`` (default, as in legacy; the
+            native CVODE driver, which raises ``ImportError`` by name when the
+            extension is not built) or ``'scipy'`` (the always-available
+            ported driver, a fully supported explicit opt-in)
 
           pbc : periodic boundaries are deferred (only ``None`` is supported)
         """
@@ -844,7 +845,7 @@ class Simulation(object):
 
 
 def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
-             integrator_backend="scipy", A=None, K1=None, K1_axis=None,
+             integrator_backend="sundials", A=None, K1=None, K1_axis=None,
              H_ext=None, demag_solver="FK", demag_solver_type=None, nx=None,
              ny=None, spacing_x=None, spacing_y=None, demag_solver_params=None,
              D=None, name="unnamed", pbc=None, sim_class=Simulation):

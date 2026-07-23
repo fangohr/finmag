@@ -23,11 +23,12 @@ by name (unchanged failure mode, just triggered by the default instead of an
 explicit request) -- callers that need the always-available driver should
 still pass ``backend="scipy"`` explicitly.
 
-Note ``Simulation.integrator_backend`` itself is a *separate* default (set in
-``finmag.sim.sim.Simulation.__init__``) and deliberately stays ``"scipy"`` for
-now -- see the "USER ACCEPTANCE PENDING" register entry in
-``transition-notes.org`` / ``dev/dolfinx/porting_map.md`` / the Task 20 plan
-section. [Claude Sonnet 5]
+Note ``Simulation.integrator_backend`` is a *separate* default (set in
+``finmag.sim.sim.Simulation.__init__``/``sim_with``). It was held at
+``"scipy"`` pending repository-owner approval; SR1 P1.3 flipped it to
+``"sundials"`` to match this factory and legacy, after SR1 P1.1/P1.2 made the
+Sundials reset/reinit/restart lifecycle trustworthy. This factory is unchanged
+by that slice. [Claude Sonnet 5], [Claude Opus 4.8]
 
 Task 11a: the eager module-scope ``from finmag.drivers.sundials_integrator
 import SundialsIntegrator`` was moved behind a PEP 562 module ``__getattr__``.

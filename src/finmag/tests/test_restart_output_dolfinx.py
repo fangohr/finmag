@@ -71,7 +71,16 @@ def test_restart_stores_coordinate_aware_format(tmpdir):
                 "unit_length", "interactions", "simtime", "driver",
                 "format_version"]).issubset(set(raw.keys()))
     assert int(raw["format_version"]) == sim_helpers.RESTART_FORMAT_VERSION == 2
-    assert str(raw["driver"]) == "scipy"
+    # ``driver`` records the backend this simulation is *configured* to use
+    # (P1.2 made it track ``integrator_backend`` instead of a hard-coded
+    # constant); it is requested-backend provenance, not evidence that an
+    # integrator was ever constructed or stepped. This simulation takes the
+    # public default, which SR1 P1.3 restored to "sundials". Both backends'
+    # provenance is covered explicitly by
+    # ``test_restart_archive_records_the_backend_actually_used``; this case is
+    # about the v2 *format*, so it pins the default rather than a hard-coded
+    # backend name. [Claude Opus 4.8]
+    assert str(raw["driver"]) == sim.integrator_backend == "sundials"
     # coordinates and values are per-vertex tables (n, gdim) / (n, 3)
     assert raw["coordinates"].ndim == 2 and raw["coordinates"].shape[1] == 3
     assert raw["m"].shape == raw["coordinates"].shape

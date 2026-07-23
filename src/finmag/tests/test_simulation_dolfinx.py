@@ -71,30 +71,78 @@ def test_ported_simulation_does_not_load_legacy_dolfin_or_native():
 # --------------------------------------------------------------------------
 
 def test_construction_core_state():
-    """USER ACCEPTANCE PENDING: ``Simulation.integrator_backend`` defaults to
-    ``"scipy"`` here, diverging from the legacy default of ``"sundials"`` that
-    Task 20 fix round 1 restored for the bare ``llg_integrator`` factory. This
-    is deliberate and temporary (Phase 1 Task 8/9 sanctioned ``"scipy"`` as
-    the DOLFINx ``Simulation`` default) -- flipping it would couple every
-    ``run_until`` gate across the M5 suite to the native sundials build, a
-    larger re-validation not done in this slice. See the identical register
-    entry in ``transition-notes.org`` ("Native Sundials/CVODE on DOLFINx
-    (Task 20)"), ``dev/dolfinx/porting_map.md``, and the Task 20 section of
-    ``docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md``. [Claude
-    Sonnet 5]
+    """SR1 P1.3: ``Simulation.integrator_backend`` defaults to ``"sundials"``,
+    matching the legacy default and the ``llg_integrator`` factory default that
+    Task 20 fix round 1 restored. The temporary ``"scipy"`` default sanctioned
+    by Phase 1 Task 8/9 is gone: the owner conditionally approved restoring the
+    legacy native backend as the public default once the Sundials lifecycle was
+    trustworthy, and SR1 P1.1 (backend-neutral ``reset_time``) and P1.2
+    (truthful restart provenance) discharged that condition. SciPy is not
+    removed -- it stays a fully supported explicit opt-in
+    (``integrator_backend="scipy"``). [Claude Opus 4.8]
     """
     box = _box()
     sim = Simulation(box, 8.6e5, unit_length=1e-9, name="my_sim")
     assert sim.mesh is box
     assert sim.unit_length == 1e-9
     assert sim.name == "my_sim"
-    assert sim.integrator_backend == "scipy"
+    assert sim.integrator_backend == "sundials"
+    # ``driver`` is initialised from the backend actually requested (P1.2), so
+    # the public provenance surface must follow the flipped default too.
+    assert sim.driver == "sundials"
     # scalar Ms exposed as a Field averaging to the requested value
     assert np.isclose(float(np.average(sim.Ms.as_array())), 8.6e5)
     # scalar alpha / gamma defaults come straight from the LLG core
     assert np.isclose(sim.alpha, 0.5)
     assert np.isclose(sim.gamma, consts.gamma)
     assert sim.Volume > 0.0
+
+
+def test_sim_with_default_integrator_backend_is_sundials():
+    """SR1 P1.3: the ``sim_with`` convenience factory carries the same public
+    default as ``Simulation.__init__``. [Claude Opus 4.8]"""
+    import inspect
+
+    assert (inspect.signature(sim_with).parameters["integrator_backend"].default
+            == "sundials")
+    assert (inspect.signature(Simulation.__init__)
+            .parameters["integrator_backend"].default == "sundials")
+
+    sim = sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                   name="sim_with_default_backend", demag_solver=None)
+    assert sim.integrator_backend == "sundials"
+    assert sim.driver == "sundials"
+
+
+def test_default_backend_instantiates_native_sundials_integrator():
+    """SR1 P1.3: the flipped default must genuinely reach the *native*
+    Sundials/CVODE driver, not merely report a string. Asserted through the
+    public lazy-creation path plus a real physical-time step. [Claude Opus 4.8]
+    """
+    from finmag.drivers.sundials_integrator import SundialsIntegrator
+
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+    assert isinstance(sim.integrator, SundialsIntegrator)
+    sim.run_until(1e-12)
+    assert sim.t >= 1e-12
+    assert sim.driver == "sundials"
+
+
+def test_explicit_scipy_backend_remains_supported():
+    """SR1 P1.3 non-goal guard: SciPy is not removed; the explicit opt-in still
+    selects the ported ``ScipyIntegrator`` and steps. [Claude Opus 4.8]"""
+    from finmag.drivers.scipy_integrator import ScipyIntegrator
+
+    sim = _make_sim(integrator_backend="scipy")
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+    assert isinstance(sim.integrator, ScipyIntegrator)
+    sim.run_until(1e-12)
+    assert sim.t >= 1e-12
+    assert sim.integrator_backend == "scipy"
+    assert sim.driver == "scipy"
 
 
 def test_scalar_alpha_and_gamma_roundtrip():
@@ -264,14 +312,18 @@ def test_reset_time():
     assert sim.t == 0.0
 
 
-def test_reset_time_to_nonzero_keeps_m_and_allows_further_integration():
+@pytest.mark.parametrize("backend", ["sundials", "scipy"])
+def test_reset_time_to_nonzero_keeps_m_and_allows_further_integration(backend):
     """Reset is a clock operation, not a state operation (SR1 P1.1).
 
-    Also covers the default (SciPy) backend half of the backend-neutral
-    ``reset_time``; the native Sundials half lives in
+    Covers both backends through ``Simulation``. This used to cover only the
+    then-default SciPy half; SR1 P1.3 flipped the public default to
+    ``"sundials"``, so the backend is now parametrised explicitly rather than
+    left implicit, keeping the SciPy half of the backend-neutral ``reset_time``
+    contract pinned. The driver-level Sundials half lives in
     ``test_sundials_driver_dolfinx.py``. [Claude Opus 4.8]
     """
-    sim = _make_sim()
+    sim = _make_sim(integrator_backend=backend)
     sim.set_m((1.0, 0.0, 0.0))
     sim.add(Zeeman((0.0, 0.0, 1e6)))
     sim.advance_time(1e-12)
