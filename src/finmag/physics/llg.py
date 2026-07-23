@@ -42,7 +42,7 @@ import ufl
 from dolfinx import fem, la
 
 import finmag.util.consts as consts
-from finmag.field import Field
+from finmag.field import Field, _assemble_scalar
 from finmag.physics.effective_field import EffectiveField
 
 # default settings for logger 'finmag' set in __init__.py
@@ -234,6 +234,54 @@ class LLG(object):
         return self._m_field.average(dx=dx)
 
     m_average = property(m_average_fun)
+
+    @property
+    def M(self):
+        """The magnetisation in A/m as a component-blocked ``xxx`` array.
+
+        Returns ``Ms(x) * m(x)`` per node: the unit magnetisation scaled by the
+        (possibly spatially varying) saturation magnetisation, in the same
+        coordinate-ordered component-blocked (``xxx``) layout as
+        :attr:`m_numpy` -- so ``M.reshape((3, -1))`` column ``j`` is the A/m
+        magnetisation at node ``j``. The per-node ``Ms`` is the lumped-mass
+        projection of the DG0 ``Ms`` onto the CG1 nodes (:meth:`_ms_nodal`),
+        already node-aligned with the m columns and handling constant and
+        spatially varying ``Ms`` identically.
+
+        NOTE (correct physics, register D20): the frozen legacy ``LLG.M`` read
+        ``self.m``, which raised ``RuntimeError`` -- it was broken. This port
+        implements the intended ``M = Ms * m`` contract.
+        """
+        m_nodes = self._m_field.get_ordered_numpy_array_xxx().reshape((3, -1))
+        Ms_node = self._ms_nodal()
+        return (Ms_node * m_nodes).reshape(-1)
+
+    @property
+    def M_average(self):
+        """The volume-average magnetisation in A/m (Ms-weighted).
+
+        Returns ``(integral Ms*m dV) / (integral dV)`` component-wise -- the
+        spatial average of :attr:`M`. For a constant ``Ms`` this equals
+        ``Ms * m_average``; for a spatially varying ``Ms`` it is the correctly
+        Ms-weighted volume average.
+
+        NOTE (correct physics, register D20): the frozen legacy ``M_average``
+        computed ``m_average * volume_Ms / volume`` with ``volume_Ms`` and
+        ``volume`` the *identical* integral, collapsing to the dimensionless
+        ``m_average`` (a unit bug). This port returns the intended A/m value.
+        """
+        domain = self.mesh
+        volume = _assemble_scalar(domain, fem.Constant(domain, 1.0) * ufl.dx)
+        if volume == 0.0:
+            raise ValueError("cannot average over a zero-volume mesh")
+        Ms = self._Ms_dg.f
+        m = self._m_field.f
+        return np.array(
+            [
+                _assemble_scalar(domain, Ms * m[i] * ufl.dx) / volume
+                for i in range(3)
+            ]
+        )
 
     def set_m(self, value, normalise=True, **kwargs):
         """Set the magnetisation, normalising to unit length by default.

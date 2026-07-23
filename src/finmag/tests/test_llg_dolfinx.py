@@ -334,3 +334,196 @@ def test_nonuniform_rhs_matches_legacy_oracle_fixture():
         assert np.allclose(got, ref, atol=tol["absolute"], rtol=tol["relative"]), (
             "quantity {} mismatch:\n got {}\n ref {}".format(name, got, ref)
         )
+
+
+# --------------------------------------------------------------------------
+# LLG.M / M_average magnetisation-in-A/m accessors (SR1 P4-M, register D20)
+#
+# ``M`` is the magnetisation in A/m (``Ms(x) * m(x)`` per node, component-blocked
+# ``xxx``); ``M_average`` is its Ms-weighted volume average ``(integral Ms*m dV)
+# / (integral dV)``. This is the CORRECT physics; the frozen legacy oracle was
+# demonstrably broken -- ``LLG.M`` read ``self.m`` which raised
+# ``RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")``, and
+# ``LLG.M_average`` computed ``m_average * volume_Ms / volume`` with
+# ``volume_Ms`` and ``volume`` the *identical* integral, collapsing it to the
+# dimensionless ``m_average`` (a unit bug). See the D20 divergence pin below.
+# --------------------------------------------------------------------------
+
+def _multinode_llg(Ms=8.6e5, m=(0.0, 0.0, 1.0), n=2, unit_length=1e-9):
+    """A multi-vertex cube LLG with a constant (or callable) Ms and m."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, n, n, n)
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=unit_length)
+    llg.Ms = Ms
+    llg.set_m(m, normalise=True)
+    return llg
+
+
+def test_M_uniform_constant_ms_has_length_ms_at_every_node():
+    """Uniform m, constant Ms: |M| == Ms at every node, direction == m."""
+    Ms = 8.6e5
+    llg = _multinode_llg(Ms=Ms, m=(0.0, 0.0, 1.0))
+
+    M_nodes = llg.M.reshape((3, -1))
+    norms = np.linalg.norm(M_nodes, axis=0)
+    assert np.allclose(norms, Ms, rtol=1e-12, atol=0.0)
+    # component-blocked xxx: only the z block carries Ms
+    assert np.allclose(M_nodes[2], Ms, rtol=1e-12, atol=0.0)
+    assert np.allclose(M_nodes[0], 0.0, atol=1e-6)
+    assert np.allclose(M_nodes[1], 0.0, atol=1e-6)
+
+
+def test_M_average_uniform_constant_ms_equals_ms_times_m_average():
+    """Constant Ms: M_average == Ms * m_average (vector), |M_average| == Ms."""
+    Ms = 8.6e5
+    llg = _multinode_llg(Ms=Ms, m=(0.3, 0.0, 0.4))  # normalised -> (0.6,0,0.8)
+
+    expected = Ms * llg.m_average
+    assert np.allclose(llg.M_average, expected, rtol=1e-12, atol=0.0)
+    assert np.isclose(np.linalg.norm(llg.M_average), Ms, rtol=1e-12)
+
+
+def test_M_varying_ms_equals_per_node_ms_times_m_nonuniform():
+    """Spatially varying Ms, NON-uniform m: M == Ms(x)*m(x) node-for-node.
+
+    Anti-scramble: the non-uniform m means any component/node scramble in the
+    ``xxx`` reshape would misalign the per-node product and fail. Verified on
+    two independent orderings -- the flat ``xxx`` block layout and the
+    coordinate (``coords_and_values``) vertex layout.
+    """
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 3, 3, 3)
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    llg.Ms = lambda x: 8.6e5 * (1.0 + 0.5 * x[0])
+    llg.set_m(
+        lambda x: np.vstack(
+            (np.cos(1.7 * x[0]), np.sin(1.3 * x[1]), 0.5 + 0.2 * x[2])
+        ),
+        normalise=True,
+    )
+
+    Ms_node = llg._ms_nodal()                   # per-node Ms, coordinate order
+    m_nodes = llg.m_numpy.reshape((3, -1))       # xxx, same node order
+    expected = Ms_node * m_nodes                 # broadcast (N,) over (3,N)
+
+    M_nodes = llg.M.reshape((3, -1))
+    assert np.allclose(M_nodes, expected, rtol=1e-12, atol=0.0)
+
+    # independent coordinate-path anti-scramble: rebuild M as an S3 Field and
+    # compare vertex-by-vertex against Ms_node * m at matching coordinates.
+    Mf = Field(S3)
+    Mf.set_with_ordered_numpy_array_xxx(llg.M)
+    _, Mvals = Mf.coords_and_values()
+    _, mvals = llg.m_field.coords_and_values()
+    assert np.allclose(Mvals, Ms_node[:, None] * mvals, rtol=1e-12, atol=0.0)
+
+
+def test_M_array_is_xxx_component_blocked_matching_m_ordering():
+    """The M array is Task-31 ``xxx`` component-blocked, matching m node-for-node.
+
+    Dividing M's per-node blocks by the per-node Ms must recover ``m_numpy``
+    exactly; a wrong ``(-1, 3)`` reshape would scramble nodes against components
+    on this varying field and fail.
+    """
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 3, 3, 3)
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    llg.Ms = lambda x: 8.6e5 * (1.0 + 0.3 * x[1])
+    llg.set_m(
+        lambda x: np.vstack(
+            (np.cos(2.1 * x[0]), np.sin(0.9 * x[2]), 0.4 + 0.3 * x[1])
+        ),
+        normalise=True,
+    )
+
+    Ms_node = llg._ms_nodal()
+    recovered = llg.M.reshape((3, -1)) / Ms_node
+    assert np.allclose(recovered, llg.m_numpy.reshape((3, -1)), rtol=1e-12)
+
+
+def test_M_average_varying_ms_two_region_is_ms_weighted_volume_average():
+    """Two equal-volume DG0 regions, uniform m: hand-computed Ms-weighted average.
+
+    Interval [0, 2] split into cells [0,1] and [1,2] (equal volume 1) with
+    per-cell Ms = [Ms1, Ms2] and uniform m = (0, 0, 1). The correct Ms-weighted
+    volume average is analytically ((Ms1+Ms2)/2) * (0, 0, 1). Legacy's buggy
+    M_average would have returned the dimensionless m_average = (0, 0, 1).
+    """
+    domain = mesh.create_interval(MPI.COMM_WORLD, 2, [0.0, 2.0])
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    Ms1, Ms2 = 6.0e5, 9.0e5
+    llg.Ms = np.array([Ms1, Ms2])
+    llg.set_m((0.0, 0.0, 1.0), normalise=True)
+
+    expected = np.array([0.0, 0.0, (Ms1 + Ms2) / 2.0])
+    assert np.allclose(llg.M_average, expected, rtol=1e-12, atol=1.0)
+    assert not np.allclose(llg.M_average, llg.m_average)
+
+
+def test_M_average_varying_ms_matches_independent_assembly():
+    """Varying Ms + non-uniform m: M_average matches an independent FEM oracle.
+
+    Independently assembles ``(integral Ms*m_i dx) / (integral dx)`` and asserts
+    the port's Ms-weighted volume average agrees, and that it is NOT the
+    dimensionless ``m_average``.
+    """
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 2, 2, 2)
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    llg.Ms = lambda x: 8.6e5 * (1.0 + 0.5 * x[0])
+    llg.set_m(
+        lambda x: np.vstack(
+            (np.cos(1.1 * x[0]), np.sin(0.7 * x[1]), 0.5 + 0.3 * x[2])
+        ),
+        normalise=True,
+    )
+
+    import ufl as _ufl
+
+    Ms = llg._Ms_dg.f
+    m = llg.m_field.f
+
+    def _sc(form):
+        return domain.comm.allreduce(
+            fem.assemble_scalar(fem.form(form)), op=MPI.SUM
+        )
+
+    V = _sc(fem.Constant(domain, 1.0) * _ufl.dx)
+    expected = np.array([_sc(Ms * m[i] * _ufl.dx) / V for i in range(3)])
+
+    assert np.allclose(llg.M_average, expected, rtol=1e-12, atol=0.0)
+    assert not np.allclose(llg.M_average, llg.m_average)
+
+
+def test_M_average_diverges_from_legacy_dimensionless_m_average():
+    """DIVERGENCE PIN (register D20): the port's M_average is the corrected
+    Ms-weighted A/m value, NOT the legacy dimensionless m_average.
+
+    The frozen legacy oracle ``b5015c5a:src/finmag/physics/llg.py`` computed::
+
+        volume_Ms = df.assemble(self._Ms_dg * df.dx)
+        volume    = df.assemble(self._Ms_dg * df.dx)   # identical integral
+        return self.m_average * volume_Ms / volume     # -> m_average
+
+    so ``volume_Ms == volume`` collapsed ``M_average`` to the dimensionless unit
+    average ``m_average`` (a copy-paste unit bug; the docstring promised A/m).
+    (Legacy ``LLG.M`` was separately broken: it read ``self.m``, which raised
+    ``RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")``.)
+
+    Under D20 the port returns the physically correct Ms-weighted average in
+    A/m. This test records the resulting divergence from the buggy oracle so the
+    behaviour change is documented, not silently erased. There is no consumer of
+    ``M_average`` even in frozen master. See acceptance register row D20.
+    """
+    Ms = 8.6e5
+    llg = _multinode_llg(Ms=Ms, m=(1.0, 0.0, 2.0))
+
+    m_avg = llg.m_average          # dimensionless unit-vector average (legacy)
+    M_avg = llg.M_average          # corrected Ms-weighted A/m average (port)
+
+    # legacy would have returned m_avg; the port diverges by the Ms factor
+    assert not np.allclose(M_avg, m_avg)
+    assert np.allclose(M_avg, Ms * m_avg, rtol=1e-12, atol=0.0)
+    # dimensionally A/m: |M_average| == Ms for this uniform state
+    assert np.isclose(np.linalg.norm(M_avg), Ms, rtol=1e-12)
