@@ -79,7 +79,7 @@ green.
 | ID | Capability | Status | Current evidence and boundary | SR1 |
 |---|---|---|---|---|
 | C01 | Install, native build, provenance, aggregate CI | **ported** | Editable pixi install; BEM, CVODE and treecode native builds; final clean main-worktree `dev/bin/verify-dolfinx-m5` on `81fab481` exited 0 with all 32 steps green (fast examples 14 passed/3 skipped in 246.36s; `/tmp/finmag-p1-default-m5.log`) | required, green |
-| C02 | Package import and top-level compatibility exports | **partial** | Core `Simulation`, `sim_with`, `Field`, energies, versions and configuration import. `NormalModeSimulation`, `normal_mode_simulation`, `set_logging_level`, and `example` can still fail through raw `dolfin` imports | everyday exports are blockers; normal-mode exports later |
+| C02 | Package import and top-level compatibility exports | **partial** | Core `Simulation`, `sim_with`, `Field`, energies, versions and configuration import. `626dfcc8` makes `set_logging_level` and `finmag.example` (`bar`, `barmini`, `nanowire`) work with no legacy `dolfin` installed, and makes `NormalModeSimulation`, `normal_mode_simulation`, `example.sphere_inside_airbox` and `example.normal_modes` raise a curated `NotImplementedError` naming the deferred feature instead of a raw `ModuleNotFoundError`. Gate `dolfinx-src-import-pytest` 19 passed/3 skipped in 23.65s (was 9 passed/2 skipped). Submodule spellings such as `from finmag.example.normal_modes import disk` still raise raw `ModuleNotFoundError`, and `finmag.util.helpers` as a module still imports legacy `dolfin` | everyday exports are blockers; normal-mode exports later |
 | C03 | Mesh generation | **partial** | Common Gmsh/OCC generators, template CSG, caching, and a subset of legacy Netgen `.geo` parsing have analytic/regression coverage. Netgen binary/nmesh and specialist generators remain unavailable | common subset required; probe Netgen need before any port; specialist generators not now |
 | C04 | `Field` data model and inspection | **partial** | Constants/callables/arrays and component ordering have regression coverage; point probing, spherical conversion and topology have the focused `dolfinx-src-io-utils-pytest` gate. `from_generic_vector`, arithmetic (`cross`, `dot`, coercion), HDF5, plotting and VTK/XDMF readback remain unavailable | owner selected these missing operations for SR1; blockers |
 | C05 | Spatial parameters and regions | **ported** | Varying `Ms`, `A`, `K`, `D`, axis and alpha plus region energies/averages have oracle/regression witnesses. Region-restricted field output is separate, unported I/O | required, green |
@@ -94,7 +94,7 @@ green.
 | C14 | Point/topology utilities | **ported** | Point evaluation, `get_spherical`, skyrmion number and density have analytic/regression coverage in `dolfinx-src-io-utils-pytest` | required, green |
 | C15 | Converted examples | **partial** | Aggregate baseline: 32 green steps; fast lane 14 passed, 3 skipped. Clean FULL baseline: 12 passed, 5 failed — three unchanged-wrapper timeouts (not physics failures), one missing scheduler `save_m` keyword, and one raw `dolfin` import through `finmag.util.helpers`. `FINMAG_EXAMPLE_FULL=1` runs the fourteen fast plus three slow entries. The std_prob4 0.10–0.18 ns crossing window is qualitative, not unchanged-behavior evidence | blocker |
 | C16 | Thermal SLLG and LLB | **deferred** | Legacy surface remains tied to unported modules/native code | Not now; retain for later full-parity decision/work |
-| C17 | Normal modes, eigensolvers, ringdown and FFT/PSD | **planned** | Top-level normal-mode exports currently reach legacy `dolfin`; no DOLFINx workflow | after SR1; required for full parity |
+| C17 | Normal modes, eigensolvers, ringdown and FFT/PSD | **planned** | Since `626dfcc8`, top-level `finmag.NormalModeSimulation`/`normal_mode_simulation` and `example.sphere_inside_airbox`/`example.normal_modes` raise a curated `NotImplementedError` instead of reaching legacy `dolfin`; the submodule spelling `from finmag.example.normal_modes import disk` still reaches it directly. No DOLFINx workflow exists either way | after SR1; required for full parity |
 | C18 | Path methods | **deferred** | Original master contains several legacy NEB implementations; they are not ported. No public GNEB API/workflow was found, so GNEB is not an interface-parity requirement; algorithmic overlap must be checked when NEB variants are inventoried | after SR1 |
 | C19 | Parallel and periodic simulation surfaces | **partial** | Ownership-sensitive Field/energy MPI probes and treecode periodic macrogeometry work. General MPI stepping and `Simulation(pbc=)` function-space periodicity do not | serial `Simulation(pbc=)` is SR1 work; MPI stepping later |
 | C20 | OOMMF/Nmag/Magpar comparison workflows | **planned** | Checked-in reference data supports some comparisons, but only a narrow Nmag example currently exercises it against DOLFINx; the live harnesses are not selected for SR1 | selected checked-data comparisons are SR1 work; live runners later/review |
@@ -103,10 +103,18 @@ green.
 
 ## Current high-priority failures
 
-1. Accessing `finmag.NormalModeSimulation`, `finmag.normal_mode_simulation`,
-   `finmag.set_logging_level`, or `finmag.example` can expose raw
-   `ModuleNotFoundError: No module named 'dolfin'` instead of either working or
-   failing by feature name.
+1. Substantially resolved in `626dfcc8` (P2.1): `finmag.set_logging_level` and
+   `finmag.example` now work in the DOLFINx environment, and
+   `finmag.NormalModeSimulation`, `finmag.normal_mode_simulation`,
+   `example.sphere_inside_airbox` and `example.normal_modes` fail by feature
+   name. What remains is the submodule-import spelling: `from
+   finmag.example.normal_modes import disk` (`src/finmag/sim/sim_test.py:1506`)
+   is a real submodule import, not attribute access, so it still raises raw
+   `ModuleNotFoundError: No module named 'dolfin'`; it belongs with the
+   normal-modes port slice. Separately, `finmag.util.helpers` as a whole still
+   imports legacy `dolfin` at module scope and remains unimportable in the
+   DOLFINx environment (only the `set_logging_level` re-export was moved out);
+   its full port is its own slice.
 2. `sim_with` rejects treecode and MacroGeometry arguments although the direct
    `Demag(solver='Treecode')` and `MacroGeometry` implementation is ported.
 3. The recorded clean FULL lane has three wrapper timeouts (`cubic_anisotropy`
@@ -124,9 +132,11 @@ still follows the per-slice protocol and receives an independent review.
 |---|---|---|
 | SR1-L1 | **Completed in `3f4ed4ea` and `17f24413`:** backend-neutral reset/reinitialisation, truthful restart provenance and both-backend restart integrity. D8/public default and D16 metadata scope were not changed. | P1.1 focused 76 passed/2 skipped; P1.2 restart 27, Simulation 33, Sundials 22, SciPy 21 passed/2 skipped, LLG 16; aggregate 32 green |
 | P1.3 | **Completed in `81fab481`:** restore native Sundials as the public `Simulation`/`sim_with` default; preserve explicit SciPy support. No scheduler, restart-format or physics change. | Simulation 37; Sundials 22; SciPy 21 passed/2 skipped; restart 27; core smoke witness `sundials` at `t=1e-12`; final clean main aggregate 32/32 green, examples 14 passed/3 skipped in 246.36s (`/tmp/finmag-p1-default-m5.log`) |
-| SR1-A1 | Repair the top-level import/error boundary: make the SR1 convenience exports work and make deferred families fail by feature name. Do not port normal modes in this slice. | `dolfinx-src-import-pytest`, clean-process probes, aggregate verifier |
+| SR1-A1 | **Completed in `626dfcc8` (P2.1):** `bar`/`barmini`/`nanowire` build their meshes with `dolfinx.mesh.create_box` (signatures, dimensions, discretisations and every `sim_with` keyword unchanged); `set_logging_level` moves to a stdlib-only `finmag.util.logging_helpers` re-exported from `finmag.util.helpers`; the unported normal-mode and airbox surfaces raise a curated `NotImplementedError`. Normal modes were not ported, and the rest of `finmag.util.helpers` was not ported. | RED: 10 tests failed before the source change (9 in `test_example_dolfinx.py`, 1 in `test_import_boundary.py`), independently reproduced by the reviewer from a reconstructed pre-change tree; every failure bottomed out in a genuine missing-`dolfin` import. Focused `dolfinx-src-import-pytest` 19 passed/3 skipped in 23.65s (from 9 passed/2 skipped); neighbours `dolfinx-src-simulation-pytest` 37 passed and `dolfinx-src-deferred-pytest` 1 passed/4 skipped. Legacy-lane check of the review fix: after `finmag.set_logging_level('DEBUG')`, `df.parameters['reorder_dofs_serial']` is `False`, logger level 10, and `finmag.util.helpers.set_logging_level is finmag.set_logging_level`. Pre-fix aggregate `dev/bin/verify-dolfinx-m5` exit 0, all 32 steps green, fast examples 14 passed/3 skipped in 271.94s, core smoke `{"integrator_backend": "sundials", ..., "t": 1e-12}` (`/tmp/finmag-p21-m5.log`); post-review-fix aggregate on `626dfcc8` again ran all 32 steps green (fast examples 14 passed/3 skipped in 238.28s, core smoke `{"integrator_backend": "sundials", ..., "t": 1e-12}`), but this run executed while these five documentation files were mid-edit, so the wrapper's own tracked-file-cleanliness guard tripped and forced its exit status to 1 -- a false alarm from concurrent doc edits (no `src/` or `pixi.toml` file changed during the run), not a source regression (`/tmp/finmag-p21-m5-final.log`). The authoritative clean-tree aggregate then ran on the committed, fully clean worktree and exited 0 with all 32 steps green: import gate 19 passed/3 skipped in 21.16s, fast examples 14 passed/3 skipped in 252.11s, core smoke `{"integrator_backend": "sundials", ..., "t": 1e-12}`, cleanliness guard silent (`/tmp/finmag-p21-m5-clean.log`) |
 | SR1-A2 | Wire the already-ported dense-FK MacroGeometry path through legacy `sim_with` nx/ny/spacing arguments. Do not add Treecode factory exposure or change demag algorithms. | RED factory tests, `dolfinx-src-treecode-pytest`, `dolfinx-src-simulation-pytest`, aggregate verifier |
 | SR1-V1 | Run `FINMAG_EXAMPLE_FULL=1`; diagnose failures and make only separately reviewed minimal fixes. Treat std_prob4's broad crossing window as a qualitative workflow witness, not parity evidence. | Recorded full-lane result plus separately scoped mesh-matched oracle or convergence/quantitative trajectory evidence, then aggregate verifier |
 | SR1-O1 | **Owner direction recorded:** fix D3/D4; D8 conditionally approved Sundials as the default. P1.1/P1.2 supplied the lifecycle/restart condition and P1.3 discharged it. | D8 implementation/evidence in `81fab481`; D3/D4 remain separately required |
 
 [Codex GPT-5]
+
+[P2.1 updates: Claude Opus 4.8]

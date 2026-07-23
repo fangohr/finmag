@@ -980,3 +980,34 @@ Before editing the matching module in `src/finmag`, check that:
   `test_ordering_contract_dolfinx.py` (4 tests, demonstrably RED pre-fix); full
   `verify-dolfinx-m5` green. See `transition-notes.org`'s "Public field-array
   component-ordering correction (Task 31)" section. [Claude Fable 5]
+- SR1 P2.1 (core example/logging import boundary, `626dfcc8`): `finmag.example`
+  and `finmag.set_logging_level` now work in the DOLFINx environment with no
+  legacy `dolfin` installed. `bar`/`barmini`/`nanowire` build their box meshes
+  with `dolfinx.mesh.create_box`, preserving every signature, dimension,
+  discretisation and `sim_with` keyword (coordinates stay in nm,
+  `unit_length=1e-9`); `nanowire`'s unused `S1`/`S3` spaces are dropped.
+  `set_logging_level` moves into a new stdlib-only
+  `finmag.util.logging_helpers`, re-exported from `finmag.util.helpers` so the
+  legacy spelling keeps working; its lazy export stays flagged as needing legacy
+  dolfin so the historical dof-ordering preparation still runs where dolfin IS
+  installed. The unported `NormalModeSimulation`, `normal_mode_simulation`,
+  `example.sphere_inside_airbox` and `example.normal_modes` are resolved at the
+  lazy import boundary and raise a curated `NotImplementedError` naming the
+  deferred feature instead of leaking `ModuleNotFoundError: No module named
+  'dolfin'`. Gate: new `src/finmag/tests/test_example_dolfinx.py` (clean
+  subprocesses, so `sys.modules` is an exact witness) folded into both
+  `dolfinx-src-import-pytest` and the legacy `src-import-pytest` -- the latter
+  is the only lane where the `finmag.util.helpers` re-export check can execute.
+  RED was 10 failing tests, reviewer-reproduced; the focused gate went from
+  9 passed/2 skipped to 19 passed/3 skipped in 23.65s, with
+  `dolfinx-src-simulation-pytest` 37 passed and `dolfinx-src-deferred-pytest`
+  1 passed/4 skipped unchanged. Stated limits: the guarded legacy-resolution
+  path is forward-looking insurance no materialised environment can exercise
+  (not verified), and the intra-cuboid diagonal orientation convention of
+  `create_box` versus legacy `df.BoxMesh` is unverified without legacy dolfin
+  (vertex counts and 6 tets per cuboid do match). Deferred: the
+  `from finmag.example.normal_modes import disk` submodule spelling, the
+  `nanowire` `name` argument never reaching `sim_with` (faithful to master
+  `b5015c5a`), and the full port of `finmag.util.helpers`. See
+  `transition-notes.org`'s "P2.1 core example/logging import boundary"
+  section. [Claude Opus 4.8]

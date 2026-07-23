@@ -107,11 +107,80 @@ not deleted and not an accepted permanent exception.
 
 ## Priority 2 — Everyday API and approved physics corrections
 
-### [ ] P2.1 Core import boundary
+### [x] P2.1 Core import boundary
 
 - Make `finmag.example`/barmini and selected everyday conveniences import.
 - Deferred normal-mode families must fail explicitly by feature name.
 - **Non-goal:** no normal-mode implementation.
+- **Completed in `626dfcc8`:** `finmag.example` (`bar`, `barmini`, `nanowire`)
+  and `finmag.set_logging_level` work in the DOLFINx environment with no legacy
+  `dolfin` installed. `bar`/`barmini`/`nanowire` build their box meshes with
+  `dolfinx.mesh.create_box`, preserving every signature, dimension,
+  discretisation and `sim_with` keyword; `set_logging_level` moves into a new
+  stdlib-only `finmag.util.logging_helpers` re-exported from
+  `finmag.util.helpers`; and `NormalModeSimulation`,
+  `normal_mode_simulation`, `example.sphere_inside_airbox` and
+  `example.normal_modes` now raise a curated `NotImplementedError` naming the
+  deferred feature instead of leaking `ModuleNotFoundError: No module named
+  'dolfin'`. No normal-mode implementation was added.
+- **Evidence:** RED was 10 failing tests before the source change (9 in
+  `test_example_dolfinx.py`, 1 in `test_import_boundary.py`), independently
+  reproduced by the reviewer from a reconstructed pre-change tree; every
+  failure bottomed out in a genuine missing-`dolfin` import. Focused gate
+  `dolfinx-src-import-pytest` went from 9 passed/2 skipped to 19 passed/3
+  skipped in 23.65s; neighbours `dolfinx-src-simulation-pytest` 37 passed and
+  `dolfinx-src-deferred-pytest` 1 passed/4 skipped. In the legacy FEniCS pixi
+  environment, `finmag.set_logging_level('DEBUG')` still leaves
+  `df.parameters['reorder_dofs_serial']` `False` with logger level 10, and
+  `finmag.util.helpers.set_logging_level is finmag.set_logging_level`. The
+  pre-fix aggregate `dev/bin/verify-dolfinx-m5` exited 0 with all 32 steps
+  green, fast examples 14 passed/3 skipped in 271.94s and the core smoke
+  re-witnessing `{"integrator_backend": "sundials", ..., "t": 1e-12}`
+  (`/tmp/finmag-p21-m5.log`); the post-review-fix aggregate on `626dfcc8`
+  again ran all 32 steps green, with fast examples 14 passed/3 skipped in
+  238.28s and the core smoke re-witnessing `{"integrator_backend": "sundials",
+  ..., "t": 1e-12}`. That run executed while these five documentation files
+  were mid-edit, so the wrapper's own tracked-file-cleanliness guard tripped
+  and forced its exit status to 1 -- a false alarm from concurrent doc edits
+  (no `src/` or `pixi.toml` file changed during the run), not a source
+  regression (log `/tmp/finmag-p21-m5-final.log`). The owed clean-tree run was
+  then executed on the committed, fully clean worktree and **exited 0 with all
+  32 steps green**: focused import gate 19 passed/3 skipped in 21.16s, fast
+  examples 14 passed/3 skipped in 252.11s, core smoke
+  `{"integrator_backend": "sundials", ..., "t": 1e-12}`, and the
+  tracked-file-cleanliness guard silent (log `/tmp/finmag-p21-m5-clean.log`).
+  This is the authoritative P2.1 aggregate result. It does not rerun or
+  reclassify the frozen FULL lane. [Claude Opus 4.8]
+- **Review:** APPROVE WITH FOLLOW-UPS. Two findings were acted on before the
+  commit was amended (`82967eb7` → `626dfcc8`): flipping `set_logging_level` to
+  `requires_legacy_dolfin=False` silently dropped the `_prepare_legacy_dolfin()`
+  dof-ordering side effect in the legacy lane (fixed by keeping the flag `True`
+  while leaving the name out of `_LEGACY_ONLY_FEATURES`, the same treatment
+  `example` gets, and verified empirically as above); and the
+  `finmag.util.helpers` re-export was covered only by a test that skips in every
+  materialised environment (fixed by folding `test_example_dolfinx.py` into the
+  legacy `src-import-pytest` task as well).
+- **Stated limits:** the guarded legacy-resolution path is forward-looking
+  insurance, not a contract exercised today — importing `finmag.example` already
+  required `dolfinx` before this slice (via `sphere_inside_airbox` →
+  `finmag.field`), so no materialised environment can exercise it; it is not
+  verified. `dolfinx.mesh.create_box` matches legacy `df.BoxMesh` exactly on
+  vertex count and on 6 tetrahedra per cuboid cell, but the intra-cuboid
+  diagonal orientation convention is unverified without legacy dolfin
+  installed; any difference would be a permutation of the 6 tets within each
+  cuboid, a discretisation-error-level difference, not a resolution or physics
+  change. This slice did not rerun the FULL example lane
+  (`FINMAG_EXAMPLE_FULL=1`, recorded baseline 12 passed/5 failed) and makes no
+  claim about it.
+- **Deferred follow-ups:** `from finmag.example.normal_modes import disk`
+  (`src/finmag/sim/sim_test.py:1506`) is a real submodule import, not attribute
+  access, so it still yields a raw `ModuleNotFoundError` in the DOLFINx
+  environment; it belongs with the normal-modes port slice. `nanowire`'s `name`
+  parameter is accepted but never forwarded to `sim_with`, so the simulation is
+  always `unnamed` — faithful to master `b5015c5a`, a latent upstream bug and
+  its own slice if the owner wants it corrected. `finmag.util.helpers` as a
+  whole still imports legacy `dolfin` at module scope and remains unimportable
+  in the DOLFINx environment; its full port is a separate slice.
 
 ### [ ] P2.2 `sim_with` MacroGeometry
 
@@ -216,3 +285,5 @@ Mercurial helpers are **Not now**, not permanently deleted. Revisit them during
 later full-parity planning.
 
 [Codex GPT-5]
+
+[P2.1 updates: Claude Opus 4.8]

@@ -55,7 +55,9 @@ regions, local Slonczewski and Zhang-Li STT, SciPy and native CVODE trajectory
 integration, backend-neutral reset/reinitialisation, truthful v2 restart on
 both backends, scheduling, NDT and field output, point/topology
 utilities, common Gmsh mesh generation, editable packaging, and converted
-examples. Validation is a mixture of frozen-oracle, analytic, cross-method,
+examples. Since `626dfcc8`, `finmag.example` (`bar`, `barmini`, `nanowire`) and
+`finmag.set_logging_level` also work in the DOLFINx environment with no legacy
+`dolfin` installed. Validation is a mixture of frozen-oracle, analytic, cross-method,
 regression, MPI ownership probes, and end-to-end tests; it is not all “oracle
 validated”. The exact boundaries are in `capability-status.md`.
 
@@ -65,8 +67,18 @@ Important current limitations:
   its native construct/advance is witnessed in the core smoke. SciPy remains a
   fully supported explicit opt-in, and both backends share reset/reinitialise
   and restart lifecycle support.
-- several compatibility exports still fail through raw legacy-`dolfin`
-  imports;
+- the top-level attribute boundary is repaired: the unported
+  `NormalModeSimulation`, `normal_mode_simulation`,
+  `example.sphere_inside_airbox` and `example.normal_modes` raise a curated
+  `NotImplementedError` naming the feature. Submodule spellings are not covered:
+  `from finmag.example.normal_modes import disk` still raises raw
+  `ModuleNotFoundError`, and `finmag.util.helpers` as a module still imports
+  legacy `dolfin` and remains unimportable in the DOLFINx environment (only its
+  `set_logging_level` re-export was moved into
+  `finmag.util.logging_helpers`);
+- the `bar`/`barmini`/`nanowire` meshes match legacy `df.BoxMesh` on vertex
+  count and on 6 tetrahedra per cuboid cell, but the intra-cuboid diagonal
+  orientation convention is unverified without legacy dolfin installed;
 - `sim_with` does not yet wire the already-ported dense-FK MacroGeometry path;
   that wiring is required now, while a Treecode factory selector is deferred;
 - the clean FULL baseline is recorded (12 passed, 5 failed): three unchanged
@@ -129,9 +141,11 @@ manifest for exact logs and environment versions.
 
 The canonical bounded slices and gates are in
 [`capability-status.md`](capability-status.md#bounded-sr1-work-slices). The
-P1.3 (restore Sundials as the public default) is complete. The recommended next
-slices are SR1-A1 (top-level error boundary) and SR1-A2 (`sim_with`
-MacroGeometry wiring).
+P1.3 (restore Sundials as the public default) and P2.1 / SR1-A1 (core
+import boundary, `626dfcc8`) are complete. The recommended next slice is
+**P2.2 `sim_with` MacroGeometry wiring** (SR1-A2): wire the already-ported
+dense-FK MacroGeometry path through the legacy `nx`/`ny`/`spacing` arguments,
+with no Treecode selector, GCR or Demag2D work.
 SR1-V1 now has its baseline failure inventory; rerun it only after separately
 reviewed fixes, including the scheduler and raw-import defects, have landed.
 SR1-O1 is now decided: fix the stale energy and hysteresis defects, and restore
@@ -139,3 +153,5 @@ Sundials as the default after lifecycle validation. The detailed, superseding
 sequence is in `plans/2026-07-23-sr1-prioritised-plan.md`.
 
 [Codex GPT-5]
+
+[P2.1 updates: Claude Opus 4.8]
