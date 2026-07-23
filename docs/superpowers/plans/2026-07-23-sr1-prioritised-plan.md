@@ -254,10 +254,52 @@ not deleted and not an accepted permanent exception.
   regression test, which remains a demag-algorithm change out of scope here.
   [Claude Sonnet 5]
 
-### [ ] P2.3 Callable pin masks
+### [x] P2.3 Callable pin masks
 
 - Restore coordinate-to-dof callable pin selection without changing indexed
   pins or adding MPI stepping.
+- **Completed in `df5fc1a1`:** `Simulation.__set_pins` previously raised a
+  by-name `_deferred` `NotImplementedError` for a callable pin mask; it now
+  resolves the callable to node indices exactly as legacy did (`git show
+  b5015c5a:src/finmag/sim/sim.py` lines ~906-918): per-point over the
+  owned-node coordinate array `self.llg._m_field.coords_and_values()[0]`, in
+  RAW MESH UNITS (`unit_length` is NOT applied), a truthy return marks that
+  node pinned, and the resulting index is the position in that same
+  coordinate-ordered `xxx` array that `LLG._pins` consumes. Indexed pins,
+  `LLG.set_pins`, MPI stepping and `field.py` are all unchanged; the
+  serial-only pin contract stays. Coordinate mapping was directly verified on
+  a `[0,30]x[0,10]x[0,10]` box (`unit_length=1e-9`): a "pin z<=zmin" callable
+  resolved to `sim.llg.pins == [0,1,2,5,8,9,12,13]`, exactly the z==0 face;
+  after `run_until(2e-12)` every pinned node's magnetisation delta measured
+  0.0 exactly, while the unpinned nodes' max delta measured
+  0.03844512461343788.
+- **Evidence:** RED first -- the 4 new callable tests failed before the
+  source change with the by-name `_deferred` `NotImplementedError`; the
+  indexed-pin regression test (`test_indexed_pins_unchanged_by_callable_support`)
+  passed both before and after, confirming no change to the existing index
+  path. Focused gate `dolfinx-src-simulation-pytest` went from 44 passed to
+  49 passed (5 new: intended-sites-and-holds-them, mesh-units-not-metres,
+  selecting-nothing, callable-and-index-list-equivalent, plus the indexed-pin
+  regression guard). Neighbour `dolfinx-src-llg-pytest` 16 passed, unchanged.
+  The clean-tree aggregate `dev/bin/verify-dolfinx-m5` on the committed
+  worktree **exited 0 with all 32 steps green**: simulation gate 49 passed,
+  fast examples 14 passed/3 skipped in 216.63s, core smoke
+  `{"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+  0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+  2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}`, tracked-file
+  cleanliness guard silent (log `/tmp/finmag-p23-m5-clean.log`). This slice
+  did not rerun the FULL example lane (`FINMAG_EXAMPLE_FULL=1`, recorded
+  baseline 12 passed/5 failed) and makes no claim about it. [Claude Sonnet 5]
+- **Review:** APPROVE, nothing blocking. The reviewer independently
+  confirmed the coordinate->index mapping two ways: structurally (both
+  `_pins` indexing and `coords_and_values` use the identical
+  `_owned_vertex_to_dof` permutation) and empirically with an asymmetric
+  single-corner selection -- the callable selected index 3, and exactly
+  node 3 at (30,10,10) was frozen while the other 15 nodes moved (a
+  permutation error would have frozen a different physical node instead).
+  Units (mesh, not metres), the per-point contract, truthiness, the
+  serial-only guard and the indexed-pin regression were all confirmed. No
+  follow-ups.
 
 ### [x] P2.4 Correct discrete-time Zeeman energy
 
@@ -405,5 +447,7 @@ later full-parity planning.
 [Codex GPT-5]
 
 [P2.1 updates: Claude Opus 4.8]
+
+[P2.3 updates: Claude Sonnet 5]
 
 [P2.4 updates: Claude Sonnet 5]

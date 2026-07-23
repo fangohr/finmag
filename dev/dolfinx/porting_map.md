@@ -1065,6 +1065,37 @@ Before editing the matching module in `src/finmag`, check that:
   technically work) is left as deliberate benign conservatism. No Treecode
   factory exposure, GCR or Demag2D work. See `transition-notes.org`'s "P2.2
   sim_with MacroGeometry wiring" section. [Claude Sonnet 5]
+- SR1 P2.3 (restore callable pin masks, `df5fc1a1`): `Simulation.__set_pins`
+  previously raised a by-name `_deferred` `NotImplementedError` for a callable
+  pin mask; it now resolves the callable in the sim layer exactly as legacy
+  did (`git show b5015c5a:src/finmag/sim/sim.py` lines ~906-918): per-point
+  over the owned-node coordinate array `self.llg._m_field.coords_and_values()
+  [0]`, in RAW MESH UNITS (`unit_length` is NOT applied), a truthy return
+  marks that node pinned, and the resulting index is the position in that
+  same coordinate-ordered `xxx` array that `LLG._pins` consumes. Indexed
+  pins, `LLG.set_pins`, MPI stepping and `field.py` are unchanged; the
+  serial-only pin contract stays. Coordinate mapping was directly verified on
+  a `[0,30]x[0,10]x[0,10]` box (`unit_length=1e-9`): a "pin z<=zmin" callable
+  resolved to `sim.llg.pins == [0,1,2,5,8,9,12,13]`, exactly the z==0 face;
+  after `run_until(2e-12)` every pinned node's magnetisation delta measured
+  0.0 exactly while the unpinned max delta measured 0.03844512461343788.
+  Gate: `dolfinx-src-simulation-pytest` went from 44 passed to 49 passed (5
+  new); neighbour `dolfinx-src-llg-pytest` 16 passed, unchanged. RED first:
+  the 4 callable tests failed before the source change with the by-name
+  `_deferred` `NotImplementedError`; the indexed-pin regression test passed
+  both before and after. Independent review: APPROVE, nothing blocking --
+  the reviewer confirmed the coordinate->index mapping two ways
+  (structurally, via the shared `_owned_vertex_to_dof` permutation used by
+  both `_pins` indexing and `coords_and_values`; and empirically, with an
+  asymmetric single-corner callable that selected index 3, and running the
+  simulation confirmed exactly physical node 3 at (30,10,10) froze while the
+  other 15 moved -- a permutation error would have frozen a different node).
+  No new acceptance-register decision: callable pins restore legacy
+  behaviour exactly, no divergence introduced. The clean-tree aggregate
+  `dev/bin/verify-dolfinx-m5` on the committed worktree exited 0 with all 32
+  steps green (log `/tmp/finmag-p23-m5-clean.log`). See
+  `transition-notes.org`'s "P2.3 callable pin masks restoration" section.
+  [Claude Sonnet 5]
 - SR1 P2.4 (correct discrete-time Zeeman energy, `ff906f11`, register D3):
   `DiscreteTimeZeeman.update()` previously rebound `self.H` to a brand-new
   `Field` on each interval crossing, bypassing `set_value()`, so the cached

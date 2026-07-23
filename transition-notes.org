@@ -6790,4 +6790,143 @@ by this same commit's companion documentation commit.
 D4 (hysteresis/=hysteresis_loop= no-re-relax defect) is untouched by this
 slice; it remains approved but unimplemented as SR1 P2.5.
 
+** P2.3 callable pin masks restoration (2026-07-23)
+
+Commit =df5fc1a1= (parent =26cdd5b7=) restores callable pin masks in
+=Simulation.__set_pins= (=src/finmag/sim/sim.py=), which previously raised a
+by-name =_deferred= =NotImplementedError= for this input form.
+
+*** Legacy contract reproduced
+
+Legacy's =Simulation.__set_pins= (=git show
+b5015c5a:src/finmag/sim/sim.py=, lines ~906-918) resolves a callable pin
+mask entirely in the sim layer, not in =LLG.set_pins=:
+
+#+BEGIN_SRC python
+def __set_pins(self, nodes):
+    pinlist = []
+    if hasattr(nodes, '__call__'):
+        coords = self.mesh.coordinates()
+        for i, c in enumerate(coords):
+            if nodes(c):
+                pinlist.append(i)
+        pinlist = np.array(pinlist)
+        self.llg.pins = pinlist
+    else:
+        self.llg.pins = nodes
+#+END_SRC
+
+The callable is invoked once per mesh coordinate, in the order
+=self.mesh.coordinates()= yields them; a truthy return appends that
+coordinate's position (=i=) to the pin index list; the index list is then
+handed to =LLG.pins= exactly as an explicit index list would be. The
+DOLFINx port reproduces this per-point/truthy/index-of-position contract
+exactly, substituting the DOLFINx-native owned-node coordinate source
+(=self.llg._m_field.coords_and_values()[0]=) for legacy's
+=self.mesh.coordinates()=, since that is the coordinate-ordered =xxx=
+array =LLG._pins= actually consumes on this port:
+
+#+BEGIN_SRC python
+def __set_pins(self, nodes):
+    if callable(nodes):
+        coords, _ = self.llg._m_field.coords_and_values()
+        mask = np.array([bool(nodes(c)) for c in coords], dtype=bool)
+        nodes = np.where(mask)[0]
+    self.llg.pins = nodes
+#+END_SRC
+
+Indexed pins and =LLG.set_pins= are unchanged (index-only); the
+serial-only pin contract stays; =field.py= is untouched.
+
+*** Mesh units, not metres
+
+The callable receives ONE raw-mesh-unit coordinate triple at a time --
+=unit_length= is NOT applied. This mirrors legacy exactly:
+=self.mesh.coordinates()= is also unscaled mesh coordinates. A caller
+selecting, say, "z <= 0" on a box built with =unit_length=1e-9= must write
+the threshold in mesh units (e.g. =0..10=), not metres (=0..1e-8=);
+applying =unit_length= here would silently select a different (or, for a
+small enough per-axis extent, every) node.
+=test_callable_pin_coordinates_are_mesh_units_not_metres= guards this
+directly: it asserts a metres-scale threshold would select every node,
+while the correct mesh-unit threshold selects only the intended face.
+
+*** Coordinate -> index mapping and its verification
+
+The resulting pin index is the position of that coordinate triple within
+=coords_and_values()[0]= -- the same owned-node, coordinate-ordered =xxx=
+array that =LLG._pins= indexes against elsewhere in the port. Two
+independent checks confirm the mapping is not merely plausible but
+actually correct:
+
+1. Direct: on a =[0,30]x[0,10]x[0,10]= box (=unit_length=1e-9=,
+   =mesh.create_box= with divisions =[3, 1, 1]=, 16 owned vertices), a "pin
+   z<=zmin" callable (=lambda c: c[2] <= zmin + eps=) resolved to
+   =sim.llg.pins == [0,1,2,5,8,9,12,13]= -- exactly the eight vertices on
+   the z==0 face, confirmed against an independently hand-computed index
+   set from the same coordinate array
+   (=test_callable_pins_intended_sites_and_holds_them=). After
+   =run_until(2e-12)=, every pinned node's magnetisation delta measured
+   =0.0= exactly; the unpinned nodes' max delta measured
+   =0.03844512461343788=, i.e. genuinely unheld dynamics.
+2. Independent review, empirical: an ASYMMETRIC single-corner callable
+   selecting only the far corner resolved to index =3=. Running the
+   simulation confirmed exactly physical node 3 at =(30, 10, 10)= was
+   frozen while the other 15 nodes moved. This is a strong check
+   specifically because the selection is asymmetric -- a permutation
+   error in the coordinate ordering (e.g. an off-by-one, a transposed
+   axis, or a different owned/ghost dof ordering) would have frozen a
+   *different* physical node instead of silently agreeing, since no
+   symmetry of the box could paper over the mismatch.
+3. Independent review, structural: both =LLG._pins= indexing and
+   =coords_and_values()= are confirmed to route through the identical
+   =_owned_vertex_to_dof= permutation, so the coordinate array the
+   callable is evaluated against and the index space =LLG._pins= consumes
+   are provably the same ordering, not just empirically coincident on the
+   probed cases.
+
+A fourth test, =test_callable_and_index_list_are_equivalent=, confirms a
+callable and the explicit index list it resolves to produce identical
+=sim.llg.pins=; a fifth,
+=test_indexed_pins_unchanged_by_callable_support=, is the existing
+indexed-pin regression guard, unchanged.
+
+*** Tests (strict TDD)
+
+RED first: the four new callable tests failed before the source change
+with the pre-existing by-name =_deferred= =NotImplementedError=; the
+indexed-pin regression test passed both before and after, confirming the
+existing index path was untouched throughout.
+
+*** Evidence
+
+Focused gate =dolfinx-src-simulation-pytest= went from =44 passed= to =49
+passed= (5 new). Neighbour =dolfinx-src-llg-pytest= =16 passed=,
+unchanged.
+
+The clean-tree aggregate =dev/bin/verify-dolfinx-m5=, run on the committed
+worktree, **exited =0= with all =32= steps green**: simulation gate =49
+passed=; fast examples =14 passed, 3 skipped in 216.63s=; core smoke
+={"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}=; tracked-file
+cleanliness guard silent. Log: =/tmp/finmag-p23-m5-clean.log=. This slice
+did NOT rerun the FULL example lane (=FINMAG_EXAMPLE_FULL=1=, recorded
+baseline =12 passed, 5 failed=) and makes no claim about it.
+
+*** Independent review
+
+Verdict: APPROVE, nothing blocking. The reviewer independently verified
+the coordinate->index mapping two ways (structural permutation identity
+and the empirical asymmetric single-corner check described above), and
+separately confirmed: mesh units versus metres, the per-point callable
+contract, truthiness handling, the serial-only guard, and the
+indexed-pin regression. No follow-ups were raised.
+
+*** New acceptance-register decision
+
+None. Callable pin masks restore legacy behaviour exactly -- no
+divergence from master was introduced -- so no new D-row was added to
+=acceptance-register.md=.
+
 [Claude Sonnet 5]
