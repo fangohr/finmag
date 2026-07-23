@@ -7096,3 +7096,113 @@ register D4) remains separately unimplemented and is untouched by this
 slice.
 
 [Claude Sonnet 5]
+
+** D18 harden toggle_stt (2026-07-23)
+
+Commit =a7b0fb87= (SR1 D18) implements the owner-approved follow-up recorded
+by P2.6: harden =Simulation.toggle_stt= (=src/finmag/sim/sim.py=) against the
+two defects register row D18 recorded. Owner decision 2026-07-23 (relayed):
+harden it.
+
+*** The two defects
+
+1. =toggle_stt= wrote =self.llg.do_slonczewski= DIRECTLY, bypassing the D11
+   mutual-exclusion guard entirely. =sim.set_zhangli(...)= followed by
+   =sim.toggle_stt(True)= left BOTH =do_slonczewski= and =do_zhangli= =True=,
+   and the LLG dispatch (=if do_slonczewski ... elif do_zhangli=) then
+   silently preferred Slonczewski -- the exact silent precedence D11 killed
+   on the =use_*= path, still reachable through this one back door.
+2. =if new_state: ... else: ...= is falsy for =False=, so an explicit
+   =toggle_stt(False)= fell into the =else= (flip) branch and FLIPPED the
+   flag instead of forcing it off, contradicting the method's own docstring.
+
+*** Corrected three-way semantics
+
+- =new_state is None= (no argument): FLIP =do_slonczewski=, preserving the
+  legacy no-argument toggle behaviour exactly.
+- =new_state= given: force =do_slonczewski = bool(new_state)=. An explicit
+  =False= therefore reliably DISABLES; it does not flip. Non-bool arguments
+  are coerced the same way -- =toggle_stt(0)= forces OFF, =toggle_stt(1)=
+  forces ON -- rather than falling into a truthiness branch (the original
+  bug), pinned by a dedicated regression test.
+- Any operation that would ENABLE Slonczewski (final state =True=) while
+  =do_zhangli= is already set raises =ValueError= naming both "Slonczewski"
+  and "Zhang-Li" BEFORE mutating the flag, mirroring the D11
+  =use_slonczewski=/=use_zhangli= guards exactly. This applies to both an
+  explicit =toggle_stt(True)= and a no-arg flip that would enable from OFF.
+  Disabling (final state =False=) never conflicts and is always allowed,
+  even with Zhang-Li active.
+
+LLG dispatch, STT physics and the D11 =use_*= guards are completely
+unchanged; this slice only closes the =toggle_stt= back door onto them.
+
+*** Tests (strict TDD)
+
+RED first: 4 of the 5 new behaviour tests failed before the fix --
+flip-on-=False= in two (=test_toggle_stt_false_forces_off_and_does_not_flip=,
+implicitly the disable-with-Zhang-Li-active case), and guard-bypass on both
+the explicit-=True= and no-arg-enable-flip conflict paths
+(=test_toggle_stt_true_while_zhangli_active_raises=,
+=test_toggle_stt_no_arg_enable_flip_while_zhangli_active_raises=). The
+no-arg-flip test (=test_toggle_stt_no_arg_flip_preserved_without_conflict=)
+already passed pre-fix -- that behaviour already existed and needed no
+change, only preservation. A sixth test,
+=test_toggle_stt_non_bool_args_are_coerced_not_flip_branched=, pins the
+=bool(new_state)= coercion (=toggle_stt(0)=/=toggle_stt(1)=) against a
+regression to the original truthiness branch.
+
+*** Evidence
+
+Focused gate =dolfinx-src-stt-pytest= went from =21 passed= before the
+change to =27 passed= after (+6: 5 behaviour tests + 1 non-bool-coercion
+regression pin). Neighbours: =dolfinx-src-llg-pytest= =16 passed= and
+=dolfinx-src-simulation-pytest= =49 passed=, both unchanged.
+
+The clean-tree aggregate =dev/bin/verify-dolfinx-m5= on the committed
+worktree **exited 0 with all 32 steps green**: STT gate =27 passed=; fast
+examples =14 passed/3 skipped= in =226.62s=; core smoke
+={"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}=; tracked-file
+cleanliness guard silent (log =/tmp/finmag-d18-m5-clean.log=). This slice
+does not rerun the FULL example lane (=FINMAG_EXAMPLE_FULL=1=, recorded
+baseline 12 passed/5 failed) and makes no claim about it.
+
+*** Independent review
+
+Verdict: APPROVE WITH FOLLOW-UPS, nothing blocking. The reviewer
+independently verified a full 20-row truth table (={do_slonczewski F,T} x
+{do_zhangli F,T} x {toggle_stt(), (True), (False), (0), (1)}=) empirically;
+confirmed the guard keys on the FINAL state and runs before mutation
+(rejected calls leave both flags intact); confirmed no =toggle_stt= path can
+now reach both-flags-=True= from any legitimate start; confirmed the legacy
+no-arg flip is preserved; confirmed the message names both modes,
+consistent with the D11 style. The one actionable follow-up (a regression
+test for non-bool =0=/=1= arguments) was ADDED before the commit was
+finalised -- it is included in =a7b0fb87=. Two non-actionable notes remain:
+from an illegitimate pre-existing both-=True= state, =toggle_stt(True)=
+correctly still raises (defensive, not a defect, since that state cannot be
+legitimately reached); and the guard message is duplicated rather than
+shared with the D11 =use_*= guard message (cosmetic, could drift in the
+future).
+
+*** Acceptance-register disposition
+
+D18's disposition is updated from "pending owner decision" to record it is
+APPROVED and IMPLEMENTED in =a7b0fb87= (SR1 D18): =toggle_stt= now honours
+explicit =False= (force-off) and raises =ValueError= naming both modes when
+a =toggle_stt= enable of Slonczewski would collide with an active Zhang-Li,
+closing the back-door; the =toggle_stt(False)= flip quirk is fixed. Owner
+decision 2026-07-23 (relayed): harden it. =capability-status.md= row C10 is
+updated to match: D18 is IMPLEMENTED, the back-door is closed, and gate
+=dolfinx-src-stt-pytest= is recorded at =27 passed=.
+
+*** Scope note
+
+This documentation-closure commit itself runs no =pixi= tasks and does not
+invoke =dev/bin/verify-dolfinx-m5=, by design -- it records the
+implementation and review evidence above without re-deriving it. P2.5
+(hysteresis re-relax, register D4) remains separately unimplemented and is
+untouched by this slice.
+
+[Claude Sonnet 5]

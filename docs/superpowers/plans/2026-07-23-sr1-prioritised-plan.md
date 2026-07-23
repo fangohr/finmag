@@ -455,6 +455,22 @@ not deleted and not an accepted permanent exception.
   reliably disable. D11's approved scope was the `use_*` configuration path
   only, so both are correctly left for a follow-up slice rather than folded
   into this one.
+- **D18 follow-up completed in `a7b0fb87` (SR1 D18):** owner decision
+  2026-07-23 (relayed): harden it. `toggle_stt` now forces
+  `do_slonczewski = bool(new_state)` when an explicit argument is given (so
+  `toggle_stt(False)` reliably disables instead of flipping; `toggle_stt(0)`/
+  `toggle_stt(1)` are coerced the same way), a no-arg call still FLIPS the
+  flag (legacy behaviour preserved), and any operation that would ENABLE
+  Slonczewski while `do_zhangli` is set raises `ValueError` naming both
+  modes BEFORE mutating the flag, mirroring the D11 `use_*` guards; disabling
+  never conflicts. Focused gate `dolfinx-src-stt-pytest` went from 21 passed
+  to 27 passed (+6: 5 behaviour tests + 1 non-bool-coercion regression pin);
+  neighbours `dolfinx-src-llg-pytest` 16 passed and
+  `dolfinx-src-simulation-pytest` 49 passed, both unchanged. Review: APPROVE
+  WITH FOLLOW-UPS, nothing blocking -- a full 20-row truth table was verified
+  empirically and the one actionable follow-up (a non-bool-coercion
+  regression test) was added before the commit was finalised. See
+  `transition-notes.org`'s "D18 harden toggle_stt" section. [Claude Sonnet 5]
 
 Each P2 slice gets a RED test, the narrow focused gate, closest legacy
 invariants from P0.1, and the aggregate verifier. Do not combine these into one
@@ -541,3 +557,5 @@ later full-parity planning.
 [P2.4 updates: Claude Sonnet 5]
 
 [P2.6 updates: Claude Sonnet 5]
+
+[D18 updates: Claude Sonnet 5]

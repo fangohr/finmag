@@ -1183,3 +1183,42 @@ Before editing the matching module in `src/finmag`, check that:
   tasks and does not invoke `dev/bin/verify-dolfinx-m5`. D4/hysteresis
   (SR1 P2.5) remains separately unimplemented. See `transition-notes.org`'s
   "P2.6 reject conflicting STT modes" section. [Claude Sonnet 5]
+- SR1 D18 (harden `Simulation.toggle_stt`, `a7b0fb87`, register D18): closes
+  the two defects D18 recorded. `toggle_stt` used to write
+  `self.llg.do_slonczewski` directly, bypassing the D11 guard, so
+  `set_zhangli(...)` then `toggle_stt(True)` could still leave both flags
+  `True` with the dispatch silently preferring Slonczewski; and
+  `toggle_stt(False)` branched `if new_state: ... else: ...`, so an explicit
+  falsy `False` fell into the flip branch instead of forcing the flag off.
+  The fix preserves the legacy three-way semantics: `new_state is None`
+  still FLIPS `do_slonczewski` (legacy no-arg behaviour, unchanged); a given
+  `new_state` now forces `do_slonczewski = bool(new_state)`, so
+  `toggle_stt(False)` reliably disables and non-bool args (`0`/`1`) are
+  coerced the same way rather than flip-branched; and any operation that
+  would ENABLE Slonczewski while `do_zhangli` is set raises `ValueError`
+  naming both "Slonczewski" and "Zhang-Li" BEFORE mutating the flag,
+  mirroring the D11 `use_*` guards -- disabling never conflicts. LLG
+  dispatch, STT physics and the D11 `use_*` guards are untouched. RED first:
+  4 of the 5 new behaviour tests failed pre-fix (flip-on-`False`, and
+  guard-bypass on both the explicit-`True` and no-arg-enable-flip paths);
+  the no-arg-flip test already passed pre-fix, since that behaviour already
+  existed. Gate: focused `dolfinx-src-stt-pytest` went from 21 passed to 27
+  passed (+6: 5 behaviour tests + 1 non-bool-coercion regression pin);
+  neighbours `dolfinx-src-llg-pytest` 16 passed and
+  `dolfinx-src-simulation-pytest` 49 passed, both unchanged. Independent
+  review: APPROVE WITH FOLLOW-UPS, nothing blocking -- the reviewer verified
+  a full 20-row truth table empirically, confirmed the guard runs before
+  mutation and keys on the final state, confirmed no `toggle_stt` path can
+  now reach both-flags-`True`, and confirmed the legacy no-arg flip is
+  preserved; the one actionable follow-up (a non-bool-coercion regression
+  test) was added before the commit was finalised. The clean-tree aggregate
+  `dev/bin/verify-dolfinx-m5` on the committed worktree exited 0 with all 32
+  steps green: STT gate 27 passed, fast examples 14 passed/3 skipped in
+  226.62s, core smoke `{"integrator_backend": "sundials", "m_average":
+  [0.9802592114540473, 0.17662000907877634, 0.08889756808631089],
+  "max_unit_norm_deviation": 2.763425760221594e-06, "t": 1e-12, "t_target":
+  1e-12}`, tracked-file cleanliness guard silent (log
+  `/tmp/finmag-d18-m5-clean.log`). This documentation-closure commit runs no
+  `pixi` tasks and does not invoke `dev/bin/verify-dolfinx-m5` itself. D4/
+  hysteresis (SR1 P2.5) remains separately unimplemented. See
+  `transition-notes.org`'s "D18 harden toggle_stt" section. [Claude Sonnet 5]
