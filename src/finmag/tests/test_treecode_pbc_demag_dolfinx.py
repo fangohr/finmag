@@ -342,16 +342,27 @@ def _pbc_field_avg(mesh, m_vec, Ms, nx=1, ny=1, dx=None, dy=None):
 
 
 def test_pbc_end_to_end_runs():
+    # Gapped pitch (1e-6 relative gap above the 20nm in-plane extent).  Until
+    # SR1 P2.2a's completion this used the touching default (no spacing), which
+    # silently exercised the broken coincident-node path (BEM row sums reach -2
+    # for nx >= 3).  The finiteness + row-sum precondition below stops that path
+    # from returning here unnoticed.  [Claude Opus 4.8]
     mesh = _box(4, 4, 2, 20.0, 20.0, 4.0)
-    avg = _pbc_field_avg(mesh, (0, 0, 1), 8.6e5, nx=3, ny=3)
+    P = 20.0 * (1.0 + 1e-6)
+    bem = BMatrixPBC(
+        mesh, Ts=MacroGeometry(nx=3, ny=3, dx=P, dy=P).compute_Ts(mesh)).bm
+    assert np.all(np.isfinite(bem)), "periodic BEM has non-finite entries"
+    np.testing.assert_allclose(bem.sum(axis=1), -np.ones(len(bem)),
+                               rtol=0, atol=1e-9)
+    avg = _pbc_field_avg(mesh, (0, 0, 1), 8.6e5, nx=3, ny=3, dx=P, dy=P)
     assert np.all(np.isfinite(avg))
 
 
-def _field_at_origin(mesh, m_vec, Ms, nx=1, ny=1):
+def _field_at_origin(mesh, m_vec, Ms, nx=1, ny=1, dx=None, dy=None):
     m, Ms_f = _fields(mesh, m_vec, Ms)
     tol = {"absolute_tolerance": 1e-10, "relative_tolerance": 1e-10,
            "maximum_iterations": int(1e5)}
-    demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny),
+    demag = FKDemag(macrogeometry=MacroGeometry(nx=nx, ny=ny, dx=dx, dy=dy),
                     parameters={"phi_1": tol, "phi_2": tol})
     demag.setup(m, Ms_f, unit_length=1e-9)
     # Task 31: component-blocked field -> owned-vertex per-node rows, paired
@@ -369,12 +380,24 @@ def _centred_box(n, half):
         [n, n, n], cell_type=dm.CellType.tetrahedron)
 
 
+# Mesh extent of ``_centred_box(10, 10.0)`` (spans [-10, 10] on each axis).
+_IMAGE_SUM_EXTENT = 20.0
+# Tile PITCH (centre-to-centre) for the image sum below.  As with the thin-film
+# tests, a pitch of exactly the mesh extent is the coincident-node defect (the
+# touching default): the periodic BEM row sums reach -2 instead of -1 for
+# nx >= 3, so the returned field is ~158% wrong.  A 1e-6 relative gap removes
+# the node coincidence and restores the correct converging sequence, which the
+# finiteness + row-sum precondition below then guards.  [Claude Opus 4.8]
+_IMAGE_SUM_PITCH = _IMAGE_SUM_EXTENT * (1.0 + 1e-6)
+
+
 def test_pbc_image_sum_converges_1d():
     # Physics sanity (the plan's accepted PBC evidence): the 1D periodic image
     # sum converges monotonically to a stable limit as the image count grows.
-    # A cube tiled along x approaches an infinite chain of cubes; |Hx| decreases
-    # monotonically and the successive increments shrink toward a fixed limit
-    # (the single-cube Nx~1/3 relaxes as neighbours are added along x).
+    # A cube tiled along x (at a non-coincident pitch, see _IMAGE_SUM_PITCH)
+    # approaches an infinite chain of cubes; |Hx| decreases monotonically and
+    # the successive increments shrink toward a fixed limit (the single-cube
+    # Nx~1/3 relaxes as neighbours are added along x).
     #
     # This test is DELIBERATELY trend-only (round-1 review item): it does not
     # pin the nx->infinity plateau value, because that limit has no known
@@ -383,17 +406,36 @@ def test_pbc_image_sum_converges_1d():
     # at higher image counts, which is not independent validation.  The
     # independent analytic anchor for this MacroGeometry path is the
     # out-of-plane thin-film test below (Nz -> 1 is a textbook result).
-    # For documentation only (not asserted, and not encoded as a fast test):
-    # extending this same 1D sweep offline to nx=51..351 on this mesh gives
-    # -0.10101, -0.10089, -0.10083, -0.10080, -0.10078, -0.10077, consistent
-    # with a slow ~1/nx approach to a plateau near -0.1007 (a-la-1/n
-    # least-squares fit); this is an extrapolation of the same numerical
+    #
+    # HISTORY (SR1 P2.2a completion): until this commit both this test and
+    # test_pbc_end_to_end_runs built MacroGeometry with NO spacing -- the
+    # exactly-touching default that P2.2a proved is numerically broken (the
+    # periodic BEM row sums reach -2 for nx >= 3, so the field is ~158% wrong).
+    # The old "plateau near -0.1007" quoted below was a broken-path number.  On
+    # the CORRECT gapped geometry the measured sequence is
+    #   nx=1,3,5,9 -> -0.3337, -0.0638, -0.0245, -0.0078
+    # and it does not plateau near -0.1007 at all: extending the same 1D sweep
+    # offline to nx=51,101,151,201,251,351 gives
+    #   -0.00025, -0.00006, -0.00003, -0.00002, -0.00001, -0.00001,
+    # i.e. |Hx| decays toward 0 as the cube's images spread out along an
+    # infinite gapped chain.  This is an extrapolation of the same numerical
     # method, not an independently-derived limit, so it is reported here as
-    # context rather than pinned as an assertion. See transition-notes.org.
-    # [Claude Sonnet 5]
+    # context rather than pinned as an assertion.  See transition-notes.org.
+    # [Claude Opus 4.8] [Claude Sonnet 5]
     Ms = 8.6e5
     mesh = _centred_box(10, 10.0)
-    hx = np.array([_field_at_origin(mesh, (1, 0, 0), Ms, nx=n, ny=1)[0]
+    P = _IMAGE_SUM_PITCH
+    # Precondition (as in the thin-film test): the periodic BEM the conclusion
+    # rests on is well posed at every image count -- finite, and row sums == -1.
+    # The touching default fails this (row sums reach -2), so a broken
+    # coincident-node config can no longer satisfy this test.
+    for n in (1, 3, 5, 9):
+        bem = BMatrixPBC(
+            mesh, Ts=MacroGeometry(nx=n, ny=1, dx=P, dy=P).compute_Ts(mesh)).bm
+        assert np.all(np.isfinite(bem)), (n, "non-finite periodic BEM")
+        np.testing.assert_allclose(bem.sum(axis=1), -np.ones(len(bem)),
+                                   rtol=0, atol=1e-9)
+    hx = np.array([_field_at_origin(mesh, (1, 0, 0), Ms, nx=n, ny=1, dx=P, dy=P)[0]
                    for n in (1, 3, 5, 9)])
     assert np.all(np.diff(np.abs(hx)) < 0.0)            # monotone decrease
     incr = np.abs(np.diff(hx))
