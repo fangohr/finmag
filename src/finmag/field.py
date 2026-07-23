@@ -7,7 +7,7 @@ and the legacy ``xyz``/``xxx`` array views explicit.
 import numbers
 
 import numpy as np
-from dolfinx import fem, geometry, io
+from dolfinx import fem, geometry, io, la
 from mpi4py import MPI
 from ufl import dx
 
@@ -79,6 +79,10 @@ class Field:
             self.from_function(value)
         elif isinstance(value, fem.Constant):
             self.from_constant(value)
+        elif isinstance(value, la.Vector) or hasattr(value, "getArray"):
+            # A backend distributed vector object (dolfinx.la.Vector or
+            # PETSc.Vec), mirroring legacy's df.GenericVector dispatch branch.
+            self.from_generic_vector(value)
         elif isinstance(value, str) or (
             isinstance(value, (tuple, list))
             and any(isinstance(item, str) for item in value)
@@ -181,10 +185,53 @@ class Field:
             "pass a callable"
         )
 
-    def from_generic_vector(self, *args, **kwargs):
-        raise NotImplementedError(
-            "legacy GenericVector assignment is unavailable; pass an owned NumPy array"
-        )
+    def from_generic_vector(self, vector):
+        """Copy owned dofs from a backend distributed vector object.
+
+        Legacy ``from_generic_vector`` took a dolfin ``GenericVector`` (a
+        backend PETSc vector *object*) and did ``set_local(get_local())`` -- a
+        raw backend-order copy of the rank-local owned entries. The
+        DOLFINx-native equivalents are the backend vector objects this Field
+        exposes: :meth:`vector` (a ``dolfinx.la.Vector``) and
+        :meth:`petsc_vector` (a ``PETSc.Vec``). This is a genuinely distinct
+        surface from :meth:`from_array`, which accepts a NumPy array.
+
+        Only the source's *owned* portion ``[:owned]`` is read (any ghost tail
+        it carries is ignored); this Field's ghosts are then repopulated by its
+        own :meth:`scatter_forward`, exactly mirroring legacy's owned-only
+        ``set_local``. Pass a NumPy array to :meth:`from_array` instead.
+        """
+        owned = self._owned_scalar_dofs()
+        if isinstance(vector, la.Vector):
+            source = np.asarray(vector.array)
+        elif hasattr(vector, "getArray"):  # PETSc.Vec
+            source = np.asarray(vector.getArray(readonly=True))
+        else:
+            raise TypeError(
+                "from_generic_vector requires a backend vector object "
+                "(dolfinx.la.Vector or PETSc.Vec); pass a NumPy array to "
+                "from_array instead. Got: {}".format(type(vector))
+            )
+        # Guard the owned-size mismatch that would otherwise SILENTLY truncate:
+        # a source from a larger space (e.g. a vector-space vector read into a
+        # scalar-space target) would let ``source[:owned]`` succeed with a
+        # wrong-but-finite result. Require the source to carry at least this
+        # Field's owned dofs, and reject an oversized source outright so a
+        # different-space vector cannot be misread node-for-node. [Claude Opus 4.8]
+        if source.shape[0] < owned:
+            raise ValueError(
+                "from_generic_vector source has {} entries but this Field owns "
+                "{} dofs".format(source.shape[0], owned))
+        ghost = self.f.x.array.shape[0] - owned
+        if source.shape[0] not in (owned, owned + ghost):
+            raise ValueError(
+                "from_generic_vector source has {} entries, which matches "
+                "neither this Field's owned ({}) nor owned+ghost ({}) dof count "
+                "-- it likely comes from a different function space".format(
+                    source.shape[0], owned, owned + ghost))
+        self.f.x.array[:owned] = source[:owned]
+        self.f.x.scatter_forward()
+        return self
 
     def from_sequence(self, seq):
         return self.from_constant(seq)

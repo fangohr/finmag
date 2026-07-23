@@ -220,6 +220,55 @@ def test_from_function_interpolates_dg0_into_cg1(spaces):
         target.as_array()[:owned], 3.5, rtol=0, atol=1e-12)
 
 
+def test_from_generic_vector_copies_backend_vector_objects(spaces):
+    """P3.4: ``from_generic_vector`` is the backend-vector-object entry point.
+
+    Legacy ``from_generic_vector`` took a dolfin ``GenericVector`` (a backend
+    PETSc vector *object*) and did ``set_local(get_local())`` -- a raw
+    backend-order owned copy. The DOLFINx-native equivalents are the backend
+    vector objects this Field exposes: ``vector()`` -> ``dolfinx.la.Vector`` and
+    ``petsc_vector()`` -> ``PETSc.Vec``. It is a genuinely distinct surface from
+    ``from_array`` (which takes a NumPy array); a NumPy array is rejected.
+    """
+    _, _, vector_space = spaces
+    source = Field(
+        vector_space,
+        lambda x: np.vstack((1.0 + x[0], 2.0 + x[1], 3.0 + x[0] * x[1])),
+    )
+
+    # dolfinx.la.Vector (Field.vector()) round-trips node-for-node in raw
+    # backend order; returns self.
+    via_la = Field(vector_space)
+    returned = via_la.from_generic_vector(source.vector())
+    assert returned is via_la
+    assert via_la.allclose(source)
+    assert np.array_equal(via_la.as_array(), source.as_array())
+
+    # PETSc.Vec (Field.petsc_vector()) round-trips too.
+    via_petsc = Field(vector_space)
+    via_petsc.from_generic_vector(source.petsc_vector())
+    assert via_petsc.allclose(source)
+    assert np.array_equal(via_petsc.as_array(), source.as_array())
+
+    # set() routes a backend la.Vector object here (legacy GenericVector
+    # dispatch parity).
+    via_set = Field(vector_space)
+    via_set.set(source.vector())
+    assert via_set.allclose(source)
+
+    # A NumPy array is a distinct surface -> rejected loudly, pointing to
+    # from_array (NOT silently producing a wrong result).
+    with pytest.raises(TypeError, match="from_array"):
+        Field(vector_space).from_generic_vector(source.as_array())
+
+    # A backend vector from a DIFFERENT (larger) space must be rejected, not
+    # silently truncated to the target's owned size (that would misread a
+    # vector-space vector into a scalar-space target node-for-node). [Claude Opus 4.8]
+    _, scalar_space, _ = spaces
+    with pytest.raises(ValueError, match="different function space|owns"):
+        Field(scalar_space).from_generic_vector(source.vector())
+
+
 def test_flat_xyz_xxx_round_trips_and_coords(spaces):
     _, _, vector_space = spaces
     field = Field(
