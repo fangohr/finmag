@@ -1131,3 +1131,42 @@ Before editing the matching module in `src/finmag`, check that:
   (hysteresis no-re-relax) is untouched and remains approved but unimplemented
   as SR1 P2.5. See `transition-notes.org`'s "P2.4 discrete-time Zeeman energy
   correction" section. [Claude Sonnet 5]
+- SR1 P2.6 (reject conflicting STT modes, `de518888`, register D11):
+  `LLG.use_slonczewski` and `use_zhangli` each gain a guard, checked BEFORE
+  either mutates any flag, that raises `ValueError` naming both
+  "Slonczewski" and "Zhang-Li" if the OTHER mode's `do_*` flag is already
+  set (`use_slonczewski` checks `do_zhangli`; `use_zhangli` checks
+  `do_slonczewski`), replacing the previous silent last-call-wins (each
+  setter used to force the sibling flag `False` unconditionally). Each guard
+  keys ONLY on the other mode's flag, so re-tuning the SAME mode (a second
+  `use_slonczewski`/`use_zhangli` call to change parameters) and
+  disable-then-switch (flip the active `do_*` flag off directly, then
+  configure the other mode) both remain allowed. `Simulation.set_stt`/
+  `set_zhangli` inherit the guard by routing through these setters, with no
+  duplicated logic in `sim.py`. STT physics and the `if do_slonczewski ...
+  elif do_zhangli` dispatch (`llg.py` ~293-310) are unchanged. RED first:
+  the 2 conflict tests failed before the change with "DID NOT RAISE
+  ValueError"; the 5 allowed-behaviour tests (same-mode reconfigure x2,
+  disable-then-switch, each mode alone x2) already passed pre-change,
+  confirming the guard does not over-reach. Gate: focused
+  `dolfinx-src-stt-pytest` went from 14 passed to 21 passed (+7 new);
+  neighbours `dolfinx-src-llg-pytest` 16 passed and
+  `dolfinx-src-simulation-pytest` 49 passed, both unchanged. Each mode alone
+  still produces a nonzero STT dm/dt (`‖dmdt‖` ~= 2.46e10 Slonczewski, ~3.5e10
+  Zhang-Li). Independent review: APPROVE WITH FOLLOW-UPS, nothing blocking
+  -- the reviewer confirmed the guard runs before any mutation in both
+  directions (a rejected call leaves the first mode's configuration fully
+  intact), same-mode reconfigure preserved, both call orders raise naming
+  both modes, physics/dispatch untouched, `Simulation`-layer inheritance,
+  genuine test assertions, RED reproduction, and scope-clean diff (`llg.py`
+  +14, `test_stt_dolfinx.py` +83). Two out-of-scope defects recorded, not
+  fixed, as new register row D18: `Simulation.toggle_stt(new_state)`
+  (`src/finmag/sim/sim.py:888`) writes `do_slonczewski` directly, bypassing
+  this guard, so `set_zhangli(...)` then `toggle_stt(True)` can still reach
+  both flags True and the dispatch silently prefers Slonczewski; separately
+  `toggle_stt(False)` branches `if new_state: ... else: ...` and so flips
+  the flag rather than forcing it off. D11's approved scope was the `use_*`
+  configuration path only. This documentation-closure commit runs no `pixi`
+  tasks and does not invoke `dev/bin/verify-dolfinx-m5`. D4/hysteresis
+  (SR1 P2.5) remains separately unimplemented. See `transition-notes.org`'s
+  "P2.6 reject conflicting STT modes" section. [Claude Sonnet 5]

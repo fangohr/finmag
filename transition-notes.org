@@ -6930,3 +6930,121 @@ divergence from master was introduced -- so no new D-row was added to
 =acceptance-register.md=.
 
 [Claude Sonnet 5]
+
+** P2.6 reject conflicting STT modes (2026-07-23)
+
+Commit =de518888= (SR1 P2.6) implements owner-approved acceptance register
+D11: configuring both local spin-transfer-torque modes on one =LLG= now
+raises a by-name =ValueError= instead of silently letting the last =use_*=
+call win.
+
+*** Mechanism
+
+Previously each =use_*= setter forced the SIBLING =do_*= flag to =False=
+unconditionally, so calling =use_slonczewski= after =use_zhangli= (or vice
+versa) silently discarded the earlier mode's configuration with no warning
+-- last-call-wins. =LLG.use_slonczewski= now checks =self.do_zhangli= BEFORE
+mutating anything, and raises =ValueError= if it is set; =LLG.use_zhangli=
+symmetrically checks =self.do_slonczewski=. Each guard keys ONLY on the
+OTHER mode's flag, never on its own, so:
+
+- Re-tuning the SAME mode (e.g. a second =use_slonczewski= call to change
+  =J=/=P=) is unaffected -- the guard's own mode's flag is irrelevant to it.
+- Disable-then-switch remains possible: flip the active =do_*= flag off
+  directly (e.g. =llg.do_slonczewski = False=), then the other mode's
+  =use_*= call proceeds normally, since the flag it checks is now clear.
+
+The =ValueError= messages name both "Slonczewski" and "Zhang-Li" by name and
+tell the caller to disable one before enabling the other, following the
+in-file house precedent set by the D10 pin-range guard.
+=Simulation.set_stt=/=set_zhangli= are thin pass-throughs to these setters,
+so they inherit the guard with no duplicated logic in =sim.py=. STT physics
+and the =if do_slonczewski ... elif do_zhangli= dispatch in =llg.py=
+(lines ~293-310) are completely unchanged -- this slice is purely a
+configuration-time guard.
+
+*** Tests (strict TDD)
+
+RED first: the two conflict tests
+(=test_slonczewski_then_zhangli_raises_valueerror= and
+=test_zhangli_then_slonczewski_raises_valueerror=) failed before the source
+change with "DID NOT RAISE ValueError" (the old code silently accepted the
+second call). The five allowed-behaviour tests -- same-mode reconfigure for
+both modes, disable-then-switch, and each mode alone still activating and
+contributing a nonzero STT =dm/dt= -- already passed before the change,
+confirming the guard's design does not over-reach into behaviour that must
+stay legal.
+
+Each conflict test also asserts the guard runs BEFORE any mutation: after
+the rejected call, the first mode's flags are unchanged in both directions
+(=llg.do_slonczewski is True= / =llg.do_zhangli is False= after a rejected
+=use_zhangli=, and the mirror after a rejected =use_slonczewski=), so a
+caller catching the =ValueError= is left with a fully intact, still-working
+first configuration, not a half-mutated object.
+
+*** Evidence
+
+Focused gate =dolfinx-src-stt-pytest= went from =14 passed= before the
+change to =21 passed= after (+7 new tests: 2 conflict + 5
+allowed-behaviour). Neighbours: =dolfinx-src-llg-pytest= =16 passed= and
+=dolfinx-src-simulation-pytest= =49 passed=, both unchanged.
+
+Each mode alone still produces a nonzero STT =dm/dt= contribution:
+=‖dmdt‖= ~= =2.46e10= for Slonczewski, ~= =3.5e10= for Zhang-Li, on the same
+macrospin/interval fixtures used throughout this test file.
+
+*** Independent review
+
+Verdict: APPROVE WITH FOLLOW-UPS, nothing blocking. The reviewer
+independently verified: the guard runs before any mutation, in both
+directions (a rejected call leaves the first mode's configuration fully
+intact); same-mode reconfigure is preserved for both modes; both call
+orders raise with messages naming both modes; each mode alone still
+activates and contributes; STT physics and the dispatch are untouched;
+=Simulation=-layer paths (=set_stt=/=set_zhangli=) inherit the guard; the
+tests assert genuine behaviour (flag state and dm/dt, not merely "raises");
+the RED evidence reproduces; and the diff is scope-clean --
+=src/finmag/physics/llg.py= +14 lines and
+=src/finmag/tests/test_stt_dolfinx.py= +83 lines, nothing else touched.
+
+*** New acceptance-register decision
+
+D11's disposition is updated from "approved" to "approved ... IMPLEMENTED
+in =de518888= (SR1 P2.6)" in =acceptance-register.md=.
+
+A NEW row, D18, records two out-of-scope defects the reviewer and
+implementer both confirmed while checking D11's guard, left for a
+follow-up slice rather than fixed here:
+
+1. =Simulation.toggle_stt(new_state)= (=src/finmag/sim/sim.py:888=) writes
+   =self.llg.do_slonczewski= DIRECTLY, bypassing the D11-guarded =use_*=
+   setters entirely. So =set_zhangli(...)= followed by
+   =toggle_stt(True)= can still leave BOTH =do_slonczewski= and
+   =do_zhangli= =True= -- the dispatch (=if do_slonczewski ... elif
+   do_zhangli=) then silently prefers Slonczewski, which is exactly the
+   silent precedence D11 set out to kill on the =use_*= path, still
+   reachable through this one back door.
+2. =toggle_stt(False)= branches =if new_state: ... else: ...=, so a falsy
+   explicit =False= argument falls into the =else= branch and FLIPS the
+   flag instead of forcing it off. =toggle_stt(False)= therefore does not
+   reliably disable Slonczewski.
+
+No test, example or documented workflow exercises either path today. D11's
+approved scope (=de518888=, this slice) is the =use_*= configuration path
+only, so both defects are correctly left as *pending owner decision* rather
+than folded into P2.6. Recommendation recorded in D18: harden =toggle_stt=
+in a follow-up slice -- refuse enabling Slonczewski via
+=toggle_stt(True)= while Zhang-Li is active (and the mirror case), and
+make =toggle_stt(False)= force the flag off rather than flip it.
+
+*** Scope note
+
+This slice does not rerun the FULL example lane
+(=FINMAG_EXAMPLE_FULL=1=) and makes no claim about it. This documentation
+closure commit itself runs no =pixi= tasks and does not invoke
+=dev/bin/verify-dolfinx-m5=, by design -- it records the implementation and
+review evidence above without re-deriving it. P2.5 (hysteresis re-relax,
+register D4) remains separately unimplemented and is untouched by this
+slice.
+
+[Claude Sonnet 5]

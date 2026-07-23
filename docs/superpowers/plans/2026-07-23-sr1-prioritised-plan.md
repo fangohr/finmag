@@ -363,10 +363,56 @@ not deleted and not an accepted permanent exception.
 - Test switching/loop physics, not merely result lengths.
 - Document why corrected output differs from master.
 
-### [ ] P2.6 Reject conflicting STT modes
+### [x] P2.6 Reject conflicting STT modes
 
 - Keep each mode independently working.
 - Raise a clear error when configuration would enable both modes.
+- **Completed in `de518888` (register D11):** `LLG.use_slonczewski` and
+  `use_zhangli` each gain a guard, evaluated BEFORE either method mutates any
+  flag, that raises `ValueError` if the OTHER mode's `do_*` flag is already
+  set (`use_slonczewski` checks `self.do_zhangli`; `use_zhangli` checks
+  `self.do_slonczewski`). Each guard keys ONLY on the sibling flag, so
+  re-tuning the SAME mode (a second `use_slonczewski` call to change J/P, or
+  a second `use_zhangli` call to change P/beta) and disable-then-switch (flip
+  the active `do_*` flag off, then configure the other mode) both remain
+  allowed -- exactly the previous last-call-wins convenience, minus the
+  silent cross-mode clobber. The `ValueError` messages name both
+  "Slonczewski" and "Zhang-Li" and tell the caller to disable one before
+  enabling the other, following the in-file D10 pin-range `ValueError`
+  precedent. `Simulation.set_stt`/`set_zhangli` inherit the guard by routing
+  through these setters, with no duplicated logic in `sim.py`. STT physics
+  and the `if do_slonczewski ... elif do_zhangli` dispatch in `llg.py` are
+  unchanged.
+- **Evidence:** RED first -- the 2 conflict tests failed before the source
+  change with "DID NOT RAISE ValueError"; the 5 allowed-behaviour tests
+  (same-mode reconfigure for each mode, disable-then-switch, each mode alone
+  activating) already passed pre-change, confirming the guard does not
+  over-reach. Focused gate `dolfinx-src-stt-pytest` went from 14 passed to
+  21 passed (+7 new tests). Neighbours: `dolfinx-src-llg-pytest` 16 passed
+  and `dolfinx-src-simulation-pytest` 49 passed, both unchanged. Each mode
+  alone still produces a nonzero STT dm/dt contribution (`‖dmdt‖` ~=
+  2.46e10 for Slonczewski, ~3.5e10 for Zhang-Li). [Claude Sonnet 5]
+- **Review:** APPROVE WITH FOLLOW-UPS, nothing blocking. The reviewer
+  verified the guard runs before any mutation in both directions (a rejected
+  call leaves the first mode's full configuration intact); same-mode
+  reconfigure is preserved for both modes; both call orders raise with
+  messages naming both modes; each mode alone still works; STT physics and
+  dispatch are untouched; the `Simulation`-layer paths inherit the guard;
+  the tests assert real behaviour (flag state, not merely "raises"); the RED
+  evidence reproduces; and the diff is scope-clean (`llg.py` +14 lines,
+  `test_stt_dolfinx.py` +83 lines, nothing else touched). Two out-of-scope
+  defects were recorded rather than fixed, as register row **D18**:
+  `Simulation.toggle_stt(new_state)` (`src/finmag/sim/sim.py:888`) writes
+  `self.llg.do_slonczewski` directly, bypassing these guarded setters, so
+  `set_zhangli(...)` followed by `toggle_stt(True)` can still leave BOTH
+  `do_slonczewski` and `do_zhangli` True -- the dispatch then silently
+  prefers Slonczewski, the very silent precedence D11 set out to close,
+  still reachable through this one path; separately, `toggle_stt(False)`
+  branches on `if new_state:` / `else:`, so a falsy explicit `False` falls
+  into the flip branch instead of forcing the flag off, and so does not
+  reliably disable. D11's approved scope was the `use_*` configuration path
+  only, so both are correctly left for a follow-up slice rather than folded
+  into this one.
 
 Each P2 slice gets a RED test, the narrow focused gate, closest legacy
 invariants from P0.1, and the aggregate verifier. Do not combine these into one
@@ -451,3 +497,5 @@ later full-parity planning.
 [P2.3 updates: Claude Sonnet 5]
 
 [P2.4 updates: Claude Sonnet 5]
+
+[P2.6 updates: Claude Sonnet 5]
