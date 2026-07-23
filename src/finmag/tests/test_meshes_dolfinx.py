@@ -41,8 +41,10 @@ import pytest
 from mpi4py import MPI
 
 import dolfinx.fem as fem
+from dolfinx.mesh import create_box, CellType
 
 from finmag.util import meshes
+from finmag.util import consts
 from finmag.util.meshes import (
     box, sphere, cylinder, nanodisk, elliptic_cylinder,
     elliptical_nanodisk, ellipsoid, truncated_cone, ring, pair_of_disks,
@@ -486,21 +488,153 @@ def test_deferred_generators_raise_by_name():
 
 
 @pytest.mark.parametrize("name", [
-    "mesh_size_plausible",
-    "describe_mesh_size",
-    "print_mesh_info",
     "plot_mesh_with_paraview",
     "plot_mesh_regions",
 ])
 def test_deleted_mesh_helpers_raise_by_name(name):
-    """These five siblings of the already-stubbed ``mesh_info``/``mesh_size``/
-    ``plot_mesh`` family were deleted outright in the initial port (bare
-    ``AttributeError`` on lookup) instead of getting by-name deferral stubs
-    like their siblings -- a silent narrowing of the Task 29 deferral list.
-    Each must now raise ``NotImplementedError`` by name."""
+    """Historical rationale (fix round 1 on commit 867c9ca1): five siblings of
+    the ``mesh_info``/``mesh_size``/``plot_mesh`` family were deleted outright
+    in the initial port (bare ``AttributeError`` on lookup) instead of getting
+    by-name deferral stubs -- a silent narrowing of the Task 29 deferral list.
+    This test pinned all five as ``NotImplementedError``-by-name.
+
+    SR1 P4-mesh un-defers three of those five -- ``mesh_size_plausible``,
+    ``describe_mesh_size`` and ``print_mesh_info`` -- restoring their real
+    diagnostic behaviour (see the ``mesh_info`` / ``mesh_size`` /
+    ``length_scales`` tests below). Only the two Paraview/matplotlib mesh
+    *plotting* helpers remain deferred, so the by-name assertion is narrowed to
+    those."""
     fn = getattr(meshes, name)
     with pytest.raises(NotImplementedError):
         fn()
+
+
+# --------------------------------------------------------------------------
+# mesh diagnostics: mesh_info / mesh_size / length_scales / print_mesh_info
+# (SR1 P4-mesh -- restore the dolfin-era diagnostic trio, DOLFINx-native)
+#
+# Historical rationale: in the dolfin-era Finmag these lived in
+# ``finmag.util.meshes`` (``mesh_info``/``mesh_size``/``print_mesh_info`` +
+# ``mesh_size_plausible``/``describe_mesh_size``) and, at the Simulation level,
+# in ``finmag.sim.sim_details`` (``length_scales(sim)`` / ``mesh_info(sim)``,
+# which harvested A/Ms/K1/D from the assembled interactions and compared the
+# mesh edge lengths against the exchange length / Bloch parameter / helical
+# period). They are pure diagnostics -- no numerical physics result depends on
+# them -- so the port defers to DOLFINx-native topology/geometry queries and
+# reuses the dolfin-free ``finmag.util.consts`` length-scale constants.
+# ``length_scales`` here takes the material constants explicitly (the mesh
+# utilities do not import the simulation layer); the physics is unchanged.
+# --------------------------------------------------------------------------
+
+# A structured box with analytically known geometry: 3 x 3 x 10 cubes of edge
+# length 10 (mesh units), each split into 6 tetrahedra (Kuhn/Freudenthal).
+_BOX_L = (30.0, 30.0, 100.0)
+_BOX_N = (3, 3, 10)
+
+
+def _known_box():
+    return create_box(
+        MPI.COMM_WORLD, [[0.0, 0.0, 0.0], list(_BOX_L)], list(_BOX_N),
+        CellType.tetrahedron)
+
+
+def test_mesh_edge_length_stats_match_analytic():
+    """Edge-length statistics of the structured box are geometrically fixed:
+    the shortest edge is the shortest axis pitch (Lz/nz = Lx/nx = 10), the
+    longest is the space diagonal of a 10-cube (sqrt(3)*10)."""
+    mesh = _known_box()
+    el = meshes._mesh_edge_lengths(mesh)
+    assert np.isclose(el.min(), 10.0)
+    assert np.isclose(el.max(), np.sqrt(3.0) * 10.0)
+    # Structure-determined mean of the Kuhn subdivision (measured, reproducible).
+    assert np.isclose(el.mean(), 12.418557682598808, rtol=1e-6)
+
+
+def test_mesh_info_reports_counts_and_edge_histogram():
+    """``mesh_info(mesh)`` reproduces the legacy string: cell/facet/edge/vertex
+    counts plus a 20-bin edge-length histogram whose first/last bin labels are
+    the min/max edge length."""
+    mesh = _known_box()
+    s = meshes.mesh_info(mesh)
+    # V = (nx+1)(ny+1)(nz+1) = 176 ; C = 6*nx*ny*nz = 540 ; E = 853.
+    assert "540 cells" in s
+    assert "176 vertices" in s
+    assert "853 edges" in s
+    assert "Distribution of edge lengths" in s
+    # histogram spans [min_edge, max_edge] = [10.000, 17.321].
+    assert "10.000" in s
+    assert "17.321" in s
+
+
+def test_mesh_size_returns_max_extent_in_metres():
+    """``mesh_size`` returns the largest bounding-box extent times unit_length."""
+    mesh = _known_box()
+    assert np.isclose(meshes.mesh_size(mesh, 1e-9), 100.0 * 1e-9)
+    assert np.isclose(meshes.mesh_size(mesh, 1.0), 100.0)
+
+
+def test_mesh_size_plausible_and_description():
+    """``mesh_size_plausible`` / ``describe_mesh_size`` classify the metric
+    size by order of magnitude, exactly as legacy."""
+    mesh = _known_box()
+    # 100 mesh-units * 1e-9 = 1e-7 m -> order -7 -> plausible, hundreds of nm.
+    assert meshes.mesh_size_plausible(mesh, 1e-9) is True
+    assert meshes.describe_mesh_size(mesh, 1e-9) == "hundreds of nanometers large"
+    # unit_length = 1 -> 100 m -> order +2 -> implausible.
+    assert meshes.mesh_size_plausible(mesh, 1.0) is False
+    assert meshes.describe_mesh_size(mesh, 1.0) == "hundreds of meters large"
+
+
+def test_length_scales_well_resolved_vs_under_resolved():
+    """``length_scales`` compares the exchange length against the mesh edges and
+    reports the right verdict; the computed exchange length matches
+    ``consts.exchange_length(A, Ms)`` exactly."""
+    mesh = _known_box()
+    A = 13e-12
+
+    # Under-resolved: exchange length 5.29 nm < 10 nm (every edge is longer).
+    Ms_hi = 8.6e5
+    l_ex = consts.exchange_length(A, Ms_hi)
+    assert l_ex < 10.0e-9
+    s = meshes.length_scales(mesh, 1e-9, A, Ms_hi)
+    assert "Warning" in s
+    assert "longer than the Exchange length" in s
+    assert "{:.2f} nm".format(l_ex * 1e9) in s  # 5.29 nm
+
+    # Well-resolved: exchange length 45.5 nm > 17.32 nm (every edge is shorter).
+    Ms_lo = 1.0e5
+    l_ex2 = consts.exchange_length(A, Ms_lo)
+    assert l_ex2 > np.sqrt(3.0) * 10.0e-9
+    s2 = meshes.length_scales(mesh, 1e-9, A, Ms_lo)
+    assert "All edges are shorter than the Exchange length" in s2
+    assert "Warning" not in s2
+    assert "{:.2f} nm".format(l_ex2 * 1e9) in s2  # 45.49 nm
+    # Edge-length statistics are reported (min/max in metres).
+    assert "min = 10.00 nm" in s2
+    assert "max = 17.32 nm" in s2
+
+
+def test_length_scales_includes_bloch_and_helical_when_given():
+    """When K1 / D are supplied, the Bloch parameter and helical period are
+    reported too, matching ``consts.bloch_parameter`` / ``consts.helical_period``."""
+    mesh = _known_box()
+    A, Ms, K1, D = 13e-12, 1.0e5, 5.0e4, 3.0e-3
+    s = meshes.length_scales(mesh, 1e-9, A, Ms, K1=K1, D=D)
+    assert "Bloch parameter" in s
+    assert "Helical period" in s
+    assert "{:.2f} nm".format(consts.bloch_parameter(A, K1) * 1e9) in s
+    assert "{:.2f} nm".format(consts.helical_period(A, D) * 1e9) in s
+
+
+def test_print_mesh_info_prints_report(capsys):
+    """``print_mesh_info`` prints (does not return) the ``mesh_info`` report."""
+    mesh = _known_box()
+    ret = meshes.print_mesh_info(mesh)
+    out = capsys.readouterr().out
+    assert ret is None
+    assert "540 cells" in out
+    assert "176 vertices" in out
+    assert "Distribution of edge lengths" in out
 
 
 # --------------------------------------------------------------------------

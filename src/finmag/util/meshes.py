@@ -29,11 +29,17 @@ Deferred by name in this slice (documented, Task 29 review items):
   ``elliptical_nanodisk_with_cuboid_shell`` (subdomain-marked meshes);
 - the 2D gmsh-script helpers ``regular_polygon`` /
   ``regular_polygon_extruded`` / ``disk_with_internal_layers``;
-- the dolfin-based mesh analysis/plotting utilities (``mesh_info``,
-  ``mesh_quality``, ``nodal_volume``, ``longest_edges``, ``mesh_size``,
-  ``mesh_size_plausible``, ``describe_mesh_size``, ``print_mesh_info``,
-  ``build_mesh``, ``embed3d``, ``line_mesh``, ``mesh_is_periodic``,
-  ``plot_mesh``, ``plot_mesh_with_paraview``, ``plot_mesh_regions``).
+- the remaining dolfin-based mesh analysis/plotting utilities
+  (``mesh_quality``, ``nodal_volume``, ``longest_edges``, ``build_mesh``,
+  ``embed3d``, ``line_mesh``, ``mesh_is_periodic``, ``plot_mesh``,
+  ``plot_mesh_with_paraview``, ``plot_mesh_regions``).
+
+The scalar mesh diagnostics ``mesh_info`` / ``print_mesh_info`` / ``mesh_size``
+/ ``mesh_size_plausible`` / ``describe_mesh_size`` -- plus a new
+``length_scales`` that compares the mesh edges against the magnetic length
+scales (exchange length / Bloch parameter / helical period, via the dolfin-free
+``finmag.util.consts``) -- are restored here on DOLFINx-native topology and
+geometry queries (SR1 P4-mesh).
 
 Caveat (inherited): mesh coordinates are stored at reduced precision, so build
 "macroscopic" meshes and use ``unit_length`` to set the physical scale.
@@ -450,6 +456,191 @@ def order_of_magnitude(value):
 
 
 # --------------------------------------------------------------------------
+# mesh diagnostics (SR1 P4-mesh; DOLFINx-native re-port of the dolfin-era
+# ``mesh_info`` / ``mesh_size`` / ``print_mesh_info`` family and the
+# Simulation-level ``length_scales`` comparison from ``sim_details``)
+#
+# These are pure diagnostics -- no numerical physics result depends on them --
+# so they use serial, rank-local topology/geometry queries (like the ported
+# ``fk_demag_pbc._mesh_coordinates`` bounding-box helper) and reuse the
+# dolfin-free length-scale constants in ``finmag.util.consts``.
+# --------------------------------------------------------------------------
+
+def _mesh_edge_lengths(mesh):
+    """Return a ``numpy`` array of every edge length of ``mesh``, in mesh
+    coordinate units.
+
+    DOLFINx does not expose edges by default, so the edge entities and their
+    edge->vertex connectivity are created on demand; the two endpoints of each
+    edge are looked up in ``mesh.geometry.x`` and the Euclidean distance taken.
+    Serial / rank-local (sufficient for a diagnostic).
+    """
+    mesh.topology.create_entities(1)
+    mesh.topology.create_connectivity(1, 0)
+    e2v = mesh.topology.connectivity(1, 0).array.reshape(-1, 2)
+    x = mesh.geometry.x
+    return np.linalg.norm(x[e2v[:, 0]] - x[e2v[:, 1]], axis=1)
+
+
+def mesh_info(mesh):
+    """
+    Return a string containing some basic information about the mesh
+    (such as the number of cells/vertices/interior and surface triangles)
+    as well as the distribution of edge lengths.
+
+    The number of surface facets is computed as ``F_s = F - F_i`` where
+    ``F`` is the total facet count and ``F_i`` the number of interior
+    facets. Each interior facet is shared by two cells while each of the
+    ``4*C`` cell-faces (``C`` tetrahedral cells) is counted once per cell,
+    so ``F_i = 4*C - F`` -- the legacy tetrahedron-mesh identity.
+    """
+    tdim = mesh.topology.dim
+    mesh.topology.create_entities(1)
+    mesh.topology.create_entities(tdim - 1)
+    C = mesh.topology.index_map(tdim).size_global
+    F = mesh.topology.index_map(tdim - 1).size_global
+    E = mesh.topology.index_map(1).size_global
+    V = mesh.topology.index_map(0).size_global
+    F_i = 4 * C - F
+    F_s = F - F_i
+
+    lens = _mesh_edge_lengths(mesh)
+    vals, bins = np.histogram(lens, bins=20)
+    # to ensure that 'vals' and 'bins' have the same number of elements
+    vals = np.insert(vals, 0, 0)
+    vals_normalised = 70.0 / max(vals) * vals
+
+    info_string = textwrap.dedent("""\
+        ===== Mesh info: ==============================
+        {:6d} cells (= volume elements)
+        {:6d} facets
+        {:6d} surface facets
+        {:6d} interior facets
+        {:6d} edges
+        {:6d} vertices
+
+        ===== Distribution of edge lengths: ===========
+        """.format(C, F, F_s, F_i, E, V))
+
+    for (b, v) in zip(bins, vals_normalised):
+        info_string += "{:.3f} {}\n".format(b, int(round(v)) * '*')
+
+    return info_string
+
+
+def print_mesh_info(mesh):
+    print(mesh_info(mesh))
+
+
+def mesh_size(mesh, unit_length):
+    """
+    Return the maximum extent of the mesh along any of the x/y/z axes,
+    in metres (i.e. multiplied by ``unit_length``).
+
+    """
+    coords = mesh.geometry.x
+    max_extent = max(coords.max(axis=0) - coords.min(axis=0))
+    return max_extent * unit_length
+
+
+def mesh_size_plausible(mesh, unit_length):
+    """
+    Try to detect if unit_length fits to the mesh.
+
+    """
+    mesh_size_magnitude = order_of_magnitude(mesh_size(mesh, unit_length))
+    # we expect mesh sizes inbetween a nanometer and tens of microns
+    plausible = (mesh_size_magnitude >= -9) and (mesh_size_magnitude <= -5)
+    return plausible
+
+
+def describe_mesh_size(mesh, unit_length):
+    """
+    Describe the size of the mesh in words.
+    Returns string which could be read after `Your mesh is...`.
+
+    """
+    magn = order_of_magnitude(mesh_size(mesh, unit_length))
+    if magn <= -15:
+        # happens when mesh expressed in meters and unit_length=1e-9
+        # nevertheless
+        return "smaller than a femtometer"
+    if magn < -9:
+        return "smaller than a nanometer"
+    if magn == -9:
+        return "a few nanometers large"
+    if magn == -8:
+        return "tens of nanometers large"
+    if magn == -7:
+        return "hundreds of nanometers large"
+    if magn == -6:
+        return "a micrometer large or more"
+    if magn == -5:
+        return "tens of micrometers large"
+    if magn < 0:
+        return "so large! Such wow. Very mesh."
+    # the following happens when mesh expressed in nanometers and unit_length=1
+    if magn == 0:
+        return "a few meters large"
+    if magn == 1:
+        return "dozens of meters large"
+    if magn >= 2:
+        return "hundreds of meters large"
+
+
+def length_scales(mesh, unit_length, A, Ms, K1=None, D=None):
+    """
+    Return a human-readable string comparing the mesh discretisation against
+    the relevant magnetic length scales.
+
+    The exchange length is always reported (from the exchange constant ``A``
+    and the saturation magnetisation ``Ms``); the Bloch parameter is added
+    when an anisotropy constant ``K1`` is supplied and the helical period when
+    a DMI constant ``D`` is supplied. For each length scale the mesh edges are
+    binned into ``[0, L, inf)`` and the fraction of edges longer than ``L`` is
+    reported, warning that too-coarse edges may lead to discretisation
+    artefacts (cf. W. Rave, K. Fabian, A. Hubert, J. Magn. Magn. Mater. 190
+    (1998), 332-348).
+
+    Legacy parity note: the dolfin-era Finmag exposed this on the Simulation
+    object (``finmag.sim.sim_details.length_scales(sim)`` /
+    ``mesh_info(sim)``), harvesting ``A``/``Ms``/``K1``/``D`` from the
+    assembled interactions. The mesh utilities do not import the simulation
+    layer, so here the material constants are passed explicitly; the physics is
+    unchanged -- the length scales come from the dolfin-free
+    ``finmag.util.consts.{exchange_length,bloch_parameter,helical_period}``.
+    """
+    from finmag.util import consts
+
+    edgelengths = _mesh_edge_lengths(mesh) * unit_length  # metres
+
+    lengths = {'Exchange length': consts.exchange_length(A, Ms)}
+    if K1 is not None:
+        lengths['Bloch parameter'] = consts.bloch_parameter(A, K1)
+    if D is not None:
+        lengths['Helical period'] = consts.helical_period(A, D)
+
+    lines = ["Edge lengths: min = {:.2f} nm, max = {:.2f} nm, mean = {:.2f} nm.".format(
+        edgelengths.min() * 1e9, edgelengths.max() * 1e9, edgelengths.mean() * 1e9)]
+
+    for name, L in lengths.items():
+        (a, b), _ = np.histogram(edgelengths, bins=[0.0, L, np.inf])
+        if b == 0.0:
+            lines.append(
+                "All edges are shorter than the {} = {:.2f} nm.".format(name, L * 1e9))
+        else:
+            lines.append(
+                "Warning: {:.2f}% of edges are longer than the {} = {:.2f} nm "
+                "(this may lead to discretisation artefacts).".format(
+                    100.0 * b / (a + b), name, L * 1e9))
+
+    lines.append("The minimum length scale is the {} = {:.2f} nm.".format(
+        min(lengths, key=lengths.get), min(lengths.values()) * 1e9))
+
+    return "\n".join(lines) + "\n"
+
+
+# --------------------------------------------------------------------------
 # deferred backends / surfaces (documented, Task 29 review items)
 # --------------------------------------------------------------------------
 
@@ -483,9 +674,8 @@ regular_polygon_extruded = _deferred(
 disk_with_internal_layers = _deferred(
     "disk_with_internal_layers",
     "the layered gmsh-script disk helper is not ported in this slice.")
-mesh_info = _deferred(
-    "mesh_info",
-    "dolfin-based mesh analysis utilities are not ported in this slice.")
+# mesh_info / mesh_size / print_mesh_info / mesh_size_plausible /
+# describe_mesh_size / length_scales are restored above (SR1 P4-mesh).
 mesh_quality = _deferred(
     "mesh_quality",
     "dolfin-based mesh analysis utilities are not ported in this slice.")
@@ -494,18 +684,6 @@ nodal_volume = _deferred(
     "dolfin-based mesh analysis utilities are not ported in this slice.")
 longest_edges = _deferred(
     "longest_edges",
-    "dolfin-based mesh analysis utilities are not ported in this slice.")
-mesh_size = _deferred(
-    "mesh_size",
-    "dolfin-based mesh analysis utilities are not ported in this slice.")
-mesh_size_plausible = _deferred(
-    "mesh_size_plausible",
-    "dolfin-based mesh analysis utilities are not ported in this slice.")
-describe_mesh_size = _deferred(
-    "describe_mesh_size",
-    "dolfin-based mesh analysis utilities are not ported in this slice.")
-print_mesh_info = _deferred(
-    "print_mesh_info",
     "dolfin-based mesh analysis utilities are not ported in this slice.")
 mesh_is_periodic = _deferred(
     "mesh_is_periodic",
