@@ -1,6 +1,7 @@
 """DOLFINx cubic-anisotropy interaction."""
 
 import numpy as np
+import ufl
 from aeon import timer
 from dolfinx import fem
 from ufl import TestFunction, dx, inner
@@ -32,7 +33,21 @@ class CubicAnisotropy(EnergyBase):
     legacy docstring only says they "should be unit vectors"). Constant scalar
     ``K1``/``K2``/``K3`` *and* spatially varying ones (callable/Field/Function,
     placed into a CG1 nodal space exactly as legacy did) are supported.
-    Spatially varying ``u1``/``u2`` axes remain deferred by name.
+    Spatially varying ``u1``/``u2`` axes are also supported (SR1 P3.5): they are
+    placed into vector CG1 as given -- via ``axis_coefficient(...,
+    normalise=False)``, the same route ``UniaxialAnisotropy`` and the varying-K
+    path use -- and ``u3 = u1 x u2`` is then formed *per node* (``ufl.cross`` in
+    the energy form, ``np.cross`` on the nodal arrays for the analytic field),
+    in the same right-handed order legacy's constant ``np.cross(u1, u2)`` used.
+    This is a greenfield extension, not a legacy port: legacy
+    ``CubicAnisotropy.__init__`` computed ``u3 = np.cross(u1, u2)`` from the raw
+    axes at construction and therefore *crashed* on any callable/Field/string
+    axis, so no legacy varying-axis behaviour and no legacy oracle exist for it.
+    The varying-axis path is instead validated by (W1) a constant-reduction that
+    is bit-for-bit equal to the oracle-validated constant-axis path and (W2) the
+    constant-axis analytic field evaluated per region; see
+    ``test_cubic_anisotropy_dolfinx.py``. Legacy string ``Expression`` axes stay
+    refused by name (``axis_coefficient`` -- DOLFINx has no ``Expression``).
 
     The legacy ``assemble`` flag chose between two different *field*
     computation algorithms; the total *energy* is always box-assembled, in
@@ -97,9 +112,18 @@ class CubicAnisotropy(EnergyBase):
 
     def __init__(self, u1, u2, K1, K2=0, K3=0, name='CubicAnisotropy',
                  assemble=False):
-        self.u1_value = _constant_cubic_axis(u1, "u1")
-        self.u2_value = _constant_cubic_axis(u2, "u2")
-        self.u3_value = np.cross(self.u1_value, self.u2_value)
+        self.u1_value = _cubic_axis(u1, "u1")
+        self.u2_value = _cubic_axis(u2, "u2")
+        # For constant axes ``u3 = u1 x u2`` is formed once here (legacy's
+        # ``np.cross(u1, u2)``, right-handed), keeping the constant-axis path
+        # bit-identical. For a spatially varying axis (callable/Field/Function)
+        # ``u3`` is deferred to ``setup`` and evaluated per node; flag it by
+        # leaving ``u3_value`` as ``None`` (SR1 P3.5).
+        if isinstance(self.u1_value, np.ndarray) and isinstance(
+                self.u2_value, np.ndarray):
+            self.u3_value = np.cross(self.u1_value, self.u2_value)
+        else:
+            self.u3_value = None
 
         self.K1_value = scalar_coefficient(K1, "K1")
         self.K2_value = scalar_coefficient(K2, "K2")
@@ -127,7 +151,23 @@ class CubicAnisotropy(EnergyBase):
 
         self.u1 = Field(vector_space, self.u1_value, name="u1")
         self.u2 = Field(vector_space, self.u2_value, name="u2")
-        self.u3 = Field(vector_space, self.u3_value, name="u3")
+        if self.u3_value is not None:
+            # Constant axes: place the precomputed constant ``u3 = u1 x u2``
+            # (unchanged; keeps the constant-axis energy/oracle bit-identical).
+            self.u3 = Field(vector_space, self.u3_value, name="u3")
+        else:
+            # Spatially varying axes: form ``u3 = u1 x u2`` per node by
+            # interpolating the UFL cross product into the same vector-CG1
+            # space. ``ufl.cross`` is the same right-handed ordering as
+            # ``np.cross``; at the CG1 nodes this equals ``np.cross`` of the
+            # nodal ``u1``/``u2`` values (SR1 P3.5).
+            u3_expr = fem.Expression(
+                ufl.cross(self.u1.f, self.u2.f),
+                vector_space.element.interpolation_points)
+            u3_function = fem.Function(vector_space)
+            u3_function.interpolate(u3_expr)
+            u3_function.x.scatter_forward()
+            self.u3 = Field(vector_space, u3_function, name="u3")
 
         a = inner(self.u1.f, m.f)
         b = inner(self.u2.f, m.f)
@@ -198,12 +238,26 @@ class CubicAnisotropy(EnergyBase):
         m_nodes = self.m.as_array().reshape(-1, self.m.value_dim())
         Ms = self._ms_per_node(m_nodes.shape[0])
 
-        u1 = self.u1_value
-        u2 = self.u2_value
-        u3 = self.u3_value
-        a = m_nodes @ u1
-        b = m_nodes @ u2
-        c = m_nodes @ u3
+        if self.u3_value is not None:
+            # Constant axes: single constant 3-vector per axis (unchanged --
+            # keeps this path bit-identical to the constant-axis oracle).
+            u1 = self.u1_value
+            u2 = self.u2_value
+            u3 = self.u3_value
+            a = m_nodes @ u1
+            b = m_nodes @ u2
+            c = m_nodes @ u3
+        else:
+            # Spatially varying axes (SR1 P3.5): per-node axis arrays aligned
+            # row-for-row with ``m_nodes`` (same vector-CG1 dof layout), with
+            # ``u3 = u1 x u2`` formed per node in legacy's right-handed
+            # ``np.cross`` order. Axes used as given (no normalise/orthogonalise).
+            u1 = self.u1.as_array().reshape(-1, 3)
+            u2 = self.u2.as_array().reshape(-1, 3)
+            u3 = np.cross(u1, u2, axis=1)
+            a = np.einsum("ij,ij->i", m_nodes, u1)
+            b = np.einsum("ij,ij->i", m_nodes, u2)
+            c = np.einsum("ij,ij->i", m_nodes, u3)
 
         # Per-node mass-lumped K arrays (aligned with ``m_nodes`` rows: the S1
         # scalar and S3 blocked-vector CG1 spaces enumerate vertices
@@ -275,25 +329,25 @@ class CubicAnisotropy(EnergyBase):
         return ms_nodal[:, None]
 
 
-def _constant_cubic_axis(value, name):
-    """Validate a constant cubic-anisotropy axis (u1/u2).
+def _cubic_axis(value, name):
+    """Normalise a cubic-anisotropy axis (u1/u2) for Field placement.
 
-    Spatially varying cubic axes remain deferred by name in this slice (there
-    is no legacy oracle for them and the ``u3 = u1 x u2`` cross product would
-    need a per-node evaluation); spatially varying cubic *K*'s are supported.
+    Accepts a constant 3-vector (validated finite, shape ``(3,)``, returned as
+    an ndarray) or a spatially varying axis -- a callable, :class:`Field` or
+    ``dolfinx.fem.Function`` -- returned unchanged for placement into the
+    vector-CG1 space (SR1 P3.5). This is exactly the ``UniaxialAnisotropy`` /
+    varying-K route: ``axis_coefficient(value, name, normalise=False)``.
+
     The axis is stored exactly as given -- deliberately *not* normalised and
-    *not* checked for orthogonality, matching the legacy class.
+    *not* orthogonalised -- matching the legacy class's raw ``self.u1_value =
+    u1`` contract (its docstring only says axes "should be unit vectors").
+
+    Legacy string ``Expression`` axes remain refused by name: ``axis_coefficient``
+    raises :class:`NotImplementedError` for a ``str`` / tuple-of-``str`` (DOLFINx
+    has no ``Expression`` object; pass a callable). Note the historical framing:
+    legacy ``CubicAnisotropy.__init__`` computed ``u3 = np.cross(u1, u2)`` from
+    the raw axes and so crashed on ANY callable/Field/string axis, so there was
+    never a working legacy varying-axis path (hence no oracle); this port adds
+    one as a greenfield extension while keeping the string-Expression refusal.
     """
-    if (
-        isinstance(value, (Field, fem.Function))
-        or callable(value)
-        or (isinstance(value, str))
-        or (isinstance(value, (tuple, list))
-            and any(isinstance(component, str) for component in value))
-    ):
-        raise NotImplementedError(
-            "spatially varying cubic-anisotropy {} is deferred; pass a "
-            "constant 3-vector (spatially varying cubic K1/K2/K3 are "
-            "supported)".format(name)
-        )
     return axis_coefficient(value, name, normalise=False)

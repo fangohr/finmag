@@ -277,19 +277,194 @@ def test_spatially_varying_k1_k2_k3_are_supported():
         CubicAnisotropy((1, 0, 0), (0, 1, 0), "1.0 + x[0]")
 
 
-def test_spatially_varying_axes_are_deferred_by_name():
+# --------------------------------------------------------------------------
+# spatially varying axes (SR1 P3.5): greenfield -- NO legacy oracle
+#
+# Legacy ``CubicAnisotropy.__init__`` forms ``u3 = np.cross(u1, u2)`` from the
+# *raw* axes at construction, so it crashes (ValueError) on ANY callable / Field
+# / Function / string axis. There is therefore no legacy contract and no
+# obtainable oracle for a spatially varying axis (the frozen oracle crashes
+# identically). What legacy DOES dictate and this port preserves: axes are used
+# *as given* (never normalised, never orthogonalised) and ``u3 = u1 x u2`` in
+# right-handed order, now evaluated per node. The witnesses below therefore
+# validate against (W1) the already-oracle-validated CONSTANT-axis path via a
+# constant-reduction, and (W2) the constant-axis analytic field per region --
+# there is no D2-style divergence pin because there is no legacy value to
+# diverge from.
+# --------------------------------------------------------------------------
+
+def _const_callable(u):
+    """A spatially constant vectorized callable evaluating to the vector ``u``."""
+    u = np.asarray(u, dtype=float)
+
+    def f(x):
+        return np.repeat(u[:, None], x.shape[1], axis=1)
+
+    return f
+
+
+def test_spatially_varying_axes_are_accepted():
+    """SR1 P3.5: spatially varying cubic axes (callable / Field / Function) are
+    now supported -- routed through the same ``axis_coefficient(..., normalise=
+    False)`` / vector-CG1 Field placement the ``UniaxialAnisotropy`` axis and
+    the varying-K path already use, with ``u3 = u1 x u2`` formed per node. This
+    lifts the historical by-name deferral (legacy crashed in ``np.cross`` at
+    construction on any varying axis -- see the module comment above), so it is
+    a greenfield extension validated by the W1/W2 witnesses below, not a legacy
+    port."""
     domain = _cube()
     vector_space = fem.functionspace(domain, ("Lagrange", 1, (3,)))
     spatial_axis = Field(vector_space, (1.0, 0.0, 0.0))
+    m, Ms = _fields(domain, (0.2, 0.5, np.sqrt(1.0 - 0.29)))
 
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
-        CubicAnisotropy(spatial_axis, (0, 1, 0), 1.0e4)
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u2"):
-        CubicAnisotropy((1, 0, 0), spatial_axis, 1.0e4)
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
-        CubicAnisotropy(lambda x: x, (0, 1, 0), 1.0e4)
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
+    for ca in (
+        CubicAnisotropy(spatial_axis, (0, 1, 0), 1.0e4),        # Field axis
+        CubicAnisotropy((1, 0, 0), spatial_axis, 1.0e4),        # Field axis (u2)
+        CubicAnisotropy(_const_callable((1, 0, 0)), (0, 1, 0), 1.0e4),  # callable
+    ):
+        ca.setup(m, Ms, unit_length=1.0)
+        assert np.all(np.isfinite(ca.compute_field()))
+
+
+def test_string_expression_axis_still_rejected():
+    """A legacy string-Expression axis is STILL refused by name -- delegated to
+    ``axis_coefficient``, which raises ``NotImplementedError`` for string
+    Expressions (DOLFINx has no ``Expression`` object; pass a callable). The
+    varying-axis (callable/Field/Function) deferral was lifted in SR1 P3.5, but
+    the string-Expression deferral is a separate, still-live limitation, so its
+    exception now carries the ``axis_coefficient`` string-Expression message
+    rather than the old varying-axis deferral wording."""
+    with pytest.raises(NotImplementedError, match="string Expression"):
         CubicAnisotropy(("1.0", "0.0", "0.0"), (0, 1, 0), 1.0e4)
+    with pytest.raises(NotImplementedError, match="string Expression"):
+        CubicAnisotropy((1, 0, 0), "x[0]", 1.0e4)
+
+
+def test_varying_axis_constant_reduction_matches_constant_axis():
+    """W1 (constant-reduction witness), bit-for-bit. A callable axis and a Field
+    axis whose values equal a spatial constant must reproduce the constant-axis
+    ``CubicAnisotropy`` field AND energy to ~machine precision, on BOTH the
+    ``assemble=False`` nodal path and the ``assemble=True`` box path. This
+    anchors the new varying-axis path to the constant-axis path, which is the
+    one already pinned to the legacy oracle (there is no varying-axis oracle;
+    see the module comment). Uses a non-unit / non-orthogonal axis pair to also
+    confirm the as-given contract survives the reduction."""
+    domain = _cube(3)
+    m_vec = (0.2, 0.5, np.sqrt(1.0 - 0.2**2 - 0.5**2))
+    K1, K2, K3 = 1.0e4, 2.0e3, 3.0e2
+    u1c, u2c = (1.0, 2.0, 0.0), (0.0, 1.0, 3.0)  # non-unit, non-orthogonal
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+
+    for assemble in (False, True):
+        m, Ms = _fields(domain, m_vec)
+        const = CubicAnisotropy(u1c, u2c, K1, K2, K3, assemble=assemble)
+        const.setup(m, Ms, unit_length=1.0)
+
+        m2, Ms2 = _fields(domain, m_vec)
+        # u1 as a callable, u2 as a Field -- both equal to the constant axes.
+        var = CubicAnisotropy(
+            _const_callable(u1c), Field(S3, u2c), K1, K2, K3, assemble=assemble)
+        var.setup(m2, Ms2, unit_length=1.0)
+
+        np.testing.assert_allclose(
+            var.compute_field(), const.compute_field(), rtol=1e-13, atol=0.0)
+        np.testing.assert_allclose(
+            var.compute_energy(), const.compute_energy(), rtol=1e-13, atol=0.0)
+
+
+def test_piecewise_axis_nodal_field_matches_per_region_constant():
+    """W2 (piecewise-region witness) on the ``assemble=False`` nodal path. A
+    spatially varying axis that is piecewise-constant across two regions must
+    give, at every node, exactly the constant-axis analytic field for that
+    node's own axis (each node evaluates its own axis and its own
+    ``u3 = u1_node x u2_node``). Region B is region A's frame rotated about z, so
+    each region reduces to a known constant-axis cubic field. Asserted only on
+    the exact nodal path: the ``assemble=True`` box path interpolates the CG1
+    axis across the region seam (continuous), so exactness there does not hold
+    and is deliberately not pinned."""
+    domain = _cube(3)
+    m_vec = (0.2, 0.5, np.sqrt(1.0 - 0.2**2 - 0.5**2))
+    Ms = 8.0e5
+    K1, K2, K3 = 1.0e4, 2.0e3, 3.0e2
+    uA1, uA2 = np.array((1.0, 0.0, 0.0)), np.array((0.0, 1.0, 0.0))
+    th = 0.7
+    uB1 = np.array((np.cos(th), np.sin(th), 0.0))
+    uB2 = np.array((-np.sin(th), np.cos(th), 0.0))
+
+    def piecewise(uA, uB):
+        def f(x):
+            out = np.empty((3, x.shape[1]))
+            left = x[0] < 0.5
+            out[:, left] = uA[:, None]
+            out[:, ~left] = uB[:, None]
+            return out
+
+        return f
+
+    m, Ms_field = _fields(domain, m_vec, Ms=Ms)
+    ca = CubicAnisotropy(
+        piecewise(uA1, uB1), piecewise(uA2, uB2), K1, K2, K3)  # assemble=False
+    ca.setup(m, Ms_field, unit_length=1.0)
+
+    coords, m_nodes = m.coords_and_values()
+    left = coords[:, 0] < 0.5
+    assert left.any() and (~left).any()
+
+    H = ca.compute_field().reshape((3, -1)).T
+    H_A = _analytic_field(m_nodes[left], uA1, uA2, K1, K2, K3, Ms)
+    H_B = _analytic_field(m_nodes[~left], uB1, uB2, K1, K2, K3, Ms)
+    np.testing.assert_allclose(H[left], H_A, rtol=1e-12, atol=0.0)
+    np.testing.assert_allclose(H[~left], H_B, rtol=1e-12, atol=0.0)
+
+
+def test_varying_axis_used_as_given_not_normalised():
+    """As-given preservation (legacy contract). A non-unit, spatially varying
+    axis is stored verbatim -- never normalised, never orthogonalised -- exactly
+    as legacy used its constant axes raw (mirrors
+    ``test_non_orthogonal_non_unit_axes_are_silently_accepted`` for the varying
+    case)."""
+    domain = _cube(2)
+    m, Ms = _fields(domain, (0.3, 0.4, np.sqrt(1.0 - 0.25)))
+
+    def u1_var(x):  # spatially varying, never unit length
+        n = x.shape[1]
+        return np.vstack((1.0 + x[0], 2.0 * np.ones(n), 3.0 * np.ones(n)))
+
+    ca = CubicAnisotropy(u1_var, (0.0, 1.0, 0.0), K1=1.0e4)
+    ca.setup(m, Ms, unit_length=1.0)
+
+    coords, u1_nodes = ca.u1.coords_and_values()
+    n = coords.shape[0]
+    expected = np.column_stack(
+        (1.0 + coords[:, 0], 2.0 * np.ones(n), 3.0 * np.ones(n)))
+    np.testing.assert_allclose(u1_nodes, expected, rtol=0.0, atol=1e-13)
+    # not renormalised: every node's stored axis has norm clearly != 1.
+    assert np.all(np.abs(np.linalg.norm(u1_nodes, axis=1) - 1.0) > 0.1)
+
+
+def test_varying_u3_is_per_node_cross_product():
+    """``u3 = u1 x u2`` is evaluated PER NODE in right-handed (legacy
+    ``np.cross``) order for spatially varying axes -- the stored ``u3`` Field
+    equals ``np.cross(u1_node, u2_node)`` node-for-node."""
+    domain = _cube(3)
+    m, Ms = _fields(domain, (0.2, 0.5, np.sqrt(1.0 - 0.29)))
+
+    def u1_var(x):
+        return np.vstack(
+            (np.cos(0.5 * x[0]), np.sin(0.5 * x[0]), np.zeros(x.shape[1])))
+
+    def u2_var(x):
+        return np.vstack(
+            (np.zeros(x.shape[1]), np.cos(0.4 * x[1]), np.sin(0.4 * x[1])))
+
+    ca = CubicAnisotropy(u1_var, u2_var, K1=1.0e4, K2=2.0e3, K3=3.0e2)
+    ca.setup(m, Ms, unit_length=1.0)
+
+    u1n = ca.u1.as_array().reshape(-1, 3)
+    u2n = ca.u2.as_array().reshape(-1, 3)
+    u3n = ca.u3.as_array().reshape(-1, 3)
+    np.testing.assert_allclose(
+        u3n, np.cross(u1n, u2n, axis=1), rtol=0.0, atol=1e-13)
 
 
 def test_default_assemble_false_computes_energy_and_analytic_field():

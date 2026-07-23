@@ -739,19 +739,34 @@ def test_region_restricted_field_output_still_deferred_by_name():
 
 
 # --------------------------------------------------------------------------
-# deferral: spatially varying cubic axes remain by-name
+# spatially varying cubic axes (SR1 P3.5): accepted (was by-name deferral)
 # --------------------------------------------------------------------------
 
-def test_spatially_varying_cubic_axis_is_deferred_by_name():
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u1"):
-        CubicAnisotropy(lambda x: (1.0, 0.0, 0.0), (0.0, 1.0, 0.0), K1=1.0)
-    with pytest.raises(NotImplementedError, match="cubic-anisotropy u2"):
-        CubicAnisotropy((1.0, 0.0, 0.0), lambda x: (0.0, 1.0, 0.0), K1=1.0)
-    # but spatially varying cubic K's are supported
+def test_spatially_varying_cubic_axis_is_accepted():
+    """SR1 P3.5: spatially varying cubic axes (callable/Field/Function) are now
+    supported, lifting the historical by-name deferral. This is a greenfield
+    extension: legacy ``CubicAnisotropy.__init__`` forms ``u3 = np.cross(u1,
+    u2)`` from the raw axes and crashes on any varying axis, so there is no
+    legacy oracle -- the axis path is pinned by the W1 constant-reduction and W2
+    per-region witnesses in ``test_cubic_anisotropy_dolfinx.py``. Spatially
+    varying cubic K's remain supported here too."""
     domain = _interval8()
     S3, DG = _spaces(domain)
     m = Field(S3, _m_cossin_L8); m.normalise()
-    ca = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0),
-                         K1=lambda x: 1.0e4 * (1.0 + x[0]))
-    ca.setup(m, Field(DG, 8.6e5), unit_length=1e-9)
+    Ms = Field(DG, 8.6e5)
+
+    # callable u1 axis (spatially varying) -- accepted, finite field.
+    ca = CubicAnisotropy(_axis_var, (0.0, 1.0, 0.0), K1=1.0e4)
+    ca.setup(m, Ms, unit_length=1e-9)
     assert np.all(np.isfinite(ca.compute_field()))
+
+    # callable u2 axis (spatially varying) -- accepted, finite field.
+    ca2 = CubicAnisotropy((1.0, 0.0, 0.0), _axis_var, K1=1.0e4)
+    ca2.setup(m, Field(DG, 8.6e5), unit_length=1e-9)
+    assert np.all(np.isfinite(ca2.compute_field()))
+
+    # spatially varying cubic K's remain supported (unchanged behaviour).
+    ca3 = CubicAnisotropy((1.0, 0.0, 0.0), (0.0, 1.0, 0.0),
+                          K1=lambda x: 1.0e4 * (1.0 + x[0]))
+    ca3.setup(m, Field(DG, 8.6e5), unit_length=1e-9)
+    assert np.all(np.isfinite(ca3.compute_field()))
