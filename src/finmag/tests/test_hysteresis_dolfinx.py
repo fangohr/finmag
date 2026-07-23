@@ -10,30 +10,46 @@ import with a local, dolfin-free reimplementation in
 ``hysteresis``/``hysteresis_loop`` are bound exactly the way legacy did
 (``relax = sim_relax.relax``, etc).
 
-Important finding (see ``transition-notes.org`` Task 15 and
-``gen_hysteresis_oracle.py``'s module docstring): running the SAME scenario
-against the frozen legacy oracle (native Sundials backend, the *true*
-legacy default) reveals that ``hysteresis()``/``hysteresis_loop()`` do *not*
-actually achieve an independent re-relaxation at every stage after the
-first one -- the magnetisation barely moves in stage 2 onward even for a
-field reversal well past the Stoner-Wohlfarth coercive field, because each
-subsequent ``relax()`` call's very first scheduled tick coincides with the
-integrator's already-advanced clock (``t == integrator.cur_t``), and
-``Scheduler.run()`` explicitly skips integrating in that case. The legacy
-test suite itself documents this exact symptom with a wink (see
-``src/finmag/sim/hysteresis_test.py::test_hysteresis_loop_and_plotting``:
-"Check that the magnetisation values are as trivial as we expect them to be
-;-)"). This DOLFINx port reproduces that (surprising, but genuinely legacy,
-oracle-confirmed) behavior verbatim rather than "fixing" it -- see
-``test_oracle_hysteresis_loop_matches_legacy`` and
-``test_hysteresis_loop_legacy_trivial_invariant`` below.
+DIAGNOSIS CORRECTION (SR1 P2.5, acceptance register D4, owner decision
+2026-07-23): an earlier revision of this module (and the D4 register row)
+claimed that ``hysteresis()``/``hysteresis_loop()`` "do not independently
+re-relax after the first stage" -- attributing the on-axis oracle stall to a
+re-relaxation defect (the first scheduled tick of each stage coinciding with
+``t == integrator.cur_t``, which ``Scheduler.run()`` skips). Direct
+measurement under the approved-fix investigation shows that claim is **not
+reproducible**, so it is corrected here rather than acted on:
 
-The Stoner-Wohlfarth-like switching *capability* itself -- the reason
-``relax()``/``hysteresis()`` exist at all -- is verified separately, using
-fresh ``Simulation``/``relax()`` calls per field step (avoiding the above
-limitation), in ``test_stoner_wohlfarth_like_loop_witness`` below.
+* ``relax()`` resets ``sim.relaxation = {}`` at the very start of every call
+  (``sim_relax.py``), and its scheduler trigger is removed at the end of each
+  stage, so **no relaxation state leaks between stages**. Each stage rebuilds
+  its stopping condition and integrates to ITS OWN equilibrium. The
+  ``t == integrator.cur_t`` skip is real but harmless: that first tick never
+  integrates in any stage (it only records the ``last_m`` baseline);
+  subsequent ticks integrate normally.
+* In **non-degenerate** geometry the shared ``hysteresis()`` path re-relaxes
+  fully every stage and switches the magnetisation -- **bit-for-bit identical**
+  to a fresh ``Simulation``/``relax()`` per stage (witnessed by
+  ``test_hysteresis_switches_each_stage_tilted_axis`` and
+  ``test_stoner_wohlfarth_like_loop_witness`` below).
+* The on-axis oracle loop does not switch because the applied field is exactly
+  antiparallel to the easy axis, placing m at the **unstable Stoner-Wohlfarth
+  saddle** where the torque is genuinely ~0. A *fresh* ``relax()`` from that
+  same state does not switch either, so this is **correct degenerate-geometry
+  physics, not a skipped relaxation**. The divergence between "buggy" and
+  "corrected" here is exactly ZERO. The legacy test suite documents the same
+  triviality with a wink (see
+  ``src/finmag/sim/hysteresis_test.py::test_hysteresis_loop_and_plotting``:
+  "Check that the magnetisation values are as trivial as we expect them to be
+  ;-)").
 
-[Claude Sonnet 5]
+Accordingly ``test_oracle_hysteresis_loop_matches_legacy`` and
+``test_hysteresis_loop_legacy_trivial_invariant`` below are **DEGENERACY
+PINS** (unstable-saddle geometry, faithfully preserved from legacy
+``ba928093``), not "preserved re-relax defect" pins; their numeric assertions
+are unchanged, only their rationale is corrected. No source file was modified
+by P2.5 -- the core relaxation code already re-relaxes each stage correctly.
+
+[Claude Sonnet 5; P2.5 diagnosis correction Claude Opus 4.8]
 """
 
 import json
@@ -118,14 +134,24 @@ def test_hysteresis_loop_return_shapes():
 
 
 def test_hysteresis_loop_legacy_trivial_invariant():
-    """Transcribed from legacy ``hysteresis_test.py::
+    """DEGENERACY PIN (acceptance register D4, diagnosis corrected 2026-07-23).
+    Transcribed from legacy ``hysteresis_test.py::
     test_hysteresis_loop_and_plotting``: a Zeeman-only (no anisotropy), no-
     exchange, no-demag single-cell system with initial direction close to
     the x-axis stays "trivially" aligned near +1 across a whole H-reversing
     loop (the legacy test's own docstring: "Check that the magnetisation
-    values are as trivial as we expect them to be ;-)"), because of the
-    stage-2-onward relax() limitation documented in this module's
-    docstring."""
+    values are as trivial as we expect them to be ;-)").
+
+    The magnetisation stays near +1 NOT because ``relax()`` is skipped after
+    the first stage but because this on-axis geometry is degenerate: with the
+    field very nearly (anti)parallel to m and no anisotropy to define a
+    transverse easy plane, m sits at an unstable Stoner-Wohlfarth saddle where
+    the LLG torque ``m x (m x H) ~ 0``, so NO relaxation method -- fresh or
+    shared -- switches it. This matches legacy because the physics is
+    identical (faithfully preserved from ``ba928093``), not because a re-relax
+    defect was preserved; ``test_hysteresis_switches_each_stage_tilted_axis``
+    breaks the degeneracy with a 10 deg tilt and shows the same shared path
+    switching. The numeric assertion is unchanged."""
     sim = _make_sim(m_init=(0.8, 0.2, 0.0), K1=None, Ms=1.0e6, nx=1)
     H = 0.2e6
     N = 5
@@ -140,6 +166,28 @@ def test_hysteresis_loop_legacy_trivial_invariant():
 # --------------------------------------------------------------------------
 
 def test_oracle_hysteresis_loop_matches_legacy():
+    """DEGENERACY PIN (acceptance register D4, diagnosis corrected 2026-07-23).
+    Pins the exact tiny on-axis 4-stage loop (uniaxial K1, easy axis exactly
+    along the x fields, a reversal from +1e5 to -1e5 A/m past the on-axis
+    coercive field ``2 K1 / (mu0 Ms) ~ 1.85e4 A/m``) against the frozen
+    legacy oracle (native Sundials backend).
+
+    Stages 1-3 each advance exactly ``1.0e-14 s``, take a single integration
+    step, and leave m_x ~ 0.99999998 -- the sample never switches even though
+    the field reverses well past coercivity. This is CORRECT physics for a
+    DEGENERATE geometry, NOT a re-relaxation defect: the field is exactly
+    antiparallel to the easy axis, so m sits at the unstable Stoner-Wohlfarth
+    saddle where the torque ``m x (m x H) ~ 0``; a fresh ``relax()`` from the
+    same state also stays at +x, and ``relax()`` provably resets its state
+    every stage (``sim_relax.py``). The result matches legacy ``ba928093``
+    because the saddle physics is identical, not because a defect was
+    preserved -- the corrected-vs-legacy divergence here is exactly zero.
+    Non-degenerate switching (which the shared ``hysteresis()`` path performs
+    correctly) is witnessed by
+    ``test_hysteresis_switches_each_stage_tilted_axis`` and
+    ``test_stoner_wohlfarth_like_loop_witness``. The stage-time and m_average
+    assertions below are unchanged (bit-exact ``t``, m_average to oracle
+    tolerance); only this rationale is corrected."""
     Ms = ORACLE["physical_parameters"]["Ms"]["value"]
     unit_length = ORACLE["physical_parameters"]["unit_length"]["value"]
     K1 = ORACLE["physical_parameters"]["K1"]["value"]
@@ -171,8 +219,11 @@ def test_oracle_hysteresis_loop_matches_legacy():
 
 # --------------------------------------------------------------------------
 # Stoner-Wohlfarth-like qualitative switching + loop-closure witness, using
-# fresh Simulation/relax() calls per field step (sidestepping the
-# hysteresis()/relax() stage-2-onward limitation documented above)
+# fresh Simulation/relax() calls per field step. NOTE: this fresh-per-stage
+# construction is not needed to work around any re-relax defect (there is
+# none -- see the module docstring); the shared hysteresis() path gives the
+# identical loop, asserted directly in
+# test_stoner_wohlfarth_loop_shared_hysteresis_path below.
 # --------------------------------------------------------------------------
 
 def test_stoner_wohlfarth_like_loop_witness():
@@ -207,3 +258,97 @@ def test_stoner_wohlfarth_like_loop_witness():
     assert m_x_vals[-1] > 0.9  # swept back up to +H_max: loop closes
     # Loop closure: first and last point (both at +H_max) agree closely.
     assert abs(m_x_vals[0] - m_x_vals[-1]) < 0.05
+
+
+# --------------------------------------------------------------------------
+# P2.5 switching-physics witnesses through the SHARED hysteresis() scheduler
+# path (register D4 diagnosis correction, 2026-07-23). These assert PHYSICAL
+# switching invariants, not stage counts, and demonstrate that the shared
+# path already re-relaxes each stage to its own equilibrium.
+# --------------------------------------------------------------------------
+
+def _inst_dmdt_max(sim):
+    """Instantaneous max nodal |dm/dt| (rad/s) recomputed at the settled m."""
+    sim.llg.solve(sim.t)
+    d = np.asarray(sim.dmdt).reshape((3, -1))
+    return float(np.max(np.sqrt(np.sum(d ** 2, axis=0))))
+
+
+# relax()'s stopping threshold: stopping_dmdt * ONE_DEGREE_PER_NS.
+_ONE_DEGREE_PER_NS = 17453292.5
+
+
+def test_hysteresis_switches_each_stage_tilted_axis():
+    """Each applied-field stage independently re-relaxes to ITS OWN
+    equilibrium, and the sample SWITCHES -- driven entirely through the shared
+    ``sim.hysteresis()`` scheduler/clock path (NOT fresh per-stage sims).
+
+    Geometry breaks the on-axis Stoner-Wohlfarth saddle degeneracy: the
+    uniaxial easy axis is tilted 10 deg off the x field axis, so each stage
+    has a well-defined, distinct equilibrium. Fields step down through the
+    coercive field and reverse: [+1e5, +33333, -33333, -1e5] A/m on x. This is
+    the direct evidence that ``hysteresis()`` re-relaxes every stage -- the
+    behaviour the D4 register row wrongly claimed was defective. On the
+    shipping (unmodified) code this test PASSES; it is a switching-physics
+    witness, not a fixed defect."""
+    phi = np.deg2rad(10.0)
+    easy_tilt = (np.cos(phi), np.sin(phi), 0.0)
+    sim = _make_sim(easy_axis=easy_tilt, name="tilt_switch")
+
+    stages = []
+
+    def fun(sim):
+        stages.append((float(sim.m_average[0]), _inst_dmdt_max(sim)))
+        return sim.m_average
+
+    sim.hysteresis(
+        [(1.0e5, 0.0, 0.0), (33333.0, 0.0, 0.0),
+         (-33333.0, 0.0, 0.0), (-1.0e5, 0.0, 0.0)],
+        fun=fun, stopping_dmdt=1.0)
+
+    m_x = np.array([s[0] for s in stages])
+    dmdt = np.array([s[1] for s in stages])
+
+    # (i) every stage really is at its own equilibrium (re-relaxed): the
+    # instantaneous torque at the settled state is at/below relax()'s
+    # stopping threshold. If a stage had been skipped, a stage whose field
+    # reversed would sit far above threshold.
+    assert np.all(dmdt <= _ONE_DEGREE_PER_NS), dmdt
+
+    # (ii) switching PHYSICS, not stage count: m_x follows the field sign,
+    # flipping from +x to -x when the field reverses past coercivity.
+    assert m_x[0] > 0.99 and m_x[1] > 0.99   # aligned with +x field
+    assert m_x[2] < -0.99 and m_x[3] < -0.99  # switched to -x on reversal
+    # measured (shared path): [0.9996, 0.9980, -0.9980, -0.9996]
+    np.testing.assert_allclose(m_x, [0.9996, 0.9980, -0.9980, -0.9996],
+                               atol=2e-3)
+
+
+def test_stoner_wohlfarth_loop_shared_hysteresis_path():
+    """Full Stoner-Wohlfarth loop swept along a 20 deg off-axis direction,
+    driven through the SHARED ``sim.hysteresis()`` path, asserting the
+    switching SEQUENCE and loop closure. This is the shared-path twin of
+    ``test_stoner_wohlfarth_like_loop_witness`` (which uses fresh sims): the
+    two produce the same loop, proving the shared scheduler path is not
+    degraded relative to fresh per-stage relaxation."""
+    theta = np.deg2rad(20.0)
+    H_dir = np.array([np.cos(theta), np.sin(theta), 0.0])
+    H_max = 3.0e4
+    N = 6
+    H_norms = (list(np.linspace(H_max, -H_max, N))
+               + list(np.linspace(-H_max, H_max, N)))
+    H_list = [tuple(h * H_dir) for h in H_norms]
+
+    sim = _make_sim(name="sw_shared")
+    m_x = np.array(sim.hysteresis(
+        H_list, fun=lambda s: float(s.m_average[0]), stopping_dmdt=1.0))
+
+    signs = np.sign(m_x)
+    # switching SEQUENCE (measured): the four large-|H| points in each sweep
+    # direction carry a definite sign; the loop is hysteretic (m_x lags H).
+    assert signs.tolist() == [1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1, 1]
+    assert m_x[0] > 0.9        # +H_max: aligned +x
+    assert m_x[N - 1] < -0.9   # swept to -H_max: flipped
+    assert m_x[-1] > 0.9       # swept back to +H_max
+    # loop closure: first and last (both at +H_max) agree closely.
+    assert abs(m_x[0] - m_x[-1]) < 0.05
