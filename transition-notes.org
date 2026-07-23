@@ -4518,6 +4518,54 @@ then immediately *shadows* it with a local literal (=17453292.5=, missing
 the trailing =2=) -- a pre-existing legacy inconsistency, not introduced or
 fixed by this port.
 
+*** DIAGNOSIS CORRECTION (SR1 P2.5, register D4, owner decision 2026-07-23)
+
+The Task-15 "Important finding" above -- that =hysteresis()=/
+=hysteresis_loop()= "do not actually re-relax after the first stage" -- is
+**withdrawn as incorrect**. The SR1 P2.5 approved-fix investigation could NOT
+reproduce a re-relaxation failure; the owner therefore directed a *diagnosis
+correction, not a mechanism rewrite*, and =sim_relax.py=/=hysteresis.py=
+remain unchanged (still byte-for-byte legacy apart from the localised
+=finmag.util.helpers= import).
+
+What the earlier note got wrong:
+
+- =relax()= resets =sim.relaxation = {}= at the very start of *every* call
+  (=sim_relax.py=), and its scheduler trigger returns =False= when relaxed,
+  which =Scheduler.next()= removes from =scheduler.items= at the end of each
+  stage. So **no relaxation state, stopping condition, or trigger leaks
+  between stages** -- each stage rebuilds all of it and integrates to its own
+  equilibrium.
+- The =t == integrator.cur_t= scheduler skip the note blamed is real but
+  *harmless*: that first tick never integrates in any stage (it only records
+  the =last_m= baseline); the subsequent ticks integrate normally.
+- Direct measurement in **non-degenerate geometry** shows the shared
+  =hysteresis()= path re-relaxes every stage and switches the magnetisation,
+  **bit-for-bit identical** to a fresh =Simulation=/=relax()= per stage. A
+  20 deg off-axis Stoner-Wohlfarth loop and a 10 deg-tilted on-axis reversal
+  both switch through the shared path.
+- The on-axis oracle "stall" (stages advancing only =1e-14 s=, m never
+  switching) is a genuine **degenerate Stoner-Wohlfarth saddle**: the applied
+  field is exactly antiparallel to the easy axis, so the LLG torque
+  =m x (m x H) ~ 0= and m sits at the unstable saddle. A *fresh* =relax()=
+  from that same state also does not switch, so this is correct
+  degenerate-geometry physics, not a skipped relaxation. The corrected-vs-
+  legacy divergence there is exactly **zero**; it matches legacy =ba928093=
+  because the physics is identical, not because a defect was preserved.
+
+Deliverable (test + docs only, no source change): the mischaracterising
+module/class docstrings in =test_hysteresis_dolfinx.py= were corrected; the
+two on-axis oracle assertions (=test_oracle_hysteresis_loop_matches_legacy=,
+=test_hysteresis_loop_legacy_trivial_invariant=) were relabelled as
+**DEGENERACY PINS** with their numeric assertions UNCHANGED; and two positive
+switching-physics witnesses driven through the SHARED =sim.hysteresis()= path
+were added (=test_hysteresis_switches_each_stage_tilted_axis=,
+=test_stoner_wohlfarth_loop_shared_hysteresis_path=). Focused gate
+=dolfinx-src-timezeeman-pytest= 32 -> 34 passed. A scratch (uncommitted)
+tautology-refutation probe confirmed the switching test genuinely fails when
+relaxation is modelled as skipped (m_x frozen at =[+1,+1,+1,+1]=) and passes
+on the real per-stage-relax code (=[+1,+1,-1,-1]=). [Claude Opus 4.8]
+
 *** Measured results (2026-07-21, =pixi run -e dolfinx=)
 
 New gate =dolfinx-src-timezeeman-pytest= (=test_timezeeman_dolfinx.py= +

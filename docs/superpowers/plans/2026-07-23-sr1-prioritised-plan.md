@@ -357,11 +357,53 @@ not deleted and not an accepted permanent exception.
   reconciliation, discharged by this same commit's companion documentation
   update.
 
-### [ ] P2.5 Correct hysteresis stage relaxation
+### [x] P2.5 Correct hysteresis stage relaxation
 
 - Ensure every applied-field stage independently relaxes.
 - Test switching/loop physics, not merely result lengths.
 - Document why corrected output differs from master.
+- **Completed as a DIAGNOSIS CORRECTION, no source change (register D4, owner
+  decision 2026-07-23):** the approved-fix investigation found the D4 premise
+  -- that `hysteresis()`/`hysteresis_loop()` fail to re-relax after the first
+  stage -- is **NOT reproducible**. `relax()` resets `sim.relaxation = {}` at
+  the start of every call (`sim_relax.py`) and its scheduler trigger is
+  removed at the end of each stage, so no relaxation state leaks between
+  stages; `hysteresis`/`hysteresis_loop` (verbatim legacy, only the
+  `finmag.util.helpers` import localised) call `relax()` per stage. Direct
+  measurement in non-degenerate geometry shows the shared `hysteresis()` path
+  re-relaxes every stage and switches the magnetisation **bit-for-bit
+  identical** to a fresh `Simulation`/`relax()` per stage. The on-axis oracle
+  stall is a genuine **degenerate Stoner-Wohlfarth saddle** (field antiparallel
+  to the easy axis -> torque ~0; a fresh `relax()` from the same state also
+  does not switch), i.e. correct physics, not a skipped relaxation -- so the
+  corrected-vs-legacy divergence there is exactly ZERO. The owner therefore
+  directed a diagnosis correction rather than a mechanism rewrite:
+  `sim_relax.py`/`hysteresis.py` are **unchanged**. The mischaracterising
+  module/class docstrings in `test_hysteresis_dolfinx.py` were corrected; the
+  two on-axis oracle assertions (`test_oracle_hysteresis_loop_matches_legacy`,
+  `test_hysteresis_loop_legacy_trivial_invariant`) were relabelled from
+  "preserved re-relax defect" to **DEGENERACY PINS** with their numeric
+  assertions UNCHANGED; and two positive switching-physics witnesses were
+  added, both through the SHARED `sim.hysteresis()` scheduler path (not fresh
+  sims): `test_hysteresis_switches_each_stage_tilted_axis` (easy axis tilted
+  10 deg off the x fields so each stage has a distinct equilibrium; asserts
+  every stage is at/below `relax()`'s stopping threshold AND m_x switches
+  `[+0.9996, +0.9980, -0.9980, -0.9996]` past coercivity) and
+  `test_stoner_wohlfarth_loop_shared_hysteresis_path` (20 deg off-axis loop;
+  asserts the switching sign sequence `[1,1,1,1,-1,-1,-1,-1,-1,-1,1,1]` and
+  loop closure `|m_x[0]-m_x[-1]| < 0.05`).
+- **Evidence:** focused gate `dolfinx-src-timezeeman-pytest` 32 -> 34 passed
+  (the two new switching witnesses; no test removed, oracle/trivial pins pass
+  unchanged). A scratch tautology-refutation probe (not committed) confirmed
+  the new switching test is a genuine witness, not a tautology: modelling a
+  genuinely-skipped relaxation (relax only the first stage, then set fields
+  without integrating) freezes m_x at `[+1,+1,+1,+1]` and FAILS the switching
+  assertion, whereas the real per-stage-relax code gives `[+1,+1,-1,-1]` and
+  passes. No source file was modified, so no `.py` under `src/finmag/sim/`
+  changed. This slice did NOT run the FULL example lane
+  (`FINMAG_EXAMPLE_FULL=1`, baseline 12 passed/5 failed) and makes no claim
+  about it; `examples/cubic_anisotropy/hysteresis.py` is non-degenerate,
+  already switches, and was not touched. [Claude Opus 4.8]
 
 ### [x] P2.6 Reject conflicting STT modes
 

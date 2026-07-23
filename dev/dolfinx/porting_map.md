@@ -642,6 +642,19 @@ Before editing the matching module in `src/finmag`, check that:
   verbatim, not fixed (DELIBERATE DEVIATION, USER ACCEPTANCE PENDING). PBC,
   non-FK demag, stochastic/STT kernels, regions, and normal-mode consumers
   remain unported. [Claude Sonnet 5]
+  SR1 P2.5 update (register D4, owner decision 2026-07-23): the "important
+  finding" above is CORRECTED -- the re-relax defect is NOT reproducible.
+  `relax()` resets `sim.relaxation = {}` per call and drops its scheduler
+  trigger per stage, so `hysteresis()` already re-relaxes every stage to its
+  own equilibrium (bit-for-bit identical to fresh per-stage `relax()` in
+  non-degenerate geometry). The on-axis oracle stall is a genuine degenerate
+  Stoner-Wohlfarth saddle (torque ~0; correct physics), reclassified as a
+  degeneracy pin. Owner directed a diagnosis correction, NOT a mechanism
+  rewrite: `sim_relax.py`/`hysteresis.py` stay unchanged; the mischaracterising
+  test docstrings were corrected, the oracle/trivial assertions relabelled as
+  degeneracy pins (numeric assertions unchanged), and two shared-path
+  switching-physics witnesses added (gate `dolfinx-src-timezeeman-pytest`
+  32 -> 34 passed). [Claude Opus 4.8]
 - Task 10 established the first aggregated direct-source DOLFINx gate
   (`dev/bin/verify-dolfinx-m5`), running every `dolfinx-src-*` focused pytest
   gate and MPI probe plus a new core physical-time smoke
