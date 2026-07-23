@@ -43,7 +43,7 @@ class ScipyIntegrator(object):
     """
 
     def __init__(self, llg, m0, reltol=1e-6, abstol=1e-6, nsteps=10000,
-                 method="bdf", tablewriter=None, **kwargs):
+                 method="bdf", tablewriter=None, t0=0.0, **kwargs):
         self.llg = llg
         self.m_field = m0
         self.solve_for = llg.solve_for
@@ -54,7 +54,16 @@ class ScipyIntegrator(object):
         self.integrator_kwargs = kwargs
         self.tablewriter = tablewriter
 
-        self.cur_t = 0.0
+        # Explicit clock origin, matching ``SundialsIntegrator.__init__``'s
+        # ``t0``. Backend-neutral callers (``Simulation.reset_time`` via
+        # ``llg_integrator``) can then seed either driver's clock through the
+        # constructor rather than poking at ``self.ode``. It is appended after
+        # the pre-existing named parameters rather than inserted at Sundials'
+        # position 3, so that any out-of-tree caller passing ``reltol``/
+        # ``abstol``/... positionally keeps its meaning; every in-tree caller
+        # reaches this through ``llg_integrator(**kwargs)`` by keyword.
+        # [Claude Opus 4.8]
+        self.cur_t = t0
         self._n_rhs_evals = 0
 
         self.ode = self._new_ode()

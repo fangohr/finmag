@@ -425,3 +425,111 @@ def test_barmini_class_sim_advances_on_sundials_default_path():
     m_nodal = sim.m.reshape((3, -1))
     max_dev = float(np.max(np.abs(1.0 - np.linalg.norm(m_nodal, axis=0))))
     assert max_dev < 1e-5
+
+
+# --------------------------------------------------------------------------
+# layer 5: backend-neutral Simulation.reset_time (SR1 P1.1)
+# --------------------------------------------------------------------------
+# ``Simulation.reset_time`` used to reseed the freshly built integrator by
+# poking at ``integrator.ode`` (a ``scipy.integrate.ode`` attribute that only
+# the SciPy driver has), so it raised ``AttributeError`` on the native Sundials
+# backend. The clock origin is now handed to the driver through
+# ``llg_integrator(..., t0=t0)``, which both backends accept. [Claude Opus 4.8]
+
+@requires_sundials
+def test_sim_reset_time_to_zero_on_sundials_backend():
+    sim = _core_workflow_sim("reset_zero_sundials", "sundials")
+    sim.run_until(1e-12)
+    assert sim.t > 0.0
+    m_before = sim.m.copy()
+
+    sim.reset_time(0.0)
+
+    assert sim.t == 0.0
+    assert isinstance(sim.integrator, SundialsIntegrator)
+    # Resetting the clock must not disturb the magnetisation.
+    assert np.array_equal(sim.m, m_before)
+
+
+@requires_sundials
+def test_sim_reset_time_to_nonzero_on_sundials_backend():
+    sim = _core_workflow_sim("reset_nonzero_sundials", "sundials")
+    sim.run_until(1e-12)
+    m_before = sim.m.copy()
+
+    sim.reset_time(5e-12)
+
+    assert sim.t == 5e-12
+    assert isinstance(sim.integrator, SundialsIntegrator)
+    assert np.array_equal(sim.m, m_before)
+
+
+@requires_sundials
+def test_sim_integrates_forward_after_nonzero_reset_on_sundials_backend():
+    """A nonzero reset must leave a usable integrator, not just a clock value."""
+    sim = _core_workflow_sim("reset_forward_sundials", "sundials")
+    sim.run_until(1e-12)
+    sim.reset_time(5e-12)
+    m_after_reset = sim.m.copy()
+
+    sim.run_until(6e-12)
+
+    assert np.isclose(sim.t, 6e-12)
+    # The extra 1e-12 s of relaxation towards +z must have moved m.
+    assert not np.allclose(sim.m, m_after_reset)
+    m_nodal = sim.m.reshape((3, -1))
+    max_dev = float(np.max(np.abs(1.0 - np.linalg.norm(m_nodal, axis=0))))
+    assert max_dev < 1e-5
+
+
+@requires_sundials
+def test_reset_then_advance_matches_continuous_twin_on_sundials():
+    """Physical oracle: a reset must shift the clock, not the trajectory.
+
+    The core-workflow right-hand side is autonomous (Exchange + a constant
+    Zeeman field + uniaxial anisotropy; no time-dependent term), so integrating
+    a duration ``dt`` from a reset origin ``t0`` must land on the same
+    magnetisation as integrating the same ``dt`` continuously from the same
+    state. That is what a clock-only ``reset_time`` means physically, and it is
+    the assertion that would fail if ``reset_time`` reported the right
+    ``sim.t`` while quietly disturbing the state or the integration interval.
+
+    Both runs use the native Sundials backend (asserted, not assumed). The two
+    legs differ only in CVODE's internal step-size/order history -- the reset
+    run restarts it, the twin carries it over -- so the residual between them
+    is local truncation error, and it must scale with the requested tolerance.
+    Measured over this 2 ps leg, it does: max|m_reset - m_twin| is 4.8e-8 at
+    reltol=1e-8, 1.1e-9 at 1e-10, 6.1e-13 at 1e-12. The test therefore runs at
+    ``reltol=1e-10 / abstol=1e-12`` (tighter than the file's usual 1e-8/1e-10,
+    to buy discriminating power) and bounds the residual at 1e-8 -- roughly an
+    order of magnitude above the measured value, so it is not brittle, while
+    still sitting ~7 orders below the 0.32 physical drift over the same leg
+    (asserted, so the comparison cannot pass vacuously). A reset that dropped
+    or corrupted the state would land at the drift scale and be independent of
+    tolerance, so this bound separates the two cleanly. [Claude Opus 4.8]
+    """
+    t_common, t0_reset, dt = 1e-12, 5e-12, 2e-12
+
+    sim_reset = _core_workflow_sim("reset_continuity_reset", "sundials")
+    sim_reset.set_tol(reltol=1e-10, abstol=1e-12)
+    sim_reset.run_until(t_common)
+    m_common = sim_reset.m.copy()
+    sim_reset.reset_time(t0_reset)
+    sim_reset.run_until(t0_reset + dt)
+    m_reset = sim_reset.m.copy()
+
+    sim_twin = _core_workflow_sim("reset_continuity_twin", "sundials")
+    sim_twin.set_tol(reltol=1e-10, abstol=1e-12)
+    sim_twin.run_until(t_common)
+    # The twin only means anything if the two runs agree at the branch point.
+    assert np.max(np.abs(sim_twin.m - m_common)) < 1e-12
+    sim_twin.run_until(t_common + dt)
+    m_twin = sim_twin.m.copy()
+
+    assert isinstance(sim_reset.integrator, SundialsIntegrator)
+    assert isinstance(sim_twin.integrator, SundialsIntegrator)
+    assert np.isclose(sim_reset.t, t0_reset + dt)
+
+    # Non-vacuous: the shared 2 ps leg moves the magnetisation by ~0.32.
+    assert np.max(np.abs(m_twin - m_common)) > 1e-2
+    assert np.max(np.abs(m_reset - m_twin)) < 1e-8

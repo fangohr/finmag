@@ -120,6 +120,51 @@ def test_constructor_signature_and_defaults_preserved():
     assert integrator.tablewriter is None
 
 
+def test_constructor_accepts_explicit_t0_like_sundials():
+    """``t0`` is the shared clock-origin kwarg of both drivers (SR1 P1.1).
+
+    ``SundialsIntegrator`` has always taken ``t0``; the SciPy driver now
+    matches it, so ``Simulation.reset_time`` can seed either backend through
+    ``llg_integrator`` instead of reaching into ``integrator.ode``.
+    [Claude Opus 4.8]
+    """
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    integrator = ScipyIntegrator(llg, llg.m_field, t0=5e-12)
+    assert integrator.cur_t == 5e-12
+    # Not just the driver's own bookkeeping: the underlying scipy.integrate.ode
+    # must itself be seeded at t0, otherwise ``advance_time(t0 + dt)`` would
+    # silently integrate over ``t0 + dt`` of physical time from an origin of 0.
+    assert integrator.ode.t == 5e-12
+
+    integrator.advance_time(6e-12)
+    assert integrator.cur_t == 6e-12
+    assert integrator.ode.t == 6e-12
+
+
+def test_constructor_t0_is_keyword_only_in_practice_positional_slots_kept():
+    """The pre-existing positional slots must keep their meaning (SR1 P1.1).
+
+    ``t0`` was appended after ``tablewriter`` rather than inserted at the
+    position ``SundialsIntegrator`` uses, so a caller passing the historical
+    positional arguments still gets ``reltol``/``abstol``/``nsteps``/``method``.
+    [Claude Opus 4.8]
+    """
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    integrator = ScipyIntegrator(llg, llg.m_field, 1e-8, 1e-10, 12345, "adams")
+    assert integrator.reltol == 1e-8
+    assert integrator.abstol == 1e-10
+    assert integrator.nsteps == 12345
+    assert integrator.method == "adams"
+    assert integrator.cur_t == 0.0
+
+
+def test_llg_integrator_forwards_t0_to_scipy_backend():
+    llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
+    integrator = llg_integrator(llg, llg.m_field, backend="scipy", t0=3e-12)
+    assert integrator.cur_t == 3e-12
+    assert integrator.ode.t == 3e-12
+
+
 def test_advance_time_zero_first_is_a_no_op():
     llg = _macrospin_llg((1.0, 0.0, 0.0), 1.0e5)
     integrator = ScipyIntegrator(llg, llg.m_field)

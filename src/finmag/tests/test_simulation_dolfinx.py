@@ -264,6 +264,29 @@ def test_reset_time():
     assert sim.t == 0.0
 
 
+def test_reset_time_to_nonzero_keeps_m_and_allows_further_integration():
+    """Reset is a clock operation, not a state operation (SR1 P1.1).
+
+    Also covers the default (SciPy) backend half of the backend-neutral
+    ``reset_time``; the native Sundials half lives in
+    ``test_sundials_driver_dolfinx.py``. [Claude Opus 4.8]
+    """
+    sim = _make_sim()
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+    sim.advance_time(1e-12)
+    m_before = sim.m.copy()
+
+    sim.reset_time(5e-12)
+
+    assert sim.t == 5e-12
+    assert np.array_equal(sim.m, m_before)
+
+    sim.advance_time(6e-12)
+    assert np.isclose(sim.t, 6e-12)
+    assert not np.allclose(sim.m, m_before)
+
+
 def test_reinit_integrator_noop_without_integrator():
     sim = _make_sim()
     sim.set_m((1.0, 0.0, 0.0))

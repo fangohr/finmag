@@ -456,14 +456,12 @@ class Simulation(object):
 
     def reset_time(self, t0):
         """Reset the simulation clock to ``t0``, rebuilding the integrator."""
-        integrator = llg_integrator(
+        # Both drivers take ``t0``, so the clock origin goes through the
+        # factory; reaching into ``integrator.ode`` here used to break the
+        # native Sundials backend, which has no such attribute. [Claude Opus 4.8]
+        self._integrator = llg_integrator(
             self.llg, self.llg._m_field, backend=self.integrator_backend,
-            reltol=self.reltol, abstol=self.abstol)
-        # The SciPy driver takes no ``t0`` kwarg; reseed its state explicitly.
-        integrator.cur_t = t0
-        integrator.ode.set_initial_value(
-            self.llg._m_field.get_ordered_numpy_array_xxx(), t0)
-        self._integrator = integrator
+            t0=t0, reltol=self.reltol, abstol=self.abstol)
         self.scheduler.reset(t0)
         assert self.t == t0
 
