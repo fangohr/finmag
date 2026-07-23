@@ -1222,3 +1222,82 @@ Before editing the matching module in `src/finmag`, check that:
   `pixi` tasks and does not invoke `dev/bin/verify-dolfinx-m5` itself. D4/
   hysteresis (SR1 P2.5) remains separately unimplemented. See
   `transition-notes.org`'s "D18 harden toggle_stt" section. [Claude Sonnet 5]
+- SR1 P3.3 (`Field.cross`/`Field.dot`/scalar coercion, `c59f3438`): replaces
+  the point-arithmetic stubs with pointwise DOLFINx-native implementations
+  operating on owned nodal rows (raw backend order, shared dofmap,
+  `scatter_forward`, no assembly) -- exact node-by-node for Lagrange-1, as the
+  legacy dolfin `dP` point measure was. `cross` returns a new vector Field on
+  the same vector CG1 space; `dot` returns a new scalar Field on the
+  associated scalar space; `coerce_scalar_field` restores the legacy
+  number-to-scalar-Field surface backing `__mul__`/`__rmul__`/`__truediv__`
+  (`__div__` alias). A new `_require_same_space` guard prevents cross/dot on
+  mismatched spaces, closing the Task-31 silent-scramble class for this
+  surface. `__add__` stays deferred (no consumer). Gate
+  `dolfinx-src-field-pytest` 29 -> 34 passed; `dolfinx-src-field-mpi`
+  unchanged (exit 0); ordering round-trip verified with an asymmetric field
+  to machine precision. Review: APPROVE, nothing blocking. Recorded, not
+  fixed: the scalar-Field multiply/divide path does not itself invoke
+  `_require_same_space` (matches legacy's own gap, no consumer). See
+  `transition-notes.org`'s "Priority 3 Field completeness and varying cubic
+  axes" section. [Claude Sonnet 5]
+- SR1 P3.4 (`Field.from_generic_vector`, `ef92eb7d`): restores the
+  backend-vector-object entry point. Legacy took a dolfin `GenericVector`
+  (backend PETSc vector object) and did `set_local(get_local())` -- an
+  owned-only raw-order copy. The DOLFINx equivalents are the backend vector
+  objects `Field` already exposes: `vector()` (`dolfinx.la.Vector`) and
+  `petsc_vector()` (`PETSc.Vec`). `from_generic_vector` reads only the
+  source's owned portion, writes it into this Field's owned region, and
+  repopulates ghosts via its own `scatter_forward`, mirroring legacy exactly.
+  A NumPy `ndarray` raises `TypeError` pointing to `from_array`; a
+  mismatched-space/oversized source raises `ValueError` (review-driven guard
+  against silent truncation). `set()` gains the matching backend-vector
+  dispatch branch. Gate `dolfinx-src-field-pytest` 34 -> 35 passed;
+  `dolfinx-src-field-mpi` exit 0 with `from_generic_vector_owned_only: true`
+  (a corrupted source ghost tail does not propagate; a PETSc round-trip
+  independently pins the owned-only read). Review: APPROVE WITH FOLLOW-UPS,
+  nothing blocking -- both acted-on follow-ups are in the final commit.
+  Recorded, not fixed: `set()`'s backend-vector branch uses a duck-typed
+  `hasattr(value, "getArray")` predicate, safe for all current inputs. See
+  `transition-notes.org`'s "Priority 3 Field completeness and varying cubic
+  axes" section. [Claude Sonnet 5]
+- SR1 P3.5 (spatially varying cubic-anisotropy axes, `595f8335`): lifts the
+  by-name deferral on callable/Field/Function `u1`/`u2` axes. They are placed
+  into vector CG1 via `axis_coefficient(..., normalise=False)` -- the same
+  route `UniaxialAnisotropy` and the varying-K path use -- and `u3 = u1 x u2`
+  is formed PER NODE: `ufl.cross` interpolated into vector CG1 for the energy
+  form, `np.cross` on the nodal arrays for the `assemble=False` analytic
+  field. As-given (no normalise/orthogonalise), matching legacy's constant
+  `np.cross(u1, u2)` now evaluated per node. GREENFIELD, NO LEGACY ORACLE:
+  legacy `CubicAnisotropy.__init__` crashes (`ValueError`) at construction on
+  any callable/Field/Function/string axis, since it computes `u3` from the
+  raw axes immediately -- there was never a working legacy varying-axis path,
+  so no oracle fixture exists and none was added; this carries no divergence
+  pin. Validated instead against the already-oracle-validated constant-axis
+  path: W1 constant-reduction (a callable/Field axis equal to a spatial
+  constant reproduces the constant-axis field/energy to rtol 1e-13, both
+  assemble modes) and W2 per-region composition (a piecewise-constant
+  rotated-frame axis matches the constant-axis analytic field per node,
+  nodal `assemble=False` path only). The constant-axis path is untouched and
+  bit-identical; K2 physics and its divergence pin
+  (`test_k2_varying_diverges_from_legacy_native_in_hz_only`) are unchanged.
+  String-Expression axes remain refused by name. Gate
+  `dolfinx-src-cubicanis-pytest` 25 -> 30 passed (+6 witnesses -1 deferral
+  test); `dolfinx-src-varparams-pytest` 33 passed, unchanged (K2 pin green).
+  Review: APPROVE ("ship it") -- constant-axis path byte-identical, per-node
+  u3 handedness max abs error 0.0, W1 at machine precision, dolfinx-0.10
+  `interpolation_points` attribute access confirmed correct. See
+  `transition-notes.org`'s "Priority 3 Field completeness and varying cubic
+  axes" section. [Claude Sonnet 5]
+- Combined final clean-tree aggregate `dev/bin/verify-dolfinx-m5` on the
+  integrated P3.3+P3.4+P3.5 tip `595f8335`: exit 0, all 32 steps green; field
+  gate 35 passed; cubic-anisotropy gate 30 passed; varying-parameters gate 33
+  passed; fast examples 14 passed/3 skipped in 223.66s; core smoke
+  `{"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+  0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+  2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}`; cleanliness guard
+  silent (log `/tmp/finmag-p3-final-m5.log`). This documentation-closure
+  commit itself runs no `pixi` tasks and does not invoke
+  `dev/bin/verify-dolfinx-m5`. No new acceptance-register row is added for
+  P3.3/P3.4 (legacy-parity restorations, no deviation) or P3.5 (greenfield,
+  no legacy behaviour to diverge from). The PBC deferral (P3.1/P3.2, register
+  D19, `3d9c9be6`) is referenced, not re-documented, here. [Claude Sonnet 5]

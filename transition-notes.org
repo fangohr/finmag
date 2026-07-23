@@ -7206,3 +7206,206 @@ implementation and review evidence above without re-deriving it. P2.5
 untouched by this slice.
 
 [Claude Sonnet 5]
+
+** Priority 3 Field completeness and varying cubic axes (2026-07-23)
+
+This is one combined documentation-closure entry covering the three
+implemented Priority 3 slices: P3.3 (=Field.cross=/=dot=/scalar coercion,
+=c59f3438=), P3.4 (=Field.from_generic_vector=, =ef92eb7d=), and P3.5
+(spatially varying cubic-anisotropy axes, =595f8335=). The PBC pair (P3.1
+probe, P3.2 deferral, register D19, =3d9c9be6=) was already documented
+separately in =acceptance-register.md= and =capability-status.md= C19 and is
+not re-derived here.
+
+*** P3.3 =Field.cross=, =Field.dot= and scalar coercion (=c59f3438=)
+
+**** Mechanism
+
+The point-arithmetic stubs are replaced with pointwise DOLFINx-native
+implementations. For Lagrange-1, the legacy dolfin =dP= point measure is
+exact node-by-node, so these operate directly on the owned nodal rows (raw
+backend order, shared dofmap) and =scatter_forward= -- no assembly:
+
+- =cross=: per-node 3-vector cross product between two vector Fields on the
+  SAME vector CG1 space, returning a new vector Field on that space
+  (=x_hat cross y_hat == z_hat= at every node).
+- =dot=: per-node dot product returning a new scalar Field on the associated
+  scalar CG1 space (=m . m == 1= for unit =m=).
+- =coerce_scalar_field=: restores the legacy surface -- a number (or anything
+  the =Field= constructor accepts) becomes a scalar Field on
+  =associated_scalar_space(self.functionspace)=; an existing scalar Field
+  passes straight through. This backs =__mul__=/=__rmul__=/=__truediv__=
+  (=__div__= alias) via a shared node-array scaling body,
+  =_scaled_by_scalar=.
+- =_require_same_space=: a guard that both operands share the exact dofmap
+  (same mesh, same function space), preventing the Task-31 silent-scramble
+  class where differently-ordered spaces would otherwise mix node rows
+  undetected.
+
+=__add__= stays deferred -- it is not scalar coercion and has no consumer;
+the existing "Field addition" RED guard is untouched.
+
+**** Tests and evidence
+
+Tests assert analytic invariants AND anti-scramble on node-varying fields
+(=v cross v == 0=, =v . v == |v|^2= node-for-node, not just at a single
+point), plus type/dimension/space guards. Gate =dolfinx-src-field-pytest=
+went from =29 passed= to =34 passed=; the neighbouring MPI probe
+=dolfinx-src-field-mpi= is unchanged (exit 0). Independent review: APPROVE,
+nothing blocking -- the ordering round-trip was verified with an asymmetric
+field to machine precision.
+
+**** Known minor gap (recorded, not fixed)
+
+The scalar-Field multiply/divide path (=_scaled_by_scalar=) does not itself
+invoke =_require_same_space=, so a scalar Field on a different mesh with a
+coincidentally-matching node count could in principle silently scramble.
+This matches legacy's own gap (legacy has no such guard on this path either)
+and has no current consumer; recorded for awareness only.
+
+*** P3.4 =Field.from_generic_vector= (=ef92eb7d=)
+
+**** Mechanism
+
+Legacy =Field.from_generic_vector= took a dolfin =GenericVector= (a backend
+PETSc vector *object*) and did =set_local(get_local())= -- a raw backend-order
+copy of the rank-local owned entries. The DOLFINx-native equivalents are the
+backend vector objects this =Field= already exposes: =vector()= (a
+=dolfinx.la.Vector=) and =petsc_vector()= (a =PETSc.Vec=).
+=from_generic_vector= now reads only the source's owned portion (=[:owned]=,
+ignoring any ghost tail it carries), writes it into this Field's owned
+region, and repopulates ghosts via its OWN =scatter_forward= -- mirroring
+legacy's owned-only =set_local= exactly. A NumPy =ndarray= is rejected with a
+=TypeError= pointing to =from_array=, keeping this a genuinely distinct
+surface. =set()= gains the matching backend-vector dispatch branch (duck-typed
+=hasattr(value, "getArray")=, plus =isinstance(value, la.Vector)=), restoring
+legacy's =GenericVector= dispatch parity.
+
+Two review-driven guards were added before the commit was finalised: a
+mismatched-space source raises =ValueError= rather than silently truncating
+(a source with fewer entries than this Field owns, or with an entry count
+that matches neither owned nor owned+ghost, is rejected outright -- guarding
+against the class of bug where a vector-space vector read into a
+scalar-space target would otherwise succeed with a wrong-but-finite result).
+
+**** Tests and evidence (RED-first)
+
+=test_from_generic_vector_copies_backend_vector_objects=: both =la.Vector=
+and =PETSc.Vec= round-trip node-for-node on a node-varying field; =set()=
+correctly routes a backend vector through this path; a NumPy array raises
+=TypeError= directing the caller to =from_array=.
+
+MPI ownership (=field_dolfinx_mpi_probe=, =mpiexec -n 2=): the source
+backend vector's ghost tail is deliberately corrupted, and the test asserts
+only the OWNED dofs are copied and the target's ghosts come from its own
+=scatter_forward= -- i.e. the corruption does not propagate. The JSON summary
+gains a =from_generic_vector_owned_only= key. A PETSc round-trip
+independently pins the owned-only read.
+
+Gate =dolfinx-src-field-pytest= went from =34 passed= to =35 passed=; the
+MPI probe =dolfinx-src-field-mpi= passes with exit 0 and
+=from_generic_vector_owned_only: true= in its summary. Independent review:
+APPROVE WITH FOLLOW-UPS, nothing blocking -- the two acted-on follow-ups (the
+mismatched-space =ValueError= guard and the PETSc owned-only-read MPI
+assertion) are both in the final =ef92eb7d=, not left outstanding.
+
+**** Known minor gap (recorded, not fixed)
+
+=set()='s backend-vector branch uses a duck-typed
+=hasattr(value, "getArray")= predicate. This is safe for all current inputs
+(verified none of the other =set()= input types expose =getArray=), noted
+for awareness only.
+
+*** P3.5 Spatially varying cubic-anisotropy axes (=595f8335=)
+
+**** Mechanism
+
+The by-name deferral on spatially varying cubic-anisotropy axes is lifted.
+Callable/=Field=/=Function= =u1=/=u2= are now placed into vector CG1 as
+given -- via =axis_coefficient(..., normalise=False)=, the SAME route
+=UniaxialAnisotropy= and the varying-K path already use -- and
+=u3 = u1 x u2= is formed PER NODE: =ufl.cross(u1.f, u2.f)= interpolated into
+vector CG1 for the energy form, =np.cross(u1_nodes, u2_nodes)= on the nodal
+arrays for the =assemble=False= analytic field. The right-handed ordering
+and the as-given contract (no normalisation, no orthogonalisation) match
+legacy's constant =np.cross(u1, u2)=, now evaluated per node instead of
+once.
+
+The constant-axis path is untouched and bit-identical: =u3_value= is still
+=np.cross(u1, u2)= at =__init__= when both axes are constant =ndarray= s
+(else =None=, deferring =u3= to setup), and =_compute_field_analytic= keeps
+the exact constant-vector branch, taking the per-node einsum/=np.cross=
+branch only when =u3_value is None=. The existing constant-axis oracle
+tests, the native K2-typo-dormant test, and the K2 varying-divergence pin
+(=test_k2_varying_diverges_from_legacy_native_in_hz_only=) are unchanged and
+green. String-Expression axes stay refused by name via =axis_coefficient=
+(DOLFINx has no =Expression=); the two former axis-deferral tests are
+rewritten to assert ACCEPTANCE of callable/Field axes while keeping a
+string-Expression rejection test, per house convention.
+
+**** GREENFIELD, no legacy oracle -- and why
+
+This is deliberately NOT a legacy port and carries NO divergence pin. Legacy
+=CubicAnisotropy.__init__= computes =u3 = np.cross(u1, u2)= from the RAW axes
+at construction, so it CRASHES (=ValueError=, numpy cannot cross a callable)
+on ANY callable/Field/Function/string axis. There was never a working legacy
+varying-axis path, and the frozen oracle crashes identically -- so no oracle
+fixture can be generated and none was added. The "oracle witness" a strict
+port would ask for is physically impossible here.
+
+The substitutes, both anchored to the already-oracle-validated CONSTANT-axis
+path, are:
+
+- W1 constant-reduction (bit-for-bit): a callable axis and a Field axis
+  whose values equal a spatial constant reproduce the constant-axis field
+  AND energy to rtol 1e-13, on both =assemble=False= and =assemble=True=.
+- W2 piecewise-region (=assemble=False= nodal path only): a piecewise-constant
+  (rotated-frame) axis gives, at every node, exactly the constant-axis
+  analytic field for that node's own axis. This is NOT pinned on the
+  =assemble=True= box path, which interpolates the CG1 axis across the
+  region seam -- a genuinely different, not-yet-witnessed code path.
+
+Plus: as-given preservation (a non-unit varying axis stored verbatim, norms
+=!= 1= survive) and per-node =u3= right-handedness (the stored =u3= Field
+equals =np.cross(u1_node, u2_node)= node-for-node).
+
+**** Tests and evidence
+
+Gate =dolfinx-src-cubicanis-pytest= went from =25 passed= to =30 passed=
+(+6 witnesses -1 deferral test); =dolfinx-src-varparams-pytest= stayed at
+=33 passed= (+1 -1, K2 pin green, unchanged). Independent review: APPROVE
+("ship it") -- the constant-axis path is byte-identical, per-node =u3=
+handedness has max abs error =0.0=, W1 holds at machine precision, and the
+dolfinx-0.10 =interpolation_points= attribute access used by the energy-form
+path was confirmed correct.
+
+*** Combined final aggregate
+
+The clean-tree aggregate =dev/bin/verify-dolfinx-m5= on =595f8335= (the
+integrated P3.3+P3.4+P3.5 source tip) exited 0 with all 32 steps green: field
+gate =35 passed=; cubic-anisotropy gate =30 passed=; varying-parameters gate
+=33 passed=; fast examples =14 passed/3 skipped= in =223.66s=; core smoke
+={"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}=; tracked-file
+cleanliness guard silent (log =/tmp/finmag-p3-final-m5.log=).
+
+*** Acceptance-register disposition
+
+No new acceptance-register row is added for P3.3 or P3.4: both are legacy-
+parity restorations with no behavioral deviation from legacy. P3.5 is
+greenfield with no legacy behaviour to diverge from -- there is nothing to
+register as a decision, only the greenfield/no-oracle fact recorded here and
+in =capability-status.md= C06. K2's existing divergence pin (register-adjacent,
+from the P2-era varying-K2 slice) is untouched by this work.
+
+*** Scope note
+
+This documentation-closure commit itself runs no =pixi= tasks and does not
+invoke =dev/bin/verify-dolfinx-m5=; it records the implementation, evidence
+and review outcomes above without re-deriving them. The PBC deferral
+(P3.1/P3.2, register D19, =3d9c9be6=) is referenced, not re-opened or
+re-documented, here. Priority 4 (I/O and convenience surface) is the
+recommended next work; see the updated =HANDOVER.md=.
+
+[Claude Sonnet 5]

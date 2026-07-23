@@ -478,14 +478,67 @@ public-interface commit.
 
 ## Priority 3 — Selected serial physics and Field completeness
 
-1. Probe the exact legacy `Simulation(pbc=)` contract under `dev/dolfinx`.
-2. Implement serial function-space PBC from the accepted probe; do not combine
-   it with MacroGeometry or MPI.
-3. Port `Field.cross`, `Field.dot` and scalar coercion.
-4. Port `Field.from_generic_vector` separately with ordering and MPI-ownership
-   tests.
-5. Port spatially varying cubic axes with oracle and analytic witnesses; retain
-   the owner-approved correct K2 physics.
+### [x] P3.1 Probe the exact legacy `Simulation(pbc=)` contract
+
+- **Completed:** the probe under `dev/dolfinx` found serial function-space PBC
+  BLOCKED in the supported environment (`dolfinx_mpc` absent; DOLFINx 0.10
+  `fem.functionspace` has no `constrained_domain`; a probe through the actual
+  `Exchange` proved periodicity cannot be recovered by post-hoc value copying).
+  See register `D19`.
+
+### [x] P3.2 Implement serial function-space PBC — deferred, not implemented
+
+- **Resolved as deferred (owner decision 2026-07-23, register `D19`,
+  `3d9c9be6`):** not implemented for SR1. The by-name `_deferred('pbc')` guard
+  and `test_pbc_is_deferred` stand; the demag image-lattice PBC (MacroGeometry,
+  P2.2) is a separate, working feature and is unaffected. Do not re-open this
+  without new owner input; see `acceptance-register.md` D19 and
+  `capability-status.md` C19 for the full disposition.
+
+### [x] P3.3 Port `Field.cross`, `Field.dot` and scalar coercion
+
+- **Completed in `c59f3438`:** pointwise per-node `cross`/`dot` on owned nodal
+  rows (raw backend order, scatter_forward, no assembly), `coerce_scalar_field`
+  backing `__mul__`/`__rmul__`/`__truediv__`, and a `_require_same_space` guard
+  against mismatched-space scrambling. `__add__` stays deferred (no consumer).
+  Gate `dolfinx-src-field-pytest` 29 -> 34 passed; `dolfinx-src-field-mpi`
+  unchanged (exit 0); ordering round-trip verified with an asymmetric field to
+  machine precision. Review: APPROVE, nothing blocking. Known minor gap: the
+  scalar-Field multiply/divide path does not itself invoke
+  `_require_same_space` (matches legacy's own gap, no consumer).
+
+### [x] P3.4 Port `Field.from_generic_vector` separately
+
+- **Completed in `ef92eb7d`:** restored as the backend-vector-object entry
+  point, accepting a `dolfinx.la.Vector` (`Field.vector()`) or `PETSc.Vec`
+  (`Field.petsc_vector()`), reading only the owned portion and
+  scatter-forwarding so ghosts come from the target's own scatter; a NumPy
+  ndarray raises `TypeError` pointing to `from_array`, and a
+  mismatched-space/oversized source raises `ValueError`. Gate
+  `dolfinx-src-field-pytest` 34 -> 35 passed; `dolfinx-src-field-mpi` exit 0
+  with `from_generic_vector_owned_only: true` (corrupted source ghost tail
+  does not propagate; independently pinned by a PETSc owned-only-read
+  round-trip). Review: APPROVE WITH FOLLOW-UPS, nothing blocking; both acted-on
+  follow-ups (the mismatched-space `ValueError` guard and the PETSc
+  owned-only-read MPI assertion) are in the final commit.
+
+### [x] P3.5 Port spatially varying cubic axes
+
+- **Completed in `595f8335`:** callable/Field/Function `u1`/`u2` axes are
+  placed into vector CG1 via `axis_coefficient(..., normalise=False)`, forming
+  `u3 = u1 x u2` per node (`ufl.cross` for the energy form, `np.cross` for the
+  analytic field), used as-given (no normalisation/orthogonalisation). GREENFIELD,
+  NO LEGACY ORACLE: legacy crashes at construction on any varying axis, so
+  there is no oracle and no divergence pin. Validated instead by
+  constant-reduction (W1, machine precision) and per-region composition (W2,
+  nodal path only) against the oracle-validated constant-axis path, which is
+  itself untouched and bit-identical. K2 physics and its divergence pin are
+  unchanged. Gate `dolfinx-src-cubicanis-pytest` 25 -> 30 passed;
+  `dolfinx-src-varparams-pytest` 33 passed, unchanged (K2 pin green). Review:
+  APPROVE ("ship it").
+
+**All of Priority 3 is now resolved:** three items ported (P3.3, P3.4, P3.5)
+and the PBC pair (P3.1/P3.2) deferred past SR1 under register D19.
 
 ## Priority 4 — Selected I/O and convenience surface
 

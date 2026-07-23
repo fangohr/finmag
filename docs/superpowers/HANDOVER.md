@@ -89,13 +89,22 @@ Important current limitations:
   configuring both local STT modes raises `ValueError` (P2.6, D11); the D4
   hysteresis re-relax "defect" was found not reproducible and closed as a
   diagnosis correction (P2.5);
+- `Field.cross`/`Field.dot`/scalar coercion (P3.3, `c59f3438`) and
+  `Field.from_generic_vector` (P3.4, `ef92eb7d`) are ported, operating on
+  owned nodal rows and respecting the Task-31 public ordering; `Field.__add__`
+  stays deferred. Spatially varying cubic-anisotropy axes u1/u2 (P3.5,
+  `595f8335`) are ported and greenfield (no legacy oracle exists, since legacy
+  crashes on any varying axis at construction); K2 physics is unchanged. The
+  by-name serial function-space PBC deferral (P3.1/P3.2, register D19) is a
+  deliberate owner decision, not a gap;
 - the clean FULL baseline remains the recorded P0.2 evidence (12 passed,
   5 failed) — three unchanged wrapper timeouts, a missing scheduler `save_m`
   keyword, and a raw legacy `dolfin` import through `finmag.util.helpers`. No P2
   slice reran or reclassified it; SR1-V1 (FULL-lane diagnosis) is still open, and
   std_prob4's broad switching window is only qualitative;
-- normal modes, thermal SLLG/LLB, MPI stepping, function-space PBC, legacy NEB,
-  external harnesses, and long-tail I/O/visualisation remain unported.
+- normal modes, thermal SLLG/LLB, MPI stepping, function-space PBC (deferred,
+  D19), legacy NEB, external harnesses, HDF5/plotting/VTK-XDMF readback, and
+  the rest of the long-tail I/O/convenience surface remain unported.
 
 ## Install and verify the supported environment
 
@@ -176,12 +185,51 @@ overlapping macro-geometry pitch refusal) is now **approved 2026-07-23**: the
 by-name refusal is the accepted SR1 contract, and the coincident-node BEM kernel
 fix is deferred to a separate later slice. **D18** (the `toggle_stt` back-door
 that bypasses the D11 guard, plus its `toggle_stt(False)` flip-not-force-off
-quirk) is being taken up as a hardening slice.
+quirk) is now **implemented in `a7b0fb87`**: `toggle_stt` honours explicit
+`False` and inherits the D11 conflict guard, closing the back-door.
 
-The recommended next work is **Priority 3** (serial function-space PBC probe,
-`Field.cross`/`dot`/coercion, `from_generic_vector`, varying cubic axes) and the
+**All of Priority 3 is now also complete** (three ported slices plus the PBC
+pair deferred), each landed as a reviewed source/test commit plus this
+combined documentation commit, and integrated on `dolfinx-parity`:
+
+- P3.1/P3.2 (serial function-space PBC probe and implementation,
+  `3d9c9be6`): the probe found it BLOCKED in the supported environment (no
+  `dolfinx_mpc`; DOLFINx 0.10 has no `constrained_domain`; the exchange seam
+  must be operator-coupled, not value-copied), so it is **deferred past SR1**
+  under owner decision register **D19**, not implemented. The `_deferred('pbc')`
+  guard stands; the working demag image-lattice PBC (MacroGeometry, P2.2) is
+  unaffected.
+- P3.3 `Field.cross`/`Field.dot`/scalar coercion (`c59f3438`): pointwise
+  per-node operations on owned nodal rows, guarded against mismatched-space
+  scrambling. Gate `dolfinx-src-field-pytest` 29 -> 34 passed. Review:
+  APPROVE, nothing blocking.
+- P3.4 `Field.from_generic_vector` (`ef92eb7d`): restores the backend-vector
+  (`dolfinx.la.Vector`/`PETSc.Vec`) entry point, owned-only read with
+  MPI-ownership witnesses. Gate `dolfinx-src-field-pytest` 34 -> 35 passed;
+  `dolfinx-src-field-mpi` exit 0 with `from_generic_vector_owned_only: true`.
+  Review: APPROVE WITH FOLLOW-UPS, nothing blocking (both follow-ups acted on
+  in the final commit).
+- P3.5 spatially varying cubic-anisotropy axes (`595f8335`): callable/Field/
+  Function `u1`/`u2` now form `u3 = u1 x u2` per node. GREENFIELD, no legacy
+  oracle (legacy crashes at construction on any varying axis), validated by
+  constant-reduction and per-region composition against the oracle-validated
+  constant-axis path; K2 physics untouched. Gate
+  `dolfinx-src-cubicanis-pytest` 25 -> 30 passed; `dolfinx-src-varparams-pytest`
+  33 passed, unchanged. Review: APPROVE ("ship it").
+- The final clean-tree `dev/bin/verify-dolfinx-m5` over the integrated
+  P3.3+P3.4+P3.5 tip `595f8335` exited 0 with all 32 steps green (field 35,
+  cubic anisotropy 30, varying parameters 33, fast examples 14 passed/3
+  skipped in 223.66s, core smoke `integrator_backend: sundials` at
+  `t=1e-12`; log `/tmp/finmag-p3-final-m5.log`). See
+  `transition-notes.org`'s "Priority 3 Field completeness and varying cubic
+  axes" section and `dev/dolfinx/porting_map.md` for full evidence.
+
+The recommended next work is **Priority 4** (selected I/O and convenience
+surface: HDF5 readback, region/submesh output, magnetisation initialisers,
+`probe_field*`, `M`/`M_average` compatibility, `length_scales`/`mesh_info`,
+logging/instance/shutdown helpers, and backend-neutral plotting) and the
 **SR1-V1 FULL-lane** diagnosis, which still shows its recorded baseline
-(12 passed, 5 failed) and has not been rerun or reclassified by any P2 slice.
+(12 passed, 5 failed) and has not been rerun or reclassified by any P3 slice.
 The detailed, superseding sequence is in
 `plans/2026-07-23-sr1-prioritised-plan.md`.
 
@@ -190,3 +238,5 @@ The detailed, superseding sequence is in
 [P2.1 updates: Claude Opus 4.8]
 
 [P2.2–P2.6 completion update: Claude Opus 4.8]
+
+[P3.3–P3.5 completion update: Claude Sonnet 5]
