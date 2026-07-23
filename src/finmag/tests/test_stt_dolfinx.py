@@ -301,6 +301,100 @@ def test_simulation_set_zhangli_activates_zhangli():
 
 
 # --------------------------------------------------------------------------
+# D18 (SR1): Simulation.toggle_stt honours explicit False and is guarded
+#
+# toggle_stt must (a) FLIP do_slonczewski when called with no argument
+# (legacy no-arg toggle), (b) force the flag to bool(new_state) when given an
+# explicit argument -- so toggle_stt(False) reliably DISABLES rather than
+# flipping -- and (c) mirror the D11 guard: any operation that would ENABLE
+# Slonczewski while Zhang-Li is already active raises a by-name ValueError
+# BEFORE mutating the flag. Disabling never conflicts and is always allowed.
+# --------------------------------------------------------------------------
+
+def test_toggle_stt_false_forces_off_and_does_not_flip():
+    sim = _box_sim("d18_false_off")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    # explicit False disables an active Slonczewski torque
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+    # and starting from OFF, an explicit False must LEAVE it off (not flip on)
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_true_while_zhangli_active_raises():
+    sim = _box_sim("d18_conflict_true")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+    with pytest.raises(ValueError) as exc:
+        sim.toggle_stt(True)
+    # the message must name both modes so it is specific and actionable
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    # the guard runs before any mutation: neither flag changed
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_no_arg_flip_preserved_without_conflict():
+    sim = _box_sim("d18_flip")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    sim.toggle_stt()  # ON -> OFF (disable, always allowed)
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt()  # OFF -> ON (enable; no Zhang-Li active so allowed)
+    assert sim.llg.do_slonczewski is True
+
+
+def test_toggle_stt_no_arg_enable_flip_while_zhangli_active_raises():
+    sim = _box_sim("d18_flip_conflict")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+    # a no-arg flip of a False flag is an ENABLE -> must raise, state intact
+    with pytest.raises(ValueError) as exc:
+        sim.toggle_stt()
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_disable_always_allowed_even_with_zhangli_active():
+    sim = _box_sim("d18_disable_ok")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    # disabling Slonczewski (already off) never conflicts, regardless of Zhang-Li
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+    assert sim.llg.do_zhangli is True
+
+
+def test_toggle_stt_non_bool_args_are_coerced_not_flip_branched():
+    # Regression pin for D18: the fix forces the flag via ``bool(new_state)``,
+    # NOT a truthiness ``if new_state:`` branch (the original bug). A falsy
+    # non-None argument (0) must force OFF, and a truthy non-bool (1) must
+    # force ON -- a reversion to ``if new_state:`` would send 0 into the flip
+    # branch and mishandle these. [Claude Opus 4.8]
+    sim = _box_sim("d18_coerce")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    sim.toggle_stt(0)  # explicit falsy int -> force OFF (must not flip)
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt(0)  # still OFF, not flipped back on
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt(1)  # truthy int -> force ON (no Zhang-Li, so allowed)
+    assert sim.llg.do_slonczewski is True
+
+
+# --------------------------------------------------------------------------
 # D11 (SR1 P2.6): the two local STT modes are mutually exclusive
 #
 # Configuring both Slonczewski and Zhang-Li on one object must raise a clear

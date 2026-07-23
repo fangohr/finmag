@@ -886,15 +886,33 @@ class Simulation(object):
             with_time_update=with_time_update)
 
     def toggle_stt(self, new_state=None):
-        """Toggle the Slonczewski spin-transfer torque (legacy semantics).
+        """Toggle the Slonczewski spin-transfer torque (legacy semantics, guarded).
 
-        With no argument the ``do_slonczewski`` flag is flipped; pass a boolean
-        to set it explicitly.
+        - ``new_state is None`` (no argument): FLIP the ``do_slonczewski`` flag,
+          preserving the legacy no-argument toggle behaviour.
+        - ``new_state`` given: force ``do_slonczewski = bool(new_state)``. An
+          explicit ``False`` therefore reliably DISABLES the torque; it does not
+          flip.
+
+        Mirroring the D11 ``use_slonczewski``/``use_zhangli`` guards, any
+        operation that would ENABLE Slonczewski (final state ``True``) while the
+        Zhang-Li torque is already active raises :class:`ValueError` naming both
+        modes BEFORE mutating the flag -- the two local STT modes are mutually
+        exclusive. Disabling (final state ``False``) never conflicts and is
+        always allowed.
         """
-        if new_state:
-            self.llg.do_slonczewski = new_state
+        if new_state is None:
+            target = not self.llg.do_slonczewski
         else:
-            self.llg.do_slonczewski = not self.llg.do_slonczewski
+            target = bool(new_state)
+        if target and self.llg.do_zhangli:
+            raise ValueError(
+                "Cannot enable the Slonczewski spin-transfer torque: the "
+                "Zhang-Li torque is already active. The two local STT modes "
+                "are mutually exclusive; disable Zhang-Li first (e.g. set "
+                "llg.do_zhangli = False) before enabling Slonczewski."
+            )
+        self.llg.do_slonczewski = target
 
     def set_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01,
                     using_u0=False, with_time_update=None):
