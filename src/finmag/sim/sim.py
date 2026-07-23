@@ -97,6 +97,49 @@ def _deferred(name, detail):
     )
 
 
+def _reject_touching_macro_geometry(mesh, macrogeometry):
+    """Refuse the exactly-touching macro-geometry tiling (SR1 P2.2).
+
+    Divergence 2 from the legacy contract, deliberate and documented. Legacy
+    ``sim_with(nx=3)`` with no ``spacing_x`` meant "the tiles touch": the image
+    lattice pitch defaults to the mesh bounding-box extent, so neighbouring
+    tiles share boundary nodes. The ported periodic BEM assembly does not
+    handle those coincident nodes -- the solid angle is double counted (BEM row
+    sums reach -2 instead of -1), giving a ~158% error on a cube, and on a flat
+    slab the matrix acquires non-finite entries so the phi_2 solve fails with
+    ``KSP_DIVERGED_NANORINF`` and the returned field is silently ``-M``. See
+    ``test_treecode_pbc_demag_dolfinx.py::
+    test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.
+
+    Fixing that is a demag-algorithm change (explicit non-goal of this slice),
+    so ``sim_with`` refuses the configuration by name rather than exposing a
+    silently wrong field. One ULP of gap already restores the correct answer,
+    hence the suggested ``extent * (1 + 1e-6)`` pitch. [Claude Opus 4.8]
+    """
+    extents = macrogeometry.find_mesh_info(mesh)
+    axes = (("x", "nx", "spacing_x", macrogeometry.nx, macrogeometry.dx),
+            ("y", "ny", "spacing_y", macrogeometry.ny, macrogeometry.dy))
+    for axis, n_name, s_name, n_tiles, pitch in axes:
+        if n_tiles <= 1:
+            continue  # a single tile along this axis never places an image
+        extent = float(extents[0] if axis == "x" else extents[1])
+        # `pitch is None` is the legacy "tiles touch" default: compute_Ts would
+        # infer exactly this extent from the mesh bounding box.
+        effective = extent if pitch is None else float(pitch)
+        if abs(effective - extent) <= 1e-9 * max(abs(extent), 1.0):
+            raise NotImplementedError(
+                "sim_with({}={!r}, {}={!r}): the exactly-touching "
+                "macro-geometry tiling (tile pitch equal to the mesh extent "
+                "{!r} along {}) is not available in the DOLFINx port -- "
+                "coincident tile boundary nodes make the periodic BEM "
+                "assembly return a silently wrong (or non-finite) demag "
+                "field. Pass a slightly larger pitch, e.g. {}={!r}. "
+                "(Deliberate divergence from the legacy default; see "
+                "dev/dolfinx/porting_map.md.)".format(
+                    n_name, n_tiles, s_name, pitch, extent, axis,
+                    s_name, extent * (1.0 + 1e-6)))
+
+
 class Simulation(object):
     """Unified interface to finmag's micromagnetic simulation capabilities."""
 
@@ -854,9 +897,22 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
     Exchange (``A``), uniaxial anisotropy (``K1`` + ``K1_axis``), Zeeman
     (``H_ext``), DMI (``D``, constant scalar, ``dmi_type='auto'``) and
     Fredkin-Koehler demag (``demag_solver='FK'``, default) are ported. Non-FK
-    demag solvers and periodic macro-geometry demag (``nx``/``ny``/
-    ``spacing_*``) raise ``NotImplementedError`` by name when requested; pass
+    demag solvers raise ``NotImplementedError`` by name when requested; pass
     ``demag_solver=None`` to build a demag-free simulation.
+
+    ``nx``, ``ny``, ``spacing_x`` and ``spacing_y`` refer to the demag
+    interaction. If specified they create a "macro geometry" in which the demag
+    field is computed as if repeated copies of the mesh were present on either
+    side of the sample, arranged in a grid of ``nx`` tiles along x and ``ny``
+    tiles along y with the actual simulation tile in the centre (so both must be
+    odd; both default to 1). ``spacing_x``/``spacing_y`` are the tile **pitch**
+    -- the centre-to-centre translation of the image lattice, *not* the gap
+    between tiles -- given in **mesh coordinate units** (the same units as the
+    mesh coordinates; ``unit_length`` is deliberately not applied, matching
+    legacy). A pitch equal to the mesh extent therefore means "the tiles touch";
+    that exactly-coincident case is refused by name in this port, see
+    :func:`_reject_touching_macro_geometry`, so pass e.g.
+    ``spacing_x = extent * (1 + 1e-6)`` for an effectively continuous film.
     """
     sim = sim_class(mesh, Ms, unit_length=unit_length,
                     integrator_backend=integrator_backend, name=name, pbc=pbc)
@@ -884,16 +940,41 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1,
                 "non-FK demag solvers (only the 'FK' Fredkin-Koehler solver "
                 "is ported)",
             )
-        if any(v is not None for v in (nx, ny, spacing_x, spacing_y)):
-            _deferred(
-                "sim_with(nx/ny/spacing_x/spacing_y)",
-                "periodic macro-geometry demag",
-            )
         # Import lazily so plain `import finmag` and demag-free simulations
         # never pull the native BEM extension or the demag module graph.
         from finmag.energies import Demag
 
-        sim.add(Demag(solver="FK", solver_type=demag_solver_type,
+        # SR1 P2.2 -- macro-geometry (periodic tiling) demag.  Legacy
+        # (`git show b5015c5a:src/finmag/sim/sim.py`, lines 1443-1447) forwarded
+        # the four arguments straight into
+        # ``MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)`` with no
+        # transformation and no ``unit_length`` scaling; ``spacing_*`` is the
+        # tile PITCH (centre-to-centre translation of the image lattice) in mesh
+        # coordinate units, not a gap.  That contract is preserved exactly,
+        # including the legacy quirks ``nx = nx or 1`` and the odd/positive
+        # tile-count validation (legacy ``Exception`` -> ported ``ValueError``).
+        #
+        # Divergence 1: legacy built a MacroGeometry unconditionally whenever a
+        # demag solver was requested; here one is built only when at least one
+        # of the four arguments is given, so the plain default keeps routing
+        # through the dense array BEM instead of the native treecode kernels.
+        # This is numerically inert -- the 1x1 image lattice agrees with plain
+        # FK to 2.06e-15 relative (pinned by
+        # test_sim_with_single_tile_macro_geometry_matches_plain_fk_demag) and
+        # the single-tile periodic BEM equals the golden dense FK BEM
+        # bit-for-bit -- and it preserves the import boundary (no
+        # finmag.native.* import for a demag-free or default simulation).
+        # [Claude Opus 4.8]
+        macrogeometry = None
+        if any(v is not None for v in (nx, ny, spacing_x, spacing_y)):
+            from finmag.energies.demag import MacroGeometry
+
+            macrogeometry = MacroGeometry(nx=nx, ny=ny,
+                                          dx=spacing_x, dy=spacing_y)
+            _reject_touching_macro_geometry(sim.mesh, macrogeometry)
+
+        sim.add(Demag(solver="FK", macrogeometry=macrogeometry,
+                      solver_type=demag_solver_type,
                       parameters=demag_solver_params))
     log.debug("Successfully created simulation '{}'".format(sim.name))
     return sim

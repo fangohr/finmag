@@ -426,10 +426,155 @@ def test_sim_with_non_fk_demag_is_deferred_by_name():
                  demag_solver="GCR")
 
 
-def test_sim_with_macro_geometry_demag_is_deferred_by_name():
-    with pytest.raises(NotImplementedError, match="macro-geometry|periodic"):
+# --------------------------------------------------------------------------
+# sim_with macro-geometry (periodic tiling) demag -- SR1 P2.2
+#
+# ``nx``/``ny``/``spacing_x``/``spacing_y`` are forwarded to
+# ``MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)``, exactly as in
+# legacy ``sim.py`` (b5015c5a, lines 1443-1447): no transformation, no
+# ``unit_length`` scaling.  ``spacing_*`` is the tile PITCH (centre-to-centre)
+# in mesh coordinate units, not a gap.  [Claude Opus 4.8]
+# --------------------------------------------------------------------------
+
+_DEMAG_TOL = {"absolute_tolerance": 1e-10, "relative_tolerance": 1e-10,
+              "maximum_iterations": int(1e5)}
+_DEMAG_PARAMS = {"phi_1": _DEMAG_TOL, "phi_2": _DEMAG_TOL}
+
+
+def _centred_box(lo, hi, n):
+    return mesh.create_box(
+        MPI.COMM_WORLD, [np.array(lo, float), np.array(hi, float)],
+        list(n), mesh.CellType.tetrahedron)
+
+
+def _demag_at_origin(sim, Ms):
+    """Reduced demag field ``H/Ms`` at the mesh node nearest the origin."""
+    H = sim.get_interaction("Demag").compute_field().reshape((3, -1)).T
+    coords, _ = sim.m_field.coords_and_values()
+    i = int(np.argmin(np.linalg.norm(coords, axis=1)))
+    return H[i] / Ms
+
+
+def _pbc_vs_bar(m_init, component):
+    """(tiled 20nm cube, directly meshed 60x20x20 bar) reduced demag fields.
+
+    Reproduces the legacy acceptance test for this feature
+    (``b5015c5a:src/finmag/energies/demag/demag_pbc_test.py``): a 20nm cube
+    tiled 3x along x must give the same demag field at the centre as a single
+    directly meshed 60x20x20 nm bar.  This is a genuine cross-geometry check --
+    a periodic image sum against a different, directly meshed body -- so a
+    units or pitch-vs-gap regression in the ``spacing_x`` wiring cannot pass it.
+
+    The pitch is 20.001 rather than the legacy default of exactly 20 (touching):
+    the exactly-touching case is the coincident-node defect pinned by
+    ``test_treecode_pbc_demag_dolfinx.py::
+    test_pbc_coincident_tile_spacing_produces_a_non_finite_bem`` and is refused
+    by name by ``sim_with``.  [Claude Opus 4.8]
+    """
+    Ms = 1e6
+    cube = _centred_box((-10, -10, -10), (10, 10, 10), (10, 10, 10))
+    bar = _centred_box((-30, -10, -10), (30, 10, 10), (30, 10, 10))
+    tiled = sim_with(cube, Ms=Ms, m_init=m_init, unit_length=1e-9,
+                     nx=3, spacing_x=20.001, demag_solver_params=_DEMAG_PARAMS,
+                     name="pbc_tiled_cube")
+    ref = sim_with(bar, Ms=Ms, m_init=m_init, unit_length=1e-9,
+                   demag_solver_params=_DEMAG_PARAMS, name="pbc_ref_bar")
+    return (_demag_at_origin(tiled, Ms)[component],
+            _demag_at_origin(ref, Ms)[component])
+
+
+def test_sim_with_macro_geometry_reproduces_directly_meshed_bar_in_plane():
+    h, h_ref = _pbc_vs_bar((1.0, 0.0, 0.0), 0)
+    assert abs((h - h_ref) / h_ref) < 0.01, (h, h_ref)
+
+
+def test_sim_with_macro_geometry_reproduces_directly_meshed_bar_out_of_plane():
+    h, h_ref = _pbc_vs_bar((0.0, 0.0, 1.0), 2)
+    assert abs((h - h_ref) / h_ref) < 0.02, (h, h_ref)
+
+
+def test_sim_with_single_tile_macro_geometry_matches_plain_fk_demag():
+    """``nx=1, ny=1`` is a one-element image lattice, so it must reproduce the
+    plain (non-periodic) FK demag exactly.  Cheap exactness guard; note it is
+    insensitive to ``spacing_*`` (Ts = [[0,0,0]] regardless), so it is a
+    regression guard, not the physical witness.  [Claude Opus 4.8]"""
+    Ms = 8.6e5
+    kw = dict(Ms=Ms, m_init=(0.1, 0.2, 1.0), unit_length=1e-9)
+    plain = sim_with(_box(), name="mg_plain", **kw)
+    tiled = sim_with(_box(), nx=1, ny=1, name="mg_1x1", **kw)
+    h_p = plain.get_interaction("Demag").compute_field()
+    h_t = tiled.get_interaction("Demag").compute_field()
+    assert np.max(np.abs(h_t - h_p)) / np.max(np.abs(h_p)) < 1e-12
+
+
+def test_sim_with_macro_geometry_matches_hand_assembled_demag():
+    """The four arguments are forwarded to ``MacroGeometry`` unchanged."""
+    from finmag.energies import Demag
+    from finmag.energies.demag import MacroGeometry
+
+    Ms = 8.6e5
+    cube = _centred_box((-10, -10, -10), (10, 10, 10), (4, 4, 4))
+    via_sim_with = sim_with(cube, Ms=Ms, m_init=(1.0, 0.0, 0.0),
+                            unit_length=1e-9, nx=3, spacing_x=20.001,
+                            name="mg_sim_with")
+    manual = Simulation(cube, Ms, unit_length=1e-9, name="mg_manual")
+    manual.set_m((1.0, 0.0, 0.0))
+    manual.add(Demag(solver="FK",
+                     macrogeometry=MacroGeometry(nx=3, dx=20.001)))
+    np.testing.assert_allclose(
+        via_sim_with.get_interaction("Demag").compute_field(),
+        manual.get_interaction("Demag").compute_field(), rtol=1e-10, atol=0.0)
+
+
+def test_sim_with_macro_geometry_rejects_even_tile_counts():
+    """Historical note: this test was
+    ``test_sim_with_macro_geometry_demag_is_deferred_by_name`` and asserted a
+    by-name ``NotImplementedError`` while ``nx``/``ny``/``spacing_*`` were
+    unported.  SR1 P2.2 wires them through, so ``nx=2`` now reaches
+    ``MacroGeometry``'s legacy odd-positive-tile validation and raises
+    ``ValueError`` instead (legacy raised a bare ``Exception`` with the same
+    message; the port narrows it).  [Claude Opus 4.8]"""
+    with pytest.raises(ValueError, match="odd"):
         sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
                  demag_solver="FK", nx=2)
+    with pytest.raises(ValueError, match="odd"):
+        sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 demag_solver="FK", ny=-3)
+
+
+def test_sim_with_touching_macro_geometry_tiles_are_deferred_by_name():
+    """Deliberate divergence from the legacy default (SR1 P2.2).
+
+    Legacy ``sim_with(nx=3)`` with no ``spacing_x`` meant "the tiles touch",
+    i.e. pitch == mesh extent.  In this port that is the coincident-node case,
+    which returns a silently wrong field (~158% error on a cube, NaN-poisoned
+    on a flat slab) -- see ``test_treecode_pbc_demag_dolfinx.py::
+    test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.  ``sim_with``
+    refuses it by name rather than exposing it.  [Claude Opus 4.8]"""
+    box = _box(2, 5.0)
+    with pytest.raises(NotImplementedError, match="touching"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9, nx=3)
+    # explicit spacing equal to the mesh extent is the same configuration
+    with pytest.raises(NotImplementedError, match="touching"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 nx=3, spacing_x=5.0)
+    with pytest.raises(NotImplementedError, match="touching"):
+        sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 ny=3, spacing_y=5.0)
+    # a single tile along a given axis never tiles, so it is not affected
+    sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+             nx=1, ny=1, name="mg_touching_1x1")
+    # ... and a slightly larger pitch is accepted
+    sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+             nx=3, spacing_x=5.0 * (1 + 1e-6), name="mg_touching_gap")
+
+
+def test_sim_with_treecode_demag_is_still_deferred_by_name():
+    """The Treecode factory selector is out of scope for SR1 P2.2 and stays
+    deferred even now that the macro-geometry arguments are wired."""
+    with pytest.raises(NotImplementedError, match="non-FK|[Tt]reecode"):
+        sim_with(_box(), Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9,
+                 demag_solver="Treecode", nx=3, spacing_x=10.0)
 
 
 def test_sim_with_dmi_builds_ported_interaction():
