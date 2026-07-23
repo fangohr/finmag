@@ -182,10 +182,77 @@ not deleted and not an accepted permanent exception.
   whole still imports legacy `dolfin` at module scope and remains unimportable
   in the DOLFINx environment; its full port is a separate slice.
 
-### [ ] P2.2 `sim_with` MacroGeometry
+### [x] P2.2 `sim_with` MacroGeometry
 
 - Wire nx/ny/spacing arguments to the existing dense-FK MacroGeometry path.
 - **Non-goals:** no Treecode selector, GCR or Demag2D work.
+- **Completed in `2cf4647f`** (witness corrections `f97d4088`/`571df59f`,
+  guard hardening `899d3906`): `sim_with(nx=, ny=, spacing_x=, spacing_y=)`
+  forwards its four arguments to `MacroGeometry(nx=nx, ny=ny, dx=spacing_x,
+  dy=spacing_y)` on the already-ported dense-FK path, matching the legacy
+  contract (`git show b5015c5a:src/finmag/sim/sim.py`, lines 1443-1447)
+  exactly: no `unit_length` scaling, and `spacing_*` is the tile PITCH
+  (centre-to-centre translation of the image lattice) in mesh coordinate
+  units, not a gap. A new guard, `_reject_touching_macro_geometry`, refuses by
+  name any pitch at or below the mesh extent on an active axis (`pitch <=
+  extent`) -- both the legacy exactly-touching default and the overlapping
+  case -- because the ported periodic BEM double-counts the solid angle at
+  coincident/interpenetrating tile boundary nodes.
+- **P2.2a false-positive correction (`f97d4088`, completed by `571df59f`):**
+  three PBC-path tests were counting a demonstrably broken configuration (the
+  touching `MacroGeometry` default, pitch == mesh extent) as passing physics
+  evidence. `test_pbc_out_of_plane_thin_film_analytic_limit` asserted `|Nz -
+  1| < 1e-3` on a 40x40x2 slab tiled with that default; the configuration
+  produces a periodic BEM with non-finite entries, the phi_2 Krylov solve
+  fails with `KSP_DIVERGED_NANORINF`, phi_2 stays identically zero, and `H =
+  -grad(phi_1) = -M` exactly -- which trivially satisfies `|Nz - 1| < 1e-3`
+  (measured 2.085e-10) while the same configuration also reports the
+  unphysical `Nx = 1.000000` in-plane. `test_pbc_image_sum_converges_1d` and
+  `test_pbc_end_to_end_runs` used the same touching default and were corrected
+  in the follow-up commit, which also corrected a stale "plateau near
+  -0.1007" comment that was itself a broken-path number. All three now use a
+  non-coincident pitch `extent * (1 + 1e-6)`, assert BEM finiteness and the
+  row-sum identity (`sum_j B_ij == -1`) as explicit preconditions, and (where
+  applicable) a monotonic approach to the analytic limit; the touching
+  expectation is retained as a strict `xfail`
+  (`test_pbc_out_of_plane_thin_film_analytic_limit_touching_tiles`), and the
+  underlying defect is pinned directly by
+  `test_pbc_coincident_tile_spacing_produces_a_non_finite_bem`.
+- **Evidence:** cross-geometry equivalence (the legacy `demag_pbc_test.py`
+  acceptance check) -- a 3x-tiled 20nm cube (`nx=3, spacing_x=20.001`)
+  reproduces a directly-meshed 60x20x20nm bar to 0.08% in Hx (in-plane) and
+  0.011% in Hz (out-of-plane), against the legacy bounds of 1%/2%; thin-film
+  analytic limits in both directions at the gapped pitch (`Nz`: 0.709851 ->
+  0.983976 -> 0.990758; `Nx`: 0.054464 -> 0.007920 -> 0.004588, for nx=ny =
+  1, 3, 5), with monotonic approach plus BEM-finiteness/row-sum
+  preconditions -- independently reproduced by review, which confirmed the
+  gap-limit is continuous from the right (`Nz -> ~0.9908` as gap -> 0+), so
+  the 1e-6 gap is real physics, not an artefact; `nx=1, ny=1` reduces to plain
+  FK demag to 1.005e-15 relative; the corrected gapped 1D image-sum sequence
+  (nx = 1, 3, 5, 9): -0.3337, -0.0638, -0.0245, -0.0078, decaying toward 0
+  (replacing the broken-path "plateau near -0.1007"). Focused gates after all
+  four commits: `dolfinx-src-simulation-pytest` 44 passed (was 37),
+  `dolfinx-src-treecode-pytest` 22 passed/1 xfailed (was 20 passed),
+  `dolfinx-src-demag-pytest` 18 passed (unchanged), `dolfinx-src-import-pytest`
+  19 passed/3 skipped (unchanged).
+- **Review:** APPROVE WITH FOLLOW-UPS. The touching-case diagnosis, the
+  honesty of the replacement witnesses, the cross-geometry witness, exactness,
+  mutation-resistance and scope were all independently verified. Finding 1 (a
+  second touching-default witness, in `test_pbc_image_sum_converges_1d` /
+  `test_pbc_end_to_end_runs`) and finding 2 (the guard rejected only
+  exact-touching, not overlapping, pitches) were acted on in `571df59f` and
+  `899d3906`. Finding 3 (the guard over-rejects a vanishingly small ~5e-10 gap
+  band that would technically work) is deliberately left as benign
+  conservatism -- the error message steers users to `extent * (1 + 1e-6)`.
+- **New divergence recorded:** D17 in `acceptance-register.md` -- the by-name
+  refusal of `pitch <= extent` is a deliberate divergence from the legacy
+  default (which computed touching/overlapping tiles); disposition *pending
+  owner decision*.
+- **Non-goal confirmed:** no Treecode factory selector, GCR or Demag2D work;
+  no demag-algorithm change. The coincident-node BEM defect itself is NOT
+  fixed -- it is refused by name and pinned by a strict `xfail` plus a direct
+  regression test, which remains a demag-algorithm change out of scope here.
+  [Claude Sonnet 5]
 
 ### [ ] P2.3 Callable pin masks
 

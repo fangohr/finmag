@@ -1011,3 +1011,57 @@ Before editing the matching module in `src/finmag`, check that:
   `b5015c5a`), and the full port of `finmag.util.helpers`. See
   `transition-notes.org`'s "P2.1 core example/logging import boundary"
   section. [Claude Opus 4.8]
+- SR1 P2.2 (`sim_with` MacroGeometry wiring, `2cf4647f`, witness corrections
+  `f97d4088`/`571df59f`, guard hardening `899d3906`): `sim_with(nx=, ny=,
+  spacing_x=, spacing_y=)` now forwards its four arguments unchanged into
+  `MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)` on the
+  already-ported dense-FK path (Task 23 above), matching the legacy contract
+  (`git show b5015c5a:src/finmag/sim/sim.py`, lines 1443-1447) exactly: no
+  transformation, no `unit_length` scaling. `spacing_x`/`spacing_y` are the
+  tile PITCH (centre-to-centre translation of the image lattice) in mesh
+  coordinate units, not a gap; the docstring now says so explicitly. A
+  `MacroGeometry` is built only when at least one of the four arguments is
+  given (numerically inert for the 1x1 case, agrees with plain FK to
+  1.005e-15 relative; preserves the import boundary for the plain default).
+  A new guard, `_reject_touching_macro_geometry`, refuses by name any pitch
+  at or below the mesh extent on an active axis (`pitch <= extent`) --
+  hardened in `899d3906` to also cover the overlapping case (`pitch <
+  extent`), not just the exactly-touching legacy default -- because the
+  ported periodic BEM double-counts the solid angle at coincident/
+  interpenetrating tile boundary nodes (row sums reach -2/-3; ~158% error on
+  a cube; non-finite on a flat slab, failing the phi_2 solve with
+  `KSP_DIVERGED_NANORINF` and silently returning `H = -M`). This is a
+  DELIBERATE DIVERGENCE from the legacy default, recorded as D17 in
+  `acceptance-register.md`, disposition pending owner decision; fixing the
+  underlying coincident-node BEM defect itself is a demag-algorithm change
+  and stays out of scope here -- it is refused by name and pinned (strict
+  `xfail` plus a direct regression test), not fixed.
+
+  A preceding correction, P2.2a (`f97d4088`, completed `571df59f`), found and
+  replaced three PBC-path tests that were counting the touching
+  `MacroGeometry` default as passing physics evidence when in fact that
+  configuration's periodic BEM is non-finite, the phi_2 Krylov solve fails
+  with `KSP_DIVERGED_NANORINF`, and the silently-returned `H = -M` happened
+  to satisfy the old assertions. The replacement witnesses use a
+  non-coincident pitch `extent * (1 + 1e-6)` with explicit BEM-finiteness and
+  row-sum preconditions; the touching expectation is retained as a strict
+  `xfail`, and the defect is pinned directly by a new
+  `test_pbc_coincident_tile_spacing_produces_a_non_finite_bem`.
+
+  Evidence: cross-geometry equivalence (legacy `demag_pbc_test.py` acceptance
+  check) -- a 3x-tiled 20nm cube (`nx=3, spacing_x=20.001`) reproduces a
+  directly-meshed 60x20x20nm bar to 0.08% in Hx / 0.011% in Hz against legacy
+  bounds 1%/2%; thin-film analytic limits both directions at the gapped
+  pitch (`Nz`: 0.709851 -> 0.983976 -> 0.990758; `Nx`: 0.054464 -> 0.007920
+  -> 0.004588, nx=ny=1,3,5), independently reproduced by review, which
+  confirmed the gap-limit is continuous from the right so the 1e-6 gap is
+  real physics, not an artefact. Gate: `dolfinx-src-simulation-pytest` 44
+  passed (was 37); `dolfinx-src-treecode-pytest` 22 passed/1 xfailed (was 20
+  passed); `dolfinx-src-demag-pytest` 18 passed and `dolfinx-src-import-pytest`
+  19 passed/3 skipped unchanged. Review: APPROVE WITH FOLLOW-UPS -- findings
+  1 (a second touching-default witness) and 2 (the guard originally missed
+  the overlapping case) were acted on in `571df59f`/`899d3906`; finding 3
+  (the guard over-rejects a vanishingly small ~5e-10 gap band that would
+  technically work) is left as deliberate benign conservatism. No Treecode
+  factory exposure, GCR or Demag2D work. See `transition-notes.org`'s "P2.2
+  sim_with MacroGeometry wiring" section. [Claude Sonnet 5]
