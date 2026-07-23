@@ -5,8 +5,23 @@ repeatedly in the documentation/manual.
 They generally return a simulation object.
 """
 
-import dolfin as df
+from mpi4py import MPI
+from dolfinx import mesh as dolfinx_mesh
+
 import finmag
+
+
+def _box_mesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz):
+    """SR1 P2.1: the DOLFINx replacement for the legacy
+    ``df.BoxMesh(df.Point(...), df.Point(...), nx, ny, nz)``. Coordinates stay
+    in nanometres exactly as before; the physical scale is carried by the
+    ``unit_length=1e-9`` passed to ``sim_with``. [Claude Opus 4.8]"""
+    return dolfinx_mesh.create_box(
+        MPI.COMM_WORLD,
+        [(xmin, ymin, zmin), (xmax, ymax, zmax)],
+        [nx, ny, nz],
+        dolfinx_mesh.CellType.tetrahedron,
+    )
 
 
 def bar(name='bar', demag_solver_type=None):
@@ -29,7 +44,7 @@ def bar(name='bar', demag_solver_type=None):
     xmax, ymax, zmax = 30, 30, 100  # other corner of cuboid
     # number of subdivisions (use ~2nm edgelength)
     nx, ny, nz = 15, 15, 50
-    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
+    mesh = _box_mesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1), name=name,
@@ -61,7 +76,7 @@ def barmini(name='barmini', mark_regions=False, demag_solver_type=None):
     xmax, ymax, zmax = 3, 3, 10     # other corner of cuboid
     # number of subdivisions (use ~2nm edgelength)
     nx, ny, nz = 2, 2, 4
-    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
+    mesh = _box_mesh(xmin, ymin, zmin, xmax, ymax, zmax, nx, ny, nz)
 
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1), name=name,

@@ -193,14 +193,23 @@ def test_no_unported_optional_energies_remain():
     assert not any(flag for (_module, _attr, flag) in _LAZY_EXPORTS.values())
 
 
-def test_unported_public_access_reports_the_real_missing_dependency():
+def test_unported_public_access_raises_a_named_not_implemented_error():
+    """Historical note: before SR1 P2.1, accessing an unported legacy-dolfin
+    public name such as ``finmag.NormalModeSimulation`` in the DOLFINx
+    environment surfaced the raw ``ModuleNotFoundError: No module named
+    'dolfin'`` (see this test's previous version in git history for that exact
+    probe). The rationale then was that the boundary must report the *real*
+    missing dependency rather than swallow it. SR1 P2.1 keeps that honesty but
+    upgrades the diagnosis: the lazy boundary now checks
+    ``importlib.util.find_spec("dolfin")`` itself and raises a curated
+    ``NotImplementedError`` that NAMES the deferred feature, which is strictly
+    more informative than an import traceback pointing at an internal module.
+    The legacy lane (where ``dolfin`` IS installed) still resolves the real
+    object, so this test only applies without legacy dolfin.
+    [Claude Opus 4.8]"""
     if importlib.util.find_spec("dolfin") is not None:
         pytest.skip("This check is for the DOLFINx environment without legacy dolfin.")
 
-    # NormalModeSimulation is still a legacy-dolfin surface (unported), so
-    # accessing it in the DOLFINx environment still reports the real missing
-    # dependency. (The core Simulation/sim_with are now DOLFINx-native and are
-    # covered by test_ported_public_names_bypass_legacy_dolfin below.) [Claude Opus 4.8]
     result = subprocess.run(
         [
             sys.executable,
@@ -214,7 +223,9 @@ def test_unported_public_access_reports_the_real_missing_dependency():
     )
 
     assert result.returncode != 0
-    assert "No module named 'dolfin'" in result.stderr
+    assert "NotImplementedError" in result.stderr
+    assert "NormalModeSimulation" in result.stderr
+    assert "No module named 'dolfin'" not in result.stderr
 
 
 @pytest.mark.skipif(
@@ -294,7 +305,7 @@ assert sim_with.__module__ == "finmag.sim.sim"
 assert MacroGeometry.__module__ == "finmag.energies.demag.fk_demag_pbc"
 assert NormalModeSimulation.__module__ == "finmag.sim.normal_mode_sim"
 assert normal_mode_simulation.__module__ == "finmag.sim.normal_mode_sim"
-assert set_logging_level.__module__ == "finmag.util.helpers"
+assert set_logging_level.__module__ == "finmag.util.logging_helpers"
 assert configuration.__name__ == "finmag.util.configuration"
 assert versions.__name__ == "finmag.util.versions"
 assert example.__name__ == "finmag.example"

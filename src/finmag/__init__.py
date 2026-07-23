@@ -11,6 +11,7 @@ the package itself remains independent of a particular FEM runtime.
 """
 
 from importlib import import_module
+import importlib.util
 import logging
 
 from .__version__ import __version__
@@ -42,7 +43,20 @@ _LAZY_EXPORTS = {
         "normal_mode_simulation",
         True,
     ),
-    "set_logging_level": ("finmag.util.helpers", "set_logging_level", True),
+    # SR1 P2.1: ``set_logging_level`` was lifted out of the (still unported)
+    # ``finmag.util.helpers`` into a stdlib-only module, so it now resolves
+    # without legacy dolfin. The flag nevertheless stays ``True`` (like
+    # ``example`` below, and unlike the ``_LEGACY_ONLY_FEATURES`` names): when
+    # legacy dolfin IS installed, reaching this public name must keep applying
+    # the historical dof-ordering preparation, because legacy scripts of the
+    # form ``import finmag; finmag.set_logging_level(...); df.FunctionSpace(...)``
+    # relied on that side effect. Dropping it here would silently change dof
+    # ordering in the legacy lane. [Claude Opus 4.8]
+    "set_logging_level": (
+        "finmag.util.logging_helpers",
+        "set_logging_level",
+        True,
+    ),
     "configuration": ("finmag.util.configuration", None, False),
     "versions": ("finmag.util.versions", None, False),
     "example": ("finmag.example", None, True),
@@ -68,6 +82,32 @@ __all__ = [
 ]
 
 
+# SR1 P2.1: public names that still *require* legacy dolfin and have no
+# DOLFINx port yet. Without legacy dolfin installed the lazy boundary raises a
+# curated ``NotImplementedError`` naming the feature, instead of letting a raw
+# ``ModuleNotFoundError: No module named 'dolfin'`` escape from somewhere deep
+# inside the import chain. Names flagged ``requires_legacy_dolfin=True`` that
+# are NOT listed here (currently ``example``) still get the legacy dof-ordering
+# preparation when dolfin is present, but resolve normally when it is absent.
+# [Claude Opus 4.8]
+_LEGACY_ONLY_FEATURES = {
+    "NormalModeSimulation": (
+        "finmag.NormalModeSimulation is not ported to DOLFINx yet: the "
+        "normal-mode eigenvalue machinery (finmag.sim.normal_mode_sim) is a "
+        "deferred legacy-dolfin surface."
+    ),
+    "normal_mode_simulation": (
+        "finmag.normal_mode_simulation is not ported to DOLFINx yet: the "
+        "normal-mode eigenvalue machinery (finmag.sim.normal_mode_sim) is a "
+        "deferred legacy-dolfin surface."
+    ),
+}
+
+
+def _legacy_dolfin_is_available():
+    return importlib.util.find_spec("dolfin") is not None
+
+
 def _prepare_legacy_dolfin(df=None):
     """Apply the degree-of-freedom ordering expected by legacy Finmag."""
     if df is None:
@@ -88,7 +128,10 @@ def __getattr__(name):
         raise AttributeError("module {!r} has no attribute {!r}".format(__name__, name))
 
     if requires_legacy_dolfin:
-        _prepare_legacy_dolfin()
+        if _legacy_dolfin_is_available():
+            _prepare_legacy_dolfin()
+        elif name in _LEGACY_ONLY_FEATURES:
+            raise NotImplementedError(_LEGACY_ONLY_FEATURES[name])
     module = import_module(module_name)
     value = module if attribute_name is None else getattr(module, attribute_name)
     globals()[name] = value

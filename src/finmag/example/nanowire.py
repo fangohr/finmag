@@ -5,7 +5,9 @@ repeatedly in the documentation/manual.
 They generally return a simulation object.
 """
 
-import dolfin as df
+from mpi4py import MPI
+from dolfinx import mesh as dolfinx_mesh
+
 import finmag
 from math import sin, cos, pi
 
@@ -20,9 +22,16 @@ def nanowire(lx=100, ly=10, lz=3, nx=30, ny=3, nz=1, name='nanowire'):
     A = 13e-12
     Ms = 8e5
 
-    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(lx, ly, lz), nx, ny, nz)
-    S1 = df.FunctionSpace(mesh, 'CG', 1)
-    S3 = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+    # SR1 P2.1: mesh coordinates stay in nanometres; the physical scale is
+    # carried by ``unit_length=1e-9`` below. The legacy ``S1``/``S3`` function
+    # spaces that used to be built here were assigned but never used, so they
+    # are dropped rather than translated. [Claude Opus 4.8]
+    mesh = dolfinx_mesh.create_box(
+        MPI.COMM_WORLD,
+        [(0.0, 0.0, 0.0), (float(lx), float(ly), float(lz))],
+        [nx, ny, nz],
+        dolfinx_mesh.CellType.tetrahedron,
+    )
 
     def m_init_fun(pt):
         x, y, z = pt

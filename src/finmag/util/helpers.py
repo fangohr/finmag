@@ -9,6 +9,11 @@ except Exception:
     render_paraview_scene = None
 from finmag.util.versions import get_version_dolfin
 from finmag.util import ansistrm
+# SR1 P2.1: ``set_logging_level`` now lives in a stdlib-only module so the
+# public ``finmag.set_logging_level`` resolves without legacy dolfin; this
+# re-export keeps the historical ``finmag.util.helpers`` spelling working.
+# [Claude Opus 4.8]
+from finmag.util.logging_helpers import set_logging_level
 from threading import Timer
 from distutils.version import LooseVersion
 import subprocess as sp
@@ -134,24 +139,6 @@ def logging_status_str():
                         % (loggername, "no handlers found"))
 
     return msg
-
-
-def set_logging_level(level):
-    """
-    Set the level for finmag log messages.
-
-    *Arguments*
-
-    level: string
-
-       One of the levels supported by Python's `logging` module.
-       Supported values: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' and
-       the finmag specific level 'EXTREMEDEBUG'.
-    """
-    if level not in ['EXTREMEDEBUG', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
-        raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
-                         "'WARNING', 'ERROR', 'CRITICAL'")
-    logger.setLevel(level)
 
 
 supported_color_schemes = ansistrm.level_maps.keys()

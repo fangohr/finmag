@@ -144,7 +144,11 @@ dolfinx-provenance-check = "python -c \"import finmag, os; resolved = os.path.ab
 # [Claude Sonnet 5]
 dolfinx-src-import = "PYTHONDONTWRITEBYTECODE=1 python -c \"import finmag\""
 dolfinx-src-import-pythonpath-fallback = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -c \"import finmag\""
-dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py"
+# SR1 P2.1 folds the ported `finmag.example` / `set_logging_level` boundary
+# checks into this existing gate (precedent: Task 19 folding
+# `test_thin_film_demag_dolfinx.py` into `dolfinx-src-energies-pytest`).
+# [Claude Opus 4.8]
+dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py"
 dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_field_dolfinx.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
 dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies_dolfinx.py src/finmag/tests/test_thin_film_demag_dolfinx.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
@@ -273,7 +277,12 @@ dolfinx = { features = ["dolfinx"], no-default-feature = true }
 [tasks]
 # Keep the lazy import contract executable in the FEniCS-2019 environment as
 # well as the focused DOLFINx source lane. [Codex GPT-5.6]
-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py"
+# SR1 P2.1 adds `test_example_dolfinx.py` here too: its
+# `test_helpers_still_reexports_set_logging_level` check needs legacy dolfin,
+# so this legacy lane is the only place it can actually execute (it skips in
+# the dolfinx lane). Its dolfinx-requiring checks skip here in turn.
+# [Claude Opus 4.8]
+src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py"
 # This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
 # to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]
 import-finmag = "PYTHONPATH=src python -c \"import finmag; print(finmag)\""
