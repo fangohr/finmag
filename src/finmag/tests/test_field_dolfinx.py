@@ -347,6 +347,152 @@ def test_legacy_only_features_fail_precisely(spaces):
         field + field
 
 
+def _node_varying_vector(space):
+    return Field(
+        space,
+        lambda x: np.vstack((1.0 + x[0], 2.0 + x[1], 3.0 + x[0] * x[1])),
+    )
+
+
+def _other_node_varying_vector(space):
+    return Field(
+        space,
+        lambda x: np.vstack((0.5 - x[1], 4.0 + x[0], 1.0 - x[0] * x[0])),
+    )
+
+
+def test_cross_is_pointwise_vector_field_and_survives_node_scramble(spaces):
+    _, _, vector_space = spaces
+
+    x_hat = Field(vector_space, (1.0, 0.0, 0.0))
+    y_hat = Field(vector_space, (0.0, 1.0, 0.0))
+    z_hat = x_hat.cross(y_hat)
+
+    # cross returns a NEW vector Field on the same vector space.
+    assert z_hat.functionspace is vector_space
+    assert not z_hat.is_scalar_field()
+    _, values = z_hat.coords_and_values()
+    assert np.allclose(values, np.array([0.0, 0.0, 1.0]))
+
+    # Anti-scramble: on a node-varying field, v x v == 0 everywhere and the
+    # cross matches np.cross of the PUBLIC arrays node-for-node. A permutation
+    # bug survives uniform constants but fails a varying field.
+    v = _node_varying_vector(vector_space)
+    w = _other_node_varying_vector(vector_space)
+    _, self_cross = v.cross(v).coords_and_values()
+    assert np.allclose(self_cross, 0.0)
+
+    _, cross_vals = v.cross(w).coords_and_values()
+    _, v_vals = v.coords_and_values()
+    _, w_vals = w.coords_and_values()
+    assert np.allclose(cross_vals, np.cross(v_vals, w_vals))
+
+
+def test_dot_returns_scalar_field_on_scalar_space_and_survives_node_scramble(spaces):
+    _, scalar_space, vector_space = spaces
+
+    unit = Field(vector_space, (0.6, 0.0, 0.8))
+    result = unit.dot(unit)
+
+    # dot returns a NEW scalar Field on the associated scalar space.
+    assert result.is_scalar_field()
+    assert result.functionspace.ufl_element() == scalar_space.ufl_element()
+    assert result.mesh() is vector_space.mesh
+    _, values = result.coords_and_values()
+    assert np.allclose(values, 1.0)
+
+    # Anti-scramble: on a node-varying field, v . v == |v|^2 node-for-node and
+    # matches einsum of the PUBLIC arrays.
+    v = _node_varying_vector(vector_space)
+    w = _other_node_varying_vector(vector_space)
+    _, self_dot = v.dot(v).coords_and_values()
+    _, v_vals = v.coords_and_values()
+    assert np.allclose(self_dot, np.einsum("ij,ij->i", v_vals, v_vals))
+
+    _, dot_vals = v.dot(w).coords_and_values()
+    _, w_vals = w.coords_and_values()
+    assert np.allclose(dot_vals, np.einsum("ij,ij->i", v_vals, w_vals))
+
+
+def test_scalar_multiply_and_divide_coerce_and_scale(spaces):
+    _, scalar_space, vector_space = spaces
+    field = _node_varying_vector(vector_space)
+    _, base = field.coords_and_values()
+
+    _, doubled = (field * 2.0).coords_and_values()
+    assert np.allclose(doubled, 2.0 * base)
+    # __rmul__ path: number on the left.
+    _, r_doubled = (2.0 * field).coords_and_values()
+    assert np.allclose(r_doubled, 2.0 * base)
+    _, halved = (field / 2.0).coords_and_values()
+    assert np.allclose(halved, base / 2.0)
+
+    # Multiply by a node-varying scalar Field a = x^2 (coerce_scalar_field path).
+    a = Field(scalar_space, lambda x: x[0] ** 2)
+    _, a_vals = a.coords_and_values()
+    _, scaled = (field * a).coords_and_values()
+    assert np.allclose(scaled, base * a_vals[:, None])
+
+    # Result keeps the Task-31 public ordering contract (component-blocked xxx).
+    product = field * 2.0
+    assert np.allclose(
+        product.get_ordered_numpy_array_xxx(),
+        (2.0 * base).T.reshape(-1),
+    )
+
+
+def test_coerce_scalar_field_surface(spaces):
+    _, scalar_space, vector_space = spaces
+    field = _node_varying_vector(vector_space)
+
+    # A number coerces into a scalar Field on the associated scalar space.
+    coerced = field.coerce_scalar_field(3.0)
+    assert isinstance(coerced, Field)
+    assert coerced.is_scalar_field()
+    assert coerced.functionspace.ufl_element() == scalar_space.ufl_element()
+    assert np.allclose(coerced.coords_and_values()[1], 3.0)
+
+    # A scalar Field passes straight through.
+    a = Field(scalar_space, lambda x: x[0] ** 2)
+    assert field.coerce_scalar_field(a) is a
+
+    # A non-scalar Field is rejected loudly.
+    with pytest.raises(ValueError, match="scalar fields"):
+        field.coerce_scalar_field(field)
+
+
+def test_cross_and_dot_reject_bad_operands(spaces):
+    _, _, vector_space = spaces
+    vector = Field(vector_space, (1.0, 0.0, 0.0))
+
+    # Non-Field operand -> TypeError (legacy message surface).
+    with pytest.raises(TypeError, match="must be a Field"):
+        vector.cross(3.0)
+    with pytest.raises(TypeError, match="must be a Field"):
+        vector.dot("not a field")
+
+    # cross is only defined for 3d vector fields.
+    two_space = fem.functionspace(vector_space.mesh, ("Lagrange", 1, (2,)))
+    two = Field(two_space, (1.0, 2.0))
+    with pytest.raises(ValueError, match="3d vector fields"):
+        two.cross(two)
+
+    # dot requires equal dimension.
+    with pytest.raises(ValueError, match="same dimension"):
+        vector.dot(two)
+
+    # Same value_dim but a different function space still raises a clear error
+    # rather than silently returning a scrambled result.
+    other_mesh = mesh.create_unit_square(MPI.COMM_WORLD, 3, 3)
+    other_vector = Field(
+        fem.functionspace(other_mesh, ("Lagrange", 1, (3,))), (1.0, 0.0, 0.0)
+    )
+    with pytest.raises(ValueError, match="same mesh and function space"):
+        vector.cross(other_vector)
+    with pytest.raises(ValueError, match="same mesh and function space"):
+        vector.dot(other_vector)
+
+
 def test_coordinate_order_rejects_non_vertex_space():
     domain = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2)
     discontinuous = fem.functionspace(domain, ("DG", 0))

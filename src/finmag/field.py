@@ -613,33 +613,127 @@ class Field:
             "{} used legacy point-measure assembly and is not yet ported".format(name)
         )
 
+    def _require_same_space(self, other, operation):
+        """Guard that ``other`` is a Field on this exact function space.
+
+        Both operands must share the same dofmap so ``_owned_nodal_values``
+        rows are index-aligned node-for-node -- feeding differently-ordered
+        spaces would silently scramble nodes (the Task-31 failure class).
+        Mirrors the identity check used by :meth:`allclose`.
+        """
+        if not (
+            self.mesh() is other.mesh()
+            and self.functionspace is other.functionspace
+        ):
+            raise ValueError(
+                "{} requires Fields on the same mesh and function space".format(
+                    operation
+                )
+            )
+
     def coerce_scalar_field(self, value):
-        del value
-        self._unsupported_point_arithmetic("scalar-to-Field coercion")
+        """Coerce ``value`` into a scalar Field on the associated scalar space.
+
+        Mirrors legacy ``Field.coerce_scalar_field``: a number (or anything the
+        Field constructor accepts) becomes a scalar Field on
+        ``associated_scalar_space(self.functionspace)``; an existing Field must
+        already be scalar and passes straight through.
+        """
+        if not isinstance(value, Field):
+            scalar_space = associated_scalar_space(self.functionspace)
+            try:
+                return Field(scalar_space, value)
+            except Exception:
+                raise ValueError(
+                    "cannot coerce into scalar field: {}".format(value)
+                )
+        value.assert_is_scalar_field()
+        return value
 
     def __add__(self, other):
         del other
         self._unsupported_point_arithmetic("Field addition")
 
+    def _scaled_by_scalar(self, other, operation):
+        """Shared body of ``__mul__``/``__truediv__`` (Claas Abert's pointwise
+        'point measure hack'): scale each nodal value by a coerced scalar.
+
+        For Lagrange-1 the legacy ``dP`` point measure is exact node-by-node,
+        so operate directly on the owned nodal rows (raw backend order, shared
+        dofmap between this field and the coerced scalar field) and scatter the
+        result -- no assembly needed.
+        """
+        scalar = self.coerce_scalar_field(other)
+        nodal = self._owned_nodal_values()
+        scale = scalar._owned_nodal_values().reshape(-1)
+        if operation == "mul":
+            scaled = nodal * scale[:, None]
+        else:
+            scaled = nodal / scale[:, None]
+        result = Field(self.functionspace)
+        owned = self._owned_scalar_dofs()
+        result.f.x.array[:owned] = scaled.reshape(-1)
+        result.f.x.scatter_forward()
+        return result
+
     def __mul__(self, other):
-        del other
-        self._unsupported_point_arithmetic("Field multiplication")
+        return self._scaled_by_scalar(other, "mul")
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        del other
-        self._unsupported_point_arithmetic("Field division")
+        return self._scaled_by_scalar(other, "div")
 
     __div__ = __truediv__
 
     def cross(self, other):
-        del other
-        self._unsupported_point_arithmetic("Field cross product")
+        """Return the pointwise 3-vector cross product as a new vector Field.
+
+        Both operands must be 3-component vector Fields on the same space; the
+        result lives on that same vector space. ``x_hat cross y_hat == z_hat``
+        at every node.
+        """
+        if not isinstance(other, Field):
+            raise TypeError(
+                "Argument must be a Field. Got: {} ({})".format(other, type(other))
+            )
+        if not (self.value_dim() == 3 and other.value_dim() == 3):
+            raise ValueError(
+                "The cross product is only defined for 3d vector fields."
+            )
+        self._require_same_space(other, "cross")
+        a = self._owned_nodal_values()
+        b = other._owned_nodal_values()
+        result = Field(self.functionspace)
+        owned = self._owned_scalar_dofs()
+        result.f.x.array[:owned] = np.cross(a, b).reshape(-1)
+        result.f.x.scatter_forward()
+        return result
 
     def dot(self, other):
-        del other
-        self._unsupported_point_arithmetic("Field dot product")
+        """Return the pointwise dot product as a new scalar Field.
+
+        Both operands must be vector Fields of equal dimension on the same
+        space; the result lives on the associated scalar space. ``m dot m == 1``
+        for a unit vector field.
+        """
+        if not isinstance(other, Field):
+            raise TypeError(
+                "Argument must be a Field. Got: {} ({})".format(other, type(other))
+            )
+        if not (self.value_dim() == other.value_dim()):
+            raise ValueError(
+                "The dot product is only defined for vector fields of the "
+                "same dimension."
+            )
+        self._require_same_space(other, "dot")
+        a = self._owned_nodal_values()
+        b = other._owned_nodal_values()
+        result = Field(associated_scalar_space(self.functionspace))
+        owned = result._owned_scalar_dofs()
+        result.f.x.array[:owned] = np.einsum("ij,ij->i", a, b)
+        result.f.x.scatter_forward()
+        return result
 
 
 def evaluate_at_point(function, point):
