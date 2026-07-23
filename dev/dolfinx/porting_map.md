@@ -1065,3 +1065,38 @@ Before editing the matching module in `src/finmag`, check that:
   technically work) is left as deliberate benign conservatism. No Treecode
   factory exposure, GCR or Demag2D work. See `transition-notes.org`'s "P2.2
   sim_with MacroGeometry wiring" section. [Claude Sonnet 5]
+- SR1 P2.4 (correct discrete-time Zeeman energy, `ff906f11`, register D3):
+  `DiscreteTimeZeeman.update()` previously rebound `self.H` to a brand-new
+  `Field` on each interval crossing, bypassing `set_value()`, so the cached
+  UFL energy form `self.E` (built once in `setup()` against the original `H`
+  `Function`) kept assembling the discarded setup-time field forever --
+  `compute_energy()` froze at `-8.042477193189932e-23` while
+  `compute_field()`/`energy_density()` stayed current: 16.7% relative error at
+  the first crossing, 50% at t=1ns, unbounded in general (100% wrong when
+  `H(0)=0`, wrong sign when `m.H(t)` flips). The fix routes the refresh
+  through `self.set_value(self.field_function(t))`, exactly as the base
+  `TimeZeeman.update` does: `self.H` is written in place and `self.E` is
+  re-formed against it. Measured field bit-invariance (max|difference| = 0.0
+  in `compute_field()`/`average_field()` for both a constant-vector and a
+  spatially-varying callable contract) proves the fix changes no field value;
+  dynamics, effective field and every `.ndt` trajectory stay bit-identical,
+  and only `compute_energy()` is corrected. The legacy stale value is
+  preserved as an explicit divergence pin
+  (`_D3_LEGACY_STALE_ENERGY = -8.042477193189932e-23`,
+  `test_discrete_time_zeeman_energy_diverges_from_legacy_stale_value`) rather
+  than dropped; the committed oracle fixture
+  (`fixtures/timezeeman_oracle.json`) does NOT numerically discriminate the
+  original defect (its correct energies are ~1e-37 J against `atol=1e-18`),
+  so `test_oracle_discrete_time_zeeman_sequence_matches_legacy` passes
+  unchanged. Gate: focused `dolfinx-src-timezeeman-pytest` went from 28 passed
+  to 32 passed (the staleness quirk pin replaced by the D3 divergence pin plus
+  4 new corrected-behaviour/invariance/switch-off/analytic tests);
+  `dolfinx-src-energies-pytest` 45 passed; `dolfinx-src-simulation-pytest` 37
+  passed. Independent review: APPROVE, nothing blocking (reproduced the
+  multi-crossing/sign-flip tracking, the field bit-invariance, and confirmed
+  `E_now/E_legacy == 2.0` is a robust structural fact, not a coincidence). The
+  clean-tree aggregate `dev/bin/verify-dolfinx-m5` on the committed worktree
+  exited 0 with all 32 steps green (log `/tmp/finmag-p24-m5-clean.log`). D4
+  (hysteresis no-re-relax) is untouched and remains approved but unimplemented
+  as SR1 P2.5. See `transition-notes.org`'s "P2.4 discrete-time Zeeman energy
+  correction" section. [Claude Sonnet 5]

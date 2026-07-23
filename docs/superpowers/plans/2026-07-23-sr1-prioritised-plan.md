@@ -259,10 +259,61 @@ not deleted and not an accepted permanent exception.
 - Restore coordinate-to-dof callable pin selection without changing indexed
   pins or adding MPI stepping.
 
-### [ ] P2.4 Correct discrete-time Zeeman energy
+### [x] P2.4 Correct discrete-time Zeeman energy
 
 - Rebuild/update the energy consistently with the field after interval changes.
 - Preserve an explicit regression showing the legacy stale-energy behavior.
+- **Completed in `ff906f11` (register D3):** `DiscreteTimeZeeman.update()`
+  previously rebound `self.H` to a brand-new `Field` on each interval crossing,
+  bypassing `set_value()`; the cached UFL energy form `self.E` (built once in
+  `setup()` against the original `H` `Function`) kept assembling the
+  discarded setup-time field forever, so `compute_energy()` froze at
+  `E(H(t=0))` -- measured a permanent freeze at `-8.042477193189932e-23` --
+  while `compute_field()`/`energy_density()` stayed current: 16.7% relative
+  error at the first crossing, 50% at t=1ns, unbounded in general (100% wrong
+  when `H(0)=0`, wrong sign when `m.H(t)` flips). The fix routes the interval
+  refresh through `self.set_value(self.field_function(t))`, exactly as the
+  base `TimeZeeman.update` does: `self.H` is written in place and `self.E` is
+  re-formed against it. Field values are provably unchanged by the fix
+  (measured max|difference| = 0.0 in `compute_field()`/`average_field()`
+  dof arrays between the old rebind path and the new `set_value` path, for
+  both a constant-vector and a nested spatially-varying callable contract),
+  so dynamics, effective field and every `.ndt` trajectory stay bit-identical;
+  only `compute_energy()` is corrected. The legacy stale value is preserved as
+  an explicit divergence pin (`_D3_LEGACY_STALE_ENERGY =
+  -8.042477193189932e-23`) rather than silently dropped.
+- **Evidence:** focused gate `dolfinx-src-timezeeman-pytest` went from 28
+  passed to 32 passed (the stale-energy quirk pin was replaced by the D3
+  divergence pin plus 5 new tests: corrected analytic energy tracking across
+  interval updates, the field-invariance guard on both input contracts, a
+  switch-off energy guard, and an explicit analytic-energy assertion on the
+  continuous `TimeZeeman` path). Neighbours: `dolfinx-src-energies-pytest` 45
+  passed; `dolfinx-src-simulation-pytest` 37 passed.
+  `test_oracle_discrete_time_zeeman_sequence_matches_legacy` passes
+  unchanged -- the committed fixture `timezeeman_oracle.json` does NOT
+  numerically discriminate this defect (its correct energies are ~1e-37 J
+  against `atol=1e-18`), so the fix passes it unchanged; the real numerical
+  record of the legacy value is now the D3 divergence pin. The clean-tree
+  aggregate `dev/bin/verify-dolfinx-m5` on the committed worktree **exited 0
+  with all 32 steps green**: focused import gate 19 passed/3 skipped in
+  20.87s, timezeeman folded in at 32 passed, fast examples 14 passed/3
+  skipped in 207.38s, core smoke
+  `{"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+  0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+  2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}`, tracked-file
+  cleanliness guard silent (log `/tmp/finmag-p24-m5-clean.log`). This slice
+  did not rerun the FULL example lane (`FINMAG_EXAMPLE_FULL=1`, recorded
+  baseline 12 passed/5 failed) and makes no claim about it. [Claude Sonnet 5]
+- **Review:** APPROVE, nothing blocking. The reviewer independently
+  reproduced the multi-crossing and sign-flip energy tracking (rel err
+  ≤2e-14, energy correctly flips sign); the field bit-invariance (max|
+  difference| = 0.0 on both surfaces); the analytic energy values; that the
+  divergence pin hard-pins the real legacy value and that `E_now/E_legacy ==
+  2.0` is a robust structural fact (energy linear in H, fixture field doubles
+  t=0 -> 1e-9), not a coincidence; and that re-forming `self.E` costs ~7.7us
+  (~0.5% of an update), negligible. The only follow-up noted was docs
+  reconciliation, discharged by this same commit's companion documentation
+  update.
 
 ### [ ] P2.5 Correct hysteresis stage relaxation
 
@@ -354,3 +405,5 @@ later full-parity planning.
 [Codex GPT-5]
 
 [P2.1 updates: Claude Opus 4.8]
+
+[P2.4 updates: Claude Sonnet 5]

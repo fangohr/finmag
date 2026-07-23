@@ -6679,5 +6679,115 @@ D17 in =docs/superpowers/acceptance-register.md= records this as a
 deliberate divergence needing an owner decision: legacy computed a
 touching/overlapping macro-geometry demag by default; this port refuses
 =pitch <= extent= by name. Disposition: *pending owner decision*.
+** P2.4 discrete-time Zeeman energy correction (2026-07-23)
+
+Commit =ff906f11= (parent =cdde958b=) corrects =DiscreteTimeZeeman='s
+stale-energy defect under owner-approved acceptance register D3.
+
+*** Mechanism
+
+=DiscreteTimeZeeman.update()= previously refreshed its field on each interval
+crossing by rebinding =self.H= to a brand-new =Field= object, exactly
+mirroring legacy's own =self.H = Field(..., self.value, name='H_ext')= --
+*not* =self.set_value(...)=, which the base =TimeZeeman.update= uses and which
+also rebuilds the cached UFL energy form =self.E=. Because =self.E= was only
+ever built once, in =setup()=, against the *original* =H= =Function= object,
+=compute_energy()= silently kept returning the energy of the very first
+(setup-time) field value forever after the first interval update, even though
+=compute_field()=/=energy_density()= (which read =self.H='s current array
+directly) correctly reflected the updated field. Measured against the D3
+fixture (a 1x1x1 box, =unit_length=1e-9=, =m=(0.6, 0.8, 0)=, =Ms=8e5 A/m=,
+=H(0)=(0, 1e5, 0)=): =compute_energy()= froze permanently at
+=-8.042477193189932e-23= J -- 16.7% relative error at the first crossing,
+rising to 50% by =t=1ns=, and unbounded in general (100% wrong when
+=H(0)=0=, WRONG SIGN when =m.H(t)= flips sign relative to the setup-time
+field). Owner decision D3 (approved 2026-07-23) authorises the correction.
+
+*** The fix
+
+The interval refresh now routes through
+=self.set_value(self.field_function(t))= -- exactly as the base
+=TimeZeeman.update= does. =self.H= is written *in place* and =self.E= is
+re-formed against it. This changes no field value whatsoever; it only
+corrects =compute_energy()= to track the current field instead of the
+discarded setup-time one.
+
+*** Field-bit-invariance safety property
+
+The measured evidence that the fix is field-value-neutral: =compute_field()=/
+=average_field()= dof arrays are IDENTICAL (max|difference| = 0.0) between the
+old rebind path and the new =set_value= path, for both a constant-vector
+field contract and a nested spatially-varying callable contract. Dynamics,
+effective field and every =.ndt= trajectory are therefore provably unchanged
+by this slice; only =compute_energy()='s return value is corrected.
+
+*** Divergence pin and fixture non-discrimination
+
+The legacy stale value is preserved as an explicit divergence pin rather than
+silently dropped: =_D3_LEGACY_STALE_ENERGY = -8.042477193189932e-23= is
+hard-pinned by
+=test_discrete_time_zeeman_energy_diverges_from_legacy_stale_value=, which
+also asserts the field still agrees, the energy ratio =E_now/E_legacy= is
+exactly =2.0=, and equality with a fresh static =Zeeman=. The corrected
+physical value is separately asserted by
+=test_discrete_time_zeeman_energy_tracks_field_after_interval_update=.
+
+The committed oracle fixture =fixtures/timezeeman_oracle.json='s
+=discrete_time_zeeman= case does NOT numerically discriminate this
+correction: its correct energies are ~1e-37 J against an absolute tolerance of
+1e-18, so =test_oracle_discrete_time_zeeman_sequence_matches_legacy= passes
+*unchanged*, both before and after the fix. The real numerical record of the
+legacy defect is now the D3 divergence pin above, not the oracle fixture.
+
+*** Tests (strict TDD)
+
+The stale-energy quirk pin =test_discrete_time_zeeman_energy_staleness_quirk=
+is replaced by the D3 divergence pin
+(=test_discrete_time_zeeman_energy_diverges_from_legacy_stale_value=) plus
+five new tests: the corrected-behaviour analytic-energy test above; a
+field-invariance guard
+(=test_discrete_time_zeeman_d3_fix_changes_no_field_value=) covering both
+input contracts; a switch-off energy guard
+(=test_discrete_time_zeeman_energy_is_zero_after_switch_off=, asserting
+=== 0.0=); and an explicit analytic energy assertion on the continuous
+=TimeZeeman= path
+(=test_time_dependent_field_update_energy_tracks_analytic=).
+
+*** Evidence
+
+Focused gate =dolfinx-src-timezeeman-pytest= went from =28 passed= before the
+fix to =32 passed= after (one staleness test replaced by the D3 divergence
+pin plus five new). Neighbours: =dolfinx-src-energies-pytest= =45 passed=;
+=dolfinx-src-simulation-pytest= =37 passed=.
+
+The clean-tree aggregate =dev/bin/verify-dolfinx-m5=, run on the committed
+worktree, **exited =0= with all =32= steps green**: focused import gate =19
+passed, 3 skipped in 20.87s=; timezeeman folded in at =32 passed=; fast
+examples =14 passed, 3 skipped in 207.38s=; core smoke
+={"integrator_backend": "sundials", "m_average": [0.9802592114540473,
+0.17662000907877634, 0.08889756808631089], "max_unit_norm_deviation":
+2.763425760221594e-06, "t": 1e-12, "t_target": 1e-12}=; tracked-file
+cleanliness guard silent. Log: =/tmp/finmag-p24-m5-clean.log=. This slice did
+NOT rerun the FULL example lane (=FINMAG_EXAMPLE_FULL=1=, recorded baseline
+=12 passed, 5 failed=) and makes no claim about it.
+
+*** Independent review
+
+Verdict: APPROVE, nothing blocking. The reviewer independently reproduced:
+the multi-crossing and sign-flip energy tracking (relative error <= 2e-14,
+energy correctly flips sign); the field bit-invariance (max|difference| = 0.0
+on both surfaces); the analytic energy values; that the divergence pin
+hard-pins the real legacy value and that =E_now/E_legacy == 2.0= is a robust
+structural fact (energy linear in H, fixture field doubles =t=0 -> 1e-9=), not
+a coincidence; and that re-forming =self.E= costs ~7.7us (~0.5% of an
+update), negligible. The only follow-up was docs reconciliation across
+=acceptance-register.md=, =capability-status.md=, the SR1 plan,
+=master-pixi-parity-manifest.md=, this file and =porting_map.md= -- discharged
+by this same commit's companion documentation commit.
+
+*** Scope note
+
+D4 (hysteresis/=hysteresis_loop= no-re-relax defect) is untouched by this
+slice; it remains approved but unimplemented as SR1 P2.5.
 
 [Claude Sonnet 5]

@@ -90,7 +90,7 @@ N = gratuitous (UNNECESSARY).
 | `Zeeman` | `(H, name='Zeeman', **kwargs)` | identical | NO-CHANGE | Y | — |
 | `DipolarField` | `(pos, m, magnitude=None, name='DipolarField')` | identical | NO-CHANGE | Y | — |
 | `TimeZeeman` | `(field_expression, t_off=None, name='TimeZeeman')` | identical (signature); `field_expression` now a Python callable, not a dolfin `Expression` | FORCED | Y | — (Expression mechanism removed by DOLFINx; documented Task 15) |
-| `DiscreteTimeZeeman` | `(field_expression, dt_update=None, t_off=None, name='DiscreteTimeZeeman')` | identical | NO-CHANGE | Y | — (stale-energy legacy bug preserved, register #3) |
+| `DiscreteTimeZeeman` | `(field_expression, dt_update=None, t_off=None, name='DiscreteTimeZeeman')` | identical | NO-CHANGE | Y | — (stale-energy legacy bug CORRECTED under register D3 in `ff906f11`, SR1 P2.4; signature itself unchanged) |
 | `TimeZeemanPython` | `(df_expression, time_fun, t_off=None, name='TimeZeemanPython')` | `(H0_value, time_fun, t_off=None, name='TimeZeemanPython')` | FORCED | Y | — (1st param renamed to reflect the forced Expression→value contract; documented transition-notes.org:4368) |
 | `OscillatingZeeman` | `(H0, freq, phase=0, t_off=None, name='OscillatingZeeman')` | identical | NO-CHANGE | Y | — |
 | `ThinFilmDemag` | `(direction='z', field_strength=None, in_jacobian=False, name='ThinFilmDemag')` | identical | NO-CHANGE | Y | — |
