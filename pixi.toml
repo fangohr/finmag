@@ -77,6 +77,7 @@ python-gmsh = "*"
 # is dolfin-free and lazily imported, so `import finmag` never pulls Cython.
 # [Claude Opus 4.8]
 cython = "*"
+h5py = ">=3.16.0,<4"
 
 [feature.dolfinx.activation.env]
 # The DOLFINx port lane can now compile an array-only native surface
@@ -149,7 +150,7 @@ dolfinx-src-import-pythonpath-fallback = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=s
 # `test_thin_film_demag_dolfinx.py` into `dolfinx-src-energies-pytest`).
 # [Claude Opus 4.8]
 dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py src/finmag/tests/test_plot_helpers_dolfinx.py src/finmag/tests/test_util_helpers_dolfinx.py"
-dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_field_dolfinx.py"
+dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_field_dolfinx.py src/finmag/tests/test_field_hdf5_dolfinx.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
 dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies_dolfinx.py src/finmag/tests/test_thin_film_demag_dolfinx.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
 dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.energies_dolfinx_mpi_probe"

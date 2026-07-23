@@ -516,12 +516,24 @@ def test_save_field_to_vtk_xdmf(tmpdir):
     assert os.path.exists(xdmf)
 
 
-def test_vtk_readback_unavailable_by_name():
-    """VTK/XDMF is write-only; legacy dolfinh5tools read-back fails by name."""
+def test_hdf5_field_readback_roundtrips(tmpdir):
+    """Field HDF5 read-back is restored (SR1 P4-hdf5): the single-file,
+    coordinate-aware ``.h5`` checkpoint written by ``Field.save_hdf5`` reloads
+    exactly via ``Field.from_hdf5`` -- replacing the legacy dolfinh5tools path.
+
+    (XDMF/VTK function read-back remains genuinely unavailable -- DOLFINx 0.10's
+    ``XDMFFile``/``vtkhdf`` expose no ``read_function`` -- so the coordinate-aware
+    HDF5 checkpoint is the supported Field round-trip; see
+    test_field_hdf5_dolfinx.py for its dedicated coverage.)
+    """
     sim = _make_sim()
-    sim.set_m((1.0, 0.0, 0.0))
-    with pytest.raises(NotImplementedError, match="HDF5|dolfinh5tools"):
-        sim.m_field.save_hdf5("x.h5")
+    sim.set_m(lambda pt: (np.sin(pt[0]), np.cos(pt[1]), 0.0))
+    path = str(tmpdir.join("m_field.h5"))
+    sim.m_field.save_hdf5(path)
+    sim.m_field.close_hdf5()
+
+    reloaded = Field.from_hdf5(sim.m_field.functionspace, path)
+    assert reloaded.allclose(sim.m_field)
 
 
 # ==========================================================================

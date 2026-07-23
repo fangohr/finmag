@@ -12,6 +12,22 @@ from mpi4py import MPI
 from ufl import dx
 
 
+# On-disk format tag for the single-file HDF5 Field checkpoint written by
+# ``Field.save_hdf5`` / read by ``Field.from_hdf5``. Bumped only on an
+# incompatible layout change.
+FIELD_HDF5_FORMAT = "finmag-field-hdf5"
+FIELD_HDF5_FORMAT_VERSION = 1
+
+# Coordinate matching tolerance (decimals) used when remapping a stored
+# coordinate/value table onto a target function space, matching the restart v2
+# coordinate-aware convention (``sim_helpers._COORD_DECIMALS``).
+_FIELD_HDF5_COORD_DECIMALS = 12
+
+
+def _ensure_h5_suffix(filename):
+    return filename if filename.endswith(".h5") else filename + ".h5"
+
+
 def associated_scalar_space(functionspace):
     """Return the exact scalar element underlying a scalar/blocked space."""
     element = functionspace.ufl_element()
@@ -506,15 +522,150 @@ class Field:
             del self._xdmf_file
             del self._xdmf_filename
 
-    def save_hdf5(self, *args, **kwargs):
-        raise NotImplementedError(
-            "legacy dolfinh5tools HDF5 is unavailable; use save_xdmf for output"
-        )
+    def save_hdf5(self, filename, t=None, unit_length=None):
+        """Write this Field to a single, self-describing HDF5 checkpoint.
+
+        The legacy ``Field.save_hdf5`` used the external ``dolfinh5tools``
+        package to write a ``.h5`` (mesh + a function timeseries) plus a
+        ``.json`` sidecar listing the saved times. That package is not part of
+        the DOLFINx port. This replacement writes ONE ``.h5`` file (no sidecar)
+        holding a single snapshot in the port's coordinate-aware format -- the
+        same philosophy as the ``.npy`` restart archive
+        (``sim_helpers.save_restart_data``): store the owned mesh-vertex
+        coordinates alongside the coordinate-ordered nodal values, so a load
+        remaps by physical coordinate and is robust to FEM/vertex reordering
+        (never a raw dof-index copy). This is a serial-only, single-snapshot
+        checkpoint -- not the legacy dolfinh5tools timeseries.
+
+        On-disk layout (``h5py``), read back by :meth:`from_hdf5`:
+
+        - root attrs:
+            - ``format`` = ``"finmag-field-hdf5"``;
+            - ``format_version`` = ``1``;
+            - ``value_dim`` : number of components per node (1 for scalar);
+            - ``is_scalar`` : bool;
+            - ``name`` : the Field's name (``""`` if unset);
+            - ``t`` : the snapshot time, only if ``t`` was supplied;
+            - ``unit_length`` : mesh unit length, only if supplied;
+        - dataset ``coordinates`` : owned mesh-vertex coordinates ``(n, gdim)``;
+        - dataset ``values`` : coordinate-ordered nodal values ``(n, value_dim)``
+          matching ``coordinates`` row-for-row.
+
+        Arguments:
+            filename : output path; a missing ``.h5`` suffix is appended.
+            t : optional snapshot time, recorded as an attribute for reference.
+            unit_length : optional mesh unit length, recorded as an attribute.
+        """
+        import h5py
+
+        filename = _ensure_h5_suffix(filename)
+        value_dim = self.value_dim()
+        coordinates, values = self.coords_and_values()
+        coordinates = np.asarray(coordinates, dtype=np.float64)
+        values = np.asarray(values, dtype=np.float64).reshape((-1, value_dim))
+
+        with h5py.File(filename, "w") as h5file:
+            h5file.attrs["format"] = FIELD_HDF5_FORMAT
+            h5file.attrs["format_version"] = FIELD_HDF5_FORMAT_VERSION
+            h5file.attrs["value_dim"] = value_dim
+            h5file.attrs["is_scalar"] = self.is_scalar_field()
+            h5file.attrs["name"] = self.name if self.name is not None else ""
+            if t is not None:
+                h5file.attrs["t"] = float(t)
+            if unit_length is not None:
+                h5file.attrs["unit_length"] = float(unit_length)
+            h5file.create_dataset("coordinates", data=coordinates)
+            h5file.create_dataset("values", data=values)
+        return self
 
     def close_hdf5(self):
-        raise NotImplementedError(
-            "legacy dolfinh5tools HDF5 is unavailable in the DOLFINx Field port"
+        """No-op: :meth:`save_hdf5` writes a complete file per call.
+
+        The legacy API kept a ``dolfinh5tools`` writer open across a timeseries
+        and required an explicit close. The single-file checkpoint written by
+        :meth:`save_hdf5` opens and closes the file on each call, so there is no
+        handle to release; this method exists only for legacy call-site
+        compatibility.
+        """
+        return None
+
+    @classmethod
+    def from_hdf5(cls, functionspace, filename):
+        """Rebuild a Field on ``functionspace`` from a :meth:`save_hdf5` file.
+
+        The stored coordinate/value table is remapped onto the target space's
+        owned vertices by physical coordinate (rounded to
+        ``_FIELD_HDF5_COORD_DECIMALS`` decimals), mirroring
+        ``sim_helpers.apply_restart_magnetisation``. A one-to-one coordinate
+        match is required: any target vertex missing from the file, or a
+        component-count / coordinate-shape mismatch, is a loud ``ValueError``
+        (never a silent misassignment).
+        """
+        import h5py
+
+        filename = _ensure_h5_suffix(filename)
+        with h5py.File(filename, "r") as h5file:
+            fmt = h5file.attrs.get("format")
+            if fmt != FIELD_HDF5_FORMAT:
+                raise ValueError(
+                    "'{}' is not a finmag Field HDF5 checkpoint (format={!r}, "
+                    "expected {!r})".format(filename, fmt, FIELD_HDF5_FORMAT)
+                )
+            version = int(h5file.attrs.get("format_version", -1))
+            if version != FIELD_HDF5_FORMAT_VERSION:
+                raise ValueError(
+                    "'{}' has HDF5 format_version={!r}, but this port only "
+                    "supports version {}".format(
+                        filename, version, FIELD_HDF5_FORMAT_VERSION
+                    )
+                )
+            stored_value_dim = int(h5file.attrs["value_dim"])
+            name = h5file.attrs.get("name", "")
+            stored_coords = np.asarray(h5file["coordinates"], dtype=np.float64)
+            stored_values = np.asarray(h5file["values"], dtype=np.float64)
+
+        name = name or None
+        field = cls(functionspace, name=name)
+        if field.value_dim() != stored_value_dim:
+            raise ValueError(
+                "checkpoint value_dim {} does not match the target function "
+                "space value_dim {}".format(stored_value_dim, field.value_dim())
+            )
+        stored_values = stored_values.reshape((-1, stored_value_dim))
+
+        stored_coords_r = np.round(stored_coords, _FIELD_HDF5_COORD_DECIMALS)
+        target_coords, _ = field.coords_and_values()
+        target_coords_r = np.round(
+            np.asarray(target_coords, dtype=np.float64),
+            _FIELD_HDF5_COORD_DECIMALS,
         )
+
+        if stored_coords_r.shape != target_coords_r.shape:
+            raise ValueError(
+                "HDF5 mesh mismatch: stored {} coordinates but the target field "
+                "has {}".format(stored_coords_r.shape, target_coords_r.shape)
+            )
+
+        lookup = {
+            tuple(coord): index
+            for index, coord in enumerate(stored_coords_r)
+        }
+        if len(lookup) != stored_coords_r.shape[0]:
+            raise ValueError("HDF5 checkpoint has duplicate vertex coordinates")
+
+        remapped = np.empty_like(stored_values)
+        for target_index, coord in enumerate(target_coords_r):
+            try:
+                source_index = lookup[tuple(coord)]
+            except KeyError:
+                raise ValueError(
+                    "HDF5 mesh mismatch: target vertex {} is absent from the "
+                    "checkpoint".format(coord.tolist())
+                )
+            remapped[target_index] = stored_values[source_index]
+
+        field.set_with_ordered_numpy_array_xyz(remapped.reshape(-1))
+        return field
 
     def probe(self, point):
         """Evaluate the field at a physical mesh-coordinate point.
