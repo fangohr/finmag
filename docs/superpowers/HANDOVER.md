@@ -224,13 +224,43 @@ combined documentation commit, and integrated on `dolfinx-parity`:
   `transition-notes.org`'s "Priority 3 Field completeness and varying cubic
   axes" section and `dev/dolfinx/porting_map.md` for full evidence.
 
-The recommended next work is **Priority 4** (selected I/O and convenience
-surface: HDF5 readback, region/submesh output, magnetisation initialisers,
-`probe_field*`, `M`/`M_average` compatibility, `length_scales`/`mesh_info`,
-logging/instance/shutdown helpers, and backend-neutral plotting) and the
-**SR1-V1 FULL-lane** diagnosis, which still shows its recorded baseline
-(12 passed, 5 failed) and has not been rerun or reclassified by any P3 slice.
-The detailed, superseding sequence is in
+**All of Priority 4 (selected I/O and convenience surface) is now also
+complete** (2026-07-24), eight reviewed source/test slices plus this combined
+documentation commit, integrated on `dolfinx-parity` (`1a9df5eb`):
+
+- P4-probe `Simulation.probe_field*` (`584820a0`); P4-viz backend-neutral
+  matplotlib `plot_helpers` importable (`5be9f5e8`, `surface_3d` has a
+  pre-existing mpl-3.11 break, importable-not-executable); P4-M correct-physics
+  `LLG.M`/`M_average` in A/m (`67e5ebe1`, register **D20**); P4-mesh
+  `mesh_info`/`length_scales` diagnostics (`868f664d`); P4-init vortex
+  initialiser family (`8de6927b`, skyrmion family unvalidated/call-time-broken);
+  P4-helpers logging helpers extracted dolfin-free (`4acd9a81`,
+  `shutdown`/instance are Simulation methods, deferred); P4-region
+  `save_m_in_region` per-region `.ndt` column (`123df146`, register **D21**);
+  P4-hdf5 `Field.save_hdf5`/`from_hdf5` single-`.h5` round-trip (`1a9df5eb`).
+- **`h5py>=3.16.0,<4` was added to `[feature.dolfinx.dependencies]`** (owner
+  decision) for the HDF5 round-trip — the first new runtime dependency of the
+  dolfinx port lane; `pixi.lock` was regenerated and `import finmag` does not
+  eagerly import it. Two new register rows are **pending owner decision**:
+  **D20** (corrected `M`/`M_average` physics vs legacy's unit bug) and **D21**
+  (`save_m_in_region` restores intent with a region-id calling convention, since
+  legacy's version was itself non-functional).
+- Deferred by evidence (not owner-refused): mayavi `quiver`, paraview/X
+  `visualization.py`, the optional PyVista adapter (pyvista absent); and the
+  Simulation instance-lifecycle/`shutdown` methods and the skyrmion initialiser
+  family (a call-time 2D/3D-coordinate gap) — each a future slice.
+- Final clean-tree `dev/bin/verify-dolfinx-m5` over the integrated Priority-4
+  tip `1a9df5eb` (with h5py) exited 0 with all 32 steps green (field 42,
+  simulation 61, meshes 53, llg 23, import 28, varparams 35, fast examples
+  14 passed/3 skipped in 276.40s, core smoke `integrator_backend: sundials` at
+  `t=1e-12`; log `/tmp/finmag-p4-final-m5.log`).
+
+The recommended next work is **Priority 5** (mesh and external-reference
+validation: the Netgen necessity probe and restoring OOMMF/Nmag/Magpar
+comparisons from checked-in data) and the **SR1-V1 FULL-lane** diagnosis, which
+still shows its recorded baseline (12 passed, 5 failed) and has not been rerun
+or reclassified by any Priority 2-4 slice. All of Priority 1-4 is complete. The
+detailed, superseding sequence is in
 `plans/2026-07-23-sr1-prioritised-plan.md`.
 
 [Codex GPT-5]

@@ -1301,3 +1301,16 @@ Before editing the matching module in `src/finmag`, check that:
   P3.3/P3.4 (legacy-parity restorations, no deviation) or P3.5 (greenfield,
   no legacy behaviour to diverge from). The PBC deferral (P3.1/P3.2, register
   D19, `3d9c9be6`) is referenced, not re-documented, here. [Claude Sonnet 5]
+- SR1 Priority 4 (selected I/O and convenience surface, complete 2026-07-24,
+  integrated at `1a9df5eb`): eight reviewed slices -- P4-probe `probe_field*`
+  (`584820a0`), P4-viz `plot_helpers` importable (`5be9f5e8`), P4-M correct
+  `LLG.M`/`M_average` (`67e5ebe1`, D20), P4-mesh `mesh_info`/`length_scales`
+  (`868f664d`), P4-init vortex initialisers (`8de6927b`), P4-helpers logging
+  helpers (`4acd9a81`), P4-region `save_m_in_region` ndt column (`123df146`,
+  D21), P4-hdf5 single-`.h5` round-trip (`eca2551b`/`1a9df5eb`). h5py added to
+  the dolfinx env (first new runtime dependency; `pixi.lock` regenerated, lazily
+  imported). Deferred: mayavi `quiver`, paraview `visualization.py`, PyVista
+  adapter, skyrmion initialiser family, Simulation `shutdown`/instance methods.
+  Combined aggregate `/tmp/finmag-p4-final-m5.log` exit 0, 32/32 green. See
+  `transition-notes.org` "Priority 4 selected I/O and convenience surface".
+  [Claude Opus 4.8]

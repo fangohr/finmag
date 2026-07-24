@@ -542,17 +542,37 @@ and the PBC pair (P3.1/P3.2) deferred past SR1 under register D19.
 
 ## Priority 4 — Selected I/O and convenience surface
 
-Implement as separate reviewable slices:
+**COMPLETE (2026-07-24).** All eight slices implemented as separate reviewed
+commits, integrated on `dolfinx-parity` (`1a9df5eb`); combined clean-tree
+`dev/bin/verify-dolfinx-m5` exited 0 with all 32 steps green on the
+h5py-equipped tip (`/tmp/finmag-p4-final-m5.log`). Owner scope decisions:
+h5py added for the single-`.h5` round-trip; P4-init/P4-region/P4-helpers were
+NOT deferred (built). Deferred by evidence (dependency absent / dead in legacy):
+mayavi `quiver`, paraview/X `visualization.py`, the optional PyVista adapter.
 
-1. HDF5 readback/round-trip with a DOLFINx-native documented format.
-2. Region/submesh field output.
-3. Magnetisation initialisers, one formula family per slice.
-4. `Simulation.probe_field*`.
-5. LLG `M`/`M_average` compatibility.
-6. `length_scales` and `mesh_info`.
-7. logging/instance/shutdown helpers needed by selected scripts.
-8. backend-neutral NumPy/Matplotlib helpers, followed by an optional PyVista
-   adapter with headless tests. Do not reproduce the mencoder wrapper.
+1. [x] HDF5 readback/round-trip — `Field.save_hdf5`/`from_hdf5` single
+   self-describing `.h5` via h5py (added to the dolfinx env), coordinate-aware
+   (restart-v2/D12/D14 consistency). `eca2551b`/`1a9df5eb`, field gate ->42.
+2. [x] Region/submesh field output — `save_m_in_region` restored as a per-region
+   `m_average` `.ndt` column (the faithful legacy contract; legacy field/submesh
+   paths were dead). Divergence D21. `123df146`, varparams 33->35. Submesh field
+   output stays deferred.
+3. [x] Magnetisation initialisers — vortex family (`magnetisation_patterns`)
+   validated. `8de6927b`, simulation 55->61. Skyrmion/helix/target families
+   import but are unvalidated (skyrmion fails at call time — future slice).
+4. [x] `Simulation.probe_field*` — restored via ported `evaluate_at_point`;
+   `region!=None` deferred. `584820a0`, simulation 49->55.
+5. [x] LLG `M`/`M_average` — correct-physics (A/m), diverging from the legacy
+   `RuntimeError`/unit bug. Divergence D20. `67e5ebe1`, llg 16->23.
+6. [x] `length_scales` and `mesh_info` — DOLFINx-native diagnostics.
+   `868f664d`, meshes 49->53.
+7. [x] logging helpers extracted to `logging_helpers` (`start_logging_to_file`
+   et al.). `shutdown`/instance-tracking are `Simulation` methods, not helpers
+   — porting them is a future sim.py slice. `4acd9a81`, import 23->28.
+8. [x] backend-neutral matplotlib helpers (`plot_helpers`) made importable
+   dolfin-free. `surface_3d` has a pre-existing mpl-3.11 API break (importable,
+   not executable). PyVista adapter deferred (pyvista absent); mencoder not
+   reproduced. `5be9f5e8`, folded into the import gate.
 
 ## Priority 5 — Mesh and external-reference validation
 

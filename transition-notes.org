@@ -7409,3 +7409,49 @@ re-documented, here. Priority 4 (I/O and convenience surface) is the
 recommended next work; see the updated =HANDOVER.md=.
 
 [Claude Sonnet 5]
+
+** Priority 4 selected I/O and convenience surface (2026-07-24)
+
+All eight Priority-4 slices are complete and integrated on =dolfinx-parity=
+(=1a9df5eb=); the combined clean-tree =dev/bin/verify-dolfinx-m5= on the
+h5py-equipped tip exited =0= with all =32= steps green (field =42=, simulation
+=61=, meshes =53=, llg =23=, import =28=, varparams =35=, fast examples =14
+passed, 3 skipped= in =276.40s=; log =/tmp/finmag-p4-final-m5.log=). Each slice
+was a reviewed source/test commit; this is the combined documentation commit.
+
+- *P4-probe* (=584820a0=): =Simulation.probe_field=/=probe_field_along_line=
+  restored as masked-array point evaluation in mesh coordinates over the ported
+  =evaluate_at_point=; =region!=None= deferred by name. simulation =49->55=.
+- *P4-viz* (=5be9f5e8=): =finmag.util.plot_helpers= made importable dolfin-free
+  (narrow imports replace =from .helpers import *=); matplotlib helpers render
+  headlessly. KNOWN GAP: =surface_3d= has a pre-existing matplotlib-3.11 API
+  break (=fig.gca(projection=...)=) -- importable, not executable. =quiver=
+  (mayavi), =visualization.py= (paraview/X) and a PyVista adapter stay deferred.
+- *P4-M* (=67e5ebe1=, register *D20*): correct-physics =LLG.M= (=Ms*m=, A/m) and
+  =M_average= (Ms-weighted volume average), diverging from legacy's =RuntimeError=
+  and =volume_Ms == volume= unit bug; zero legacy consumers. llg =16->23=.
+- *P4-mesh* (=868f664d=): =mesh_info=/=mesh_size=/=length_scales=/=print_mesh_info=
+  on DOLFINx-native topology/geometry; =length_scales= takes explicit A/Ms/K1/D
+  (mesh layer cannot import the sim layer). meshes =49->53=.
+- *P4-init* (=8de6927b=): =magnetisation_patterns= vortex family validated to
+  machine precision. Other families import but =initialise_skyrmions= fails at
+  call time (2D/3D coords) -- future skyrmion slice. simulation =55->61=.
+- *P4-helpers* (=4acd9a81=): logging helpers (=start_logging_to_file= et al.)
+  extracted into =logging_helpers=, re-exported from =helpers.py=. =shutdown=/
+  instance-tracking are =Simulation= methods, not helpers -- future sim.py slice.
+  import =23->28=.
+- *P4-region* (=123df146=, register *D21*): =save_m_in_region= registers a
+  per-region =m_average= =.ndt= column (the faithful contract; legacy's version
+  was itself non-functional -- =AttributeError= per the shipped notebook -- and
+  the region field/submesh paths were dead behind =mark_regions=). Region-id
+  calling convention. varparams =33->35=.
+- *P4-hdf5* (=1a9df5eb=): =Field.save_hdf5=/=from_hdf5= single self-describing
+  =.h5= round-trip via *h5py* (added to =[feature.dolfinx.dependencies]=, the
+  first new runtime dependency of the port lane; =pixi.lock= regenerated, not
+  eagerly imported). Coordinate-aware, mirroring restart v2 (D12/D14). field
+  =->42=. XDMF/VTK function readback stays genuinely unavailable (DOLFINx 0.10).
+
+Owner scope decisions this priority: build P4-init/P4-region/P4-helpers (not
+defer); add h5py for the single-=.h5= round-trip. D20 and D21 are pending owner
+decision. Next: Priority 5, plus the still-open SR1-V1 FULL lane (baseline 12
+passed/5 failed, untouched). [Claude Opus 4.8]
