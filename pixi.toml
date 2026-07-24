@@ -270,7 +270,7 @@ dolfinx-src-io-utils-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src
 # (probe-at-saved-coords / m x H / analytic bounds), never by raw node order,
 # so they are immune to the M8 Netgen mesh-drift that retired the legacy
 # node-order comparisons. No live external program is invoked. [Claude Opus 4.8]
-dolfinx-src-comparison-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/comparison/test_magpar_io_dolfinx.py src/finmag/tests/comparison/demag/test_demag_field_dolfinx.py src/finmag/tests/comparison/exchange/test_exchange_compare_magpar_dolfinx.py"
+dolfinx-src-comparison-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/comparison/test_magpar_io_dolfinx.py src/finmag/tests/comparison/demag/test_demag_field_dolfinx.py src/finmag/tests/comparison/exchange/test_exchange_compare_magpar_dolfinx.py src/finmag/tests/comparison/exchange/test_exchange_field_nmag_dolfinx.py src/finmag/tests/nmag/exchange_1d/test_exchange_1d_dolfinx.py src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy_dolfinx.py"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"
