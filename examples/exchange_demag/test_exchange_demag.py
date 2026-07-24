@@ -71,6 +71,16 @@ unit_length = 1e-9
 mesh = from_geofile(os.path.join(MODULE_DIR, "bar30_30_100.geo"))
 
 
+def _oommf_axis_coords_nm():
+    """OOMMF central-axis z coordinates in nm and a mask of the samples that
+    lie inside the [0, 100] nm bar (the two OOMMF edge cell-centres at -1 nm
+    and 101 nm are outside and must be clipped before point evaluation)."""
+    z_nm = np.genfromtxt(
+        os.path.join(MODULE_DIR, "oommf_coords_z_axis.txt")) * 1e9
+    in_domain = (z_nm >= 0.0) & (z_nm <= 100.0)
+    return z_nm, in_domain
+
+
 def run_finmag():
     """Run the finmag simulation and store data in averages.txt / energies.txt."""
     sim = Sim(mesh, Ms, unit_length=unit_length)
@@ -112,6 +122,24 @@ def run_finmag():
                     np.array(finmag_exch))
             np.save(os.path.join(MODULE_DIR, "finmag_demag_density.npy"),
                     np.array(finmag_demag))
+
+            # SR1 P5.2 (slice 1): also sample the exchange/demag energy density
+            # at the checked-in OOMMF z coordinates (a different grid: 50
+            # cell-centres from -1 nm to 101 nm), so the OOMMF reference can be
+            # asserted, not merely plotted. The two out-of-domain samples
+            # (z = -1 nm and z = 101 nm, OOMMF edge cells) are clipped before
+            # point evaluation; the OOMMF reference arrays are masked identically
+            # in the test. Sampling at OOMMF's own coordinates (not our integer
+            # nm grid) keeps the comparison coordinate-based. [Claude Opus 4.8]
+            oommf_z_nm, in_domain = _oommf_axis_coords_nm()
+            oe, od = [], []
+            for z in oommf_z_nm[in_domain]:
+                oe.append(evaluate_at_point(exch_energy, [15, 15, float(z)]))
+                od.append(evaluate_at_point(demag_energy, [15, 15, float(z)]))
+            np.save(os.path.join(MODULE_DIR, "finmag_exch_density_oommf.npy"),
+                    np.array(oe))
+            np.save(os.path.join(MODULE_DIR, "finmag_demag_density_oommf.npy"),
+                    np.array(od))
 
     fh.close()
     fe.close()
@@ -221,6 +249,63 @@ def test_compare_energy_density():
         "Demag energy density, max relative error from nmag = {} is larger " \
         "than tolerance (= {})".format(max(rel_error_demag_nmag), TOL_DEMAG)
     print("test_compare_energy_density OK")
+
+
+def test_compare_energy_density_oommf():
+    """Assert the checked-in OOMMF exchange/demag energy-density reference
+    (SR1 P5.2, slice 1). The same counter==10 state is sampled at OOMMF's own
+    central-axis coordinates (clipped to the [0,100] nm bar), so this is a
+    coordinate-based comparison against external OOMMF data -- no live OOMMF
+    run (register M14). Mirrors the nmag density metric above.
+    """
+    needed = [
+        "finmag_exch_density_oommf.npy",
+        "finmag_demag_density_oommf.npy",
+    ]
+    stale = any(
+        not os.path.isfile(os.path.join(MODULE_DIR, f))
+        or (os.path.getctime(os.path.join(MODULE_DIR, f))
+            < os.path.getctime(os.path.abspath(__file__)))
+        for f in needed
+    )
+    if stale:
+        run_finmag()
+
+    finmag_exch = np.load(
+        os.path.join(MODULE_DIR, "finmag_exch_density_oommf.npy"))
+    finmag_demag = np.load(
+        os.path.join(MODULE_DIR, "finmag_demag_density_oommf.npy"))
+
+    _, in_domain = _oommf_axis_coords_nm()
+    oommf_exch = np.genfromtxt(
+        os.path.join(MODULE_DIR, "oommf_exch_Edensity.txt"))[in_domain]
+    oommf_demag = np.genfromtxt(
+        os.path.join(MODULE_DIR, "oommf_demag_Edensity.txt"))[in_domain]
+
+    assert finmag_exch.shape == oommf_exch.shape
+    assert finmag_demag.shape == oommf_demag.shape
+
+    rel_error_exch = np.abs(finmag_exch - oommf_exch) / np.linalg.norm(oommf_exch)
+    rel_error_demag = np.abs(finmag_demag - oommf_demag) / np.linalg.norm(oommf_demag)
+    print("Exchange energy density, max relative error from oommf:",
+          max(rel_error_exch))
+    print("Demag energy density, max relative error from oommf:",
+          max(rel_error_demag))
+    # Measured cross-method agreement (finmag Gmsh tet mesh vs OOMMF's 2 nm
+    # finite-difference grid): exchange max 3.95e-2 (at z=84 nm), mean 1.05e-2;
+    # demag max 3.19e-2 (at z=97 nm), mean 7.26e-3. The max sits toward the bar
+    # end where the two discretisations differ most; it is a genuine
+    # independent-code comparison, not a fit. Pinned with headroom above the
+    # measured max.
+    TOL_EXCH_OOMMF = 5e-2
+    TOL_DEMAG_OOMMF = 4e-2
+    assert max(rel_error_exch) < TOL_EXCH_OOMMF, \
+        "Exchange energy density, max relative error from oommf = {} is " \
+        "larger than tolerance (= {})".format(max(rel_error_exch), TOL_EXCH_OOMMF)
+    assert max(rel_error_demag) < TOL_DEMAG_OOMMF, \
+        "Demag energy density, max relative error from oommf = {} is larger " \
+        "than tolerance (= {})".format(max(rel_error_demag), TOL_DEMAG_OOMMF)
+    print("test_compare_energy_density_oommf OK")
 
 
 # --------------------------------------------------------------------------
