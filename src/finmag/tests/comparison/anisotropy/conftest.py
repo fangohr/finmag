@@ -1,10 +1,15 @@
 import os
 import numpy as np
-import dolfin as df
+# NOTE (SR1 P5.2): ``dolfin`` and ``finmag.util.helpers`` (which imports dolfin
+# at module scope) are imported lazily inside the fixtures/helpers that actually
+# need them, so this conftest module is importable in the DOLFINx environment
+# too. The legacy dolfin-based fixtures (``setup``/``setup_cubic``) still work
+# unchanged in the legacy oracle environment. Without this, pytest could not
+# even collect the dolfin-free ``test_anis_magpar_dolfinx.py`` sibling that
+# lives in this directory. [Claude Opus 4.8]
 from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.energies import UniaxialAnisotropy, CubicAnisotropy
-from finmag.util.helpers import sphinx_sci as s
 import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,6 +41,7 @@ def m_gen(r):
 
 
 def setup(K2=K2):
+    import dolfin as df  # lazy: legacy-oracle-env fixture only
     print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(list(zip(* mesh.coordinates())))
@@ -56,6 +62,7 @@ def setup(K2=K2):
 
 
 def setup_cubic():
+    import dolfin as df  # lazy: legacy-oracle-env fixture only
     print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
     coords = np.array(list(zip(* mesh.coordinates())))
@@ -106,6 +113,7 @@ def write_table(finmag):
 
 
 def table_entry(name, tol, rel_diff):
+    from finmag.util.helpers import sphinx_sci as s  # lazy: pulls legacy dolfin
     return table_entries.format(
         name, s(tol, 0),
         s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
