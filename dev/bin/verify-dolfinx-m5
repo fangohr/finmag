@@ -210,3 +210,6 @@ pixi run -e dolfinx dolfinx-src-examples-pytest
 
 echo "==> pixi run -e dolfinx dolfinx-src-io-utils-pytest"
 pixi run -e dolfinx dolfinx-src-io-utils-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-comparison-pytest"
+pixi run -e dolfinx dolfinx-src-comparison-pytest
