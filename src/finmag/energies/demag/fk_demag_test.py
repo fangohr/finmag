@@ -84,10 +84,10 @@ def test_thin_film_argument_saves_time_on_thin_film():
 
     saved_relative = (elapsed - elapsed_thin_film) / elapsed
     print("FKDemag thin film settings saved {:.1%} of time.".format(saved_relative))
-    # Exact wall-clock ordering is noisy in CI and in containers. Accept a
-    # small regression margin so the test still catches real slowdowns without
-    # failing on measurement jitter around parity. [Codex GPT-5.4]
-    assert saved_relative > -0.05
+    assert elapsed_thin_film < elapsed
+    # This was 20% initially, but in order to make tests more robust this
+    # value is reduced to 5%
+    assert saved_relative > 0.05
 
 
 def test_demag_energy_for_uniformly_magnetised_sphere():
