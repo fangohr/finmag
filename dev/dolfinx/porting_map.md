@@ -1314,3 +1314,51 @@ Before editing the matching module in `src/finmag`, check that:
   Combined aggregate `/tmp/finmag-p4-final-m5.log` exit 0, 32/32 green. See
   `transition-notes.org` "Priority 4 selected I/O and convenience surface".
   [Claude Opus 4.8]
+- SR1 Priority 5 (mesh and external-reference validation, complete 2026-07-25,
+  integrated at `48e611ad`): P5.1 Netgen necessity probe found no selected
+  test/geometry that Gmsh + `from_geofile` cannot represent or validate --
+  Netgen binary backend stays deferred, owner-ratified (register `M4a`/`M4b`).
+  P5.2 comparison data (`133a24ff`..`48e611ad`, 7 slices): new dolfin-free
+  `finmag.util.magpar_io` (`133a24ff`, P0); OOMMF energy-density reference in
+  `exchange_demag` (`de3ad11e`, slice 1); Magpar exchange-field comparison
+  (`cac0ecb5`, slice 2); analytic demag-sphere comparison (`b6689423`, slice
+  3a); Magpar demag & anisotropy comparisons (`fd17fbc1`, slices 3b/4); Nmag
+  1D exchange & anisotropy comparisons (`f4f755d5`, slices 5/6/7); comparison
+  gate wired into `dev/bin/verify-dolfinx-m5` (`48e611ad`). All restored
+  comparisons match by coordinate probe or physical invariant against the
+  checked-in reference data, immune to the `M8` mesh-regeneration node-drift
+  class; no live `nsim`/OOMMF/Magpar execution resurrected (`M1`/`M14`/`M15`
+  SR1 deferment stands). See `transition-notes.org` "Priority 5 mesh and
+  external-reference validation". [Claude Sonnet 5]
+- Minimal-diff test-conversion phase (complete 2026-07-25, range
+  `d9226bcb`..`dadf35ae`, 31 commits): every `*_dolfinx.py` test file reshaped
+  to read as a minimal diff of its master (`b5015c5a`) original -- bucket-A
+  literal transcription (1:1 master ancestor), bucket-B master->port
+  traceability-mapping headers (no 1:1 mapping), bucket-C "NO MASTER
+  ANCESTOR" headers (7 genuinely-new-under-DOLFINx files: `test_magpar_io`,
+  `test_deferred_surfaces`, `test_dw_fixed_energy`, `test_example`,
+  `test_field_hdf5`, `test_native_bem_arrays`, `test_ordering_contract`).
+  Exemplar (`2d8f4372`) then Waves 1-4 (5/12/10/1 commits). Restored dropped
+  coverage: `test_sim_ode` at `1e-9`, method-of-averaging, hysteresis D4
+  path, `get_interaction_list`, DMI unit-length invariance, three
+  variable-params cases, exchange PBC, Slonczewski nmag validation,
+  `test_regression_Ms_numpy_type`, `test_dipolar_field_class`. Independent
+  Opus review verdict: FAITHFUL (no silently-loosened tolerance, no gutted
+  xfail, no false restoration). Aggregate verifier `dev/bin/verify-dolfinx-m5`:
+  33/33 gates green (up from 32; the P5.2 comparison gate is the new one).
+  New parity-debt findings, fixes DEFERRED to a later slice (not made in this
+  test-only phase): treecode/PBC coincident-node BEM defect reproduced as
+  master's own strict-xfail (new evidence for existing register `D17`, no new
+  row -- `test_treecode_pbc_demag_dolfinx.py`); Magpar anisotropy comparison
+  loosened to `REL_TOLERANCE = 8e-2` with a flagged genuine
+  finmag-vs-Magpar discretisation disagreement needing a physics check
+  (`test_anis_magpar_dolfinx.py`, candidate new row); `Simulation.set_m`/
+  `LLG.set_m` silently accepts a NaN `m_init` instead of legacy's `ValueError`
+  guard (`test_set_m`, `xfail(strict=True)`, candidate new row);
+  `get_field_as_dolfin_function('m')(point)` raises `ValueError: UFL
+  conditions cannot be evaluated as bool in a Python context` (pre-existing
+  `sim.py` gap, out of scope for this test-only phase,
+  `test_restart_output_dolfinx.py`, candidate new row). See
+  `transition-notes.org` "Minimal-diff test-conversion phase" and
+  `docs/superpowers/acceptance-register.md` for the authoritative disposition
+  list. [Claude Sonnet 5]

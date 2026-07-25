@@ -255,11 +255,77 @@ documentation commit, integrated on `dolfinx-parity` (`1a9df5eb`):
   14 passed/3 skipped in 276.40s, core smoke `integrator_backend: sundials` at
   `t=1e-12`; log `/tmp/finmag-p4-final-m5.log`).
 
-The recommended next work is **Priority 5** (mesh and external-reference
-validation: the Netgen necessity probe and restoring OOMMF/Nmag/Magpar
-comparisons from checked-in data) and the **SR1-V1 FULL-lane** diagnosis, which
-still shows its recorded baseline (12 passed, 5 failed) and has not been rerun
-or reclassified by any Priority 2-4 slice. All of Priority 1-4 is complete. The
+**All of Priority 5 (mesh and external-reference validation) is now also
+complete** (2026-07-25), integrated on `dolfinx-parity` (tip `dadf35ae`):
+
+- **P5.1 Netgen necessity probe**: no selected test or geometry was found that
+  Gmsh plus the `from_geofile` text-subset loader (Task 18/30) cannot
+  represent or validate. Netgen's binary backend stays deferred; the owner
+  ratified leaving it deferred (register `M4a`/`M4b`). No source change.
+- **P5.2 comparison data** (`133a24ff`..`48e611ad`, 7 slices): OOMMF, Nmag and
+  Magpar comparisons are restored from checked-in reference data, comparing by
+  coordinate probe or analytic invariant rather than raw node ordering, which
+  makes them immune to the `M8` mesh-regeneration node-drift class. A new
+  dolfin-free `finmag.util.magpar_io` reader replaces the legacy `dolfin`-
+  dependent `finmag.util.magpar`. `nsim`/live Magpar/OOMMF execution was
+  deliberately NOT resurrected (register `M1`/`M14`/`M15` SR1 deferment
+  stands). The comparison gate is folded into `dev/bin/verify-dolfinx-m5`.
+- **Minimal-diff test-conversion phase** (`d9226bcb`..`dadf35ae`, 31 commits,
+  4 waves): every `*_dolfinx.py` test file was reshaped to read as a minimal
+  diff of its `master` (`b5015c5a`) original, so a reviewer can check each
+  port against its legacy ancestor line-by-line instead of trusting a
+  from-scratch rewrite. Bucket A (literal transcription) covers files with a
+  1:1 master ancestor; bucket B adds a master->port traceability-mapping
+  header where no 1:1 mapping exists (e.g. files that were split, merged, or
+  renamed across the port); bucket C adds a "NO MASTER ANCESTOR" header to
+  the 7 test files that are genuinely new under DOLFINx (no master file to
+  restore). Restored dropped coverage discovered along the way:
+  `test_sim_ode` at `1e-9`, method-of-averaging, the hysteresis D4 path,
+  `get_interaction_list`, DMI unit-length invariance, three variable-params
+  cases, exchange PBC, Slonczewski nmag validation,
+  `test_regression_Ms_numpy_type`, `test_dipolar_field_class`. An independent
+  Opus review of the whole phase returned a **FAITHFUL** verdict: no
+  silently-loosened tolerance, no gutted xfail, no false restoration. The
+  aggregate verifier `dev/bin/verify-dolfinx-m5` is **33/33 gates green**
+  (up from 32; the comparison gate from P5.2 is the new one).
+
+The transcription phase also surfaced four HIGH-priority parity-debt findings,
+each test-pinned and left as a known divergence (fixes deferred to a later
+slice, per owner decision); see `acceptance-register.md` for the itemised,
+authoritative list:
+
+- **treecode/PBC coincident-node BEM defect** (register `D17`): restoring
+  master's own `demag_pbc_test.py` as a strict `xfail` reproduces the
+  touching-tile periodic BEM row sums reaching `-2` instead of `-1` (a
+  ~158% wrong demag field on the affected geometry) -- this is new evidence
+  for the already-registered `D17` disposition (by-name refusal kept for SR1;
+  the BEM kernel fix itself stays deferred), not a new row.
+  (`test_treecode_pbc_demag_dolfinx.py`)
+- **Magpar anisotropy comparison at 8% tolerance**: `test_anis_magpar_dolfinx.py`
+  had to loosen `REL_TOLERANCE` from legacy's `5e-7` (identical-mesh
+  assumption) to `8e-2` to absorb `M8` mesh drift, but the measured maximum
+  disagreement (~5.1e-2) is flagged in the test's own docstring as a genuine
+  finmag-vs-Magpar method/discretisation disagreement, not fully explained by
+  mesh drift alone -- needs a physics check. Candidate new register row.
+- **`set_m`/`LLG.set_m` NaN guard missing**: the ported `Simulation.set_m()`
+  does not reproduce legacy's NaN validation -- a NaN-valued `m_init` is
+  accepted silently (`sim.m` ends up containing NaN) instead of raising
+  `ValueError`. Pinned as `xfail(strict=True)` (`test_set_m`) so it stays
+  visible and flips to XPASS the moment the guard is restored. Candidate new
+  register row.
+- **`get_field_as_dolfin_function` UFL-bool crash**: calling
+  `get_field_as_dolfin_function('m')(point)` raises `ValueError: UFL
+  conditions cannot be evaluated as bool in a Python context`. This is a
+  pre-existing porting gap in `Simulation.get_field_as_dolfin_function`
+  (`src/finmag/sim/sim.py`), unrelated to the NDT-writing regression test it
+  was found in; fixing it means touching `sim.py`, out of scope for the
+  test-only conversion phase. Candidate new register row.
+  (`test_restart_output_dolfinx.py`)
+
+The recommended next work is **Priority 6** (full scientific acceptance and
+SR1 handoff) and the **SR1-V1 FULL-lane** diagnosis, which still shows its
+recorded baseline (12 passed, 5 failed) and has not been rerun or
+reclassified by any Priority 2-5 slice. All of Priority 1-5 is complete. The
 detailed, superseding sequence is in
 `plans/2026-07-23-sr1-prioritised-plan.md`.
 
@@ -270,3 +336,5 @@ detailed, superseding sequence is in
 [P2.2–P2.6 completion update: Claude Opus 4.8]
 
 [P3.3–P3.5 completion update: Claude Sonnet 5]
+
+[P5.1–P5.2 and minimal-diff test-conversion phase completion update: Claude Sonnet 5]
