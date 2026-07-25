@@ -30,7 +30,66 @@ Gilbert damping ``alpha``, and the region energy/magnetisation accounting, again
 By-name deferrals kept: legacy string Expressions (pass a callable) and
 spatially varying cubic axes.
 
-[Claude Opus 4.8]; composed-physics test [Claude Sonnet 5]
+MASTER -> PORT MAPPING HEADER (SR1 P5.2 test-suite audit restoration). Every
+master test function across the four ancestor files, and where it lands here:
+
+``test_energy_creation_with_variable_Ms.py`` (``b5015c5a``):
+  - test_can_create_energy_object[Exchange]           -> test_variable_ms_number_matches_dg0_function[factory0], atol 1e-12 (same)
+  - test_can_create_energy_object[UniaxialAnisotropy]  -> test_variable_ms_number_matches_dg0_function[factory1], atol 1e-12 (same)
+  - test_can_create_energy_object[Zeeman]              -> test_variable_ms_number_matches_dg0_function[factory2], atol 1e-12 (same)
+  - test_can_create_energy_object[Demag]               -> test_variable_ms_number_matches_dg0_function[factory3] --
+    RESTORED (audit finding: this parametrize case was dropped by the port;
+    added back verbatim, atol 1e-12 unchanged, on the same box mesh/Field
+    setup as the other three cases).
+
+``test_spatially_varying_alpha.py`` (``b5015c5a``):
+  - test_spatially_varying_alpha_using_Simulation_class -> test_scalar_alpha_via_simulation_fills_uniform_nodal_vector --
+    RESTORED (audit finding: the port had swapped master's scalar alpha=1 /
+    exact-array assertion for a varying-alpha / shape-only check, now
+    test_spatially_varying_alpha_is_accepted_via_simulation below, kept as
+    genuinely new coverage). Exact ``np.ones(11)`` assertion restored against
+    ``sim.llg._alpha_field.as_array()`` (``sim.alpha`` itself returns a plain
+    ``float`` for a constant value -- a DELIBERATE, already-documented
+    divergence, see test_scalar_alpha_preserved_as_float -- so the array
+    check targets the underlying per-node field master's
+    ``sim.alpha.vector().array()`` exposed directly).
+  - test_spatially_varying_alpha_using_LLG_class -> test_scalar_alpha_fills_uniform_nodal_vector,
+    exact ``np.ones(11)`` (unchanged, already ported faithfully).
+
+``test_spatially_varying_anisotropy.py`` (``b5015c5a``):
+  - test_spatially_varying_anisotropy_axis -> test_spatially_varying_anisotropy_axis_relaxation_tracks_easy_axis --
+    RESTORED (audit finding: the relaxation-tracking case was dropped by the
+    port, which kept only the oracle energy/field comparison,
+    test_oracle_spatially_varying_anisotropy, retained alongside it as
+    covering different ground -- static field pin vs. dynamic relax()
+    outcome). Tolerance ``diff.max() < 0.02`` restored VERBATIM; measured
+    DOLFINx value ~0.0175, passes unchanged.
+
+``test_energies_in_regions.py`` (``b5015c5a``):
+  - test_energies_in_separated_subdomains -> COVERED-ELSEWHERE, same file:
+    the additivity contract (``MultiDomainTest.check_energy_consistency``:
+    sum of per-subdomain energies == whole-mesh energy) is re-tested via
+    ``sim.mark_regions`` + ``sim.compute_energy(name, region=...)`` instead of
+    master's ``pair_of_disks`` mesh / ``df.SubMesh`` / ``CellFunction``
+    machinery, in test_region_energies_sum_to_total_zeeman_oracle (Zeeman,
+    pinned against a legacy oracle), test_region_energies_sum_to_total_for_exchange
+    (Exchange) and test_total_energy_over_region_sums_all_interactions
+    (multi-interaction "total"). The ``SubMesh``/geometry-separation mechanism
+    itself is NOT ported: ``get_submesh`` stays a documented
+    ``NotImplementedError`` deferral (test_region_restricted_field_output_still_deferred_by_name),
+    since ``mark_regions``/region ``dx`` measures replace it for every
+    behavioural need exercised here.
+  - test_energies_in_touching_subdomains -> NOT PORTED, deferred+reason:
+    ``@pytest.mark.xfail`` IN MASTER ITSELF ("fails for touching subdomains
+    for some reason... need to investigate"; never a validated behavioural
+    contract even in legacy), so there is no passing legacy behaviour to
+    restore.
+  - MultiDomainTest (helper class, not a test) -> not a coverage target;
+    its region/``dx(region)`` energy-splitting mechanic is what
+    ``mark_regions``/``compute_energy(..., region=...)`` replaces above.
+
+[Claude Opus 4.8]; composed-physics test [Claude Sonnet 5]; restoration of
+dropped Demag/relaxation/exact-alpha coverage [Claude Sonnet 5]
 """
 
 import json
@@ -43,8 +102,8 @@ from mpi4py import MPI
 
 import finmag.util.consts as consts
 from finmag.energies import (
-    CubicAnisotropy, DMI, Exchange, OscillatingZeeman, UniaxialAnisotropy,
-    Zeeman,
+    CubicAnisotropy, Demag, DMI, Exchange, OscillatingZeeman,
+    UniaxialAnisotropy, Zeeman,
 )
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
@@ -203,10 +262,18 @@ def test_string_expression_coefficients_are_deferred_by_name():
     lambda: Exchange(1.3e-11),
     lambda: UniaxialAnisotropy(1e5, (0.0, 0.0, 1.0)),
     lambda: Zeeman((0.0, 0.0, 1e6)),
+    lambda: Demag(),
 ])
 def test_variable_ms_number_matches_dg0_function(factory):
     """Ported from ``test_energy_creation_with_variable_Ms``: energy computed
-    with Ms as a plain number equals energy with Ms as a DG0 Function."""
+    with Ms as a plain number equals energy with Ms as a DG0 Function.
+
+    Master's ``test_can_create_energy_object`` parametrizes over ``Exchange``,
+    ``UniaxialAnisotropy``, ``Zeeman`` AND ``Demag``; the port originally
+    dropped the ``Demag`` case from this sweep (audit finding) -- restored
+    here using the same box mesh/Field setup as the other three cases (the
+    ``FKDemag`` BEM path accepts a plain ``dolfinx``-native box mesh, verified
+    against a netgen-generated box in ``test_fk_demag_dolfinx.py``)."""
     domain = mesh.create_box(
         MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (10e-9, 10e-9, 10e-9)],
         [5, 5, 5], mesh.CellType.tetrahedron)
@@ -280,6 +347,58 @@ def test_oracle_spatially_varying_anisotropy():
         lambda DG: Field(DG, 8.6e5, name="Ms"))
 
 
+def test_spatially_varying_anisotropy_axis_relaxation_tracks_easy_axis():
+    """Ported from ``test_spatially_varying_anisotropy_axis``
+    (``test_spatially_varying_anisotropy.py``): a spatially varying easy axis
+    rotating from (0, 1, 0) at x=0 to (1, 0, 0) at x=Lx, relaxed from
+    m=(1, 1, 0). Master's own comment notes the fit is imperfect near x=0;
+    the aggregate ``diff.max() < 0.02`` tolerance is restored VERBATIM
+    (audit finding -- this relaxation-tracking case was dropped by the port,
+    which kept only the oracle energy/field comparison above).
+
+    dolfin -> dolfinx: ``df.Expression`` -> vectorized callable; probing a
+    point uses ``Field.__call__`` (``a(x)``, ``sim.m_field(x)``), which
+    restores the same point-in-cell mechanic dolfin's ``Function.__call__``
+    gave master for free (see ``finmag.field.evaluate_at_point``)."""
+    Ms = 1e6
+    A = 1.3e-11
+    K1 = 6e5
+    lb = consts.bloch_parameter(A, K1)
+
+    unit_length = 1e-9
+    nx = 20
+    Lx = nx * lb / unit_length
+    domain = mesh.create_interval(MPI.COMM_WORLD, nx, [0.0, Lx])
+
+    # anisotropy axis goes from (0, 1, 0) at x=0 to (1, 0, 0) at x=Lx
+    def _axis_expr(x):
+        n = x.shape[1]
+        denom = np.sqrt(x[0] ** 2 + (Lx - x[0]) ** 2)
+        return np.vstack((x[0] / denom, (Lx - x[0]) / denom, np.zeros(n)))
+
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    a = Field(S3, _axis_expr)
+
+    sim = Simulation(domain, Ms, unit_length=unit_length, name="sva_relax")
+    sim.set_m((1.0, 1.0, 0.0))
+    sim.add(UniaxialAnisotropy(K1, a))
+    sim.relax()
+
+    # probe the easy axis and the magnetisation along the interval
+    points = 100
+    xs = np.linspace(0, Lx, points)
+    axis_xs = np.zeros((points, 3))
+    m_xs = np.zeros((points, 3))
+    for i, x in enumerate(xs):
+        axis_xs[i] = a(x)
+        m_xs[i] = sim.m_field(x)
+
+    # we want the magnetisation to follow the easy axis; measured max diff
+    # ~0.0175 (master tolerance 0.02, passes verbatim).
+    diff = np.abs(m_xs - axis_xs)
+    assert diff.max() < 0.02
+
+
 # --------------------------------------------------------------------------
 # spatially varying alpha
 # --------------------------------------------------------------------------
@@ -306,6 +425,28 @@ def test_scalar_alpha_fills_uniform_nodal_vector():
     llg = LLG(S1, S3)
     llg.set_alpha(1)
     assert np.array_equal(llg._alpha_field.as_array(), np.ones(11))
+
+
+def test_scalar_alpha_via_simulation_fills_uniform_nodal_vector():
+    """Ported from ``test_spatially_varying_alpha_using_Simulation_class``:
+    scalar alpha=1 set via ``sim.alpha`` fills a uniform per-node array of
+    ones (master asserted ``sim.alpha.vector().array() == np.ones(11)``
+    exactly).
+
+    Restore note (audit finding): the port had swapped this scalar/exact-array
+    case for a varying-alpha/shape-only check
+    (``test_spatially_varying_alpha_is_accepted_via_simulation`` below, kept
+    as genuinely new coverage). ``sim.alpha`` itself returns a plain ``float``
+    for a constant value here (the documented divergence pinned by
+    ``test_scalar_alpha_preserved_as_float``: legacy's ``df.Function`` had no
+    such fast path), so master's exact-array assertion is restored against
+    the underlying per-node field (``sim.llg._alpha_field.as_array()``) that
+    ``sim.alpha`` would collapse to a float from -- same mesh/parameters as
+    master (``length=20``, ``simplices=10`` -> 11 nodes)."""
+    domain = mesh.create_interval(MPI.COMM_WORLD, 10, [0.0, 20.0])
+    sim = Simulation(domain, 1.0, unit_length=1e-9, name="varalpha_scalar")
+    sim.alpha = 1
+    assert np.array_equal(sim.llg._alpha_field.as_array(), np.ones(11))
 
 
 def test_spatially_varying_alpha_is_accepted_via_simulation():
