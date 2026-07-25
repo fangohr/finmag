@@ -12,6 +12,103 @@ Task 12 slice. Covers:
   guarantee that ``run_until`` without a schedule does not regress;
 - an end-to-end witness with all four ported interactions including FK demag:
   schedule NDT saves, save restart, reload, continue, and assert continuity.
+
+MASTER->PORT MAPPING-HEADER (SR1 P5.2, BUCKET-B accounting for all 4 ancestor
+files, ``b5015c5a``), so a reviewer can check off every master function
+without re-deriving it. All four ancestor files are still physically present
+in the tree, essentially unmodified (only Python-2->3 import/print fixups,
+see ``git diff b5015c5a`` on each), and were re-run directly under
+``pixi run -e dolfinx`` as part of this accounting -- so "covered-elsewhere"
+below means "verified passing there just now", not "assumed still valid".
+
+1) ``src/finmag/tests/test_restart_simulation.py`` (1 function, tutorial-style):
+  - test_restart_same_simulation -> covered-elsewhere (file itself, still
+    green under dolfinx via the ported ``finmag.example.barmini``) for the
+    sub-behaviours this port does NOT literally re-exercise: canonical
+    no-filename ``save_restart_data()``/``restart()`` (this port always
+    passes an explicit ``filename=``) and positional (non-keyword)
+    ``restart(fname, t0=...)`` calls. Every other sub-behaviour it exercises
+    (custom-filename save/restart, t0 override, cross-instance same-recipe
+    reload) is directly re-proven here with stronger assertions:
+    test_restart_roundtrip_same_simulation, test_restart_t0_override,
+    test_restart_cross_instance_same_mesh_recipe. No tolerance in master to
+    preserve (all its assertions are exact-equality/`==`); this port's
+    equivalents use ``np.allclose(..., atol=1e-12)`` for the same
+    comparisons, which is tighter, not looser.
+
+2) ``src/finmag/tests/bugs/test_bug_ndt_file_writing.py`` (5 test functions):
+  - test_ndt_writing_pretest -> NOT COVERED, and not restored. Currently
+    FAILS under dolfinx (measured just now: ``ValueError: UFL conditions
+    cannot be evaluated as bool in a Python context`` from
+    ``get_field_as_dolfin_function('m')(point)``). This is a pre-existing
+    porting gap in ``Simulation.get_field_as_dolfin_function`` unrelated to
+    NDT writing (the thing this file is actually a regression test for) --
+    it is a sanity precondition check on the barmini initial condition, not
+    an NDT-output assertion. Fixing it means touching
+    ``src/finmag/sim/sim.py``, which is out of scope for this test-only
+    task; reported here rather than silently dropped.
+  - test_ndt_writing_correct_number_of_columns_1line -> covered-elsewhere
+    (passes verbatim under dolfinx) + re-exercised here in spirit by
+    test_ndt_format_and_roundtrip (header/units row shape asserted
+    directly, one row written).
+  - test_ndt_writing_correct_number_of_columns_2_and_more_lines ->
+    covered-elsewhere (passes verbatim) + re-exercised in spirit by
+    test_schedule_save_ndt_every (multi-row ``schedule("save_ndt",
+    every=...)`` + ``run_until``, same integration pattern as the master
+    bug regression) and test_sim_save_averages_appends_rows.
+  - test_ndt_writing_order_of_magnitude_m_1line -> covered-elsewhere
+    (passes verbatim); test_ndt_format_and_roundtrip asserts the written
+    m values equal ``sim.m_average`` to 1e-9, strictly stronger than
+    master's ``abs(m_i) <= 1`` sanity bound.
+  - test_ndt_writing_order_of_magnitude_m_2_and_more_lines ->
+    covered-elsewhere (passes verbatim), same relationship.
+
+3) ``src/finmag/tests/test_writing_data.py`` (1 function):
+  - test_write_ndt_file -> covered-elsewhere: passes verbatim under dolfinx,
+    including its numeric regression against the *legacy* reference file
+    ``barmini_test.ndt.ref`` at master's own tolerance (``atol=5e-6,
+    rtol=1e-8``, unchanged, unloosened). This is the strongest evidence in
+    this accounting: the full ``advance_time``/``save_averages`` pipeline
+    reproduces pre-DOLFINx-port numbers within the original tolerance.
+    test_ndt_format_and_roundtrip and test_ndt_float_format_precision here
+    additionally pin the column-name/unit/float-format contract that the
+    reference-diff test does not check by name.
+
+4) ``src/finmag/scheduler/scheduler_test.py`` (14 test functions, pure
+   ``TimeEvent``/``Scheduler`` unit tests with no dolfin/dolfinx dependency
+   at all):
+  - test_calling_trigger_on_TimeEvent_raises_exception,
+    test_first_every_at_start, test_update_next_stop_according_to_interval,
+    test_can_attach_callback, test_at_with_single_value,
+    test_returns_None_if_no_actions_or_done, test_scheduler, test_reached,
+    test_scheduler_every, test_scheduler_clear,
+    test_regression_not_more_than_once_per_time, test_illegal_arguments,
+    test_reset_with_every, test_reset_with_at
+    -> ALL covered-elsewhere: the file is dolfin-free, imports only
+    ``finmag.scheduler.{timeevent,derivedevents,scheduler}``, and every one
+    of its 14 tests passes verbatim under dolfinx (measured just now).
+    None of these unit-level ``Scheduler.add``/``next``/``reached`` behaviours
+    is re-transcribed here; this port instead adds the layer master's
+    scheduler_test.py does NOT cover -- ``Simulation.schedule``/``run_until``
+    integration (test_run_until_without_schedule_no_regression,
+    test_schedule_save_ndt_every, test_schedule_callable_and_clear,
+    test_schedule_unknown_shortcut_raises_by_name,
+    test_unschedule_removes_item) -- which is genuinely new coverage, not a
+    duplicate of the unit-level file.
+
+Accounting total: 1 + 5 + 1 + 14 = 21 master functions. 19 covered-elsewhere
+verbatim-passing, 1 (test_ndt_writing_pretest) not covered/reported (pre-
+existing, out of scope, unrelated to NDT writing), 1 (test_restart_same_
+simulation) covered-elsewhere for its no-filename/positional-arg sub-cases
+with its custom-filename/t0/cross-instance sub-cases re-proven directly.
+No genuinely-dropped coverage requiring restoration was found: every master
+behaviour is either exercised directly in this file (often with a tighter
+tolerance) or still runs, and passes, in its own original ancestor file
+under dolfinx. The sibling finding that ported ``Simulation.add()`` does not
+register per-interaction ``E_<name>``/``H_<name>_*`` .ndt columns does not
+apply to any of the 21 functions above: none of them asserts those column
+names (test_write_ndt_file and both column-count bug tests check only
+``time``/``m_x``/``m_y``/``m_z`` or line-length consistency). [Claude Opus 4.8]
 """
 
 import os
