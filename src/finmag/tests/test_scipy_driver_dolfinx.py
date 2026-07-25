@@ -9,6 +9,86 @@ zero-time no-op, rhs-eval counting, reinit) onto the ported DOLFINx
 ``dev/dolfinx/porting_map.md`` ("Field `xxx` consumers"): the SciPy driver
 must seed and write back the ODE state through the explicit
 component-blocked ``xxx`` ordering, not the raw backend dof order.
+
+MASTER -> PORT MAPPING HEADER (SR1 audit pass)
+===============================================
+
+``src/finmag/drivers/tests/test_scipy.py``::
+
+    _test_scipy_advance_time (disabled in master: underscore prefix,
+        never collected)
+        -> covered-elsewhere (subsumed): test_advance_time_moves_cur_t_and_
+           updates_m_field, test_macrospin_relaxes_towards_field_within_
+           physical_time. Same multi-advance sequencing restored, tolerance
+           unchanged.
+    test_scipy_advance_time_zero_first
+        -> covering: test_advance_time_zero_first_is_a_no_op. Direct port,
+           tolerance/behaviour unchanged.
+
+``src/finmag/drivers/tests/test_integrators.py`` (``IntegratorTests``)::
+
+    IntegratorTests.run_test() [helper]
+        -> not covered (helper only); the scipy-relevant behaviour it drove
+           is split across the covering rows below.
+    test_scipy_bdf
+        -> covering (behaviour tightened): test_macrospin_relaxes_towards_
+           field_within_physical_time, test_llg_integrator_explicit_scipy_
+           backend. Master only printed n_rhs_evals/error for eyeballing;
+           the port ASSERTS convergence to the analytic macrospin solution
+           (tighter, never looser).
+    test_scipy_adams
+        -> not covered (partial gap, pre-existing, NOT touched by this
+           audit pass): test_constructor_t0_is_keyword_only_in_practice_
+           positional_slots_kept only asserts method="adams" is stored by
+           the constructor; no full-integration convergence proof for
+           method="adams" is restored here. Flagged for visibility; out of
+           scope for this pass's fix (see "Fix" below).
+    test_sundials_adams / test_sundials_bdf_diag /
+    test_sundials_bdf_gmres_no_prec / test_sundials_bdf_gmres_prec_id
+        -> covered-elsewhere: src/finmag/tests/test_sundials_driver_
+           dolfinx.py. Sundials-only; out of scope for this scipy-only port
+           file.
+    finmag.tests.jacobean.domain_wall_cobalt (setup_domain_wall_cobalt /
+    domain_wall_error) [fixture]
+        -> not covered / deferred: the large analytic domain-wall fixture
+           is not restored. The port substitutes lighter-weight
+           ``_macrospin_llg``/``_nonuniform_llg`` fixtures with equivalent
+           (and stricter) numeric assertions in its place.
+
+``src/finmag/drivers/tests/sundials_reinit_test.py``::
+
+    run_test() [helper]
+        -> not covered (helper only); replaced by the local ``_advance_pair``
+           helper for the scipy-relevant path.
+    test_reinit_resets_num_rhs_eval_counter (exercises backend="sundials"
+    only, x3 -- its own scipy hook ``not_used_here_test_scipy`` is commented
+    out/disabled in master)
+        -> covered-elsewhere (sundials): test_sundials_driver_dolfinx.py::
+           test_sundials_reinit_resets_num_rhs_eval_counter restores the
+           counter-reset assertion faithfully for the backend master
+           actually exercised it against (native CVodeReInit zeroes the
+           counter).
+        -> AUDIT FIX (this pass, scipy side): master never exercised this
+           behaviour against the scipy backend, and the legacy
+           ``ScipyIntegrator.reinit()`` was a complete no-op ("This
+           integrator doesn't support reinitialisation."), so there was no
+           master behaviour to restore for scipy. The ported
+           ``ScipyIntegrator.reinit()`` (src/finmag/drivers/
+           scipy_integrator.py) goes further than master already -- it
+           rebuilds the ``scipy.integrate.ode`` object and reseeds it from
+           the current field state -- but it does NOT reset
+           ``_n_rhs_evals``. Previously this module's docstring listed
+           "reinit" among the ported invariants without ever asserting the
+           counter-reset half of it, which overclaimed coverage. Fixed by
+           two new, real, executed assertions below (see "===== NEW under
+           DOLFINx ====="): one pins the ACTUAL behaviour (counter survives
+           reinit unchanged) and one pins master's ANALOGOUS intent as an
+           ``xfail(strict=True)`` -- so the gap is now visible rather than
+           silently claimed as covered.
+    (implicit) reinit leaves the dynamic dof / clock alone unless the field
+    was externally modified
+        -> covering: test_reinit_preserves_cur_t, test_reinit_makes_
+           external_field_modification_take_effect. Direct port.
 """
 
 import sys
@@ -332,6 +412,86 @@ def test_reinit_preserves_cur_t():
     t_before = integrator.cur_t
     integrator.reinit()
     assert integrator.cur_t == t_before
+
+
+# ===== NEW under DOLFINx =====
+# --------------------------------------------------------------------------
+# audit fix: sundials_reinit_test.py's core claim -- "sundials resets the
+# counters for the evaluations of the right hand side" (its own module
+# docstring) after reinit() -- was listed in this file's module docstring
+# among the ported invariants without ever being asserted for the SCIPY
+# driver. That was an overclaim: master's own sundials_reinit_test.py never
+# exercised the scipy backend for this behaviour (its lone scipy hook,
+# ``not_used_here_test_scipy``, is commented out/disabled), and the legacy
+# ``ScipyIntegrator.reinit()`` was a complete no-op (see its docstring,
+# "This integrator doesn't support reinitialisation."), so there was no
+# master behaviour to restore here.
+#
+# The DOLFINx port's ``ScipyIntegrator.reinit()`` already goes further than
+# master: it rebuilds the underlying ``scipy.integrate.ode`` object and
+# reseeds it from the current field state (see
+# ``test_reinit_makes_external_field_modification_take_effect`` above) --
+# but it does not reset ``_n_rhs_evals``. The two tests below make that gap
+# VISIBLE with real, executed assertions instead of leaving it undocumented:
+# the first pins the driver's ACTUAL behaviour (counter survives reinit);
+# the second restates master's analogous intent (the sundials-side
+# assertion, see test_sundials_driver_dolfinx.py::
+# test_sundials_reinit_resets_num_rhs_eval_counter) for the scipy driver and
+# is marked ``xfail(strict=True)`` because it is currently unmet -- if a
+# future change makes the scipy driver reset the counter too, this xfail
+# will itself fail (XPASS) and must be revisited alongside the docstring's
+# mapping table above.
+# --------------------------------------------------------------------------
+
+def test_reinit_does_not_reset_rhs_eval_counter():
+    """Real, executed assertion of the SCIPY driver's actual behaviour.
+
+    Unlike ``SundialsIntegrator.reinit()`` (native CVodeReInit, which zeroes
+    the rhs-eval counter -- restored in
+    ``test_sundials_driver_dolfinx.py::
+    test_sundials_reinit_resets_num_rhs_eval_counter``),
+    ``ScipyIntegrator.reinit()`` only rebuilds/reseeds the
+    ``scipy.integrate.ode`` object; it never touches ``_n_rhs_evals``. This
+    pins that as measured behaviour so a silent regression (or a future fix)
+    is visible here rather than only in the docstring prose.
+    """
+    llg, integrator = _advance_pair()
+    evals_before_reinit = integrator.n_rhs_evals
+    assert evals_before_reinit > 0
+    integrator.reinit()
+    # Faithful to the CURRENT ported implementation: the counter survives
+    # reinit unchanged, unlike the sundials backend.
+    assert integrator.n_rhs_evals == evals_before_reinit
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Known DOLFINx-port gap (SR1 audit): ScipyIntegrator.reinit() does "
+        "not reset n_rhs_evals, unlike SundialsIntegrator's native reinit "
+        "(test_sundials_driver_dolfinx.py::"
+        "test_sundials_reinit_resets_num_rhs_eval_counter). Master's own "
+        "sundials_reinit_test.py never exercised this for the scipy "
+        "backend either (its scipy hook was commented out), so this is "
+        "not a regression against master -- it is a gap made visible on "
+        "purpose rather than silently left out of the docstring's "
+        "coverage claim."
+    ),
+)
+def test_reinit_resets_rhs_eval_counter_like_sundials():
+    """Master's intent, restated for the scipy driver (currently unmet).
+
+    This is the scipy-side analogue of
+    ``sundials_reinit_test.py::test_reinit_resets_num_rhs_eval_counter``
+    (which master only ever ran against the sundials backend). It is
+    expected to fail (xfail, strict) until/unless the scipy driver's
+    reinit is changed to zero the counter too; do not silently remove or
+    loosen this without updating the docstring's mapping table above.
+    """
+    llg, integrator = _advance_pair()
+    assert integrator.n_rhs_evals > 0
+    integrator.reinit()
+    assert integrator.n_rhs_evals == 0
 
 
 # --------------------------------------------------------------------------
