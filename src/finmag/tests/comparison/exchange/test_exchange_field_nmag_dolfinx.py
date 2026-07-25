@@ -1,28 +1,42 @@
-"""Nmag EXCHANGE-field comparison under DOLFINx (physical-invariant witness).
+"""Nmag EXCHANGE-field comparison under DOLFINx (minimal-diff transcription).
 
-This restores the legacy ``test_exchange_field.py::test_against_nmag`` regression
-against the checked-in Nmag reference exchange field (``m0_nmag.txt`` /
-``H_exc_nmag.txt``, both ``11x3``), rebuilt for DOLFINx.
+This file has two clearly separated parts (see ``test_fk_demag_dolfinx.py``
+for the established convention):
 
-Why this is safe to compare row-for-row:
-  * The magnetisation is set from the SAME analytic profile the legacy test used
-    (``m_gen`` below), and it is compared against ``m0_nmag.txt`` -- the two agree
-    to ~7e-16, confirming the analytic m0 *is* the Nmag reference m0.
-  * A structured ``dolfinx.mesh.create_interval(10, [0, 20nm])`` emits its 11
-    vertices in DETERMINISTIC ascending-x order (asserted here), which matches the
-    row order of the Nmag reference files. So node-order pairing is legitimate on
-    this structured 1D mesh -- unlike the unstructured 3D case (M8 mesh-drift).
-  * No live Nmag (register M1): ``nsim`` is never run; only the checked-in
-    reference text files are read.
+1. A MINIMAL-DIFF transcription of master's ``test_against_nmag`` from
+   ``src/finmag/tests/comparison/exchange/test_exchange_field.py`` (git
+   ``b5015c5a``). Function names, order, and assertion structure are kept
+   identical to master; the only differences are (a) dolfin->dolfinx API
+   changes (annotated inline), (b) the py2->py3 ``print`` conversion, and
+   (c) explanatory comments -- see below for the two unavoidable exceptions.
+   Master's tolerance (``REL_TOLERANCE = 2e-14``) passes VERBATIM under
+   DOLFINx (measured max ``rel_diff`` ~1.41e-14, recorded inline).
 
-The discriminating quantity is the physical invariant ``m x H_exchange`` (a
-per-node cross product of the 3-vectors), exactly as legacy. A units error, a
-component-ordering (Task-31 xxx-blocking) bug, or a broken assembler would blow
-the relative difference up by many orders of magnitude.
+   Master's file also contains ``test_against_oommf`` (an OOMMF comparison).
+   That function is OUT OF SCOPE for this port -- the task assignment is the
+   Nmag comparison only -- and is intentionally NOT transcribed here (not
+   silently dropped: this is the note).
 
-Field ordering is component-blocked ``xxx = [x0..xn, y0..yn, z0..zn]`` (Task-31);
-``_vectors`` reshapes that (order="F") back to per-node 3-vectors.
-[Claude Opus 4.8]
+   Two exceptions to "only (a)/(b)/(c) diffs", both necessary just to make
+   the file importable/runnable, not behavioural:
+     * ``finmag.util.helpers`` (source of master's ``vectors``/``norm``/
+       ``stats``/``sphinx_sci``) does ``import dolfin as df`` at module scope
+       and is therefore not importable in this DOLFINx env. ``vectors``/
+       ``norm`` are reimplemented locally below, logic byte-identical to the
+       originals.
+     * Master's fixture used ``request.cached_setup(setup=..., teardown=...,
+       scope="module")``, a pytest API removed from modern pytest. Replaced
+       with the equivalent ``@pytest.fixture(scope="module")``. The dropped
+       ``teardown_finmag``/``start_table``/``table_delim``/``table_entries``
+       machinery only built a Sphinx-docs RST table (``table.rst``, never
+       checked into git -- confirmed via ``git ls-files``) with no assertion
+       content, so it is not ported; the corresponding table-append line in
+       ``test_against_nmag`` is likewise dropped (commented where it was).
+
+2. A NEW-under-DOLFINx invariant guard, below the ``NEW under DOLFINx``
+   banner, with no master ancestor.
+
+[Claude Opus 4.8], [Claude Sonnet 5]
 """
 
 import os
@@ -39,93 +53,116 @@ from finmag.energies import Exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Legacy material/geometry parameters (test_exchange_field.py).
-X0 = 0.0
-X1 = 20e-9
-XN = 10
-MS = 0.86e6
+x0 = 0
+x1 = 20e-9
+xn = 10
+Ms = 0.86e6
 A = 1.3e-11
-
-# Measured max relative difference of ``m x H`` under DOLFINx: 1.41e-14 (see the
-# printed diagnostic). Legacy pinned 2e-14 on identical node-for-node dolfin
-# assembly; DOLFINx assembly reproduces it to the same order, so we pin the
-# MEASURED value with modest headroom rather than copying the legacy constant.
-REL_TOLERANCE = 5e-14
 
 
 def _vectors(vs):
-    """Component-blocked ``[x0..xn, y0..yn, z0..zn]`` -> ``(n, 3)`` per-node."""
-    n = len(vs) // 3
-    return vs.view().reshape((n, -1), order="F")
+    """dolfin-free port of ``finmag.util.helpers.vectors`` (see module note)."""
+    number_of_nodes = len(vs) // 3
+    return vs.view().reshape((number_of_nodes, -1), order="F")
 
 
-def _m_gen(r):
-    """Legacy analytic initial magnetisation on coordinate columns ``r`` (1, n)."""
-    x = np.maximum(np.minimum(r[0] / X1, 1.0), 0.0)
+def m_gen(r):
+    x = np.maximum(np.minimum(r[0] / x1, 1.0), 0.0)
     mx = (2 * x - 1) * 2 / 3
     mz = np.sin(2 * np.pi * x) / 2
     my = np.sqrt(1.0 - mx ** 2 - mz ** 2)
     return np.array([mx, my, mz])
 
 
-def _compute():
-    mesh = dm.create_interval(MPI.COMM_WORLD, XN, [X0, X1])
+def setup_finmag():
+    # df.IntervalMesh(xn, x0, x1) -> dolfinx.mesh.create_interval(comm, xn, [x0, x1])
+    mesh = dm.create_interval(MPI.COMM_WORLD, xn, [x0, x1])
+    # df mesh.coordinates() returned shape (n, 1) for an IntervalMesh, and
+    # master's `zip(*mesh.coordinates())` transposed that to one row of x
+    # values, shape (1, n). DOLFINx `mesh.geometry.x` is always (n, 3)
+    # (y/z columns are zero for a 1D mesh); take column 0 and row-wrap it to
+    # reproduce master's (1, n) shape for `m_gen`.
+    coords = np.array([mesh.geometry.x[:, 0]])
 
-    # DETERMINISTIC node order: the 11 vertices are ascending x, matching the
-    # Nmag reference row order. Asserted so a future mesh-generator change that
-    # reorders vertices cannot silently invalidate the row-for-row pairing.
-    coords_x = mesh.geometry.x[:, 0]
-    assert np.all(np.diff(coords_x) > 0), "interval vertices not ascending"
-
+    # df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3) -> functionspace with shape=(3,)
     S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))
-    DG = fem.functionspace(mesh, ("DG", 0))
-
     m = Field(S3)
-    m.set_with_numpy_array_debug(_m_gen(np.array([coords_x])).flatten())
+    m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
-    ex = Exchange(A)
-    ex.setup(m, Field(DG, MS))
+    exchange = Exchange(A)
+    # df.FunctionSpace(mesh, 'DG', 0) -> functionspace(mesh, ("DG", 0))
+    exchange.setup(m, Field(fem.functionspace(mesh, ("DG", 0)), Ms))
 
-    H = ex.compute_field()
+    # df.Function(S3); H_exc.vector()[:] = exchange.compute_field() -> DOLFINx
+    # Exchange.compute_field() already returns the flat numpy array directly,
+    # so there is no dolfin Function/vector wrapper step to reproduce.
+    H_exc = exchange.compute_field()
+    return dict(m=m, H=H_exc)
 
-    m_comp = _vectors(m.get_numpy_array_debug())
-    H_comp = _vectors(H)
-    return m_comp, H_comp
+
+@pytest.fixture(scope="module")
+def finmag():
+    # Replaces master's `request.cached_setup(setup=setup_finmag,
+    # teardown=teardown_finmag, scope="module")` (removed pytest API, see
+    # module note). No teardown is needed: the only teardown action
+    # (writing table.rst) is dropped along with it, see module note.
+    return setup_finmag()
 
 
-def test_against_nmag():
-    m_comp, H_comp = _compute()
+def test_against_nmag(finmag):
+    REL_TOLERANCE = 2e-14  # master's tolerance, kept verbatim -- passes (see measured value below)
 
     m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m0_nmag.txt"))
+    m_computed = _vectors(finmag["m"].get_numpy_array_debug())
+    assert m_ref.shape == m_computed.shape
+
     H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
-    assert m_ref.shape == m_comp.shape == (11, 3)
-    assert H_ref.shape == H_comp.shape == (11, 3)
+    H_computed = _vectors(finmag["H"])  # master: finmag["H"].vector().array()
+    assert H_ref.shape == H_computed.shape
 
-    # The analytic m0 must equal the Nmag reference m0 (this is what makes the
-    # row-for-row H comparison meaningful). Measured max abs diff ~7.2e-16.
-    m_abs = np.max(np.abs(m_ref - m_comp))
-    print("m0 vs Nmag reference, max abs diff:", m_abs)
-    assert m_abs < 1e-12
-
+    assert m_ref.shape == H_ref.shape
     m_cross_H_ref = np.cross(m_ref, H_ref)
-    m_cross_H_comp = np.cross(m_comp, H_comp)
-    diff = np.abs(m_cross_H_ref - m_cross_H_comp)
-    scale = max(np.linalg.norm(v) for v in m_cross_H_ref)
-    rel_diff = diff / scale
-    max_rel = float(np.max(rel_diff))
-    print("m x H_exchange vs Nmag, max relative difference:", max_rel)
+    m_cross_H_computed = np.cross(m_computed, H_computed)
 
-    # Non-trivial witness: the computed exchange field must be genuinely large
-    # (order MA/m) and comparable to the Nmag reference magnitude, so this is not
-    # a vacuous 0-vs-0 pass. Nmag reference |H| max ~3.9e6 A/m.
-    finmag_scale = np.max(np.linalg.norm(H_comp, axis=1))
-    ref_scale = np.max(np.linalg.norm(H_ref, axis=1))
-    print("finmag |H_exchange| max:", finmag_scale, " Nmag ref:", ref_scale)
-    assert finmag_scale > 0.5 * ref_scale
+    diff = np.abs(m_cross_H_ref - m_cross_H_computed)
+    # master: max([norm(v) for v in m_cross_H_ref]); helpers.norm(v) on a
+    # single (3,) vector reduces to np.linalg.norm(v) (see module note on why
+    # helpers.norm itself is not imported here).
+    rel_diff = diff / max(np.linalg.norm(v) for v in m_cross_H_ref)
 
-    assert max_rel < REL_TOLERANCE, (
-        "max rel_diff {} exceeds tolerance {}".format(max_rel, REL_TOLERANCE))
+    # master appended a row to the (dropped, see module note) Sphinx table here.
+
+    print("comparison with nmag, m x H, relative difference:")
+    print("    min, median, max = {}, {}, {}\n    mean, std = {}, {}".format(
+        np.min(rel_diff), np.median(rel_diff), np.max(rel_diff),
+        np.mean(rel_diff), np.std(rel_diff)))
+    # measured DOLFINx max(rel_diff): 1.41e-14 -- passes master's 2e-14 verbatim.
+    assert np.max(rel_diff) < REL_TOLERANCE
 
 
-if __name__ == "__main__":
-    test_against_nmag()
+if __name__ == '__main__':
+    f = setup_finmag()
+    test_against_nmag(f)
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) ============================
+# ==========================================================================
+
+def test_interval_mesh_vertex_order_is_ascending():
+    """Guards the row-for-row pairing in ``test_against_nmag`` above.
+
+    That comparison pairs finmag's computed ``m``/``H`` against the Nmag
+    reference files row-for-row, relying on the DOLFINx interval mesh
+    emitting its ``xn + 1`` vertices in deterministic ascending-x order (which
+    matches the Nmag reference row order). This is legitimate on this
+    structured 1D mesh -- unlike the unstructured 3D Magpar case, where node
+    order is NOT preserved under DOLFINx and the port there had to switch to a
+    coordinate-based match instead (see
+    ``test_exchange_compare_magpar_dolfinx.py``). This test pins the
+    assumption so a future mesh-generator change that reorders vertices fails
+    loudly here instead of silently corrupting the comparison above.
+    """
+    mesh = dm.create_interval(MPI.COMM_WORLD, xn, [x0, x1])
+    coords_x = mesh.geometry.x[:, 0]
+    assert np.all(np.diff(coords_x) > 0), "interval vertices not ascending"
