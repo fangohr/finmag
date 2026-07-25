@@ -18,6 +18,90 @@ faithful mechanical port (point evaluation) or a pure analytic transcription
   ``-1/(4*pi) integral(m . (dm/dx x dm/dy))`` formula (2D mesh: whole domain;
   3D mesh: top surface only), restored after being dropped outright in
   Task 9.
+
+MASTER -> PORT MAPPING-HEADER (BUCKET-B: mixed ancestor/no-ancestor file).
+
+1) ``Field.probe`` / ``Field.__call__`` part -- HAS a master ancestor, but
+   that ancestor is fully covered elsewhere, not here:
+
+   - ``field_test.py::TestField.test_probe_scalar_field`` (mesh_dim 1/2/3,
+     at-node + off-node ``self.probing_coord = 0.4351``, ``self.tol1 =
+     5e-13``)
+       -> already transcribed VERBATIM, tolerance UNCHANGED (``tol1 =
+          5e-13``), as
+          ``test_field_dolfinx.py::TestField.test_probe_scalar_field``
+          (line ~959).
+   - ``field_test.py::TestField.test_probe_vector_field`` (``vector3d_fspaces``,
+     same at-node/off-node pattern, ``tol1``)
+       -> already transcribed VERBATIM, tolerance UNCHANGED, as
+          ``test_field_dolfinx.py::TestField.test_probe_vector_field``
+          (line ~988).
+
+   These are the ONLY two ``test_probe_*``-named functions in master's
+   ``field_test.py::TestField`` (checked via ``git show b5015c5a`` --
+   grep for ``def test_``). Both are already ported with real assertions
+   and unchanged tolerance in ``test_field_dolfinx.py``, which per its own
+   docstring transcribes the full ``TestField`` suite. Nothing is dropped,
+   so nothing is restored here -- duplicating them in this file would just
+   be redundant coverage of the same two master functions.
+
+   The probe tests that DO live in *this* file are NOT master transcriptions:
+   they are NEW tests (Task 26a/30 provenance) exercising the promoted
+   ``evaluate_at_point`` helper along axes master's ``field_test.py`` never
+   tested standalone -- ``RuntimeError`` message on an out-of-mesh point,
+   ``__call__`` as shorthand for ``.probe``, a raw (non-``Field``-wrapped)
+   ``dolfinx.fem.Function`` (mirroring what
+   ``EnergyBase.energy_density_function()`` returns), and one-point-per-call
+   sampling along a line (the exchange_demag regression witness):
+       test_probe_vector_field_matches_analytic_value
+       test_probe_scalar_field_returns_python_float
+       test_call_is_shorthand_for_probe
+       test_probe_outside_mesh_raises_runtime_error
+       test_evaluate_at_point_works_on_a_raw_function_not_just_field
+       test_probe_along_the_exchange_demag_sampling_line
+
+2) ``Field.get_spherical`` / ``Simulation.skyrmion_number`` part -- NO real
+   master ancestor test exists for either:
+
+   - ``Field.get_spherical`` itself exists in master
+     (``git show b5015c5a:src/finmag/field.py``, ~line 680, the
+     ``theta = arctan(m_r / m_z)`` / ``phi = arctan(m_y / m_x)`` docstring
+     this port's formulas are transcribed from), but master's
+     ``field_test.py`` (grepped for ``get_spherical``) has ZERO tests that
+     exercise it -- no ancestor test to map.
+   - ``Simulation.skyrmion_number`` / ``skyrmion_number_density_function``
+     are real master methods (``sim_helpers.skyrmion_number`` /
+     ``skyrmion_number_density_function``, wired onto ``Simulation`` in
+     ``sim/sim.py``), but master's dedicated test module,
+     ``git show b5015c5a:src/finmag/tests/test_skyrmions.py``, is CONFIRMED
+     a placeholder stub: its only function, ``test_skyrmion()``, asserts
+     ``abs(1e-5 - 1e-5) < 1e-6`` -- literal self-consistent dummy numbers,
+     no simulation, no skyrmion, no real ancestor coverage to map or
+     restore.
+
+   With no master test to transcribe, this port validates both against
+   independent ANALYTIC references instead (see the
+   ``# ===== NEW under DOLFINx =====`` banner below):
+     - ``get_spherical``: five hand-picked unit vectors along/off the axes
+       with closed-form ``(theta, phi)`` (e.g. ``+z -> (0, 0)``,
+       ``+x -> (pi/2, 0)``, ``(1,1,0)/sqrt(2) -> (pi/2, pi/4)``), plus a
+       round-trip reconstruction
+       (``sin(theta)cos(phi), sin(theta)sin(phi), cos(theta)`` recovers the
+       original unit vector) for a non-axis-aligned direction, plus a
+       scalar-field rejection check.
+     - ``skyrmion_number``: the analytic topological-charge invariant that a
+       compactly-supported Bloch skyrmion ansatz (radius 20, reproduced
+       inline from legacy's untouched, dolfin-only
+       ``sim.magnetisation_patterns.initialise_skyrmions`` profile, since
+       that module cannot be imported under DOLFINx) carries topological
+       charge magnitude -> 1 as the mesh is refined (measured: n=20 ->
+       0.8668, n=40 -> 0.9651, n=80 -> 0.9912, monotonic convergence),
+       is exactly 0 for a uniform state (2D and 3D top-surface paths),
+       the 3D top-surface integration path numerically matches the 2D
+       whole-domain path for a z-invariant profile with the same xy
+       footprint (measured: both give 0.86675204942... at n=20), and the
+       lumped nodal density field integrates (nodal-volume-weighted sum)
+       back to the whole-mesh scalar exactly.
 """
 
 import numpy as np
@@ -101,6 +185,13 @@ def test_probe_along_the_exchange_demag_sampling_line(box):
     sampled = [field.probe(p) for p in line]
     np.testing.assert_allclose(sampled, list(range(11)), atol=1e-10)
 
+
+# ===== NEW under DOLFINx =====
+# No master ancestor test exists for either section below: master's
+# ``field_test.py`` has zero tests exercising ``get_spherical`` (grepped), and
+# master's ``tests/test_skyrmions.py`` is a confirmed placeholder stub (see
+# module docstring). Both sections validate against independent analytic
+# references instead of transcribing a master test.
 
 # --------------------------------------------------------------------------
 # Field.get_spherical
