@@ -20,6 +20,55 @@ FIXTURE = os.path.join(
 )
 
 
+# ``finmag.util.helpers`` imports ``dolfin`` at module load and is therefore
+# unusable under DOLFINx; ``components`` is reimplemented here byte-identically
+# to the master helper (``vs.view().reshape((3, -1))``) per the ratified
+# minimal-diff workaround. [Claude Opus 4.8]
+def components(vs):
+    return vs.view().reshape((3, -1))
+
+
+# ==========================================================================
+# MASTER-DERIVED TESTS (faithful transcription of
+# ``b5015c5a:src/finmag/tests/test_llg.py``)
+# ==========================================================================
+
+def test_method_of_computing_the_average_matters():
+    length = 20e-9  # m
+    simplices = 10
+    # dolfin.IntervalMesh(simplices, 0, length) -> dolfinx.mesh.create_interval
+    mesh_ = mesh.create_interval(MPI.COMM_WORLD, simplices, [0.0, length])
+    # dolfin.FunctionSpace / VectorFunctionSpace -> dolfinx.fem.functionspace
+    S1 = fem.functionspace(mesh_, ("Lagrange", 1))
+    S3 = fem.functionspace(mesh_, ("Lagrange", 1, (3,)))
+
+    llg = LLG(S1, S3)
+    # DOCUMENTED API CHANGE: the port's ``set_m`` no longer accepts legacy
+    # string ``Expression`` components with keyword parameters (it raises
+    # ``NotImplementedError``); the identical field is supplied as the
+    # equivalent callable. ``L=length`` is captured as a Python closure. The
+    # ``np.maximum(..., 0.0)`` guards ``sqrt`` against tiny negative round-off
+    # at the two endpoint nodes where ``(2x-L)/L == ±1`` exactly; the master
+    # string ``sqrt`` was evaluated on the same nodal values.
+    L = length
+    llg.set_m(
+        lambda x: np.vstack((
+            (2 * x[0] - L) / L,
+            np.sqrt(np.maximum(1.0 - ((2 * x[0] - L) / L) ** 2, 0.0)),
+            np.zeros_like(x[0]),
+        ))
+    )
+
+    average1 = llg.m_average
+    average2 = np.mean(components(llg.m_numpy), axis=1)
+    diff = np.abs(average1 - average2)
+    # master tolerance kept verbatim; measured DOLFINx diff.max() = 0.06902
+    assert diff.max() > 5e-2
+
+
+# ===== NEW under DOLFINx (no master ancestor) =====
+
+
 def _spaces(domain):
     S1 = fem.functionspace(domain, ("Lagrange", 1))
     S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
