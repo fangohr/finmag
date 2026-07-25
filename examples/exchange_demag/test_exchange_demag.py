@@ -425,6 +425,7 @@ if __name__ == '__main__':
     test_compare_averages()
     test_compare_energies()
     test_compare_energy_density()
+    test_compare_energy_density_oommf()
     plot_averages()
     plot_energies()
     plot_energy_density()
