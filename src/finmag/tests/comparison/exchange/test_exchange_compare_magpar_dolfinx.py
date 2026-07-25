@@ -9,6 +9,27 @@ Magpar node to the finmag mesh vertex at the SAME physical coordinate and
 compare the finmag exchange field value there. Each finmag/Magpar pair is
 therefore matched by *location*, not by array index.
 
+MASTER -> PORT traceability:
+  * Master ``test_three_dimensional_problem()`` (pytest entry point) and its
+    helper ``three_dimensional_problem()`` (mesh/field setup + comparison), both
+    in ``test_exchange_compare_magpar.py`` (git show b5015c5a) -> port
+    ``test_exchange_field_matches_magpar_at_saved_coordinates()`` and its helper
+    ``_compute()`` below. Same physics (Exchange field, C=1.3e-11, Ms=8.6e5, on
+    a 10nm x 1nm x 1nm 40x2x2 box, m0 = (sin^2, 0, cos^2) pattern) compared
+    against the same checked-in Magpar reference (``magpar_result/test_exch``).
+  * The only structural change is the pairing strategy: master's node-order,
+    position-by-position array zip (``magpar.compare_field``) is replaced by
+    the coordinate-keyed nodal lookup described below, because DOLFINx's mesh
+    generator does not reproduce dolfin's legacy vertex *order* (M8
+    mesh-drift) -- so index-for-index pairing is no longer valid, even though
+    the vertex *coordinates* still coincide exactly (see the coord-match-
+    distance assertion in ``_compute``).
+  * The interior ``evaluate_at_point`` probe check in ``_compute`` is a NEW
+    sanity spot-check with no master ancestor; it exists only to demonstrate
+    the nodal-vs-interpolated agreement in the interior, and is deliberately
+    NOT used on the boundary because of a known ``evaluate_at_point``
+    outer-face defect -- see the next paragraph for the workaround.
+
 Why coordinate-based:
   * Immune to M8 (mesh-drift): the DOLFINx mesh generator no longer emits
     vertices in the same *order* legacy dolfin did, so the old node-order
@@ -24,13 +45,18 @@ Field value at a saved coordinate. Every Magpar node coincides exactly with a
 finmag CG1 vertex, so the finmag field value there is simply that vertex's nodal
 value (a CG1 nodal coefficient IS the field value at the vertex -- no
 interpolation error). We therefore read the finmag nodal value at the matched
-vertex. NB: the interpolating point-in-cell probe (``Field.probe`` /
-``evaluate_at_point``) is exercised here as a sanity spot-check at an INTERIOR
-coordinate, but is NOT used to drive the boundary comparison: its bounding-box
-point-in-cell location is unreliable for points lying exactly on the outer
-``x = x_max`` face (it can resolve to the wrong boundary vertex), which would
-inject a spurious ~0.5 disagreement that is a probe-location artifact, not a
-real field difference. The coordinate-keyed nodal lookup is exact for all nodes.
+vertex -- the primary comparison never calls the interpolating probe at all.
+NB (``evaluate_at_point`` outer-face defect + workaround): the interpolating
+point-in-cell probe (``Field.probe`` / ``evaluate_at_point``) is exercised here
+ONLY as a NEW sanity spot-check at an INTERIOR coordinate (see the
+"MASTER -> PORT" note above); it is NOT used to drive the boundary comparison,
+because its bounding-box point-in-cell location is unreliable for points lying
+exactly on the outer ``x = x_max`` face (it can resolve to the wrong boundary
+vertex), which would inject a spurious ~0.5 disagreement that is a
+probe-location artifact, not a real field difference. The workaround is simply
+to never probe on the outer face: the coordinate-keyed nodal lookup used for
+every comparison point (interior and boundary alike) is exact and side-steps
+the probe entirely.
 
 The Magpar reference nodes are in NANOMETRES and the field is a flat array in
 component-blocked order ``[Hx0..Hx(N-1), Hy0.., Hz0..]`` already converted to
@@ -58,15 +84,21 @@ MS = 8.6e5
 C = 1.3e-11
 N_NODES = 369  # Magpar reference node count
 
-# MEASURED agreement: coordinate-keyed nodal comparison gives
-#   max rel_diff = 8.70e-08, mean rel_diff = 4.48e-09
-# (essentially the legacy 9e-8: because Magpar nodes land exactly on finmag CG1
-# vertices, this is the legacy node-for-node comparison re-expressed as a
-# coordinate match, so the same high-accuracy-patch agreement holds). Tolerance
-# is that measured max plus ~2.3x headroom. Do NOT raise this to paper over a
-# real disagreement: a units or component-ordering bug would blow it up by many
-# orders of magnitude (the bulk here agrees to ~1e-7).
-REL_TOLERANCE = 2e-7
+# RED-first tolerance check (measured in this environment, 3 repeat runs,
+# bit-identical each time -- this comparison is deterministic, no MPI/thread
+# nondeterminism observed):
+#   max rel_diff  = 8.698001683854669e-08
+#   mean rel_diff = 4.480401491142829e-09
+# Master's tolerance (``REL_TOLERANCE = 9e-8`` in test_exchange_compare_magpar.py,
+# labelled "needs higher accuracy patch") PASSES this measured value verbatim
+# (margin ~3.4%) -- because Magpar nodes land exactly on finmag CG1 vertices,
+# the coordinate-keyed nodal lookup here reduces to the same node-for-node
+# values master compared, so master's accuracy-patch-dependent tolerance
+# carries over unchanged. Kept verbatim rather than loosened: a units or
+# component-ordering bug would blow this up by many orders of magnitude (the
+# bulk of nodes agree to ~1e-9), so 9e-8 remains a real, tight witness, not
+# papering over a genuine disagreement.
+REL_TOLERANCE = 9e-8
 
 
 def _m0_callable(x):
@@ -85,14 +117,20 @@ def _m0_callable(x):
 
 
 def _compute():
+    # master: df.BoxMesh(df.Point(0,0,0), df.Point(x_max,y_max,z_max), 40, 2, 2)
     mesh = dm.create_box(
         MPI.COMM_WORLD,
         [[0.0, 0.0, 0.0], [X_MAX, Y_MAX, Z_MAX]],
         [40, 2, 2],
     )
+    # master: df.VectorFunctionSpace(mesh, 'Lagrange', 1) / df.FunctionSpace(mesh, 'DG', 0)
     S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))
     DG = fem.functionspace(mesh, ("DG", 0))
 
+    # master: vector_valued_function((m0_x, m0_y, m0_z), V, normalise=True) with
+    # m0_x = "pow(sin(0.2*x[0]*1e9), 2)", m0_y = "0", m0_z = "pow(cos(0.2*x[0]*1e9), 2)"
+    # -> reimplemented as the vectorised callable ``_m0_callable`` above (no
+    # dolfin Expression string-JIT under DOLFINx).
     m = Field(S3, value=_m0_callable, normalised=True)
 
     # NOTE: no unit_length passed => unit_length defaults to 1, mesh is in metres.
@@ -106,25 +144,21 @@ def _compute():
     geo = mesh.geometry.x
     finmag_nodal = H.get_numpy_array_debug().reshape((3, -1)).T
 
-    # Sanity spot-check that the interpolating probe agrees with the nodal value
-    # at an INTERIOR coordinate (exercises evaluate_at_point; boundary probing
-    # is deliberately avoided, see module docstring).
-    interior = np.array([5e-9, 0.0, 0.0])
-    j_int = np.argmin(np.abs(geo - interior).sum(axis=1))
-    probe_int = evaluate_at_point(H.f, interior)
-    assert np.allclose(probe_int, finmag_nodal[j_int], rtol=1e-9, atol=1e-3), (
-        "interior probe {} disagrees with nodal value {}".format(
-            probe_int, finmag_nodal[j_int]
-        )
-    )
-
     # --- Magpar reference (saved coords + saved field), read dolfin-free ---
+    # master: magpar.get_field(magpar_result, 'exch') (imports dolfin at module
+    # scope) -> magpar_io.get_field, the dolfin-free extraction of the same
+    # reader (see finmag.util.magpar_io module docstring).
     base = os.path.join(MODULE_DIR, "magpar_result", "test_exch")
     nodes_nm, magpar_flat = magpar_io.get_field(base, "exch")
     N = nodes_nm.shape[0]
     assert N == N_NODES, "unexpected Magpar node count {}".format(N)
 
     # --- UNIT CHECK: confirm nodes_nm*1e-9 falls within the finmag mesh -----
+    # master converted its OWN mesh to nm (``mesh.coordinates()[:] = tmp_c * 1e9``)
+    # to match Magpar's nm-scale nodes before pairing; the port instead leaves
+    # the finmag mesh in metres and converts Magpar's saved nm nodes to metres
+    # (``nodes_m = nodes_nm * 1e-9`` below) -- inverse direction, same physical
+    # coordinates, no rescaling of the finmag mesh itself.
     lo = geo.min(axis=0)
     hi = geo.max(axis=0)
     nodes_m = nodes_nm * 1e-9
@@ -170,6 +204,9 @@ def _compute():
         magpar=magpar_vecs,
         rel_diff=rel_diff,
         scale=scale,
+        H=H,
+        geo=geo,
+        finmag_nodal=finmag_nodal,
     )
 
 
@@ -193,6 +230,34 @@ def test_exchange_field_matches_magpar_at_saved_coordinates():
 
     assert max_rel < REL_TOLERANCE, (
         "max rel_diff {} exceeds tolerance {}".format(max_rel, REL_TOLERANCE)
+    )
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) ============================
+# ==========================================================================
+
+def test_interior_probe_matches_nodal_value():
+    """Sanity spot-check: ``evaluate_at_point`` agrees with the CG1 nodal value
+    at an INTERIOR coordinate.
+
+    No master ancestor -- master never probed the field, it only compared
+    nodal arrays. This exercises ``Field.probe`` / ``evaluate_at_point``
+    (unused by the primary coordinate-keyed comparison above) but deliberately
+    ONLY at an interior point: probing on the outer ``x = x_max`` face is
+    known to be unreliable (see the module docstring's "outer-face defect"
+    paragraph) and is not exercised here.
+    """
+    res = _compute()
+    geo = res["geo"]
+    finmag_nodal = res["finmag_nodal"]
+    interior = np.array([5e-9, 0.0, 0.0])
+    j_int = np.argmin(np.abs(geo - interior).sum(axis=1))
+    probe_int = evaluate_at_point(res["H"].f, interior)
+    assert np.allclose(probe_int, finmag_nodal[j_int], rtol=1e-9, atol=1e-3), (
+        "interior probe {} disagrees with nodal value {}".format(
+            probe_int, finmag_nodal[j_int]
+        )
     )
 
 
