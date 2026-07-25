@@ -1,52 +1,44 @@
-"""Nmag 1D ANISOTROPY dynamics comparison under DOLFINx (invariant witnesses).
+"""Nmag 1D ANISOTROPY dynamics comparison under DOLFINx (SR1 P5.2 minimal-diff
+transcription).
 
-Restores the legacy ``test_nmag_1d_anisotropy.py`` relaxation regression -- a 1D
-chain relaxing under uniaxial anisotropy (easy axis +z) -- rebuilt for DOLFINx.
+This is a MINIMAL-DIFF transcription of the master relaxation regression
+``test_nmag_1d_anisotropy.py`` (git ``b5015c5a``): a 1D chain relaxing under
+uniaxial anisotropy (easy axis +z), compared node-for-node against checked-in
+Nmag reference files (``*_ref.txt``; no live Nmag is run). Function names,
+order, assertion structure and TOLERANCES are kept identical to master; the
+only differences are (a) dolfin->dolfinx API changes (each annotated inline),
+(b) the py2->py3 ``print`` conversion, and (c) explanatory comments. Every
+restored master tolerance passes VERBATIM under DOLFINx -- measured values are
+recorded next to each assertion.
 
-The mesh is a structured ``dolfinx.mesh.create_interval(50, [0, 100nm])`` whose 51
-vertices are emitted in DETERMINISTIC ascending-x order, so the reference files
-(sampled node-for-node by Nmag) line up row-for-row and the third-node trajectory
-tracks the same physical site. No live Nmag is run (register M1): only the
-checked-in ``*_ref.txt`` files are read.
+The row-for-row node comparison (``test_third_node``) relies on master's
+implicit assumption that ``IntervalMesh`` emits its vertices in ascending-x
+order, so the reference files' n-th row lines up with the mesh's n-th vertex.
+``test_mesh_vertices_ascending_order`` below (NEW under DOLFINx) pins that
+assumption as an explicit, visible guard against a future dolfinx meshing
+change silently corrupting the comparison.
 
-All assertions are physical, mesh-order-robust invariants:
-  * ``test_m_cross_H`` -- the physical invariant ``m x H_anis`` at t0 matches the
-    Nmag reference. This is the sharpest witness: it directly probes the
-    anisotropy field ``H = (2 K1 / (mu0 Ms^2)) (m.u) u`` against Nmag, so a wrong
-    K1, a wrong easy axis, or a component-ordering bug blows it up.
-  * ``test_averages``  -- the volume-average magnetisation trajectory ``<m>(t)``
-    matches Nmag over the whole 0..3e-10 s run.
-  * ``test_third_node``-- the third node's ``m(t)`` trajectory matches Nmag.
-
-Every tolerance is the empirically MEASURED value under DOLFINx plus modest
-headroom (documented inline), not the legacy constant. Field ordering is
-component-blocked ``xxx`` (Task-31); ``_vectors``/``_components`` reshape it.
-[Claude Opus 4.8]
+[Claude Opus 4.8], [Claude Sonnet 5]
 """
 
 import os
 
 import numpy as np
-import pytest
-
-import dolfinx.mesh as dm
 from mpi4py import MPI
+
+import dolfinx.mesh as dm  # dolfin.IntervalMesh -> dolfinx.mesh.create_interval (MPI-aware)
 
 from finmag import Simulation as Sim
 from finmag.energies import UniaxialAnisotropy
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-X_MAX = 100e-9
-SIMPLEXES = 50
-K1 = 520e3  # J/m^3
-MS = 0.86e6
-ALPHA = 0.2
 
-T_MAX = 3e-10
-DT = 5e-12
-
-
+# dolfin-free numeric helpers: master used finmag.util.helpers.{vectors,
+# components}, but that module unconditionally imports legacy ``dolfin`` and
+# so cannot be imported under the DOLFINx environment. These are exact
+# reimplementations of ``h.vectors``/``h.components`` (component-blocked
+# ``xxx`` array reshaping, Task-31).
 def _vectors(vs):
     n = len(vs) // 3
     return vs.view().reshape((n, -1), order="F")
@@ -56,118 +48,169 @@ def _components(vs):
     return vs.view().reshape((3, -1))
 
 
-def _m_gen(coords):
-    x = coords[0]
-    mx = min(1.0, x / X_MAX)
-    mz = 0.1
-    my = np.sqrt(1.0 - (0.99 * mx ** 2 + mz ** 2))
-    return np.array([mx, my, mz])
+averages = []
+third_node = []
+
+# run the simulation
 
 
-_STATE = {}
+def setup_module(module=None):
+    x_max = 100e-9  # m
+    simplexes = 50
+    # dolfin.IntervalMesh(simplexes, 0, x_max) -> dolfinx.mesh.create_interval;
+    # dolfinx requires an explicit MPI communicator and an [a, b] pair.
+    mesh = dm.create_interval(MPI.COMM_WORLD, simplexes, [0.0, x_max])
 
+    def m_gen(coords):
+        x = coords[0]
+        mx = min(1.0, x / x_max)
+        mz = 0.1
+        my = np.sqrt(1.0 - (0.99 * mx ** 2 + mz ** 2))
+        return np.array([mx, my, mz])
 
-def _run():
-    if _STATE:
-        return _STATE
+    K1 = 520e3  # J/m^3
+    Ms = 0.86e6
 
-    mesh = dm.create_interval(MPI.COMM_WORLD, SIMPLEXES, [0.0, X_MAX])
-    assert np.all(np.diff(mesh.geometry.x[:, 0]) > 0), "vertices not ascending"
-
-    sim = Sim(mesh, MS, unit_length=1)
-    sim.alpha = ALPHA
-    sim.set_m(_m_gen)
+    sim = Sim(mesh, Ms)
+    sim.alpha = 0.2
+    sim.set_m(m_gen)
     anis = UniaxialAnisotropy(K1, (0, 0, 1))
     sim.add(anis)
 
-    H_anis_t0 = anis.compute_field().copy()
-    m_t0 = sim.m.copy()
+    # Save H_anis and m at t0 for comparison with nmag
+    global H_anis_t0, m_t0
+    H_anis_t0 = anis.compute_field()
+    m_t0 = sim.m
 
-    t = 0.0
-    averages = []
-    third_node = []
-    while t <= T_MAX:
+    av_f = open(os.path.join(MODULE_DIR, "averages.txt"), "w")
+    tn_f = open(os.path.join(MODULE_DIR, "third_node.txt"), "w")
+
+    t = 0
+    t_max = 3e-10
+    dt = 5e-12
+    # s
+    while t <= t_max:
         mx, my, mz = sim.m_average
         averages.append([t, mx, my, mz])
-        cx, cy, cz = _components(sim.m)
-        third_node.append([t, cx[2], cy[2], cz[2]])
-        t += DT
+        av_f.write(
+            str(t) + " " + str(mx) + " " + str(my) + " " + str(mz) + "\n")
+
+        mx, my, mz = _components(sim.m)  # h.components -> local _components (dolfin-free)
+        m2x, m2y, m2z = mx[2], my[2], mz[2]
+        third_node.append([t, m2x, m2y, m2z])
+        tn_f.write(
+            str(t) + " " + str(m2x) + " " + str(m2y) + " " + str(m2z) + "\n")
+
+        t += dt
         sim.run_until(t)
 
-    _STATE.update(
-        m_t0=m_t0,
-        H_anis_t0=H_anis_t0,
-        averages=np.array(averages),
-        third_node=np.array(third_node),
-    )
-    return _STATE
-
-
-def test_m_cross_H():
-    """``m x H_anis`` at t0 vs Nmag reference (physical invariant)."""
-    # Measured max rel diff under DOLFINx: 6.53e-5. Legacy pinned 7e-5. This is
-    # the inherent finmag-vs-Nmag anisotropy-field discretisation difference
-    # (node order matches, so it is the same quantity legacy compared). Pinned
-    # at the measured value with modest headroom.
-    REL_TOLERANCE = 1e-4
-
-    st = _run()
-    m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m_t0_ref.txt"))
-    H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "anis_t0_ref.txt"))
-    m_comp = _vectors(st["m_t0"])
-    H_comp = _vectors(st["H_anis_t0"])
-    assert m_ref.shape == m_comp.shape == (51, 3)
-    assert H_ref.shape == H_comp.shape == (51, 3)
-
-    m_cross_H_ref = np.cross(m_ref, H_ref)
-    m_cross_H_comp = np.cross(m_comp, H_comp)
-    diff = np.abs(m_cross_H_ref - m_cross_H_comp)
-    scale = max(np.linalg.norm(v) for v in m_cross_H_ref)
-    max_rel = float(np.max(diff / scale))
-    print("test_m_cross_H: max rel diff:", max_rel)
-
-    # Non-trivial witness: computed anisotropy field is genuinely order 1e5 A/m.
-    assert np.max(np.linalg.norm(H_comp, axis=1)) > 1e4
-    assert max_rel < REL_TOLERANCE
+    av_f.close()
+    tn_f.close()
 
 
 def test_averages():
-    # Measured max rel diff vs Nmag: 1.83e-3. Legacy pinned 9e-2.
-    REL_TOLERANCE = 1e-2
+    REL_TOLERANCE = 9e-2  # master 9e-2; measured DOLFINx max rel diff 1.83e-3 -> passes verbatim
 
     ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
-    computed = _run()["averages"]
-    assert ref.shape == computed.shape
+    computed = np.array(averages)
 
-    assert np.max(np.abs(ref[:, 0] - computed[:, 0])) < 1e-15, "timesteps"
-    ref_v, comp_v = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
-    diff = ref_v - comp_v
-    rel_diff = np.abs(diff / np.sqrt(ref_v[0] ** 2 + ref_v[1] ** 2
-                                     + ref_v[2] ** 2))
-    max_rel = float(np.nanmax(rel_diff))
-    print("test_averages: max rel diff per axis:", np.nanmax(rel_diff, axis=0))
-    assert max_rel < REL_TOLERANCE
+    dt = ref[:, 0] - computed[:, 0]
+    assert np.max(dt) < 1e-15, "Compare timesteps."
+
+    ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
+    diff = ref - computed
+    rel_diff = np.abs(diff / np.sqrt(ref[0] ** 2 + ref[1] ** 2 + ref[2] ** 2))
+
+    print("test_averages, max. relative difference per axis:")  # py2 print stmt -> py3 print()
+    print(np.nanmax(rel_diff, axis=0))
+
+    rel_err = np.nanmax(rel_diff)
+    if rel_err > 1e-3:
+        print("nmag:\n", ref)
+        print("finmag:\n", computed)
+    assert rel_err < REL_TOLERANCE
 
 
 def test_third_node():
-    # Measured max rel diff vs Nmag: 6.03e-3. Legacy pinned 3e-1.
-    REL_TOLERANCE = 3e-2
+    REL_TOLERANCE = 3e-1  # master 3e-1; measured DOLFINx max rel diff 6.03e-3 -> passes verbatim
 
     ref = np.loadtxt(os.path.join(MODULE_DIR, "third_node_ref.txt"))
-    computed = _run()["third_node"]
-    assert ref.shape == computed.shape
+    computed = np.array(third_node)
 
-    assert np.max(np.abs(ref[:, 0] - computed[:, 0])) < 1e-15, "timesteps"
-    ref_v, comp_v = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
-    diff = ref_v - comp_v
-    rel_diff = np.abs(diff / np.sqrt(ref_v[0] ** 2 + ref_v[1] ** 2
-                                     + ref_v[2] ** 2))
-    max_rel = float(np.nanmax(rel_diff))
-    print("test_third_node: max rel diff per axis:", np.nanmax(rel_diff, axis=0))
-    assert max_rel < REL_TOLERANCE
+    dt = ref[:, 0] - computed[:, 0]
+    assert np.max(dt) < 1e-15, "Compare timesteps."
+
+    ref, computed = np.delete(ref, [0], 1), np.delete(computed, [0], 1)
+    diff = ref - computed
+    rel_diff = np.abs(diff / np.sqrt(ref[0] ** 2 + ref[1] ** 2 + ref[2] ** 2))
+
+    print("test_third_node: max. relative difference per axis:")  # py2 print stmt -> py3 print()
+    print(np.nanmax(rel_diff, axis=0))
+
+    rel_err = np.nanmax(rel_diff)
+    if rel_err > 1e-3:
+        print("nmag:\n", ref)
+        print("finmag:\n", computed)
+    assert rel_err < REL_TOLERANCE
 
 
-if __name__ == "__main__":
-    test_m_cross_H()
+def test_m_cross_H():
+    """
+    compares m x H_anis at the beginning of the simulation.
+    motivation: Hans on IRC, 13.04.2012 10:45
+
+    """
+    REL_TOLERANCE = 7e-5  # master 7e-5; measured DOLFINx max rel diff 6.53e-5 -> passes verbatim
+
+    m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m_t0_ref.txt"))
+    m_computed = _vectors(m_t0)  # h.vectors -> local _vectors (dolfin-free)
+    assert m_ref.shape == m_computed.shape
+
+    H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "anis_t0_ref.txt"))
+    H_computed = _vectors(H_anis_t0)  # h.vectors -> local _vectors (dolfin-free)
+    assert H_ref.shape == H_computed.shape
+
+    assert m_ref.shape == H_ref.shape
+    m_cross_H_ref = np.cross(m_ref, H_ref)
+    m_cross_H_computed = np.cross(m_computed, H_computed)
+
+    diff = np.abs(m_cross_H_ref - m_cross_H_computed)
+    max_norm = max([np.linalg.norm(v) for v in m_cross_H_ref])  # h.norm -> np.linalg.norm (dolfin-free)
+    rel_diff = diff / max_norm
+
+    print("test_m_cross_H: max rel diff=", np.max(rel_diff))  # py2 print stmt -> py3 print()
+    assert np.max(rel_diff) < REL_TOLERANCE
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) ============================
+# ==========================================================================
+# Extra invariants with no master ancestor: (1) a structural guard on the
+# ordering assumption the row-for-row reference comparisons above silently
+# depend on, and (2) a non-triviality witness so a degenerate (all-zero)
+# anisotropy field could not accidentally satisfy test_m_cross_H's tolerance.
+
+def test_mesh_vertices_ascending_order():
+    """``test_third_node`` compares the n-th mesh vertex to the n-th row of
+    ``third_node_ref.txt``, relying on master's ``IntervalMesh`` emitting
+    vertices in ascending-x order. Pin that assumption explicitly so a future
+    dolfinx meshing change cannot silently misalign the comparison."""
+    x_max = 100e-9
+    mesh = dm.create_interval(MPI.COMM_WORLD, 50, [0.0, x_max])
+    assert np.all(np.diff(mesh.geometry.x[:, 0]) > 0)
+
+
+def test_h_anis_t0_is_nontrivial():
+    """Sanity check that ``H_anis_t0`` (used by ``test_m_cross_H``) is a
+    genuinely non-zero field, so that assertion is not vacuously satisfied."""
+    H_computed = _vectors(H_anis_t0)
+    assert np.max(np.linalg.norm(H_computed, axis=1)) > 1e4
+
+
+if __name__ == '__main__':
+    setup_module()
     test_averages()
     test_third_node()
+    test_m_cross_H()
+    test_mesh_vertices_ascending_order()
+    test_h_anis_t0_is_nontrivial()
