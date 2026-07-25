@@ -1,4 +1,42 @@
-"""Focused production tests for the direct DOLFINx EffectiveField port."""
+"""Focused production tests for the direct DOLFINx EffectiveField port.
+
+MASTER -> PORT MAPPING (SR1 P5.2 audit restoration)
+====================================================
+
+This file aggregates TWO master ancestors, each contributing exactly one test
+function. Both are accounted for below; there is no genuine gap.
+
+- ``src/finmag/tests/test_effective_field.py`` (git ``b5015c5a``):
+    * ``test_get_interaction_list`` -> ``test_get_interaction_list`` (this
+      file, restored by audit). Faithful, near-verbatim transcription: same
+      ``finmag.example.barmini()`` / ``Simulation.get_interaction_list`` /
+      ``Simulation.remove_interaction`` / ``finmag.sim_with`` API surface
+      (identical names, no divergence) and the same assertions. The only
+      change is the mesh constructor, ``dolfin.IntervalMesh(10, 0, 1)`` ->
+      ``dolfinx.mesh.create_interval(MPI.COMM_WORLD, 10, [0.0, 1.0])``
+      (the standard dolfin->dolfinx mesh-API substitution used throughout
+      this port; see e.g. ``test_llg_dolfinx.py``). Measured: passes
+      unchanged under DOLFINx (barmini's FK demag + Exchange interactions
+      give ``get_interaction_list() == ['Demag', 'Exchange']`` sorted, same
+      as legacy's ``sorted(...)`` contract).
+
+- ``src/finmag/physics/tests/test_effective_field.py`` (git ``b5015c5a``):
+    * ``test_effective_field_compute_returns_copy`` -> covered, ADAPTED, by
+      ``test_compute_returns_a_copy_not_a_live_reference`` (this file,
+      pre-existing). Master exercises the copy-not-reference contract of
+      ``EffectiveField.compute()`` through a full ``barmini()`` Simulation
+      plus ``run_until(1e-12)`` integration step; the port exercises the
+      identical contract directly against ``EffectiveField`` using a
+      ``RecordingInteraction`` double, because this file is a focused
+      physics-layer unit-test file for ``EffectiveField`` itself (Simulation
+      *integration* -- constructing a full barmini + advancing the SciPy /
+      Sundials integrator -- is covered by the Simulation test suite,
+      ``test_simulation_dolfinx.py``, not duplicated here). Tolerance is
+      UNCHANGED: ``atol=0, rtol=1e-8``, identical to master's assertion.
+
+2 master functions total (1 per file): 1 restored faithfully, 1
+covered-elsewhere-adapted with reasoning above. No dropped coverage remains.
+"""
 
 import sys
 
@@ -7,6 +45,7 @@ import pytest
 from dolfinx import fem, mesh
 from mpi4py import MPI
 
+import finmag
 from finmag.energies import Exchange, TimeZeeman, UniaxialAnisotropy, Zeeman
 from finmag.energies.energy_base import mu0
 from finmag.field import Field
@@ -289,3 +328,33 @@ def test_get_dolfin_function_rejects_region_argument_explicitly():
 
     with pytest.raises(NotImplementedError, match="region"):
         effective_field.get_dolfin_function("Zeeman", region="core")
+
+
+# ===== Restored from master (SR1 P5.2 audit) =====
+#
+# ``src/finmag/tests/test_effective_field.py`` (git b5015c5a),
+# ``test_get_interaction_list``. This exercises the Simulation-level registry
+# API (``get_interaction_list`` / ``remove_interaction`` / ``sim_with``),
+# which is a thin pass-through to the ``EffectiveField`` registry tested
+# directly above, but the audit flagged that the port silently dropped this
+# Simulation-facing coverage. Restored here near-verbatim; the only change is
+# the mesh constructor (see module docstring mapping table).
+def test_get_interaction_list():
+    # has bar mini example Demag and Exchange?
+    s = finmag.example.barmini()
+    lst = s.get_interaction_list()
+    assert 'Exchange' in lst
+    assert 'Demag' in lst
+    assert len(lst) == 2
+
+    # Let's remove one and check again
+    s.remove_interaction('Exchange')
+    assert s.get_interaction_list() == ['Demag']
+
+    # test simulation with no interaction
+    # dolfin.IntervalMesh(10, 0, 1) -> dolfinx.mesh.create_interval(comm, 10, [0.0, 1.0])
+    s2 = finmag.sim_with(
+        mesh=mesh.create_interval(MPI.COMM_WORLD, 10, [0.0, 1.0]),
+        m_init=(1, 0, 0), Ms=1,
+        demag_solver=None, unit_length=1e-8)
+    assert s2.get_interaction_list() == []
