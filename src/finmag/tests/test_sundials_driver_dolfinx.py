@@ -28,6 +28,69 @@ This is the gate for the dolfin-free native Sundials/CVODE port
 Every test that needs the native extension skips cleanly when it is
 unavailable (mirroring the Task 10 skip guards), so this file also collects on
 the legacy stack without the native build present.
+
+MASTER->PORT MAPPING-HEADER (BUCKET-B accounting)
+---------------------------------------------------
+Four master ancestors feed this port. Two of them (``sundials_reinit_test.py``
+and ``test_sundials_ode.py``) cannot even be collected under the DOLFINx/
+python3 stack any more -- they (or a module they import) still do
+``import dolfin`` -- so this file is their *sole* surviving coverage. The
+other two (``sundials_nsteps_test.py`` and ``test_sundials_stiff_ode.py``) are
+dolfin-free and still collect and pass, unmodified in spirit, as siblings
+under the current stack; they are left in place as "covered-elsewhere" rather
+than duplicated here.
+
+``src/finmag/util/ode/tests/test_sundials_ode.py`` (class ``OdeSundialsTests``,
+blocked from collecting here: ``finmag.util.helpers`` -> ``import dolfin``):
+
+| master fn                              | status                                                                 |
+|-----------------------------------------|------------------------------------------------------------------------|
+| ``test_errors``                         | covered: ``test_native_uninitialised_advance_raises_runtime_error``   |
+| ``test_simple_1d_scipy``                | covered-elsewhere: ``test_scipy_driver_dolfinx.py::test_vode_bdf_stiff_probe_matches_analytic_solution`` (different ODE -- stiff forced linear decay vs plain exponential growth -- same oracle concern: bare ``scipy.integrate.ode``/VODE/BDF matches an analytic solution) |
+| ``test_simple_1d`` (Adams+BDF/functional) | covered: ``test_native_simple_ode_adams_and_bdf_functional``        |
+| ``test_simple_1d_diag`` (BDF/Newton+diag) | covered: ``test_native_simple_ode_bdf_newton_diag``                 |
+| ``test_stiff_sp_gmr`` (BDF/Newton+SPGMR/jtimes) | covered, **behaviour tightened**: ``test_native_simple_ode_bdf_newton_spgmr_jtimes``. Master's ``jtimes`` callback never wrote ``Jv`` (returned 0 having only computed nothing), so it exercised the SPGMR call path without checking the Jacobian value; the port's ``jtimes`` sets ``Jv[:] = 0.5 * v`` (the true Jacobian of ``0.5 y``), so the same <1e-6 tolerance now also certifies the Jacobian-vector product itself. Flagged inline. |
+| ``test_jtimes_ex``                      | covered: ``test_native_jtimes_exception_propagates``                  |
+| ``init_simple_test``/``run_simple_test`` (helpers) | covered: folded into ``_run_simple_exponential`` helper here    |
+
+``src/finmag/drivers/tests/sundials_reinit_test.py`` (blocked from collecting
+here: imports ``finmag.tests.jacobean.domain_wall_cobalt`` -> ``import dolfin``):
+
+| master fn                                       | status                                                        |
+|--------------------------------------------------|----------------------------------------------------------------|
+| ``test_reinit_resets_num_rhs_eval_counter``       | covered, fixture simplified: ``test_sundials_reinit_resets_num_rhs_eval_counter``. Master iterates the ``domain_wall_cobalt`` fixture across ``method in {"bdf_diag", "adams"}`` (the ``"adams"`` case is actually run twice in master, likely a copy/paste artefact -- there is no assertion there beyond the one exercised below); the port instead drives the default macrospin fixture through the driver's default ``bdf_gmres_prec_id`` method. The single master-level invariant that survives across every variant -- ``reinit()`` zeroes ``n_rhs_evals`` and integration remains usable afterwards -- is kept at master's exact assertion (``== 0``), no tolerance loosened. |
+| ``run_test`` (helper)                             | not a test; folded into the port's use of ``llg_integrator`` + ``_macrospin_llg`` directly |
+
+``src/finmag/drivers/tests/sundials_nsteps_test.py`` (dolfin-free via
+``finmag.example.barmini`` -> DOLFINx ``bar.py``; collects and passes
+unmodified as a sibling under ``pixi run -e dolfinx pytest``, confirmed
+5 passed alongside the stiff-ODE file in the same run):
+
+| master fn                              | status                                                                   |
+|------------------------------------------|----------------------------------------------------------------------------|
+| ``test_integrator_get_set_max_steps``     | covered, both directly (``test_sundials_max_steps_get_set``, simplified macrospin fixture) and covered-elsewhere (sibling file, unmodified, still passing) |
+| ``test_integrator_stats`` (all stats keys == 0 pre-integration) | covered-elsewhere only: sibling file, unmodified, still passing; not duplicated here |
+| ``test_integrator_n_steps_only`` (nsteps progression, ``cur_t==tcur``, and ``tcur==hlast`` after 1 step) | covered, directly for nsteps/``cur_t==tcur`` (``test_sundials_advance_steps_counts_internal_steps``); the ``tcur==hlast`` after-one-step check is covered-elsewhere only (sibling file, unmodified, still passing) |
+
+``src/finmag/util/ode/tests/test_sundials_stiff_ode.py`` (Robertson stiff-ODE
+Jacobian-orientation convention; dolfin-free, collects and passes unmodified
+in spirit -- already modernised in-place by prior work with real assertions
+added and the two pathological transposed-Jacobian cases marked
+``xfail(strict=True)`` -- as a sibling under ``pixi run -e dolfinx pytest``):
+
+| master fn                          | status                                                                             |
+|--------------------------------------|--------------------------------------------------------------------------------------|
+| ``test_robertson_scipy``             | covered-elsewhere: sibling file (modernised, passing)                                |
+| ``test_robertson_scipy_transposed``  | covered-elsewhere: sibling file, renamed ``..._fails_with_excess_work``, ``xfail(strict=True)`` (divergence visible) |
+| ``test_robertson_sundials``          | covered-elsewhere: sibling file (modernised, passing, now with added value/step assertions master lacked) |
+| ``test_robertson_sundials_transposed`` | covered-elsewhere: sibling file, renamed ``..._fails_with_excess_work``, ``xfail(strict=True)`` (divergence visible) |
+
+No genuinely-dropped coverage was found: every master assertion is either
+ported directly below or still exercised, passing, by an unmodified or
+modernised sibling file under the current DOLFINx/python3 stack. Nothing was
+silently loosened; the one behaviour tightening (real vs. no-op ``jtimes`` in
+the SPGMR case) and the two pre-existing pathological-Jacobian ``xfail``
+markers are called out explicitly above and inline.
 """
 
 import math
@@ -162,6 +225,14 @@ def test_native_simple_ode_bdf_newton_diag():
 
 @requires_sundials
 def test_native_simple_ode_bdf_newton_spgmr_jtimes():
+    """Ported from ``test_sundials_ode.py::test_stiff_sp_gmr``, tightened.
+
+    Master's ``jtimes`` callback never wrote ``Jv`` at all (just ``return 0``)
+    -- it only exercised the SPGMR call path, not the Jacobian-vector value.
+    This port's ``jtimes`` sets the true ``Jv = 0.5 * v``, so the same <1e-6
+    tolerance now also certifies the analytic Jacobian-vector product.
+    Behaviour change flagged per the BUCKET-B mapping-header above.
+    """
     integrator = native_sundials.cvode(native_sundials.CV_BDF,
                                        native_sundials.CV_NEWTON)
 
@@ -294,7 +365,18 @@ def test_sundials_macrospin_relaxes_towards_field_within_physical_time():
 
 @requires_sundials
 def test_sundials_reinit_resets_num_rhs_eval_counter():
-    """Ported from sundials_reinit_test.py: reinit() zeroes the rhs counter."""
+    """Ported from sundials_reinit_test.py: reinit() zeroes the rhs counter.
+
+    Master's ``sundials_reinit_test.py`` cannot even be collected under this
+    stack any more (it imports the dolfin-only ``domain_wall_cobalt``
+    fixture); this test is that master's sole surviving coverage. The
+    domain-wall fixture and its ``bdf_diag``/``adams`` method sweep are
+    replaced by the default macrospin fixture and the driver's default
+    method, but the master-level invariant -- ``reinit()`` zeroes
+    ``n_rhs_evals`` and the integrator remains usable afterwards -- is kept
+    at master's exact tolerance (``== 0``). See the mapping-header table in
+    this module's docstring.
+    """
     llg = _macrospin_llg((np.sin(0.3), 0.0, np.cos(0.3)), 1.0e5, alpha=0.1)
     integrator = llg_integrator(llg, llg.m_field, backend="sundials",
                                 reltol=1e-8, abstol=1e-10)
