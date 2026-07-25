@@ -1,17 +1,29 @@
-"""Direct DOLFINx ``ThinFilmDemag`` port (Task 19).
+"""Direct DOLFINx ``ThinFilmDemag`` port (Task 19 + SR1 P5.2 minimal-diff
+transcription).
 
-``ThinFilmDemag`` is legacy's analytic thin-film demagnetising approximation
-(``Hi = -strength_i * m_i`` for a single chosen axis ``i``, ``strength``
-defaulting to a box-averaged ``Ms``) -- the last legacy-tested energy class
-still importing ``dolfin`` at module scope before this port.
+This file has two clearly separated parts:
 
-Validates the ported ``finmag.energies.thin_film_demag.ThinFilmDemag``
+1. A MINIMAL-DIFF transcription of the master unit tests from
+   ``src/finmag/energies/thin_film_demag_test.py`` (git ``b5015c5a``).
+   Function names, ordering, assertion structure and TOLERANCES are kept
+   identical to master; the only differences are (a) dolfin->dolfinx API
+   changes (each annotated inline), (b) the py2->py3 ``print`` conversion,
+   and (c) explanatory comments. ``ThinFilmDemag`` is legacy's analytic
+   thin-film demagnetising approximation (``Hi = -strength_i * m_i`` for a
+   single chosen axis ``i``, ``strength`` defaulting to a box-averaged
+   ``Ms``) -- the last legacy-tested energy class still importing
+   ``dolfin`` at module scope before this port.
+
+2. The sophisticated NEW-under-DOLFINx tests (construction/setup
+   validation, the "recomputed fresh on every call" contract, the explicit
+   ``field_strength`` branch, coordinate-ordered legacy oracle fixture
+   comparisons, ``Simulation.add()`` integration), which have no master
+   ancestor. They live below the ``NEW under DOLFINx`` banner and are
+   unchanged.
+
+The NEW tests validate the ported ``finmag.energies.thin_film_demag.ThinFilmDemag``
 against:
 
-- the transcribed legacy ``thin_film_demag_test.py`` invariants (name
-  attribute, zero field for magnetisation perpendicular to ``direction``, an
-  exact analytic field for magnetisation aligned with ``direction``, and a
-  slow cross-check against the ported ``FKDemag`` on a thin-film-like bar);
 - construction/setup validation consistent with every other ported
   interaction (Field type checks, CG1 requirement, mesh-matching, invalid
   ``direction``);
@@ -42,13 +54,99 @@ from finmag.energies import ThinFilmDemag, Demag
 from finmag.field import Field
 from finmag.sim.sim import Simulation
 
-_FIXTURE = os.path.join(
-    os.path.dirname(__file__), "fixtures", "thin_film_demag_oracle.json")
-ORACLE = json.load(open(_FIXTURE))
-CASES = ORACLE["cases"]
-
+# Master's module-level constant was named ``Ms``; renamed here to avoid
+# clashing with the many local ``Ms`` Field variables used throughout this
+# file (both below and in the NEW section).
 Ms_CONST = 8.6e5
 
+
+# ==========================================================================
+# MINIMAL-DIFF transcription of master thin_film_demag_test.py (git b5015c5a).
+# dolfin->dolfinx changes are annotated inline; tolerances are master's,
+# each passing verbatim under DOLFINx.
+# ==========================================================================
+
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    demag = ThinFilmDemag()
+    assert hasattr(demag, 'name')
+
+
+def compare_with_demag_from_initial_m(H_gen, m_init, atol=0, rtol=0):
+    # df.UnitCubeMesh(2, 2, 2) -> dolfinx mesh.create_unit_cube;
+    # Sim(...) -> Simulation(...) (same constructor shape: mesh, Ms, unit_length=).
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 2, 2, 2)
+    sim = Simulation(domain, Ms_CONST, unit_length=1e-9)
+    sim.set_m(m_init)
+
+    demag = ThinFilmDemag()
+    sim.add(demag)
+    H_computed = demag.compute_field()
+    H_expected = H_gen(sim.m)
+
+    diff = np.abs(H_computed - H_expected)
+    print("Expected, with shape {}:\n".format(H_expected.shape), H_expected)  # py2 print stmt -> py3 print()
+    print("Got, with shape {}:\n".format(H_computed.shape), H_computed)
+    print("Difference:\n", diff)
+    assert np.allclose(H_computed, H_expected, atol=atol, rtol=rtol)
+
+
+def test_zero_thin_film_demag():
+    compare_with_demag_from_initial_m(
+        lambda m: np.zeros(m.shape), (1, 0, 0), atol=1e-14)
+    compare_with_demag_from_initial_m(
+        lambda m: np.zeros(m.shape), (1, 1, 0), atol=1e-14)
+
+
+def test_thin_film_demag():
+    compare_with_demag_from_initial_m(lambda m: -Ms_CONST * m, (0, 0, 1), rtol=1e-14)
+
+
+@pytest.mark.slow
+def test_thin_film_demag_against_real_demag():
+    # df.BoxMesh(df.Point(0,0,0), df.Point(500e-9,500e-9,1e-9), 50, 50, 1)
+    # -> dolfinx mesh.create_box with an explicit tetrahedron cell type.
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (500e-9, 500e-9, 1e-9)],
+        [50, 50, 1], mesh.CellType.tetrahedron)
+    sim = Simulation(domain, Ms_CONST)
+    sim.set_m((0, 0, 1))
+
+    tfdemag = ThinFilmDemag()
+    sim.add(tfdemag)
+    # .view() dropped: dolfinx compute_field() already returns a fresh array.
+    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(1)
+    demag = Demag()
+    sim.add(demag)
+    H_demag = demag.compute_field().reshape((3, -1)).mean(1)
+
+    diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
+    print("Standard Demag:\n", H_demag)
+    print("ThinFilmDemag:\n", H_tfdemag)
+    print("Difference relative to Ms:\n", diff)
+    assert np.allclose(H_tfdemag, H_demag, atol=0.05 * Ms_CONST)  # 5% of Ms
+
+    sim.set_m((1, 0, 0))
+    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(1)
+    H_demag = demag.compute_field().reshape((3, -1)).mean(1)
+
+    print("Running again, changed m in the meantime.")
+    diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
+    print("Standard Demag:\n", H_demag)
+    print("ThinFilmDemag:\n", H_tfdemag)
+    print("Difference relative to Ms:\n", diff)
+    assert np.allclose(H_tfdemag, H_demag, atol=0.005 * Ms_CONST)  # 0.5% of Ms
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) =============================
+# ==========================================================================
+# Construction/setup validation, the recompute-fresh contract, the explicit
+# field_strength branch, coordinate-ordered legacy oracle-fixture
+# comparisons, and Simulation integration below have no ancestor in master
+# thin_film_demag_test.py.
 
 def _cube(cells=2):
     return mesh.create_unit_cube(MPI.COMM_WORLD, cells, cells, cells)
@@ -69,13 +167,6 @@ def test_thin_film_demag_export_does_not_load_legacy_dolfin():
 
     assert ThinFilmDemag.__module__ == "finmag.energies.thin_film_demag"
     assert "dolfin" not in sys.modules
-
-
-def test_interaction_accepts_name():
-    """Transcribed from legacy ``test_interaction_accepts_name``."""
-    demag = ThinFilmDemag()
-    assert hasattr(demag, "name")
-    assert demag.name == "ThinFilmDemag"
 
 
 def test_invalid_direction_raises_value_error():
@@ -111,70 +202,8 @@ def test_requires_matching_mesh():
 
 
 # --------------------------------------------------------------------------
-# transcribed legacy analytic invariants
+# recompute-fresh contract
 # --------------------------------------------------------------------------
-
-def _compare_with_expected(H_gen, m_init, atol=0.0, rtol=0.0):
-    domain = _cube()
-    m, Ms = _fields(domain, m_init)
-    demag = ThinFilmDemag()
-    demag.setup(m, Ms, unit_length=1e-9)
-    H_computed = demag.compute_field()
-    # compute_field() is component-blocked (Task 31); build the expected field
-    # from the blocked m so the ``-Ms * m`` invariant compares like-for-like.
-    H_expected = H_gen(m.get_ordered_numpy_array_xxx())
-    np.testing.assert_allclose(H_computed, H_expected, atol=atol, rtol=rtol)
-
-
-def test_zero_thin_film_demag():
-    """Transcribed from legacy ``test_zero_thin_film_demag``: magnetisation
-    perpendicular to the (default ``"z"``) direction gives an exactly zero
-    field."""
-    _compare_with_expected(lambda m: np.zeros_like(m), (1.0, 0.0, 0.0), atol=1e-14)
-    _compare_with_expected(
-        lambda m: np.zeros_like(m), (1.0 / np.sqrt(2), 1.0 / np.sqrt(2), 0.0),
-        atol=1e-14)
-
-
-def test_thin_film_demag():
-    """Transcribed from legacy ``test_thin_film_demag``: magnetisation
-    aligned with the direction axis gives ``H == -Ms * m`` exactly."""
-    _compare_with_expected(lambda m: -Ms_CONST * m, (0.0, 0.0, 1.0), rtol=1e-14)
-
-
-@pytest.mark.slow
-def test_thin_film_demag_against_real_demag():
-    """Transcribed from legacy ``test_thin_film_demag_against_real_demag``: a
-    sanity regression against the full ported ``FKDemag`` on a thin-film-like
-    bar, not a claim that the thin-film model is exact. Also exercises the
-    "recomputed fresh on every call" contract: ``compute_field()`` is called
-    again after changing ``m`` in place, and both interactions must reflect
-    the new state (neither caches a stale field)."""
-    domain = mesh.create_box(
-        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (500e-9, 500e-9, 1e-9)],
-        [50, 50, 1], mesh.CellType.tetrahedron)
-    m, Ms = _fields(domain, (0.0, 0.0, 1.0))
-
-    tfdemag = ThinFilmDemag()
-    tfdemag.setup(m, Ms, unit_length=1.0)
-    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(axis=1)
-
-    demag = Demag()
-    demag.setup(m, Ms, unit_length=1.0)
-    H_demag = demag.compute_field().reshape((3, -1)).mean(axis=1)
-
-    diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
-    assert np.allclose(H_tfdemag, H_demag, atol=0.05 * Ms_CONST)  # 5% of Ms
-    assert np.all(diff < 0.05)
-
-    m.set((1.0, 0.0, 0.0))
-    H_tfdemag = tfdemag.compute_field().reshape((3, -1)).mean(axis=1)
-    H_demag = demag.compute_field().reshape((3, -1)).mean(axis=1)
-
-    diff = np.abs(H_tfdemag - H_demag) / Ms_CONST
-    assert np.allclose(H_tfdemag, H_demag, atol=0.005 * Ms_CONST)  # 0.5% of Ms
-    assert np.all(diff < 0.005)
-
 
 def test_compute_field_is_recomputed_fresh_every_call():
     """Not a legacy-file transcription, but a direct pin of the "not cached"
@@ -236,6 +265,12 @@ def test_compute_energy_is_the_legacy_literal_zero():
 # --------------------------------------------------------------------------
 # coordinate-ordered legacy oracle comparisons
 # --------------------------------------------------------------------------
+
+_FIXTURE = os.path.join(
+    os.path.dirname(__file__), "fixtures", "thin_film_demag_oracle.json")
+ORACLE = json.load(open(_FIXTURE))
+CASES = ORACLE["cases"]
+
 
 def _quantity(case, name):
     for q in case["quantities"]:
