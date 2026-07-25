@@ -1,11 +1,48 @@
 """DOLFINx-parity checks for ``finmag.sim.magnetisation_patterns``.
 
-This slice (SR1 P4-init) restores the module onto the DOLFINx import graph and
-validates the FIRST formula family it exposes: the *vortex* family
-(``vortex_simple``, ``vortex_feldtkeller`` and their ``initialise_vortex``
-dispatcher).  Only the vortex physics is asserted here; the other families
-(helix / skyrmion / target) become importable once the shared dolfin-isms are
-removed but are intentionally left unvalidated by this slice.
+This slice (SR1 P4-init / SR1 P5.2 minimal-diff transcription) restores the
+module onto the DOLFINx import graph and validates the FIRST formula family
+it exposes: the *vortex* family (``vortex_simple``, ``vortex_feldtkeller``
+and their ``initialise_vortex`` dispatcher). Only the vortex physics is
+asserted here; the other families (helix / skyrmion / target) become
+importable once the shared dolfin-isms are removed but are intentionally
+left unvalidated by this slice.
+
+Two clearly separated parts, following the SR1 P5.2 minimal-diff convention
+(exemplar: ``test_fk_demag_dolfinx.py``):
+
+1. A MINIMAL-DIFF transcription of master's single function,
+   ``test_vortex_functions`` (git ``b5015c5a``,
+   ``src/finmag/sim/magnetisation_patterns_test.py`` -- the whole master file
+   is 1 function). Name, nested-helper structure and assertions are kept
+   identical to master; the only differences are (a) dolfin->dolfinx API
+   changes (annotated inline: ``cylinder(...)`` now returns a dolfinx mesh,
+   and ``mesh.coordinates()`` becomes the owned-vertex slice of
+   ``mesh.geometry.x``), (b) ``np.alltrue`` -> ``np.all`` (the former alias
+   was removed in numpy>=2.0; this repo runs numpy 2.4.6), and (c)
+   explanatory comments. No tolerance loosening: master's assertions here are
+   exact-comparison / sign checks, not tolerance-gated.
+
+   SUPERSESSION NOTE: the port's own tests below the NEW banner
+   (``test_vortex_simple_matches_analytic_profile``,
+   ``test_vortex_simple_chirality_and_polarity_flip``,
+   ``test_vortex_feldtkeller_exponential_profile``) already assert
+   materially STRONGER, closed-form pointwise values (exact analytic vectors
+   at named mesh points, not just polarity-sign/cross-product-sign checks)
+   for the same ``vortex_simple``/``vortex_feldtkeller`` physics that
+   master's ``test_vortex_functions`` exercises more loosely. Per the audit,
+   master's function is restored FAITHFULLY above the banner (nothing is
+   silently dropped), and the stronger new tests are kept below it
+   unchanged; this docstring is the explicit record of that supersession.
+
+2. The NEW-under-DOLFINx tests below the
+   ``# ===== NEW under DOLFINx (no master ancestor) =====`` banner, which
+   have no master ancestor (see the supersession note above for the three
+   that also strengthen master's coverage). They exercise the analytic
+   vortex profile via ``Simulation.set_m`` on a coordinate-friendly square
+   mesh, chirality/polarity flips, the Feldtkeller exponential profile, and
+   the ``initialise_vortex`` dispatcher (default-center-at-sample-centre and
+   the unknown-type ``ValueError``).
 
 The vortex factories are pure ``math``/tuple callables that ``Simulation.set_m``
 interpolates pointwise at the CG1 nodes, so a node's magnetisation equals the
@@ -32,6 +69,10 @@ from finmag.sim.magnetisation_patterns import (
     vortex_feldtkeller,
     vortex_simple,
 )
+# dolfin -> dolfinx: master imported `cylinder` from finmag.util.meshes too
+# (the mesh-generation helper itself is unchanged API-wise, only its return
+# type -- a dolfinx mesh instead of a dolfin one -- differs).
+from finmag.util.meshes import cylinder
 
 
 SRC_ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +80,82 @@ REPO_ROOT = SRC_ROOT.parent
 
 MS = 8.6e5
 R = 20.0  # vortex core radius, in mesh coordinates
+
+
+# ==========================================================================
+# MINIMAL-DIFF transcription of master
+# src/finmag/sim/magnetisation_patterns_test.py (git b5015c5a) -- the whole
+# master file is this one function. See the module docstring's supersession
+# note: the port's own analytic tests below the NEW banner are a materially
+# stronger replacement, but master's version is kept here faithfully too.
+# ==========================================================================
+def test_vortex_functions():
+    """
+    Testing for correct polarity and 'handiness' of the two vortex functions,
+    vortex_simple() and vortex_feldtkeller()
+    """
+
+    # dolfin -> dolfinx: `cylinder(...)` now returns a dolfinx mesh.
+    msh = cylinder(10, 1, 3, save_result=False)
+    # dolfin -> dolfinx: `mesh.coordinates()` -> owned-vertex slice of
+    # `mesh.geometry.x` (dolfin's coordinates() had no ghost/owned split).
+    n_owned = msh.geometry.index_map().size_local
+    coords = msh.geometry.x[:n_owned, : msh.geometry.dim]
+
+    def functions(hand, p):
+        f_simple = vortex_simple(r=10.1, center=(0, 0, 1),
+                                 right_handed=hand, polarity=p)
+        f_feldtkeller = vortex_feldtkeller(beta=15, center=(0, 0, 1),
+                                           right_handed=hand, polarity=p)
+        return [f_simple, f_feldtkeller]
+
+    # The polarity test evaluates the function at the mesh coordinates and
+    # checks that the polarity of z-component from this matches the user input
+    # polarity
+    def polarity_test(func, coords, p):
+        # numpy>=2.0 removed the `np.alltrue` alias (this repo runs 2.4.6);
+        # `np.all` is the same check master used.
+        assert(np.all([(p * func(coord)[2] > 0) for coord in coords]))
+
+    # This function finds cross product of radius vector and the evaluated
+    # function vector, rxm. The z- component of this will be:
+    #	- negative for a clockwise vortex
+    #	- positive for a counter-clockwise vortex
+    # When (rxm)[2] is multiplied by the polarity, p, (rxm)[2] * p is:
+    #	- negative for a left-handed state
+    #	- positive for a right-handed state
+    def handiness_test(func, coords, hand, p):
+        r = coords
+        m = [func(coord) for coord in coords]
+        cross_product = np.cross(r, m)
+        if hand is True:
+            assert(np.all((cross_product[:, 2] * p) > 0))
+        elif hand is False:
+            assert(np.all((cross_product[:, 2] * p) < 0))
+
+    # run the tests
+    for hand in [True, False]:
+        for p in [-1, 1]:
+            funcs = functions(hand, p)
+            for func in funcs:
+                polarity_test(func, coords, p)
+                handiness_test(func, coords, hand, p)
+
+    # Final sanity check: f_simple should yield zero z-coordinate
+    # outside the vortex core radius, and the magnetisation should
+    # curl around the center.
+    f_simple = vortex_simple(r=20, center=(0, 0, 1),
+                             right_handed=True, polarity=1)
+
+    assert(np.allclose(f_simple((21, 0, 0)), [0, 1, 0]))
+    assert(np.allclose(f_simple((-16, 16, 20)),
+                       [-1. / np.sqrt(2), -1. / np.sqrt(2), 0]))
+
+
+# ===== NEW under DOLFINx (no master ancestor) =====
+# (three of the tests below also supersede master's test_vortex_functions
+#  with stronger, closed-form assertions -- see the module docstring's
+#  SUPERSESSION NOTE.)
 
 
 # ---------------------------------------------------------------------------
