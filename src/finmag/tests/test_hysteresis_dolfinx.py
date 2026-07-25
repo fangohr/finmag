@@ -50,27 +50,64 @@ are unchanged, only their rationale is corrected. No source file was modified
 by P2.5 -- the core relaxation code already re-relaxes each stage correctly.
 
 [Claude Sonnet 5; P2.5 diagnosis correction Claude Opus 4.8]
+
+SR1 P5.2 minimal-diff transcription (2026-07-25, Claude Sonnet 5): the module
+docstring above predates the literal master transcription. This slice adds a
+MINIMAL-DIFF transcription of master's actual two ``hysteresis_test.py``
+functions (git ``b5015c5a``) -- ``test_hysteresis`` and
+``test_hysteresis_loop_and_plotting`` -- placed directly below the
+module-level constants and ABOVE the ``NEW under DOLFINx`` banner. This
+restores acceptance-register audit D4's dropped coverage: master's
+``test_hysteresis`` exercises the ``fun=None`` code path with a NON-EMPTY
+``H_ext_list`` (``res1 = sim1.hysteresis(H_ext_list=...); assert res1 ==
+None``), which the port previously covered only for the EMPTY-list case
+(``test_hysteresis_empty_list_returns_none``, preserved unchanged below the
+banner). Everything from ``test_relax_reduces_dmdt_below_threshold`` onward
+has no master ancestor by name and now lives below the banner accordingly.
 """
 
 import json
 import os
+from glob import glob
+
+import matplotlib
+# Headless Agg backend so plot_hysteresis_loop (imported below, which pulls
+# in matplotlib.pyplot) never needs an X display -- same precedent as
+# test_plot_helpers_dolfinx.py. Must be set before the plot_helpers import.
+matplotlib.use("Agg")
 
 import numpy as np
-from dolfinx import mesh
+import pytest
+from dolfinx import mesh as dolfinx_mesh
 from mpi4py import MPI
 
+from finmag import sim_with
+from finmag.example import barmini
 from finmag.energies import UniaxialAnisotropy, Zeeman
 from finmag.sim.sim import Simulation
+from finmag.util.plot_helpers import plot_hysteresis_loop
 
 _FIXTURE = os.path.join(
     os.path.dirname(__file__), "fixtures", "hysteresis_oracle.json")
 ORACLE = json.load(open(_FIXTURE))
 
+# Master module-level constants (git b5015c5a), used by the transcribed
+# test_hysteresis_loop_and_plotting below; ONE_DEGREE_PER_NS itself is
+# unreferenced in master's own two functions (dead constant, preserved
+# verbatim) -- not to be confused with sim_relax.py's own internal copy or
+# this file's below-banner ``_ONE_DEGREE_PER_NS``.
+ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
+
+H = 0.2e6  # maximum external field strength in A/m
+initial_direction = np.array([1.0, 0.01, 0.0])
+N = 5
+
 
 def _box(nx=1):
-    return mesh.create_box(
+    # dolfin->dolfinx: df.BoxMesh(...) -> dolfinx_mesh.create_box(...).
+    return dolfinx_mesh.create_box(
         MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)], [nx, nx, nx],
-        mesh.CellType.tetrahedron)
+        dolfinx_mesh.CellType.tetrahedron)
 
 
 def _make_sim(m_init=(1.0, 0.05, 0.0), alpha=1.0, K1=1.0e4,
@@ -83,6 +120,82 @@ def _make_sim(m_init=(1.0, 0.05, 0.0), alpha=1.0, K1=1.0e4,
         sim.add(UniaxialAnisotropy(K1, easy_axis))
     return sim
 
+
+# ==========================================================================
+# MINIMAL-DIFF transcription of master hysteresis_test.py (git b5015c5a).
+# Function names, order and assertion structure are master's; the only
+# differences are dolfin->dolfinx API changes (annotated inline), the
+# py2->py3 xrange->range conversion, and explanatory comments.
+# ==========================================================================
+
+def test_hysteresis(tmpdir):
+    os.chdir(str(tmpdir))
+    sim = barmini()
+    # dolfin->dolfinx: df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 1, 1, 1)
+    # -> dolfinx_mesh.create_box(...) (same substitution as
+    # finmag.example.bar._box_mesh).
+    mesh = dolfinx_mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (1.0, 1.0, 1.0)], [1, 1, 1],
+        dolfinx_mesh.CellType.tetrahedron)
+    H_ext_list = [(1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)]
+    N = len(H_ext_list)
+
+    # Run a relaxation and save a vtk snapshot at the end of each stage;
+    # this should result in three .vtu files (one for each stage).
+    sim1 = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0,
+                    unit_length=1e-9, A=None, demag_solver=None)
+    sim1.schedule('save_vtk', at_end=True, filename='barmini_hysteresis.pvd')
+    res1 = sim1.hysteresis(H_ext_list=H_ext_list)
+    assert(len(glob('barmini_hysteresis*.vtu')) == N)
+    assert(res1 == None)
+
+    # Run a relaxation with a non-trivial `fun` argument and check
+    # that we get a list of return values.
+    sim2 = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0,
+                    unit_length=1e-9, A=None, demag_solver=None)
+    res2 = sim2.hysteresis(H_ext_list=H_ext_list,
+                           fun=lambda sim: sim.m_average[0])
+    assert(len(res2) == N)
+
+
+@pytest.mark.requires_X_display
+def test_hysteresis_loop_and_plotting(tmpdir):
+    """
+    Call the hysteresis loop with various combinations for saving
+    snapshots and check that the correct number of vtk files have been
+    produced. Also check that calling the plotting function works
+    (although the output image isn't verified).
+
+    """
+    os.chdir(str(tmpdir))
+
+    mesh = dolfinx_mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (1.0, 1.0, 1.0)], [1, 1, 1],
+        dolfinx_mesh.CellType.tetrahedron)
+    sim = sim_with(mesh, Ms=1e6, m_init=(0.8, 0.2, 0), alpha=1.0,
+                   unit_length=1e-9, A=None, demag_solver=None)
+    H_vals, m_vals = \
+        sim.hysteresis_loop(H, initial_direction, N, stopping_dmdt=10)
+
+    # Check that the magnetisation values are as trivial as we expect
+    # them to be ;-)
+    assert(np.allclose(m_vals, [1.0 for _ in range(2 * N)], atol=1e-4))  # py2->3: xrange->range
+
+    # This only tests whether the plotting function works without
+    # errors. It currently does *not* check that it produces
+    # meaningful results (and the plot is quite boring for the system
+    # above anyway).
+    plot_hysteresis_loop(H_vals, m_vals, infobox=["param_A = 23", ("param_B", 42)],
+                         title="Hysteresis plot test", xlabel="H_ext", ylabel="m_avg",
+                         figsize=(5, 4), infobox_loc="bottom left",
+                         filename='test_plot.pdf')
+
+    # Test multiple filenames, too
+    plot_hysteresis_loop(
+        H_vals, m_vals, filename=['test_plot.pdf', 'test_plot.png'])
+
+
+# ===== NEW under DOLFINx (no master ancestor) =====
 
 # --------------------------------------------------------------------------
 # relax()
@@ -99,8 +212,10 @@ def test_relax_reduces_dmdt_below_threshold():
 
 
 # --------------------------------------------------------------------------
-# hysteresis() / hysteresis_loop(): API contract (transcribed from legacy
-# hysteresis_test.py)
+# hysteresis() / hysteresis_loop(): API contract (NEW coverage inspired by,
+# but not a literal transcription of, legacy hysteresis_test.py -- the
+# literal master transcription lives above the banner as test_hysteresis /
+# test_hysteresis_loop_and_plotting)
 # --------------------------------------------------------------------------
 
 def test_hysteresis_empty_list_returns_none():
