@@ -11,6 +11,19 @@ is intentionally NOT reproduced here (register M8); the restored coordinate-base
 Magpar demag comparison lives in the Magpar probe-at-coords slice. This file
 carries the analytic contract, pointwise, on the same ``sphere.geo`` geometry
 the legacy test used. [Claude Opus 4.8]
+
+Sphere-field coverage reconciliation (SR1 P5.2 minimal-diff pass): the
+*canonical* uniformly-magnetised-sphere field test -- the minimal-diff
+transcription of master ``fk_demag_test.py::
+test_demag_field_for_uniformly_magnetised_sphere`` -- now lives in
+``src/finmag/tests/test_fk_demag_dolfinx.py`` (demag gate), where it asserts
+master's tighter 7e-3 absolute bound on ``sphere(r=1, maxh=0.2)`` (measured
+max diff ~4.4e-3). THIS file is retained as the distinct comparison-gate
+restoration of legacy ``test_demag_field.py`` on the *different* r=10
+``sphere.geo`` geometry, exercising the ``from_geofile`` mesh path and the
+``Demag()`` factory. To avoid two tests asserting the same invariant at
+differently-justified tolerances, the previously-arbitrary 2e-2 bound here is
+tightened to its own measured-justified value (see below).
 """
 
 import os
@@ -24,9 +37,13 @@ from finmag.util.meshes import from_geofile
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Legacy tolerance (test_demag_field.py:64); the discretisation of the sphere
-# surface bounds how close every node gets to the analytic -1/3.
-REL_TOLERANCE = 2e-2
+# Legacy test_demag_field.py:64 used 2e-2, but that was looser than this
+# geometry actually achieves under DOLFINx. Measured pointwise max rel_diff on
+# the r=10 sphere.geo mesh (1335 vertices) is ~1.31e-2; tightened to 1.5e-2 so
+# this comparison variant asserts at its own measured-justified bound rather
+# than duplicating the canonical master test's contract at an arbitrary
+# tolerance. (Canonical 7e-3-absolute test: test_fk_demag_dolfinx.py.)
+REL_TOLERANCE = 1.5e-2
 
 
 def _setup_sphere_demag():

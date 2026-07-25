@@ -1,7 +1,23 @@
-"""Direct DOLFINx FK demag port (Task 11b).
+"""Direct DOLFINx FK demag port (Task 11b + SR1 P5.2 minimal-diff transcription).
 
-Validates the ported ``finmag.energies.demag.fk_demag.FKDemag`` and its
-coordinate-driven boundary-node ordering against:
+This file has two clearly separated parts:
+
+1. A MINIMAL-DIFF transcription of the master sphere-analytic unit tests from
+   ``src/finmag/energies/demag/fk_demag_test.py`` (git ``b5015c5a``). Function
+   names, ordering, assertion structure and TOLERANCES are kept identical to
+   master; the only differences are (a) dolfin->dolfinx API changes (each
+   annotated inline), (b) the py2->py3 ``print`` conversion, and (c) explanatory
+   comments. Every restored master tolerance passes VERBATIM under DOLFINx --
+   measured values are recorded next to each assertion so any future drift is
+   visible in a side-by-side diff.
+
+2. The sophisticated NEW-under-DOLFINx tests (golden-BEM extraction, per-case
+   oracle-fixture compares, analytic-cube factor, Krylov-residual isolation,
+   deferred-solver contracts) which have no master ancestor. They live below the
+   ``NEW under DOLFINx`` banner and are unchanged.
+
+The NEW tests validate the ported ``finmag.energies.demag.fk_demag.FKDemag``
+and its coordinate-driven boundary-node ordering against:
 
 - the Task 11a golden BEM matrix, reproduced *bit-for-bit* through the new
   DOLFINx boundary extraction after the coordinate-induced permutation (the
@@ -29,6 +45,7 @@ pins this empirically rather than asserting it in prose.
 
 import json
 import os
+import time
 from math import pi
 
 import numpy as np
@@ -39,15 +56,181 @@ import basix.ufl
 import dolfinx.fem as fem
 import dolfinx.mesh as dm
 
-from finmag.field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space, evaluate_at_point
 from finmag.energies import Demag
 from finmag.energies.demag import Demag2D, MacroGeometry
 from finmag.energies.demag.fk_demag import FKDemag, boundary_bem_arrays
 from finmag.native.bem_arrays import compute_bem_fk_from_arrays
 from finmag.tests.test_native_bem_arrays_dolfinx import (
     CUBE_COORDS, CUBE_CELLS, GOLDEN_BEM_FK)
+from finmag.util.consts import mu0  # master imported mu0 from consts (== 4*pi*1e-7)
+from finmag.util.meshes import sphere, box
 
-mu0 = 4.0 * pi * 1e-7
+
+# ==========================================================================
+# MINIMAL-DIFF transcription of master fk_demag_test.py (git b5015c5a).
+# dolfin->dolfinx changes are annotated inline; tolerances are master's,
+# each with the measured DOLFINx value recorded beside it.
+# ==========================================================================
+
+radius = 1.0
+maxh = 0.2
+unit_length = 1e-9
+volume = 4 * pi * (radius * unit_length) ** 3 / 3
+
+
+def setup_demag_sphere(Ms):
+    # meshes.sphere now returns a DOLFINx mesh via the netgen/gmsh backend
+    # (master got a dolfin.Mesh). save_result=False is the one deviation from
+    # master's call: the default (True) caches the mesh as sphere-1-0_2.{h5,xdmf}
+    # in the CWD, littering the repo root on every gate run (the artifacts are
+    # not gitignored). The test does not need the cache, so we disable it.
+    mesh = sphere(r=radius, maxh=maxh, save_result=False)
+    # df.FunctionSpace(mesh, 'DG', 0) -> dolfinx.fem.functionspace((family, degree))
+    Ms_field = Field(fem.functionspace(mesh, ("DG", 0)), Ms)
+    # df.VectorFunctionSpace(mesh, "Lagrange", 1) -> functionspace with shape=(3,)
+    S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))
+    # master built df.Function(S3) + assign(df.Constant((1,0,0))); the DOLFINx
+    # Field accepts the constant tuple directly.
+    m = Field(S3, (1, 0, 0))
+    demag = FKDemag()
+    demag.setup(m, Ms_field, unit_length)
+    return demag
+
+
+def test_interaction_accepts_name():
+    """
+    Check that the interaction accepts a 'name' argument and has a 'name' attribute.
+    """
+    demag = FKDemag(name='MyDemag')
+    assert hasattr(demag, 'name')
+
+
+def test_demag_field_for_uniformly_magnetised_sphere():
+    demag = setup_demag_sphere(1)
+    H = demag.compute_field().reshape((3, -1))
+    H_expected = np.array([-1.0 / 3.0, 0.0, 0.0])
+    print("Got demagnetising field H =\n{}.\nExpected mean H = {}.".format(
+        H, H_expected))
+
+    TOL = 7e-3  # master 7e-3; measured DOLFINx max diff ~4.4e-3 -> passes verbatim
+    diff = np.max(np.abs(H - H_expected[:, np.newaxis]), axis=1)
+    print("Maximum difference to expected result per axis is {}. Comparing to limit {}.".format(diff, TOL))
+    assert np.max(diff) < TOL
+
+    TOL = 8e-3  # master 8e-3; measured DOLFINx max spread ~5.0e-3 -> passes verbatim
+    spread = np.abs(H.max(axis=1) - H.min(axis=1))
+    print("The values spread {} per axis. Comparing to limit {}.".format(spread, TOL))
+    assert np.max(spread) < TOL
+
+
+@pytest.mark.skip(reason="netgen box() mesh + wall-clock timing comparison "
+                         "deferred under DOLFINx; master already marked this "
+                         "xfail. Assertions preserved verbatim for the record.")
+@pytest.mark.slow  # this test needs a minute to complete
+def test_thin_film_argument_saves_time_on_thin_film():
+    mesh = box(0, 0, 0, 500, 50, 1, maxh=2.0, directory="meshes")
+    Ms = Field(fem.functionspace(mesh, ("DG", 0)), 8e5)  # df.FunctionSpace -> functionspace
+    unit_length = 1e-9
+    S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))  # df.VectorFunctionSpace -> shape=(3,)
+    m = Field(S3, (0, 0, 1))  # df.Function+assign(Constant((0,0,1))) -> constant tuple
+
+    demag = FKDemag()
+    demag.setup(m, Ms, unit_length)
+    now = time.time()
+    H = demag.compute_field()
+    elapsed = time.time() - now
+    del(demag)
+
+    demag = FKDemag(thin_film=True)
+    demag.setup(m, Ms, unit_length)
+    now = time.time()
+    H = demag.compute_field()
+    elapsed_thin_film = time.time() - now
+
+    saved_relative = (elapsed - elapsed_thin_film) / elapsed
+    print("FKDemag thin film settings saved {:.1%} of time.".format(saved_relative))
+    assert elapsed_thin_film < elapsed
+    # This was 20% initially, but in order to make tests more robust this
+    # value is reduced to 5%
+    assert saved_relative > 0.05
+
+
+def test_demag_energy_for_uniformly_magnetised_sphere():
+    Ms = 800e3
+    demag = setup_demag_sphere(Ms)
+    E = demag.compute_energy()
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
+    print("Got E = {}. Expected E = {}.".format(E, E_expected))
+
+    REL_TOL = 3e-2  # master 3e-2; measured DOLFINx rel_diff ~2.1e-2 -> passes verbatim
+    rel_diff = abs(E - E_expected) / abs(E_expected)
+    print("Relative difference is {:.3g}%. Comparing to limit {:.3g}%.".format(
+        100 * rel_diff, 100 * REL_TOL))
+    assert rel_diff < REL_TOL
+
+
+def test_energy_density_for_uniformly_magnetised_sphere():
+    Ms = 800e3
+    demag = setup_demag_sphere(Ms)
+    rho = demag.energy_density()
+
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
+    rho_expected = E_expected / volume
+    print("Got mean rho = {:.3e}. Expected rho = {:.3e}.".format(np.mean(rho), rho_expected))
+
+    REL_TOL = 1.7e-2  # master 1.7e-2; measured DOLFINx max rel_diff ~1.1e-2 -> passes verbatim
+    rel_diff = np.max(np.abs(rho - rho_expected)) / abs(rho_expected)
+    print("Maximum relative difference = {:.3g}%. Comparing to limit {:.3g}%.".format(
+        100 * rel_diff, 100 * REL_TOL))
+    assert rel_diff < REL_TOL
+
+
+def test_energy_density_for_uniformly_magnetised_sphere_as_function():
+    Ms = 800e3
+    demag = setup_demag_sphere(Ms)
+    rho = demag.energy_density_function()
+    print("Probing the energy density at the center of the sphere.")
+    # master called the dolfin Function directly: rho([0,0,0]). DOLFINx
+    # fem.Function is not point-callable, so use the shared evaluate_at_point
+    # helper. The centre [0,0,0] is strictly interior, so it is safe from the
+    # known evaluate_at_point outer-face point-location defect.
+    rho_center = evaluate_at_point(rho, [0.0, 0.0, 0.0])
+
+    # -mu0/2 Integral H * M with H = - M / 3
+    E_expected = (1.0 / 6.0) * mu0 * Ms ** 2 * volume
+    rho_expected = E_expected / volume
+    print("Got rho = {:.3e}. Expected rho = {:.3e}.".format(rho_center, rho_expected))
+
+    REL_TOL = 1.3e-2  # master 1.3e-2; measured DOLFINx rel_diff ~7.4e-3 -> passes verbatim
+    rel_diff = np.max(np.abs(rho_center - rho_expected)) / abs(rho_expected)
+    print("Maximum relative difference = {:.3g}%. Comparing to limit {:.3g}%.".format(
+        100 * rel_diff, 100 * REL_TOL))
+    assert rel_diff < REL_TOL
+
+
+def test_regression_Ms_numpy_type():
+    mesh = sphere(r=radius, maxh=maxh, save_result=False)  # save_result=False: avoid repo-root litter (see setup_demag_sphere)
+    S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))  # df.VectorFunctionSpace -> shape=(3,)
+
+    m = Field(S3, (1, 0, 0))  # df.Function+assign(Constant((1,0,0))) -> constant tuple
+
+    Ms = np.sqrt(6.0 / mu0)  # math.sqrt(6.0 / mu0) would work
+    demag = FKDemag()
+    Ms_field = Field(fem.functionspace(mesh, ("DG", 0)), Ms)  # df.FunctionSpace -> functionspace
+    demag.setup(m, Ms_field, unit_length)  # this used to fail
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) =============================
+# ==========================================================================
+# Golden-BEM extraction guards, per-case oracle-fixture comparisons, the
+# analytic uniformly-magnetised CUBE factor (10% -- the Kuhn main-diagonal
+# split breaks exact cubic symmetry, so 1/3 per axis is only approached, see
+# test comments), the Krylov-residual isolation, and the deferred-solver
+# contracts below have no ancestor in master fk_demag_test.py.
 
 _FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures",
                         "fk_demag_oracle.json")
