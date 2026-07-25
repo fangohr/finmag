@@ -1,4 +1,4 @@
-"""Direct DOLFINx DMI port (Task 13).
+"""Direct DOLFINx DMI port (Task 13; SR1 P5.2 minimal-diff accounting).
 
 Validates the ported ``finmag.energies.dmi.DMI`` against:
 
@@ -6,9 +6,9 @@ Validates the ported ``finmag.energies.dmi.DMI`` against:
   gradient to act on);
 - an *exact* (machine-precision) chirality/sign pin using the transcribed
   legacy ``times_curl`` witness field ``m = (-y/2, x/2, c)`` (from
-  ``finmag.energies.dmi_test.dmi_terms``/``test_dmi_term3d_matches_
-  analytical_solution``), where ``m . curl(m) = c`` exactly for any CG1
-  interpolant (the field is affine, so gradients are exact);
+  ``finmag.tests.test_dmi_terms.test_dmi_with_analytical_solution``), where
+  ``m . curl(m) = c`` exactly for any CG1 interpolant (the field is affine,
+  so gradients are exact);
 - an *exact* chirality identity for a genuine sinusoidal helix
   ``m = (0, cos(kx), sin(kx))``: replacing ``k`` by ``-k`` only negates the
   ``z``-component's nodal values (the ``y``-component is identical, since
@@ -21,7 +21,9 @@ Validates the ported ``finmag.energies.dmi.DMI`` against:
   continuum value ``E = -D*q*V`` would otherwise carry;
 - exact 1D/2D ``unit_length ** (dim - 1)`` scaling checks using affine
   fields chosen so only the derivatives the reduced ``times_curl`` forms keep
-  are nonzero;
+  are nonzero, PLUS the master's own physical-invariance check (below) that
+  additionally rescales the mesh geometry itself, not just the
+  ``unit_length`` argument on a fixed mesh;
 - an exact interfacial-DMI sign/magnitude pin using an affine ``m_z`` ramp;
 - coordinate-ordered legacy oracle fixture comparisons (bulk 3D and
   interfacial, field + energy) against
@@ -34,6 +36,72 @@ Validates the ported ``finmag.energies.dmi.DMI`` against:
   Expressions and every non-``box-assemble`` method (matching the Task 5
   energy foundation exactly);
 - ``sim_with(D=...)`` construction.
+
+MASTER -> PORT MAPPING (git ``b5015c5a``; every master DMI test function
+across all 3 ancestor files accounted for so a reviewer can check off each
+one):
+
+``src/finmag/energies/dmi_test.py`` (1 test function):
+  - test_dmi_field -> DEFERRED. Compares three assembly *methods*
+    (box-assemble / box-matrix-numpy / box-matrix-petsc) for numerical
+    equivalence. Only ``box-assemble`` is ported; the other two remain
+    unimplemented and raise ``NotImplementedError`` by name (matching the
+    Task 5 ``Exchange`` precedent), covered-elsewhere by this file's
+    ``test_deferred_dmi_methods_are_rejected_precisely[box-matrix-numpy]``
+    / ``[box-matrix-petsc]``. Nothing to restore: there is no second
+    DOLFINx DMI implementation to compare ``box-assemble`` against yet.
+
+``src/finmag/tests/test_dmi.py`` (4 test functions):
+  - test_dmi_uses_unit_length_2dmesh -> GENUINE GAP, RESTORED below as
+    ``test_dmi_energy_is_unit_length_invariant_across_rescaled_meshes``.
+    Unlike the fixed-mesh ``unit_length ** (dim-1)`` formula checks above
+    (which vary only the ``unit_length`` Python argument on one fixed
+    mesh), master's test builds THREE differently-scaled meshes
+    representing the same physical helical state in different unit
+    systems and requires the energies to agree -- exercising the
+    interaction between mesh geometry, ``grad``, and the
+    ``unit_length``/``dmi_factor`` scaling that a fixed-mesh check cannot
+    see. Master's tolerance (``rel_diff < 1e-13``) kept verbatim and
+    passes (measured ~2.2e-14 and ~3.2e-14, see below).
+  - test_interaction_accepts_name -> covered-elsewhere (stronger): this
+    file's ``test_sim_with_dmi_builds_and_computes`` asserts
+    ``dmi.name == "DMI"`` exactly, a strict superset of master's mere
+    ``hasattr(dmi, 'name')``.
+  - test_dmi_pbc2d -> DEFERRED. Already ``@pytest.mark.xfail(reason=
+    "unfixed bug")`` in master itself ("We dont use PBC at the moment").
+    Periodic boundary conditions are deferred by name at the
+    ``Simulation`` level repo-wide (``finmag/sim/sim.py``:
+    ``if pbc is not None: _deferred("pbc", ...)``), not a DMI-specific
+    gap; nothing DMI-specific to restore.
+  - test_dmi_pbc2d_1D -> DEFERRED for the same repo-wide PBC reason
+    (``Simulation(..., pbc='2d')`` raises ``NotImplementedError`` by
+    name); this test also relies on ``sim.relax(...)``/domain-wall
+    dynamics, out of scope for a DMI energy-class port regardless.
+
+``src/finmag/tests/test_dmi_terms.py`` (unconditionally skipped/dead IN
+MASTER ITSELF -- reason given there: "Not sure if we even use dmi_term3d
+anymore"; every test in this file references ``dmi_term3d`` /
+``dmi_term2d`` / ``dmi_term3d_dolfin``, which are not even imported in
+master's own file -- the import line is commented out -- and do not exist
+anywhere in ``finmag.energies.dmi`` in master OR the port):
+  - compare_dmi_term3d_with_dolfin, compare_dmi_term2d_with_dolfin -> not
+    tests (no ``test_`` prefix); helpers only called from the skipped
+    tests below.
+  - test_dmi_term2d -> vestigial/dead in master itself; nothing real to
+    restore (``dmi_term2d`` does not exist in either tree).
+  - test_dmi_with_analytical_solution -> covered-elsewhere & IMPROVED:
+    its physics content (``m = (-y/2, x/2, c)`` => ``curl(m) = (0,0,1)``
+    => ``m . curl(m) = c`` => ``E = c`` for a unit-volume cube) is
+    transcribed AND ACTUALLY ENABLED (not skipped) as this file's
+    ``test_bulk_dmi_affine_twist_field_matches_transcribed_times_curl_
+    exactly``, at master's own tolerances (``rel=1e-13``, tighter than
+    master's ``eps=1e-13``/``1e-12`` absolute checks).
+  - test_dmi_term3d -> vestigial/dead in master itself; nothing real to
+    restore (``dmi_term3d`` does not exist in either tree).
+  - test_can_post_process_form -> vestigial/dead in master itself; tests
+    an internal Jacobian-assembly pattern (``dmi_term3d`` + ``derivative``
+    + ``PETScMatrix``) not exposed by the current (or master's own) public
+    API.
 
 [Claude Sonnet 5]
 """
@@ -283,6 +351,50 @@ def test_2d_dmi_energy_scales_linearly_with_unit_length(unit_length):
     dmi.setup(m, Ms, unit_length=unit_length)
     expected = 5.0e-3 * (p * d - q * c) * unit_length  # Area 1, dim - 1 == 1
     assert dmi.compute_energy() == pytest.approx(expected, rel=1e-12)
+
+
+def test_dmi_energy_is_unit_length_invariant_across_rescaled_meshes():
+    """Restored from ``finmag.tests.test_dmi.
+    test_dmi_uses_unit_length_2dmesh`` (SR1 P5.2 mapping-header accounting:
+    genuinely-dropped master coverage). Unlike the fixed-mesh scaling checks
+    above -- which hold the mesh geometry fixed and vary only the
+    ``unit_length`` *argument* to confirm the ``unit_length ** (dim - 1)``
+    formula algebraically -- this test builds THREE actually differently
+    -scaled 2D meshes representing the *same* physical helical state in SI
+    units, in units of ``1e-4``, and in nanometres, and requires the
+    computed DMI energies to agree. This additionally exercises the
+    interaction between real mesh-coordinate rescaling, ``grad``, and the
+    ``unit_length``/``dmi_factor`` convention, which the fixed-mesh checks
+    cannot see. Master's own tolerance (``rel_diff < 1e-13``) is kept
+    verbatim and passes under DOLFINx (measured ~2.2e-14 / ~3.2e-14)."""
+    A = 8.78e-12  # J/m
+    D = 1.58e-3  # J/m^2
+    Ms = 3.84e5  # A/m
+
+    energies = []
+    for unit_length in (1.0, 1e-4, 1e-9):
+        radius = 200e-9 / unit_length
+        maxh = 5e-9 / unit_length
+        helical_period = (4.0 * np.pi * A / D) / unit_length
+        k = 2.0 * np.pi / helical_period
+        nx = ny = int(round(radius / maxh))
+
+        domain = mesh.create_rectangle(
+            MPI.COMM_WORLD, [(0.0, 0.0), (radius, radius)], [nx, ny])
+
+        def m_expr(x, k=k):
+            return np.vstack(
+                (np.zeros(x.shape[1]), np.cos(k * x[0]), np.sin(k * x[0])))
+
+        m, Ms_field = _fields(domain, m_expr, Ms=Ms)
+        dmi = DMI(D)
+        dmi.setup(m, Ms_field, unit_length=unit_length)
+        energies.append(dmi.compute_energy())
+
+    rel_diff_01 = abs(energies[0] - energies[1]) / abs(energies[1])
+    rel_diff_02 = abs(energies[0] - energies[2]) / abs(energies[2])
+    assert rel_diff_01 < 1e-13
+    assert rel_diff_02 < 1e-13
 
 
 # --------------------------------------------------------------------------
