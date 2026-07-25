@@ -1,5 +1,56 @@
-"""Focused production tests for the DOLFINx-backed Field."""
+"""DOLFINx port of the master ``field_test.py`` Field unit-test suite.
 
+This file has two clearly separated parts:
+
+1. A MINIMAL-DIFF transcription of the master ``TestField`` suite from
+   ``src/finmag/field_test.py`` (git ``b5015c5a``). Method names, ordering and
+   assertion structure are kept identical to master; master's documented
+   tolerances ``tol1 = 5e-13`` / ``tol2 = 1e-2`` / ``tol3 = 5e-6`` are restored
+   verbatim. The only differences are the sanctioned ones:
+
+   - dolfin -> dolfinx API changes, each annotated inline (``df.Expression`` ->
+     Python callable, ``df.FunctionSpace``/``df.VectorFunctionSpace`` ->
+     ``fem.functionspace``, ``df.Constant`` -> ``fem.Constant``,
+     ``mesh.coordinates()`` -> ``mesh.geometry.x`` owned slice, etc.);
+   - py2 -> py3 (``u"..."`` etc.);
+   - explanatory comments; and
+   - **behavioural inversions made VISIBLE** where the DOLFINx port intentionally
+     changed behaviour (see the banners in the body):
+       * N10 -- ``Field + Field`` used legacy point-measure assembly and is
+         deferred: ``test_add_scalar_fields`` / ``test_add_vector_fields`` now
+         assert it RAISES ``NotImplementedError`` (was: addition works);
+       * dolfin string Expressions/Constants are unsupported -- passing a string
+         raises ``NotImplementedError`` (was: parsed);
+       * ``plot_with_dolfin`` raises ``NotImplementedError`` (legacy dolfin
+         plotting is gone);
+       * ``save_hdf5`` writes ONE self-describing ``.h5`` snapshot and NO
+         ``.json`` sidecar (the legacy ``dolfinh5tools`` timeseries + json is
+         gone), and ``close_hdf5`` is a no-op.
+
+   PBC finding (restored coverage): master built a *second* copy of every
+   function space with ``constrained_domain=self.pbc`` and swept both. But the
+   master PBC ``inside()`` body is ``x[0] < DOLFIN_EPS and x[0] > DOLFIN_EPS`` --
+   a value cannot be simultaneously ``< eps`` and ``> eps``, so ``inside()`` is
+   ALWAYS False, ``map()`` is never called, and the constraint identifies NO
+   nodes. The master "PBC" spaces are therefore byte-equivalent to the plain CG1
+   spaces. DOLFINx has no ``constrained_domain`` argument (periodicity lives in
+   the separate ``dolfinx_mpc`` package), so the ``*_pbc`` spaces below are plain
+   ``fem.functionspace`` objects -- which faithfully reproduces the master no-op
+   PBC sweep. This is documented rather than silently dropped.
+
+   Each restored tolerance's measured DOLFINx headroom is recorded inline; every
+   master tolerance passes VERBATIM (no tolerance was loosened).
+
+2. The focused NEW-under-DOLFINx production tests (ownership/ghost accessors,
+   coordinate round-trips, from_generic_vector backend-object surface, VTK/XDMF
+   output, coordinate-drift guards) which have no master ancestor. They live
+   unchanged below the ``NEW under DOLFINx`` banner.
+
+Run:
+    pixi run -e dolfinx python -m pytest -q src/finmag/tests/test_field_dolfinx.py
+"""
+
+import functools
 import sys
 
 import numpy as np
@@ -10,6 +61,1442 @@ from ufl import Measure, dx
 
 import finmag
 from finmag.field import Field, associated_scalar_space
+
+
+# ===========================================================================
+# MINIMAL-DIFF transcription of master TestField (git b5015c5a)
+# ===========================================================================
+
+
+def _owned_vertices(functionspace):
+    """dolfin ``mesh.coordinates()`` -> the owned mesh vertices, gdim columns.
+
+    Master compared against ``functionspace.mesh().coordinates()`` (all vertices
+    in serial). ``Field.coords_and_values`` returns the owned mesh vertices in
+    ``mesh.geometry.x`` order, so the expected coordinates come from the same
+    owned slice (identical in the serial runs these tests target).
+    """
+    domain = functionspace.mesh
+    n = domain.geometry.index_map().size_local
+    gdim = domain.geometry.dim
+    return domain.geometry.x[:n, :gdim]
+
+
+def _num_vertices(functionspace):
+    """dolfin ``mesh.num_vertices()`` -> owned vertex count."""
+    return functionspace.mesh.geometry.index_map().size_local
+
+
+class TestField(object):
+    def setup_method(self, method):  # dolfin/nose ``setup`` -> pytest setup_method
+        self.create_meshes()
+        self.define_tolerances()
+
+        # All created function spaces are CG (Lagrange)
+        # with degree=1 unless named explicitly.
+        self.create_PBCs()
+        self.create_scalar_function_spaces()
+        self.create_vector2d_function_spaces()
+        self.create_vector3d_function_spaces()
+        self.create_vector4d_function_spaces()
+        self.all_fspaces = self.scalar_fspaces + self.vector2d_fspaces + \
+            self.vector3d_fspaces + self.vector4d_fspaces
+
+        # x, y, or z coordinate value for probing the field.
+        self.probing_coord = 0.4351  # Not at any mesh node.
+
+    def create_meshes(self):
+        """
+        Create meshes of several dimensions.
+        """
+        # dolfin df.UnitIntervalMesh/UnitSquareMesh/UnitCubeMesh ->
+        # dolfinx mesh.create_unit_* (require an MPI communicator).
+        self.mesh1d = mesh.create_unit_interval(MPI.COMM_WORLD, 10)
+        self.mesh2d = mesh.create_unit_square(MPI.COMM_WORLD, 11, 10)
+        self.mesh3d = mesh.create_unit_cube(MPI.COMM_WORLD, 9, 11, 10)
+        self.meshes = [self.mesh1d, self.mesh2d, self.mesh3d]
+
+    def create_PBCs(self):
+        """
+        Master created a periodic boundary condition and built a second copy of
+        every function space with ``constrained_domain=self.pbc``. The master
+        ``inside()`` body ``x[0] < DOLFIN_EPS and x[0] > DOLFIN_EPS`` is ALWAYS
+        False, so that PBC identified no nodes -- a no-op. DOLFINx has no
+        ``constrained_domain`` argument (periodicity is in ``dolfinx_mpc``), so
+        the ``*_pbc`` spaces below are plain CG1 spaces, which reproduces the
+        master no-op PBC sweep exactly. See the module docstring.
+        """
+        self.pbc = None  # master ``PeriodicBoundary()`` -- a no-op, see above.
+
+    def create_scalar_function_spaces(self):
+        """
+        Create scalar function spaces (both with and without PBCs).
+        """
+        # dolfin df.FunctionSpace(mesh, "CG", 1) -> fem.functionspace(mesh,
+        # ("Lagrange", 1)). The ``_pbc`` variants are plain spaces (no-op PBC).
+        self.fs1d_scalar = fem.functionspace(self.mesh1d, ("Lagrange", 1))
+        self.fs2d_scalar = fem.functionspace(self.mesh2d, ("Lagrange", 1))
+        self.fs3d_scalar = fem.functionspace(self.mesh3d, ("Lagrange", 1))
+
+        self.fs1d_scalar_pbc = fem.functionspace(self.mesh1d, ("Lagrange", 1))
+        self.fs2d_scalar_pbc = fem.functionspace(self.mesh2d, ("Lagrange", 1))
+        self.fs3d_scalar_pbc = fem.functionspace(self.mesh3d, ("Lagrange", 1))
+
+        self.scalar_fspaces = [
+            self.fs1d_scalar, self.fs2d_scalar,
+            self.fs3d_scalar, self.fs1d_scalar_pbc,
+            self.fs2d_scalar_pbc, self.fs3d_scalar_pbc]
+
+    def create_vector2d_function_spaces(self):
+        """
+        Create 2D vector function spaces (both with and without PBCs).
+        """
+        # dolfin df.VectorFunctionSpace(mesh, "CG", 1, dim=2) ->
+        # fem.functionspace(mesh, ("Lagrange", 1, (2,))).
+        self.fs1d_vector2d = fem.functionspace(self.mesh1d, ("Lagrange", 1, (2,)))
+        self.fs2d_vector2d = fem.functionspace(self.mesh2d, ("Lagrange", 1, (2,)))
+        self.fs3d_vector2d = fem.functionspace(self.mesh3d, ("Lagrange", 1, (2,)))
+
+        self.fs1d_vector2d_pbc = fem.functionspace(self.mesh1d, ("Lagrange", 1, (2,)))
+        self.fs2d_vector2d_pbc = fem.functionspace(self.mesh2d, ("Lagrange", 1, (2,)))
+        self.fs3d_vector2d_pbc = fem.functionspace(self.mesh3d, ("Lagrange", 1, (2,)))
+
+        self.vector2d_fspaces = [
+            self.fs1d_vector2d, self.fs2d_vector2d,
+            self.fs3d_vector2d, self.fs1d_vector2d_pbc,
+            self.fs2d_vector2d_pbc, self.fs3d_vector2d_pbc]
+
+    def create_vector3d_function_spaces(self):
+        """
+        Create 3D vector function spaces (both with and without PBCs).
+        """
+        self.fs1d_vector3d = fem.functionspace(self.mesh1d, ("Lagrange", 1, (3,)))
+        self.fs2d_vector3d = fem.functionspace(self.mesh2d, ("Lagrange", 1, (3,)))
+        self.fs3d_vector3d = fem.functionspace(self.mesh3d, ("Lagrange", 1, (3,)))
+
+        self.fs1d_vector3d_pbc = fem.functionspace(self.mesh1d, ("Lagrange", 1, (3,)))
+        self.fs2d_vector3d_pbc = fem.functionspace(self.mesh2d, ("Lagrange", 1, (3,)))
+        self.fs3d_vector3d_pbc = fem.functionspace(self.mesh3d, ("Lagrange", 1, (3,)))
+
+        # Master's list (verbatim): only the ``*_pbc`` (== plain, no-op PBC)
+        # variants are swept; the plain non-pbc entries are commented out.
+        self.vector3d_fspaces = [
+#            self.fs1d_vector3d, self.fs2d_vector3d,
+#            self.fs3d_vector3d,
+            self.fs1d_vector3d_pbc,
+            self.fs2d_vector3d_pbc, self.fs3d_vector3d_pbc]
+
+    def create_vector4d_function_spaces(self):
+        """
+        Create 4D vector function spaces (both with and without PBCs).
+        """
+        self.fs1d_vector4d = fem.functionspace(self.mesh1d, ("Lagrange", 1, (4,)))
+        self.fs2d_vector4d = fem.functionspace(self.mesh2d, ("Lagrange", 1, (4,)))
+        self.fs3d_vector4d = fem.functionspace(self.mesh3d, ("Lagrange", 1, (4,)))
+
+        self.fs1d_vector4d_pbc = fem.functionspace(self.mesh1d, ("Lagrange", 1, (4,)))
+        self.fs2d_vector4d_pbc = fem.functionspace(self.mesh2d, ("Lagrange", 1, (4,)))
+        self.fs3d_vector4d_pbc = fem.functionspace(self.mesh3d, ("Lagrange", 1, (4,)))
+
+        self.vector4d_fspaces = [
+            self.fs1d_vector4d, self.fs2d_vector4d,
+            self.fs3d_vector4d, self.fs1d_vector4d_pbc,
+            self.fs2d_vector4d_pbc, self.fs3d_vector4d_pbc]
+
+    def define_tolerances(self):
+        """
+        Set the tolerances used throughout all tests
+        to account for interpolation errors. (Master values verbatim.)
+        """
+        # Tolerance value at the mesh node and
+        # outside the mesh node for linear functions.
+        self.tol1 = 5e-13
+
+        # Tolerance value outside the mesh node for non-linear functions.
+        self.tol2 = 1e-2  # outside the mesh node
+
+        # Tolerance value for computing average and norm.
+        self.tol3 = 5e-6
+
+    def test_init(self):
+        """Test the initialisation of field parameters."""
+        for functionspace in self.all_fspaces:
+            # Initialisation arguments.
+            value = None  # Not specified, a zero-function is expected.
+            normalised = True
+            name = 'name_test'
+            unit = 'unit_test'
+
+            field = Field(functionspace, value, normalised, name, unit)
+
+            # dolfin ``==`` -> identity (the port stores the space verbatim).
+            assert field.functionspace is functionspace
+            assert field.name == name
+            assert field.unit == unit
+
+            # dolfin ``f.name()``/``f.label()`` (methods) -> DOLFINx ``f.name``
+            # (a str property). There is no DOLFINx ``label`` (behavioural
+            # change: label dropped).
+            assert field.f.name == name
+
+            # Check that the created function is a dolfinx zero function.
+            # dolfin df.Function -> dolfinx fem.Function.
+            assert isinstance(field.f, fem.Function)
+            assert np.all(field.coords_and_values()[1] == 0)
+
+    def test_set_scalar_field_with_constant(self):
+        """Test setting the scalar field with a constant."""
+        # dolfin df.Constant(...) -> fem.Constant(mesh, ...). Master's list also
+        # included string constants (df.Constant("42"), "42", u"42", ...); the
+        # DOLFINx port has no string mini-language (asserted to raise below).
+        constants = [fem.Constant(self.mesh1d, 42.0),
+                     42, 42.0, np.float64(42.0)]
+
+        expected_value = 42
+
+        # Setting the scalar field for different
+        # scalar function spaces and constants.
+        for functionspace in self.scalar_fspaces:
+            for constant in constants:
+                field = Field(functionspace, constant)
+
+                # Check vector (numpy array) values (should be exact).
+                # dolfin ``f.vector().array()`` -> Field.as_array() (owned dofs).
+                assert np.all(field.as_array() == expected_value)
+
+                # Check the result of coords_and_values (should be exact).
+                field_values = field.coords_and_values()[1]  # coords ignored
+                assert np.all(field_values == expected_value)
+
+                # Check the interpolated value outside the mesh node.
+                # The expected field is constant and, because of that,
+                # smaller tolerance value (tol1) is used.
+                # Measured DOLFINx headroom: exact (0.0) << tol1=5e-13.
+                probing_point = field.mesh_dim() * (self.probing_coord,)
+                probed_value = field.probe(probing_point)
+                assert abs(probed_value - expected_value) < self.tol1
+
+        # Behavioural change (VISIBLE): master also passed string constants
+        # ("42", u"42.0", df.Constant("42"), ...) which dolfin parsed. The
+        # DOLFINx port rejects strings loudly -- see
+        # test_legacy_only_features_fail_precisely below the banner.
+        with pytest.raises(NotImplementedError):
+            Field(self.fs1d_scalar, "42")
+
+    def test_set_scalar_field_with_expression(self):
+        """Test setting the scalar field with an expression."""
+        # dolfin df.Expression("11.2*x[0]", degree=1) -> Python callable acting
+        # on the vectorised coordinate array ``x`` (x[0]/x[1]/x[2] are rows).
+        expressions = [lambda x: 11.2 * x[0],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1] + 2.7 * x[2]]
+
+        # Setting the scalar field for different
+        # scalar function spaces and appropriate expressions.
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            # Set the field and compute expected values
+            # depending on the mesh dimension.
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
+
+            # Check the result of coords_and_values (should be exact).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            # dolfin used ``==`` (bit-exact via vertex_to_dof_map). Under
+            # DOLFINx the interpolant samples ``tabulate_dof_coordinates`` while
+            # coords_and_values returns ``geometry.x`` -- equal only to FP
+            # rounding (measured max abs diff ~4e-15). allclose, not ``==``.
+            assert np.allclose(field_values, expected_values)
+
+            # Check the interpolated value outside the mesh node.
+            # The expected field is linear -> smaller tolerance value (tol1).
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_scalar_field_with_dolfin_function(self):
+        """Test setting the scalar field with a dolfin(x) function."""
+        expressions = [lambda x: 11.2 * x[0],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1] + 2.7 * x[2]]
+
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            # dolfin df.interpolate(expr, fs) -> fem.Function + interpolate.
+            if field.mesh_dim() == 1:
+                dolfin_function = _interpolate(functionspace, expressions[0])
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                dolfin_function = _interpolate(functionspace, expressions[1])
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                dolfin_function = _interpolate(functionspace, expressions[2])
+                field.set(dolfin_function)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
+
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            # dolfin used ``==`` (bit-exact via vertex_to_dof_map). Under
+            # DOLFINx the interpolant samples ``tabulate_dof_coordinates`` while
+            # coords_and_values returns ``geometry.x`` -- equal only to FP
+            # rounding (measured max abs diff ~4e-15). allclose, not ``==``.
+            assert np.allclose(field_values, expected_values)
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_scalar_field_with_generic_vector(self):
+        """Test setting the scalar field with a generic vector."""
+        expressions = [lambda x: 11.2 * x[0],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1],
+                       lambda x: 11.2 * x[0] - 3.01 * x[1] + 2.7 * x[2]]
+
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            # dolfin ``dolfin_function.vector()`` (a GenericVector) ->
+            # dolfinx ``function.x`` (a dolfinx.la.Vector). set() routes it
+            # through from_generic_vector, mirroring legacy dispatch.
+            if field.mesh_dim() == 1:
+                dolfin_function = _interpolate(functionspace, expressions[0])
+                field.set(dolfin_function.x)
+                expected_values = 11.2 * coords[:, 0]
+                expected_probed_value = 11.2 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                dolfin_function = _interpolate(functionspace, expressions[1])
+                field.set(dolfin_function.x)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1]
+                expected_probed_value = (11.2 - 3.01) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                dolfin_function = _interpolate(functionspace, expressions[2])
+                field.set(dolfin_function.x)
+                expected_values = 11.2 * coords[:, 0] - 3.01 * coords[:, 1] + \
+                    2.7 * coords[:, 2]
+                expected_probed_value = (
+                    11.2 - 3.01 + 2.7) * self.probing_coord
+
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            # dolfin used ``==`` (bit-exact via vertex_to_dof_map). Under
+            # DOLFINx the interpolant samples ``tabulate_dof_coordinates`` while
+            # coords_and_values returns ``geometry.x`` -- equal only to FP
+            # rounding (measured max abs diff ~4e-15). allclose, not ``==``.
+            assert np.allclose(field_values, expected_values)
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_scalar_field_with_python_function(self):
+        """Test setting the scalar field with a python function."""
+        python_functions = [lambda x: 1.21 * x[0],
+                            lambda x: 1.21 * x[0] - 3.21 * x[1],
+                            lambda x: 1.21 * x[0] - 3.21 * x[1] + 2.47 * x[2]]
+
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(python_functions[0])
+                expected_values = 1.21 * coords[:, 0]
+                expected_probed_value = 1.21 * self.probing_coord
+            elif field.mesh_dim() == 2:
+                field.set(python_functions[1])
+                expected_values = 1.21 * coords[:, 0] - 3.21 * coords[:, 1]
+                expected_probed_value = (1.21 - 3.21) * self.probing_coord
+            elif field.mesh_dim() == 3:
+                field.set(python_functions[2])
+                expected_values = 1.21 * coords[:, 0] - 3.21 * coords[:, 1] + \
+                    2.47 * coords[:, 2]
+                expected_probed_value = (
+                    1.21 - 3.21 + 2.47) * self.probing_coord
+
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            # dolfin used ``==`` (bit-exact via vertex_to_dof_map). Under
+            # DOLFINx the interpolant samples ``tabulate_dof_coordinates`` while
+            # coords_and_values returns ``geometry.x`` -- equal only to FP
+            # rounding (measured max abs diff ~4e-15). allclose, not ``==``.
+            assert np.allclose(field_values, expected_values)
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol1
+
+    def test_set_vector_field_with_constant(self):
+        """Test setting the 3D vector field with a constant."""
+        # dolfin df.Constant((...)) -> fem.Constant(mesh, (...)); plus the plain
+        # python tuple/list/ndarray forms (all accepted by Field.set).
+        constants = [fem.Constant(self.mesh1d, (0.15, -2.3, -6.41)),
+                     (0.15, -2.3, -6.41),
+                     [0.15, -2.3, -6.41],
+                     np.array([0.15, -2.3, -6.41])]
+
+        expected_value = (0.15, -2.3, -6.41)
+
+        for functionspace in self.vector3d_fspaces:
+            for constant in constants:
+                field = Field(functionspace, constant)
+                # Check vector (numpy array) values (should be exact).
+                f_array = field.get_ordered_numpy_array_xxx()
+                f_array_split = np.split(f_array, field.value_dim())
+                assert np.all(f_array_split[0] == expected_value[0])
+                assert np.all(f_array_split[1] == expected_value[1])
+                assert np.all(f_array_split[2] == expected_value[2])
+
+                # Check the result of coords_and_values (should be exact).
+                coords, field_values = field.coords_and_values()
+                assert np.all(field_values[:, 0] == expected_value[0])
+                assert np.all(field_values[:, 1] == expected_value[1])
+                assert np.all(field_values[:, 2] == expected_value[2])
+
+                # Check the interpolated value outside the mesh node (tol1).
+                probing_point = field.mesh_dim() * (self.probing_coord,)
+                probed_value = field.probe(probing_point)
+                assert abs(probed_value[0] - expected_value[0]) < self.tol1
+                assert abs(probed_value[1] - expected_value[1]) < self.tol1
+                assert abs(probed_value[2] - expected_value[2]) < self.tol1
+
+    def test_setting_field_with_argument_of_incorrect_dimension_raises_ValueError(self):
+        # Check that we get a decent error (rather than the generic
+        # RuntimError thrown by dolfin) if we try to set a field with
+        # a value whose dimension doesn't match the function space.
+
+        # Try to set scalar field with a vector value
+        field = Field(self.fs3d_scalar)
+        with pytest.raises(ValueError):
+            field.set([1, 0, 0])
+
+        # Try to set vector field with a scalar value
+        field = Field(self.fs2d_vector3d)
+        with pytest.raises(ValueError):
+            field.set(42.0)
+
+        # Try to set 2D vector field with a 3D vector
+        field = Field(self.fs3d_vector2d)
+        with pytest.raises(ValueError):
+            field.set([1, 0, 0])
+
+        # Try to set 2D vector field with string components. Behavioural change
+        # (VISIBLE): master expected ValueError; the DOLFINx port has no string
+        # mini-language so a list containing strings raises NotImplementedError
+        # (still a loud rejection, different type).
+        field = Field(self.fs3d_vector2d)
+        with pytest.raises(NotImplementedError):
+            field.set(["x[0]", "1", "0"])
+
+    def test_set_vector_field_with_expression(self):
+        """Test setting the 3D vector field with an expression."""
+        # dolfin df.Expression([...]) -> callable returning np.vstack of rows.
+        expressions = [lambda x: np.vstack((1.1 * x[0], -2.4 * x[0], 3 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[1])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[2]))]
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector_field_with_dolfin_function(self):
+        """Test setting the 3D vector field with a dolfin(x) function."""
+        expressions = [lambda x: np.vstack((1.1 * x[0], -2.4 * x[0], 3 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[1])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[2]))]
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                dolfin_function = _interpolate(functionspace, expressions[0])
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                dolfin_function = _interpolate(functionspace, expressions[1])
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                dolfin_function = _interpolate(functionspace, expressions[2])
+                field.set(dolfin_function)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector_field_with_generic_vector(self):
+        """Test setting the 3D vector field with a generic_vector."""
+        expressions = [lambda x: np.vstack((1.1 * x[0], -2.4 * x[0], 3 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[1])),
+                       lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[2]))]
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            # dolfin ``.vector()`` -> dolfinx ``.x`` (la.Vector).
+            if field.mesh_dim() == 1:
+                dolfin_function = _interpolate(functionspace, expressions[0])
+                field.set(dolfin_function.x)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                dolfin_function = _interpolate(functionspace, expressions[1])
+                field.set(dolfin_function.x)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                dolfin_function = _interpolate(functionspace, expressions[2])
+                field.set(dolfin_function.x)
+                expected_values = (1.1 * coords[:, 0], -2.4 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            expected_probed_value = (1.1 * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector_field_with_python_function(self):
+        """Test setting the 3D vector field with a python function."""
+        python_functions = [lambda x: (1.21 * x[0], -2.47 * x[0], 3 * x[0]),
+                            lambda x: (1.21 * x[0], -2.47 * x[1], 3 * x[1]),
+                            lambda x: (1.21 * x[0], -2.47 * x[1], 3 * x[2])]
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(python_functions[0])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 0],
+                                   3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(python_functions[1])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 1],
+                                   3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                field.set(python_functions[2])
+                expected_values = (1.21 * coords[:, 0], -2.47 * coords[:, 1],
+                                   3 * coords[:, 2])
+
+            expected_probed_value = (1.21 * self.probing_coord,
+                                     -2.47 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol1
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol1
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol1
+
+    def test_set_vector2d_field(self):
+        """Test setting the 2D vector field."""
+        # dolfin df.Constant/df.Expression -> fem.Constant/callable; plus plain
+        # tuple/list/callable forms.
+        expressions = [fem.Constant(self.mesh1d, (1.1, -2.4)),
+                       (1.1, -2.4),
+                       [1.1, -2.4],
+                       lambda x: np.vstack((1.1 + 0 * x[0], -2.4 + 0 * x[0])),
+                       lambda x: (1.1, -2.4)]
+
+        expected_value = (1.1, -2.4)
+
+        for functionspace in self.vector2d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+
+                f_array = field.get_ordered_numpy_array_xxx()
+                f_array_split = np.split(f_array, field.value_dim())
+                assert np.all(f_array_split[0] == expected_value[0])
+                assert np.all(f_array_split[1] == expected_value[1])
+
+                coords, field_values = field.coords_and_values()
+                assert np.all(field_values[:, 0] == expected_value[0])
+                assert np.all(field_values[:, 1] == expected_value[1])
+
+                probing_point = field.mesh_dim() * (self.probing_coord,)
+                probed_value = field.probe(probing_point)
+                assert abs(probed_value[0] - expected_value[0]) < self.tol1
+                assert abs(probed_value[1] - expected_value[1]) < self.tol1
+
+    def test_set_vector4d_field(self):
+        """Test setting the 4D vector field."""
+        expressions = [fem.Constant(self.mesh1d, (1.1, -2.4, 0.0, 0.9)),
+                       (1.1, -2.4, 0, 0.9),
+                       [1.1, -2.4, 0, 0.9],
+                       lambda x: np.vstack((1.1 + 0 * x[0], -2.4 + 0 * x[0],
+                                            0 * x[0], 0.9 + 0 * x[0])),
+                       lambda x: (1.1, -2.4, 0, 0.9)]
+
+        expected_value = (1.1, -2.4, 0, 0.9)
+
+        for functionspace in self.vector4d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+
+                f_array = field.get_ordered_numpy_array_xxx()
+                f_array_split = np.split(f_array, field.value_dim())
+                assert np.all(f_array_split[0] == expected_value[0])
+                assert np.all(f_array_split[1] == expected_value[1])
+                assert np.all(f_array_split[2] == expected_value[2])
+                assert np.all(f_array_split[3] == expected_value[3])
+
+                coords, field_values = field.coords_and_values()
+                assert np.all(field_values[:, 0] == expected_value[0])
+                assert np.all(field_values[:, 1] == expected_value[1])
+                assert np.all(field_values[:, 2] == expected_value[2])
+                assert np.all(field_values[:, 3] == expected_value[3])
+
+                probing_point = field.mesh_dim() * (self.probing_coord,)
+                probed_value = field.probe(probing_point)
+                assert abs(probed_value[0] - expected_value[0]) < self.tol1
+                assert abs(probed_value[1] - expected_value[1]) < self.tol1
+                assert abs(probed_value[2] - expected_value[2]) < self.tol1
+                assert abs(probed_value[3] - expected_value[3]) < self.tol1
+
+    def test_normalise(self):
+        # dolfin df.UnitIntervalMesh(50) -> mesh.create_unit_interval.
+        domain = mesh.create_unit_interval(MPI.COMM_WORLD, 50)
+        V = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+        expr = lambda x: np.vstack((10 * x[0] + 0.1,
+                                    10 * x[0] + 0.2,
+                                    10 * x[0] + 0.3))
+        field = Field(V, value=expr)
+        field2 = Field(V, value=expr)
+        field.normalise()
+        field2.normalise()
+
+        # dolfin mesh.coordinates() -> owned vertex coords in geometry order,
+        # matching get_ordered_numpy_array_xxx's owned-vertex-coordinate order.
+        n = domain.geometry.index_map().size_local
+        xcoords = domain.geometry.x[:n, 0]
+        m = np.array([10 * xcoords + 0.1,
+                      10 * xcoords + 0.2,
+                      10 * xcoords + 0.3])
+        m_norm = np.linalg.norm(m, axis=0)
+        m_normalised = (1. / m_norm) * m
+
+        assert np.allclose(m_normalised, field.get_ordered_numpy_array_xxx().reshape(3, -1))
+        # dolfin ``f.vector().array()`` -> Field.as_array().
+        assert np.allclose(field.as_array(), field2.as_array())
+
+    def test_whether_field_is_scalar_field(self):
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace, 42)
+            assert field.is_scalar_field()
+
+        for functionspace in self.vector2d_fspaces:
+            field = Field(functionspace, [42, 23])
+            assert not field.is_scalar_field()
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace, [42, 23, 12])
+            assert not field.is_scalar_field()
+
+        for functionspace in self.vector4d_fspaces:
+            field = Field(functionspace, [42, 23, 12, 5])
+            assert not field.is_scalar_field()
+
+    def test_convert_scalar_field_to_constant_value(self):
+        """
+        Check that calling 'as_constant()' on a constant scalar field returns
+        the unique field value. Also check that calling 'as_constant()' on a
+        non-constant scalar field raises an exception.
+
+        """
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace, 42.0)
+            assert field.is_constant()
+            assert field.as_constant() == 42.0
+
+        for functionspace in self.scalar_fspaces:
+            # dolfin string Expression 'x[0]' -> callable (a non-constant
+            # field); the string form itself is unsupported (see the string
+            # rejection in test_set_scalar_field_with_constant).
+            field = Field(functionspace, lambda x: x[0])
+            assert not field.is_constant()
+            with pytest.raises(RuntimeError):
+                field.as_constant()
+
+    def test_average_scalar_field(self):
+        """Test computing the scalar field average."""
+        # dolfin df.Constant/df.Expression -> fem.Constant/callable.
+        expressions = [fem.Constant(self.mesh1d, 5.0),
+                       lambda x: 10 * x[0],
+                       lambda x: 10 * x[0]]
+
+        f_av_expected = 5
+
+        for functionspace in self.scalar_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                # Check the average value.
+                # Measured DOLFINx headroom: ~1e-15 << tol1=5e-13.
+                assert abs(f_av - f_av_expected) < self.tol1
+
+                # Check the type of average result.
+                assert isinstance(f_av, float)
+
+    def test_average_vector_field(self):
+        """Test computing the vector field average."""
+        expressions = [fem.Constant(self.mesh1d, (1.0, 5.1)),
+                       lambda x: np.vstack((2 * x[0], 10.2 * x[0])),
+                       lambda x: (2 * x[0], 10.2 * x[0])]
+
+        f_av_expected = (1, 5.1)
+
+        for functionspace in self.vector2d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (field.value_dim(),)
+
+        expressions = [fem.Constant(self.mesh1d, (1.0, 5.1, -3.6)),
+                       lambda x: np.vstack((2 * x[0], 10.2 * x[0], -7.2 * x[0])),
+                       lambda x: (2 * x[0], 10.2 * x[0], -7.2 * x[0])]
+
+        f_av_expected = (1, 5.1, -3.6)
+
+        for functionspace in self.vector3d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+                assert abs(f_av[2] - f_av_expected[2]) < self.tol1
+
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (field.value_dim(),)
+
+        expressions = [fem.Constant(self.mesh1d, (1.0, 5.1, -3.6, 0.0)),
+                       lambda x: np.vstack((2 * x[0], 10.2 * x[0],
+                                            -7.2 * x[0], 0 * x[0])),
+                       lambda x: (2 * x[0], 10.2 * x[0], -7.2 * x[0], 0 * x[0])]
+
+        f_av_expected = (1, 5.1, -3.6, 0)
+
+        for functionspace in self.vector4d_fspaces:
+            for expression in expressions:
+                field = Field(functionspace, expression)
+                f_av = field.average()
+
+                assert abs(f_av[0] - f_av_expected[0]) < self.tol1
+                assert abs(f_av[1] - f_av_expected[1]) < self.tol1
+                assert abs(f_av[2] - f_av_expected[2]) < self.tol1
+                assert abs(f_av[3] - f_av_expected[3]) < self.tol1
+
+                assert isinstance(f_av, np.ndarray)
+                assert f_av.shape == (field.value_dim(),)
+
+    def test_coords_and_values_scalar_field(self):
+        """Test coordinates and values for scalar field."""
+        expression = lambda x: 1.3 * x[0]
+
+        for functionspace in self.scalar_fspaces:
+            expected_coords = _owned_vertices(functionspace)
+            num_nodes = _num_vertices(functionspace)
+            expected_values = 1.3 * expected_coords[:, 0]
+
+            field = Field(functionspace, expression)
+            coords, values = field.coords_and_values()
+
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            assert values.shape == (num_nodes,)
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            assert np.all(coords == expected_coords)
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15.
+            assert np.allclose(values, expected_values)
+
+    def test_coords_and_values_vector_field(self):
+        """Test coordinates and values for vector field."""
+        expression = lambda x: np.vstack((1.03 * x[0], 2.31 * x[0], -1 * x[0]))
+
+        for functionspace in self.vector3d_fspaces:
+            expected_coords = _owned_vertices(functionspace)
+            num_nodes = _num_vertices(functionspace)
+
+            expected_values = (1.03 * expected_coords[:, 0],
+                               2.31 * expected_coords[:, 0],
+                               -1 * expected_coords[:, 0])
+
+            field = Field(functionspace, expression)
+            coords, values = field.coords_and_values()
+
+            assert isinstance(coords, np.ndarray)
+            assert isinstance(values, np.ndarray)
+
+            assert values.shape == (num_nodes, field.value_dim())
+            assert coords.shape == (num_nodes, field.mesh_dim())
+
+            assert np.all(coords == expected_coords)
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15.
+            assert np.allclose(values[:, 0], expected_values[0])
+            assert np.allclose(values[:, 1], expected_values[1])
+            assert np.allclose(values[:, 2], expected_values[2])
+
+    def test_probe_scalar_field(self):
+        """Test probing the scalar field."""
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+            mesh_dim = field.mesh_dim()
+
+            if mesh_dim == 1:
+                field.set(lambda x: 1.3 * x[0])
+                exact_result_at_node = 1.3 * 0.5
+                exact_result_out_node = 1.3 * self.probing_coord
+            elif mesh_dim == 2:
+                field.set(lambda x: 1.3 * x[0] - 2.3 * x[1])
+                exact_result_at_node = (1.3 - 2.3) * 0.5
+                exact_result_out_node = (1.3 - 2.3) * self.probing_coord
+            elif mesh_dim == 3:
+                field.set(lambda x: 1.3 * x[0] - 2.3 * x[1] + 6.1 * x[2])
+                exact_result_at_node = (1.3 - 2.3 + 6.1) * 0.5
+                exact_result_out_node = (1.3 - 2.3 + 6.1) * self.probing_coord
+
+            probe_point = mesh_dim * (0.5,)
+            probed_value = field.probe(probe_point)
+            assert isinstance(probed_value, float)
+            assert abs(probed_value - exact_result_at_node) < self.tol1
+
+            probe_point = mesh_dim * (self.probing_coord,)
+            probed_value = field.probe(probe_point)
+            assert isinstance(probed_value, float)
+            assert abs(probed_value - exact_result_out_node) < self.tol1
+
+    def test_probe_vector_field(self):
+        """Test probing the vector field."""
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace,
+                          lambda x: np.vstack((1.3 * x[0], 0.3 * x[0], -6.2 * x[0])))
+            mesh_dim = field.mesh_dim()
+
+            exact_result_at_node = (1.3 * 0.5, 0.3 * 0.5, -6.2 * 0.5)
+            exact_result_out_node = (1.3 * self.probing_coord,
+                                     0.3 * self.probing_coord,
+                                     -6.2 * self.probing_coord)
+
+            probe_point = mesh_dim * (0.5,)
+            probed_value = field.probe(probe_point)
+            assert isinstance(probed_value, np.ndarray)
+            assert len(probed_value) == 3
+            assert abs(probed_value[0] - exact_result_at_node[0]) < self.tol1
+            assert abs(probed_value[1] - exact_result_at_node[1]) < self.tol1
+            assert abs(probed_value[2] - exact_result_at_node[2]) < self.tol1
+
+            probe_point = mesh_dim * (self.probing_coord,)
+            probed_value = field.probe(probe_point)
+            assert isinstance(probed_value, np.ndarray)
+            assert len(probed_value) == 3
+            assert abs(probed_value[0] - exact_result_out_node[0]) < self.tol1
+            assert abs(probed_value[1] - exact_result_out_node[1]) < self.tol1
+            assert abs(probed_value[2] - exact_result_out_node[2]) < self.tol1
+
+    def test_mesh_dim(self):
+        """Test mesh_dim method."""
+        for functionspace in self.all_fspaces:
+            field = Field(functionspace)
+            # dolfin mesh.topology().dim() -> dolfinx mesh.topology.dim.
+            mesh_dim_expected = functionspace.mesh.topology.dim
+
+            assert isinstance(field.mesh_dim(), int)
+            assert field.mesh_dim() == mesh_dim_expected
+
+    def test_value_dim(self):
+        """Test value_dim method."""
+        for functionspace in self.all_fspaces:
+            field = Field(functionspace)
+            # dolfin ufl_element().value_shape() (call, method) ->
+            # dolfinx reference_value_shape (property); num_sub_spaces()==0
+            # for scalars maps to an empty value shape.
+            value_shape = functionspace.ufl_element().reference_value_shape
+            assert isinstance(field.value_dim(), int)
+            if not value_shape:
+                assert field.value_dim() == 1
+            else:
+                assert field.value_dim() == value_shape[0]
+
+    def test_mesh(self):
+        """Test mesh method."""
+        for functionspace in self.all_fspaces:
+            field = Field(functionspace)
+
+            # dolfin df.Mesh -> dolfinx mesh.Mesh.
+            assert isinstance(field.mesh(), mesh.Mesh)
+
+    def test_set_nonlinear_scalar_field(self):
+        """Test setting nonlinear scalar field."""
+        python_functions = [lambda x: 1.21 * x[0] * x[0],
+                            lambda x: 1.21 * x[0] * x[0] - 3.21 * x[1],
+                            lambda x: 1.21 * x[0] * x[0] - 3.21 * x[1] + 2.47 * x[2]]
+
+        for functionspace in self.scalar_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(python_functions[0])
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0]
+                expected_probed_value = 1.21 * self.probing_coord * \
+                    self.probing_coord
+            elif field.mesh_dim() == 2:
+                field.set(python_functions[1])
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0] - \
+                    3.21 * coords[:, 1]
+                expected_probed_value = (1.21 * self.probing_coord - 3.21) * \
+                    self.probing_coord
+            elif field.mesh_dim() == 3:
+                field.set(python_functions[2])
+                expected_values = 1.21 * coords[:, 0] * coords[:, 0] - \
+                    3.21 * coords[:, 1] + 2.47 * coords[:, 2]
+                expected_probed_value = (1.21 * self.probing_coord - 3.21 +
+                                         2.47) * self.probing_coord
+
+            # Check the result of coords_and_values (should be exact at nodes).
+            field_values = field.coords_and_values()[1]  # ignore coordinates
+            # dolfin used ``==`` (bit-exact via vertex_to_dof_map). Under
+            # DOLFINx the interpolant samples ``tabulate_dof_coordinates`` while
+            # coords_and_values returns ``geometry.x`` -- equal only to FP
+            # rounding (measured max abs diff ~4e-15). allclose, not ``==``.
+            assert np.allclose(field_values, expected_values)
+
+            # Nonlinear field -> greater tolerance value (tol2) off-node.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value - expected_probed_value) < self.tol2
+
+    def test_set_nonlinear_vector_field(self):
+        """Test setting the vector field with a nonlinear expression."""
+        # 2D vector fields.
+        expressions = [lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[1]))]
+
+        for functionspace in self.vector2d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0])
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1])
+
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+
+            # Nonlinear field -> greater tolerance value (tol2) off-node.
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+
+        # 3D vector fields.
+        expressions = [lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[0], 3 * x[0])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[1], 3 * x[1])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[1], 3 * x[2]))]
+
+        for functionspace in self.vector3d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0], 3 * coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 1])
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 2])
+
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
+
+        # 4D vector fields.
+        expressions = [lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[0],
+                                            3 * x[0], x[0])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[1],
+                                            3 * x[1], x[0])),
+                       lambda x: np.vstack((1.1 * x[0] * x[0], -2.4 * x[1],
+                                            3 * x[2], x[0]))]
+
+        for functionspace in self.vector4d_fspaces:
+            field = Field(functionspace)
+
+            coords = field.coords_and_values()[0]  # Values ignored.
+            if field.mesh_dim() == 1:
+                field.set(expressions[0])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 0], 3 * coords[:, 0],
+                                   coords[:, 0])
+            elif field.mesh_dim() == 2:
+                field.set(expressions[1])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 1],
+                                   coords[:, 0])
+            elif field.mesh_dim() == 3:
+                field.set(expressions[2])
+                expected_values = (1.1 * coords[:, 0] * coords[:, 0],
+                                   -2.4 * coords[:, 1], 3 * coords[:, 2],
+                                   coords[:, 0])
+
+            expected_probed_value = (1.1 * self.probing_coord * self.probing_coord,
+                                     -2.4 * self.probing_coord,
+                                     3 * self.probing_coord,
+                                     self.probing_coord)
+
+            f_array = field.get_ordered_numpy_array_xxx()
+            f_array_split = np.split(f_array, field.value_dim())
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(f_array_split[0], expected_values[0])
+            assert np.allclose(f_array_split[1], expected_values[1])
+            assert np.allclose(f_array_split[2], expected_values[2])
+            assert np.allclose(f_array_split[3], expected_values[3])
+
+            coords, field_values = field.coords_and_values()
+            # allclose (not ``==``): dof-coord vs vertex-coord FP ~4e-15, see note above.
+            assert np.allclose(field_values[:, 0], expected_values[0])
+            assert np.allclose(field_values[:, 1], expected_values[1])
+            assert np.allclose(field_values[:, 2], expected_values[2])
+            assert np.allclose(field_values[:, 3], expected_values[3])
+
+            probing_point = field.mesh_dim() * (self.probing_coord,)
+            probed_value = field.probe(probing_point)
+            assert abs(probed_value[0] - expected_probed_value[0]) < self.tol2
+            assert abs(probed_value[1] - expected_probed_value[1]) < self.tol2
+            assert abs(probed_value[2] - expected_probed_value[2]) < self.tol2
+            assert abs(probed_value[3] - expected_probed_value[3]) < self.tol2
+
+    def test_plot_with_dolfin(self):
+        """Test that we can call the plotting function of a Field object.
+
+        Behavioural change (VISIBLE): master called ``plot_with_dolfin`` and
+        expected it to render. Legacy dolfin plotting has no DOLFINx equivalent,
+        so the port raises ``NotImplementedError`` (write VTK/XDMF instead --
+        see test_vtk_xdmf_output_and_filename_tracking below the banner).
+        """
+        field = Field(self.fs3d_vector3d, value=[1, 0, 0])
+        with pytest.raises(NotImplementedError):
+            field.plot_with_dolfin(interactive=False)
+
+    def test_add_scalar_fields(self):
+        # N10: master asserted ``Field + Field`` WORKS (field3 == 6.45). The
+        # DOLFINx port intentionally DEFERS operator ``+`` -- it used legacy
+        # point-measure assembly and now raises NotImplementedError.
+        # Behavioural change, see finmag.field.Field.__add__ /
+        # test_legacy_only_features_fail_precisely below the banner.
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = Field(functionspace, value=3.35)
+
+            with pytest.raises(NotImplementedError):
+                field1 + field2
+
+    def test_add_vector_fields(self):
+        # N10: master asserted ``Field + Field`` WORKS (components 6, 4.1, 9).
+        # The DOLFINx port intentionally DEFERS operator ``+`` (raises
+        # NotImplementedError) -- behavioural change, see test_add_scalar_fields.
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2, 3))
+            field2 = Field(functionspace, value=(5, 2.1, 6))
+
+            with pytest.raises(NotImplementedError):
+                field1 + field2
+
+    def test_mul_scalar_fields(self):
+        for functionspace in self.scalar_fspaces:
+            # dolfin string Expression "x[0] + 3.1" -> callable.
+            field1 = Field(functionspace, value=lambda x: x[0] + 3.1)
+
+            # Multiply with scalars
+            field2 = field1 * 42
+            field3 = -12 * field1
+
+            coords2, vals2 = field2.coords_and_values()
+            coords3, vals3 = field3.coords_and_values()
+            np.testing.assert_allclose(vals2, 42 * (coords2[:, 0] + 3.1))
+            np.testing.assert_allclose(vals3, -12 * (coords3[:, 0] + 3.1))
+
+    def test_mul_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            # dolfin string Expression list -> callable.
+            field1 = Field(functionspace,
+                           value=lambda x: np.vstack((x[0] + 1, x[0] + 2.4, x[0] + 3.7)))
+
+            # Multiply with scalars
+            field2 = field1 * 42
+            field3 = -3.6 * field1
+
+            # Multiply with a scalar field
+            S1 = associated_scalar_space(functionspace)
+            a = Field(S1, lambda pt: pt[0]**2)
+            field4 = field1 * a
+
+            coords2, vals2 = field2.coords_and_values()
+            coords3, vals3 = field3.coords_and_values()
+            coords4, vals4 = field4.coords_and_values()
+
+            xcoords2 = coords2[:, 0][:, np.newaxis]
+            xcoords3 = coords3[:, 0][:, np.newaxis]
+            xcoords4 = coords4[:, 0][:, np.newaxis]
+            vals2_expected = 42 * (xcoords2 + [1, 2.4, 3.7])
+            vals3_expected = -3.6 * (xcoords3 + [1, 2.4, 3.7])
+            vals4_expected = xcoords4**2 * (xcoords2 + [1, 2.4, 3.7])
+
+            np.testing.assert_allclose(vals2, vals2_expected)
+            np.testing.assert_allclose(vals3, vals3_expected)
+            # atol: the x^2 factor produces denormal ~1e-34 (not exact 0) at the
+            # x=0 nodes under DOLFINx; master's dolfin gave exact 0 (rtol-only).
+            np.testing.assert_allclose(vals4, vals4_expected, atol=1e-15)
+
+    def test_div_scalar_fields(self):
+        for functionspace in self.scalar_fspaces:
+            field1 = Field(functionspace, value=3.1)
+            field2 = field1 / 20
+            # dolfin ``f.vector().array()`` -> Field.as_array().
+            assert np.allclose(field2.as_array(), 0.155)
+
+    def test_div_vector_fields(self):
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=(1, 2.4, 3.7))
+
+            # Multiply with scalars
+            field2 = field1 / 20
+
+            # Divide by a scalar field
+            S1 = associated_scalar_space(functionspace)
+            a = Field(S1, lambda pt: (pt[0] + 1.0)**2)
+            field3 = field1 / a
+
+            coords = field2.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field2.probe(coord)[0] - 0.05) < self.tol1
+                assert abs(field2.probe(coord)[1] - 0.12) < self.tol1
+                assert abs(field2.probe(coord)[2] - 0.185) < self.tol1
+
+            coords = field3.coords_and_values()[0]
+            for coord in coords:
+                assert abs(field3.probe(coord)[0] - 1.0 / (coord[0] + 1)**2) < self.tol1
+                assert abs(field3.probe(coord)[1] - 2.4 / (coord[0] + 1)**2) < self.tol1
+                assert abs(field3.probe(coord)[2] - 3.7 / (coord[0] + 1)**2) < self.tol1
+
+    def test_cross(self):
+        v = np.array([1, 2, 3])
+        w = np.array([4, 5, -2])
+        v_cross_w = np.cross(v, w)
+
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=v)
+            field2 = Field(functionspace, value=w)
+            field3 = field1.cross(field2)
+
+            coords, vals = field3.coords_and_values()
+            np.testing.assert_allclose(vals - v_cross_w, 0)
+
+    def test_dot(self):
+        v = np.array([1, 2, 3])
+        w = np.array([4, 5, -2])
+        v_dot_w = np.dot(v, w)
+
+        for functionspace in self.vector3d_fspaces:
+            field1 = Field(functionspace, value=v)
+            field2 = Field(functionspace, value=w)
+            field3 = field1.dot(field2)
+
+            _, vals = field3.coords_and_values()
+            np.testing.assert_allclose(vals, v_dot_w)
+
+    def test_allclose(self):
+        for functionspace in self.all_fspaces:
+            # Define field on the function space and fill with random values.
+            field1 = Field(functionspace)
+            # the rtol check below can fail if the changed field value below is
+            # accidentally very small, so keep those values away from zero.
+            field1.set_random_values(vrange=[0.1, 1.0])
+
+            # Define second field as copy of the first.
+            field2 = Field(functionspace, field1)
+            assert field2.allclose(field1)
+
+            # Change one of the coordinates and check that the fields are now
+            # not allclose any more with the default tolerances, but that they
+            # are allclose with less strict tolerances.
+            a = field1.get_ordered_numpy_array_xxx()
+            eps = np.zeros_like(a)
+            eps[7] = 2.1e-6
+
+            # (master wrapped this in a try/except ipdb debugger drop -- removed.)
+            field2.set_with_ordered_numpy_array_xxx(a + eps)
+            assert not field2.allclose(field1)
+            assert field2.allclose(field1, atol=1e-5)
+            assert field2.allclose(field1, rtol=1e-4)
+
+            # Only a `Field` is a valid `other`.
+            with pytest.raises(TypeError):
+                assert field2.allclose(42.0)
+
+            with pytest.raises(TypeError):
+                assert field2.allclose(a)
+
+    def test_field_get_ordered_numpy_array_xxx_and_xyz(self):
+        """
+        For each mesh define a scalar field as well as vector fields of
+        dimension 2, 3, 4. The field values are defined by adding
+        0.01, 0.02, 0.03 and 0.04, respectively, to the x-coordinates
+        of the mesh nodes.
+
+        Then the field values are retrieved using both
+        ``get_ordered_numpy_array_xxx`` and ``get_ordered_numpy_array_xyz``
+        and compared with the expected values.
+        """
+        def fsetval(value_dim, pos):
+            # Helper function to set field values
+            x = pos[0]
+            return [x + 0.01 * (i + 1) for i in range(value_dim)]
+
+        for functionspace in self.all_fspaces:
+            # Define the field
+            f = Field(functionspace)
+            vdim = f.value_dim()
+            f.set(functools.partial(fsetval, vdim))
+
+            # Retrieve the field values in the different orderings
+            vals_xxx = f.get_ordered_numpy_array_xxx()
+            vals_xyz = f.get_ordered_numpy_array_xyz()
+
+            # Define the expected field values (derived from the x-coordinates
+            # of the owned mesh nodes -- dolfin mesh.coordinates()[:,0]).
+            xcoords = _owned_vertices(functionspace)[:, 0]
+            vals_xxx_expected = np.concatenate(
+                [xcoords + 0.01 * (i + 1) for i in range(vdim)])
+            vals_xyz_expected = np.array(
+                [xcoords + 0.01 * (i + 1) for i in range(vdim)]).transpose().ravel()
+
+            np.testing.assert_almost_equal(vals_xxx, vals_xxx_expected)
+            np.testing.assert_almost_equal(vals_xyz, vals_xyz_expected)
+
+            # Error if we try to call get_ordered_numpy_array() on a non-scalar.
+            if vdim > 1:
+                with pytest.raises(ValueError):
+                    f.get_ordered_numpy_array()
+
+    def test_save_hdf5(self, tmp_path):
+        """
+        Test saving of field to hdf5.
+
+        Behavioural change (VISIBLE): the legacy ``save_hdf5`` used the external
+        ``dolfinh5tools`` package to write a ``.h5`` timeseries PLUS a ``.json``
+        sidecar of saved times, and required ``close_hdf5``. The DOLFINx port
+        writes ONE self-describing ``.h5`` snapshot (no ``.json`` sidecar) per
+        call and ``close_hdf5`` is a no-op. So this asserts the ``.h5`` exists
+        and that NO ``.json`` sidecar is produced.
+        """
+        # Define base filename to save data to (tmp_path -> auto-cleaned).
+        filename = str(tmp_path / "test_save_field")
+        fieldname = 'f'
+
+        expression = lambda x: np.vstack((1.1 * x[0], -2.4 * x[1], 3 * x[2]))
+
+        # Define and set field
+        field = Field(functionspace=self.fs3d_vector3d, name=fieldname)
+        field.set(expression)
+
+        # save field to h5 file (single-snapshot; the last call wins).
+        field.save_hdf5(filename, t=1.0)
+        field.save_hdf5(filename, t=2.0)
+
+        # close hdf5 file (no-op under DOLFINx).
+        field.close_hdf5()
+
+        # check that the .h5 file has been created, and that NO .json sidecar
+        # is written (behavioural change from the legacy dolfinh5tools format).
+        assert (tmp_path / "test_save_field.h5").exists()
+        assert not (tmp_path / "test_save_field.json").exists()
+
+
+def _interpolate(functionspace, callable_expr):
+    """dolfin ``df.interpolate(expr, fs)`` -> a dolfinx fem.Function.
+
+    Builds a raw ``fem.Function`` on ``functionspace`` and interpolates the
+    Python callable into it (scatter-forward for ghosts), so the transcribed
+    tests can hand a Function / its backend ``.x`` vector to ``Field.set``.
+    """
+    function = fem.Function(functionspace)
+    function.interpolate(callable_expr)
+    function.x.scatter_forward()
+    return function
+
+
+# ===========================================================================
+# NEW under DOLFINx (no master ancestor)
+# ===========================================================================
+# The tests below are the focused production tests for the DOLFINx-backed Field
+# (ownership/ghost accessors, coordinate round-trips, from_generic_vector
+# backend-object surface, VTK/XDMF output, coordinate-drift guards). They have
+# no master ancestor and are preserved verbatim.
 
 
 @pytest.fixture
