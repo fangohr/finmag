@@ -1,5 +1,14 @@
 """Array-only FK BEM native surface for the DOLFINx environment (Task 11a).
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): ``finmag.native.bem_arrays``
+is a new, array-only extraction of the FK/GCR BEM kernels, separated from the
+legacy SWIG-DOLFIN mesh converters so it can build without ``-ldolfin`` on
+Python 3.12. Master's own BEM test (``test_bem_computation.py``) exercises
+the dolfin-mesh-coupled surface and is out of scope here (restored
+separately); this file has no test-file ancestor of its own, so it is
+validated instead against golden arrays captured from the known-good
+compiled legacy module.
+
 These tests exercise the ``finmag.native.bem_arrays`` extension: the
 array-only Fredkin-Koehler BEM/LLG native bindings, separated from the legacy
 SWIG-DOLFIN mesh converters and the ``-ldolfin`` link dependency so the surface

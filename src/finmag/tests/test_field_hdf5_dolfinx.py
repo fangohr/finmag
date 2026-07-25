@@ -1,5 +1,12 @@
 """HDF5 checkpoint round-trip for the DOLFINx-backed :class:`Field`.
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): master's HDF5 checkpoint
+writer (``dolfinh5tools``) is a stateful, multi-call-per-timeseries wrapper
+around ``dolfin.HDF5File`` with a JSON sidecar; ``Field.save_hdf5``/
+``from_hdf5`` (SR1 P4-hdf5, N41) is a from-scratch, single-file h5py redesign
+with no dolfin dependency, so there is no master test file to restore -- this
+suite is new to validate the new contract.
+
 These tests pin the single-file, self-describing, coordinate-aware ``.h5``
 round-trip added for SR1 P4-hdf5. The on-disk layout mirrors the restart v2
 coordinate-aware format (owned vertex coordinates + coordinate-ordered values),
@@ -182,3 +189,20 @@ def test_hdf5_rejects_mismatched_value_dim(tmpdir):
     scalar = _scalar_space()
     with pytest.raises(ValueError, match="value_dim|component"):
         Field.from_hdf5(scalar, path)
+
+
+# ===== NEW under DOLFINx =====
+
+def test_close_hdf5_is_a_harmless_no_op(tmpdir):
+    """``close_hdf5`` is a legacy-call-site-compatibility no-op: each
+    ``save_hdf5`` call already opens and closes its own file, so there is no
+    handle to release. Calling it must not raise and must not touch the file
+    on disk."""
+    space = _vector_space()
+    field = _node_varying_vector(space)
+    path = str(tmpdir.join("m.h5"))
+    field.save_hdf5(path)
+
+    assert field.close_hdf5() is None
+    # The already-written checkpoint is untouched and still loads correctly.
+    assert Field.from_hdf5(space, path).allclose(field)

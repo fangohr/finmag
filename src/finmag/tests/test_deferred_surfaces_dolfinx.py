@@ -1,5 +1,12 @@
 """Task 10 headline deferred-surfaces sweep.
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): there is no legacy
+"deferred surfaces" concern on master -- master has ``dolfin`` and never
+needed to defer anything by name. This aggregated sweep exists solely to
+police the DOLFINx port's own deferral contract (unsupported features must
+fail with a curated, feature-naming ``NotImplementedError``, never an
+incidental raw import error), so it is DOLFINx-only by construction.
+
 This file is the single, aggregated place a reviewer can look to confirm
 "unsupported features fail by name, not through incidental import errors"
 (the Task 10 gate checklist). Most of the headline deferred surfaces already

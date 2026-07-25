@@ -1,5 +1,13 @@
 """SR1 P2.1: the ``finmag.example`` / ``set_logging_level`` import boundary.
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): master's ``finmag.example``
+subpackage has no dedicated import-boundary test of its own -- import
+boundaries (dolfin-free import, curated by-name deferral for unported
+examples) are a DOLFINx-port-only concern. This file validates that ported
+contract: ``finmag.example`` (``bar``/``barmini``/``nanowire``) and
+``set_logging_level`` import and run with no legacy ``dolfin``, while the
+still-unported ``sphere_inside_airbox``/``normal_modes`` fail by name.
+
 These checks pin down that the small "standard simulation" examples that the
 manual leans on (``bar``, ``barmini``, ``nanowire``) and the public
 ``set_logging_level`` helper work in the DOLFINx environment with no legacy

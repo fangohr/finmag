@@ -1,6 +1,13 @@
 """Witness that the dolfin-free Magpar readers load the checked-in reference
 data correctly under the DOLFINx environment (SR1 P5.2 precondition).
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): ``finmag.util.magpar_io``
+is a new, dolfin-free extraction of the legacy ``finmag.util.magpar`` reader
+logic; master has no ``magpar_io`` test file to restore because the module
+itself postdates master (the legacy readers were only ever exercised
+indirectly, bundled inside ``finmag.util.magpar``, which imports ``dolfin``
+and cannot run in this environment).
+
 These tests exercise ``finmag.util.magpar_io`` -- the extracted, dolfin-free
 readers -- against the three checked-in Magpar reference datasets
 (``test_exch``, ``test_anis``, ``test_demag``). Importing the module at all is

@@ -1,5 +1,12 @@
 """Dedicated public field-array component-ordering contract (Task 31).
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): the component-blocked vs.
+interleaved vs. double-converted array-ordering distinction this file guards
+against is a DOLFINx-port-only failure mode -- master's dolfin-native arrays
+never had a second "backend ordering" to confuse with the public
+component-blocked layout, so there is no master test file to restore. This
+suite is new to pin the ported ordering contract directly.
+
 CRITICAL-class guard. A wrong ordering fix does not raise, it silently
 scrambles physics, so this module pins the legacy component-blocked (``xxx``)
 ordering on every public field-array surface with *analytic* layouts that are

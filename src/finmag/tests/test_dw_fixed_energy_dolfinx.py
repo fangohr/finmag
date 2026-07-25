@@ -1,5 +1,11 @@
 """``FixedEnergyDW`` curated by-name deferral (Task 19).
 
+NO MASTER ANCESTOR (genuinely new under DOLFINx): no ``dw_fixed_energy_test.py``
+(or any equivalent) exists on master, so there is nothing to restore. The
+curated by-name ``NotImplementedError`` deferral itself is a DOLFINx-port
+invention (master just shipped the untested, admittedly-broken class as-is);
+this suite is new to validate that new deferral contract.
+
 ``FixedEnergyDW`` is untested even on legacy master (no
 ``dw_fixed_energy_test.py`` exists) and legacy's own todo notes record it as
 broken (see the rationale in
