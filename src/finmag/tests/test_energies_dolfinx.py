@@ -1,4 +1,214 @@
-"""Focused production tests for the first DOLFINx energy slice."""
+"""DOLFINx energy-interaction tests: Exchange, Zeeman (static), UniaxialAnisotropy.
+
+BUCKET-B aggregate port. This file does not literally transcribe any single
+master file; it AGGREGATES coverage from five master ancestors (all at git
+``b5015c5a``) under renamed, restructured tests, plus one master test
+restored verbatim under its master name (see RESTORE below). The table
+below is the MASTER -> PORT MAPPING HEADER required by the SR1 P5.2
+bucket-B convention (exemplars: ``git show 02e2e3d8`` for the accounting
+style, ``test_fk_demag_dolfinx.py`` for the minimal-diff-transcription +
+NEW-under-DOLFINx split). Every master function across all five ancestors
+is listed exactly once, with its fate: a covering port function, an
+explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
+
+1) ``src/finmag/energies/exchange_test.py`` (6 functions)
+
+  - ``test_interaction_accepts_name`` -> covered-elsewhere (weaker):
+    ``test_exchange_uniform_field_is_exactly_zero`` asserts the *default*
+    ``exchange.name == "Exchange"``; the custom-name kwarg is exercised for
+    ``Zeeman`` in this file (``zeeman.name == "Applied"``, same
+    ``EnergyBase`` code path) but not re-asserted for ``Exchange`` with a
+    custom string. Not independently fixed (out of this audit's named-restore
+    scope; low risk, shared implementation).
+  - ``test_there_should_be_no_exchange_for_uniform_m`` -> covered:
+    ``test_exchange_uniform_field_is_exactly_zero``. Tolerance TIGHTENED,
+    not loosened: master ``FIELD_TOLERANCE=6e-7`` / ``ENERGY_TOLERANCE=0.0``
+    -> port asserts field ``atol=1e-12`` and energy ``abs=0.0`` exactly
+    (measured: both are exact/near-exact zero for box-assemble on a uniform
+    field, so the tighter bound still passes).
+  - ``test_exchange_energy_analytical`` -> covered:
+    ``test_exchange_linear_energy_and_physical_length_scaling``. Different
+    ``m`` profile (linear ``(x, y, 0)`` vs. master's ``(x, z, -y)``) and
+    generalised across 2D/3D + explicit ``unit_length``. Tolerance TIGHTENED:
+    master ``rel=1e-7`` -> port ``rel=1e-13`` (measured comparably tight
+    since the port uses an exactly-linear field on an affine mesh).
+  - ``test_exchange_energy_analytical_2`` -> covered-elsewhere:
+    ``test_exchange_linear_energy_and_physical_length_scaling`` (same
+    property -- analytic linear-energy formula scaling with ``A`` and
+    ``unit_length`` -- different construction: master used a fine
+    ``BoxMesh`` + trig ``m`` at ``rel=5e-5``; port uses an exactly-linear
+    ``m`` at ``rel=1e-13``).
+  - ``test_exchange_field_supported_methods`` -> deferred + reason:
+    covered by ``test_deferred_energy_methods_are_rejected_precisely``.
+    Alternate methods (``box-matrix-numpy``, ``box-matrix-petsc``,
+    ``direct``) are NOT ported under DOLFINx and raise
+    ``NotImplementedError("... not yet ported")`` by name; only
+    ``box-assemble`` exists, so a same-vs-alternate-method equivalence test
+    is moot by construction. (Master itself excluded ``"project"`` from the
+    comparison as "too bad"; DOLFINx additionally rejects ``"project"``
+    outright, see ``test_deferred_energy_methods_are_rejected_precisely``.)
+  - ``test_exchange_periodic_boundary_conditions`` -> RESTORED this
+    session under its master name (see RESTORE section below); was the
+    named dropped-coverage item from the P5 test-suite audit.
+
+2) ``src/finmag/energies/anisotropy_test.py`` (5 functions)
+
+  - ``test_interaction_accepts_name`` -> NOT COVERED. No ``.name``
+    assertion exists for ``UniaxialAnisotropy`` anywhere in this port file
+    (``Exchange``/``Zeeman`` custom-name handling is exercised elsewhere in
+    this file via the same shared ``EnergyBase`` mechanism, but
+    ``UniaxialAnisotropy`` itself is never checked). Genuine minor gap,
+    flagged rather than silently assumed covered; not fixed here (outside
+    the audit's named-restore scope).
+  - ``test_anisotropy_energy_simple_configurations`` -> covered:
+    ``test_anisotropy_parallel_and_perpendicular_legacy_k2_law`` (identical
+    parametrize-over-``m`` shape as master, extended with a non-zero ``K2``
+    term and a different ``K1``). Tolerance TIGHTENED: master
+    ``rtol=1e-12`` -> port ``rel=1e-13, abs=1e-15``.
+  - ``test_anisotropy_energy_analytical`` -> covered-elsewhere:
+    ``test_anisotropy_density_integrates_to_energy_and_refreshes`` exercises
+    the ``K1``-only path (``K2`` defaults to 0) but with a spatially
+    *uniform* ``m`` rather than master's spatially-varying
+    ``(0, sqrt(1-x^2), x)`` analytic-integral case; the port test is
+    stronger in a different dimension (checks the energy-density integral
+    identity and refresh-after-``m``-change instead).
+  - ``test_anisotropy_field`` -> covered, STRONGER method:
+    ``test_anisotropy_k1_k2_field_direction_ms_and_length_scaling``. Master
+    re-derives ``H`` by re-assembling the same UFL weak form with a
+    ``TestFunction`` (a self-consistency check against the same machinery
+    under test); the port instead computes ``H`` from the closed-form
+    analytic ``K1``/``K2`` field formula, an independent oracle.
+  - ``test_anisotropy_field_supported_methods`` -> deferred + reason:
+    same as exchange's supported-methods test above --
+    ``test_deferred_energy_methods_are_rejected_precisely`` plus
+    ``test_invalid_or_deferred_material_inputs_fail_explicitly``
+    (``assemble=False`` raises ``NotImplementedError("... native/direct ...")``).
+    Only ``box-assemble`` is ported.
+
+3) ``src/finmag/energies/zeeman_test.py`` (14 functions total; STATIC-Zeeman
+   subset only per this file's scope -- 5 functions. The remaining 9
+   time-varying functions are covered in ``test_timezeeman_dolfinx.py``,
+   whose own docstring cross-references back here for the static subset.)
+
+  - ``test_interaction_accepts_name`` (``Zeeman`` part only; the
+    ``TimeZeeman``/``DiscreteTimeZeeman`` parts are covered in
+    ``test_timezeeman_dolfinx.py``) -> covered, stronger:
+    ``test_zeeman_field_average_and_analytic_energy`` asserts a *custom*
+    name (``zeeman.name == "Applied"``), stronger than master's bare
+    ``hasattr`` check.
+  - ``test_compute_energy`` -> covered:
+    ``test_zeeman_field_average_and_analytic_energy`` (generalised to
+    2D/3D, arbitrary ``H`` vector). Tolerance TIGHTENED: master
+    ``rtol=1e-12`` -> port ``rel=1e-13``.
+  - ``test_energy_density_function`` -> covered-elsewhere (weaker):
+    ``test_zeeman_callable_set_value_keeps_live_function_and_density``.
+    Master integrates ``energy_density_function()`` over the mesh
+    (``df.assemble(edf * dx) * unit_length``) and compares to the
+    independent analytic total ``-mu0 * H``; the port instead checks the
+    raw density array pointwise against the analytic density formula and
+    that ``energy_density_function() is density.f`` (a live-reference
+    identity check). The INTEGRAL-equals-energy property master checked
+    for ``Zeeman`` specifically is not reproduced here (it IS reproduced
+    for ``Exchange``/``UniaxialAnisotropy`` via the local
+    ``_density_integral`` helper, just not wired up for ``Zeeman`` too) --
+    flagged as a minor gap, not fixed (outside the audit's named-restore
+    scope).
+  - ``test_compute_energy_in_regions`` -> covered-elsewhere (weaker):
+    ``test_zeeman_compute_energy_preserves_restricted_measure_argument``.
+    Master splits the mesh into two SEPARATE physical subdomains
+    (``df.SubMesh``) with DIFFERENT ``m`` per domain and compares each
+    against an independent per-region analytic formula at ``rtol=5e-3``;
+    the port instead uses ONE spatially-uniform ``m`` over a single mesh
+    split by ``meshtags``/restricted ``dx(1)``, verifying that the
+    restricted half-energy equals half the total at ``rel=1e-13``. The
+    measure-restriction PLUMBING is verified tightly; master's
+    "different ``m`` per region matches an independent analytic per-region
+    formula" property is not reproduced (``df.SubMesh``/``CellFunction``/
+    ``Measure("dx")[domains]`` are removed dolfin APIs -- ``meshtags`` +
+    ``subdomain_data`` is the DOLFINx equivalent already used here; see
+    also ``test_energies_in_regions.py`` below, same relationship).
+  - ``test_value_set_update`` -> covered, stronger:
+    ``test_zeeman_callable_set_value_keeps_live_function_and_density``
+    additionally asserts the live ``dolfinx.fem.Function`` object identity
+    (``zeeman.H.f is function``) survives ``set_value()``, not just the
+    ``.value`` attribute as master did.
+
+   Time-varying subset (9 functions, NOT covered in this file by design --
+   see ``test_timezeeman_dolfinx.py``): ``test_time_zeeman_init``,
+   ``test_time_dependent_field_update``,
+   ``test_time_dependent_field_switched_off``,
+   ``test_discrete_time_zeeman_updates_in_intervals``,
+   ``test_discrete_time_zeeman_check_arguments_are_sane``,
+   ``test_discrete_time_zeeman_switchoff_only``, ``test_oscillating_zeeman``,
+   ``test_dipolar_field_class``,
+   ``test_compare_stray_field_of_sphere_with_dipolar_field`` (still
+   out-of-scope/xfail-in-master per that file's own docstring, pending the
+   deferred airbox/example machinery).
+
+4) ``src/finmag/energies/magnetostatic_field_test.py`` (2 functions) -> NOT
+   COVERED. ``MagnetostaticField`` (``finmag/energies/magnetostatic_field.py``)
+   is a standalone macrospin-style class with NO ``dolfin``/FEM dependency
+   at all (pure numpy), still present unchanged in the tree, but it is not
+   wired into ``finmag.energies``'s lazy export table and has no DOLFINx
+   test coverage. Flagged here rather than silently assumed covered; a
+   cheap future slice, but out of this audit's named-restore scope (only
+   ``test_exchange_periodic_boundary_conditions`` was named).
+   - ``test_magnetostatic_field_for_uniformly_magnetised_sphere`` -> not covered.
+   - ``test_magnetostatic_energy_density_for_uniformly_magnetised_sphere`` -> not covered.
+
+5) ``src/finmag/energies/test_energies_in_regions.py`` (2 functions)
+
+  - ``test_energies_in_separated_subdomains`` -> covered-elsewhere, TWO
+    locations, of increasing strength: (a) in THIS file, weakly, via
+    ``test_zeeman_compute_energy_preserves_restricted_measure_argument``
+    (restricted-``dx`` summation property only, spatially-uniform ``m``);
+    (b) more strongly, in ``test_variable_params_dolfinx.py`` via
+    ``test_region_energies_sum_to_total_zeeman_oracle``,
+    ``test_region_energies_sum_to_total_for_exchange`` and
+    ``test_total_energy_over_region_sums_all_interactions``, which use
+    ``sim.mark_regions`` + ``compute_energy(..., region=...)`` as the
+    DOLFINx replacement for master's ``pair_of_disks``/``df.SubMesh``/
+    ``CellFunction`` region machinery (that file's own mapping header has
+    the full accounting; ``get_submesh`` itself stays a documented
+    ``NotImplementedError`` deferral there since region ``dx`` measures
+    cover every behavioural need exercised by ``MultiDomainTest``).
+  - ``test_energies_in_touching_subdomains`` -> NOT COVERED / deferred:
+    already ``@pytest.mark.xfail`` in master itself, investigating an
+    unresolved touching-subdomain bug ("fails for some reason... need to
+    investigate"; master's own comment). Not reproduced under DOLFINx:
+    low value (master never got this working either) and depends on the
+    same unported ``SubMesh`` machinery as above. (Cross-checked: also
+    NOT PORTED in ``test_variable_params_dolfinx.py`` for the same reason.)
+
+RESTORE (P5 test-suite audit): ``test_exchange_periodic_boundary_conditions``
+was dropped from the initial DOLFINx aggregation of ``exchange_test.py``
+without being flagged. It is restored below under its master name,
+immediately after the plain-exchange tests.
+
+PBC IS A NO-OP UNDER THIS PORT -- DOCUMENTED, NOT HIDDEN. Master's test
+uses ``finmag.util.pbc2d.PeriodicBoundary2D`` (a *different* class from the
+locally-defined ``PeriodicBoundary`` investigated in the sibling
+``test_field_dolfinx.py`` PBC-no-op finding -- that one's ``inside()`` body,
+``x[0] < DOLFIN_EPS and x[0] > DOLFIN_EPS``, is self-contradictory and hence
+always ``False``; ``PeriodicBoundary2D.inside()`` uses genuinely different,
+non-vacuous boundary-matching logic and is not shown here to share that
+specific defect). Regardless of whether master's own periodicity detection
+was correct, DOLFINx's ``dolfinx.fem.functionspace`` has **no**
+``constrained_domain=`` argument at all: periodicity support lives only in
+the separate ``dolfinx_mpc`` package, which nothing else in this port
+depends on, and ``finmag.util.pbc2d`` itself still imports legacy
+``dolfin`` (importing it here would violate
+``test_ported_energy_exports_do_not_load_legacy_dolfin`` above). So under
+DOLFINx there is structurally no way to build a genuinely periodic "_pbc"
+function space in this test: it is reproduced below as the SAME plain CG1
+space as the "_normal" variant. The restored test therefore -- like
+master's own ``field_test.py`` PBC sweep -- does not actually exercise
+periodicity; it degenerates to running the same uniform-``m``
+zero-exchange-field/energy check twice on the same space. Master's
+tolerances (``FIELD_TOLERANCE = 6e-7``, ``ENERGY_TOLERANCE = 0.0``) are kept
+VERBATIM and pass (measured: both computed quantities are exact/near-exact
+zero for box-assemble exchange on a uniform field).
+"""
 
 import sys
 
@@ -223,6 +433,52 @@ def test_exchange_field_scales_as_inverse_unit_length_squared():
     )
     weighted = (H1 * vol_blocked).reshape((3, -1)).sum(1)
     assert np.allclose(weighted, 0.0, atol=1e-8)
+
+
+def test_exchange_periodic_boundary_conditions():
+    """Restored (P5 test-suite audit): master
+    ``exchange_test.py::test_exchange_periodic_boundary_conditions``.
+
+    See the module docstring's "PBC IS A NO-OP UNDER THIS PORT" section for
+    the full explanation. In short: DOLFINx has no ``constrained_domain=``
+    argument, so the "_pbc" function space below is necessarily the SAME
+    plain CG1 space as the "_normal" one -- this test does not actually
+    exercise periodicity, mirroring master's own (differently-caused)
+    ``field_test.py`` PBC no-op. Master's tolerances are kept verbatim.
+    """
+    mesh1 = mesh.create_box(
+        MPI.COMM_WORLD,
+        [(0.0, 0.0, 0.0), (1.0, 1.0, 0.1)],
+        [2, 2, 1],
+        mesh.CellType.tetrahedron,
+    )
+    mesh2 = mesh.create_unit_cube(MPI.COMM_WORLD, 10, 10, 10)
+
+    for domain in (mesh1, mesh2):
+        S3_normal = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+        # DOLFINx has no `constrained_domain=`; `finmag.util.pbc2d` (which
+        # provides master's `PeriodicBoundary2D`) is dolfin-only and is
+        # deliberately not imported here (see module docstring). So the
+        # "_pbc" space is, of necessity, identical to S3_normal.
+        S3_pbc = S3_normal
+
+        for S3 in (S3_normal, S3_pbc):
+            FIELD_TOLERANCE = 6e-7  # master verbatim
+            ENERGY_TOLERANCE = 0.0  # master verbatim
+
+            Ms_space = fem.functionspace(domain, ("DG", 0))
+            m_field = Field(S3, (0.0, 0.0, 1.0), name="m")
+            Ms_field = Field(Ms_space, 1.0)
+
+            exch = Exchange(1.0)
+            exch.setup(m_field, Ms_field)
+            field = exch.compute_field()
+            energy = exch.compute_energy()
+
+            # measured: both ~0 (box-assemble exchange field/energy of an
+            # exactly uniform m is exact up to floating-point round-off).
+            assert np.max(np.abs(field)) < FIELD_TOLERANCE
+            assert abs(energy) <= ENERGY_TOLERANCE
 
 
 def test_exchange_and_anisotropy_can_rebind_to_a_new_mesh():
