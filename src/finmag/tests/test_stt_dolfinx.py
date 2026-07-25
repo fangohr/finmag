@@ -5,6 +5,75 @@ Covers the Slonczewski/Xiao and Zhang-Li torques transcribed into the ported
 and, for Zhang-Li, the discrete gradient field), analytic direction/scaling
 pins, ``Simulation`` pass-throughs, dynamics witnesses, and a scipy-vs-sundials
 cross-backend check.
+
+MASTER->PORT MAPPING-HEADER (SR1 P5.2, BUCKET-B; ``b5015c5a``). Four STT
+master ancestors, every function accounted for:
+
+======================================================================================================================
+Master file                                                    | Master fn              | Port coverage
+======================================================================================================================
+zhangli/zhang_li_test.py                                       | test_zhangli           | COVERED:
+                                                                |                        | test_zhangli_domain_wall_displacement_witness
+                                                                |                        | (identical setup/asserts, no numeric tol change)
+----------------------------------------------------------------------------------------------------------------------
+zhangli/zhang_li_test.py                                       | test_zhangli_sllg      | DEFERRED: kernel='sllg'
+                                                                |                        | (stochastic LLG+Zhang-Li native kernel never
+                                                                |                        | rebuilt for DOLFINx). Guard COVERED-ELSEWHERE:
+                                                                |                        | test_simulation_dolfinx.py::
+                                                                |                        | test_nonstandard_kernels_are_deferred[sllg]
+                                                                |                        | asserts NotImplementedError by name.
+----------------------------------------------------------------------------------------------------------------------
+zhangli/zhang_li_test.py                                       | compare_gradient_field1| N/A: not a pytest test in master either --
+                                                                | compare_gradient_field2| no ``test_`` prefix, calls df.interactive(), manual
+                                                                | (+ sech/init_m/field_at| visualisation scripts. The underlying discrete
+                                                                | /init_J/init_J_x/      | gradient-field computation these exercise IS
+                                                                | init_J_xy/init_m2/     | covered-elsewhere by
+                                                                | field_at2 helpers)     | test_zhangli_rhs_and_gradient_match_legacy_oracle_fixture
+----------------------------------------------------------------------------------------------------------------------
+zhangli/stt_nonlocal_test.py                                   | test_zhangli           | DEFERRED: kernel='llg_stt' -> the separate
+                                                                | (nonlocal STT)         | nonlocal-STT physics class ``finmag.physics.
+                                                                |                        | llg_stt.LLG_STT`` (native spin-diffusion
+                                                                |                        | ``delta_m`` state, ``set_parameters``/``speedup``)
+                                                                |                        | has NO DOLFINx port anywhere in the tree -- a
+                                                                |                        | distinct compiled kernel from the local
+                                                                |                        | Slonczewski/Zhang-Li torques this file covers.
+                                                                |                        | Guard COVERED-ELSEWHERE: test_simulation_dolfinx.py
+                                                                |                        | ::test_nonstandard_kernels_are_deferred[llg_stt].
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/validation/finmag/                                 | test_against_nmag      | RESTORED (was genuinely dropped): see
+test_finmag_validation.py                                      |                        | test_slonczewski_validation_matches_nmag_reference_
+                                                                |                        | trajectory below. Master's TOLERANCE=1e-4 /
+                                                                |                        | EPSILON=1e-16 kept VERBATIM against the SAME
+                                                                |                        | ``slonczewski/validation/nmag/averages_nmag5.txt``
+                                                                |                        | reference. Divergence (disclosed, not a tolerance
+                                                                |                        | loosening): master ran the full 10 ns / 2000 steps;
+                                                                |                        | a dev timing probe of the DOLFINx sundials stepper on
+                                                                |                        | this problem measured ~2 s/step past JIT/setup
+                                                                |                        | overhead (~70-90 min for the full run) -- far too
+                                                                |                        | slow for the suite, so the restored test runs only
+                                                                |                        | the first 1e-10 s (20 steps) against the matching
+                                                                |                        | prefix of the same reference file. Measured max
+                                                                |                        | |diff| over that window in development: 4.8e-6
+                                                                |                        | (well inside 1e-4).
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/validation/finmag/                                 | plot_dynamics /        | N/A: not pytest tests (no ``test_`` prefix),
+test_finmag_validation.py                                      | extract_magnetisation_ | plotting/ndt-extraction helpers.
+                                                                | dynamics               |
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/oscillator/test_oscillator.py                      | _test_oscillator       | NOT A REAL MASTER TEST: the leading underscore
+                                                                |                        | means pytest's default ``test_*`` collection
+                                                                |                        | pattern never picks this up -- master itself
+                                                                |                        | (``b5015c5a``) never runs it, so there is no
+                                                                |                        | genuine coverage being dropped by the port. Not
+                                                                |                        | restored. (Had it been collected, restoring it would
+                                                                |                        | additionally require ``Demag()``, a ``from_geofile``
+                                                                |                        | vortex-oscillator mesh, and a ``relax()``-generated
+                                                                |                        | initial state -- well beyond a one-line port.)
+======================================================================================================================
+
+(``zhangli/standard.py`` was checked too: no ``test_*`` functions at all --
+a manual relax/plot script, not a test-file ancestor.)
+[Claude Opus 4.8]
 """
 
 import json
@@ -20,6 +89,8 @@ from finmag import Simulation
 from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
 from finmag.field import Field
 from finmag.physics.llg import LLG
+from finmag.util.consts import mu0
+from finmag.util.fileio import Tablereader
 
 FIX_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 SLON_FIXTURE = os.path.join(FIX_DIR, "slonczewski_rhs.json")
@@ -529,6 +600,77 @@ def test_slonczewski_tilt_direction_flips_with_current():
     d_neg = _run(-5.0e12)
     assert d_pos * d_neg < 0.0
     assert abs(d_pos) > 1e-4 and abs(d_neg) > 1e-4
+
+
+# --------------------------------------------------------------------------
+# restored: Nmag full-dynamics validation (was genuinely dropped)
+#
+# Port of ``slonczewski/validation/finmag/test_finmag_validation.py::
+# test_against_nmag``, itself running ``run_validation.py``: a BoxMesh
+# Slonczewski-STT problem (Zeeman + Exchange + UniaxialAnisotropy + local
+# ``set_stt``) integrated step by step and compared against Nmag's reference
+# trajectory (``slonczewski/validation/nmag/averages_nmag5.txt``, still
+# present in the tree).
+#
+# DISCLOSED DIVERGENCE (duration only, tolerance untouched): master integrates
+# the full 10 ns (2000 steps @ 5 ps). A dev timing probe of this problem on
+# the DOLFINx sundials stepper measured ~2 s/step past one-time JIT/assembly
+# setup -- roughly 70-90 minutes for the full run, far too slow for the test
+# suite. This restoration therefore runs only the first 1e-10 s (20 steps)
+# and compares against the matching prefix of the SAME reference file.
+# Master's TOLERANCE=1e-4 / EPSILON=1e-16 are kept VERBATIM (not loosened).
+# Measured in development over this window: time-column diff exactly 0.0,
+# max |m diff| 4.8e-6, mean 9.5e-7 -- both comfortably inside tolerance.
+# [Claude Opus 4.8]
+# --------------------------------------------------------------------------
+
+NMAG_VALIDATION_FILE = os.path.join(
+    os.path.dirname(__file__), "slonczewski", "validation", "nmag",
+    "averages_nmag5.txt")
+NMAG_VALIDATION_EPSILON = 1e-16  # master's EPSILON, verbatim
+NMAG_VALIDATION_TOLERANCE = 1e-4  # master's TOLERANCE, verbatim
+NMAG_VALIDATION_T_MAX = 1e-10  # truncated from master's 10e-9, see above
+NMAG_VALIDATION_DT = 5e-12  # matches master's schedule step exactly
+
+
+def test_slonczewski_validation_matches_nmag_reference_trajectory():
+    L = W = 12.5e-9
+    H = 5e-9
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (L, W, H)], [5, 5, 2],
+        mesh.CellType.tetrahedron)
+    sim = Simulation(domain, Ms=860e3, unit_length=1.0,
+                     name="stt_validation_nmag")
+    sim.set_m((1, 0.01, 0.01))
+    sim.alpha = 0.014
+    sim.gamma = 221017
+
+    H_app_mT = np.array([0.2, 0.2, 10.0])
+    H_app_SI = H_app_mT / (1000 * mu0)
+    sim.add(Zeeman(tuple(H_app_SI)))
+    sim.add(Exchange(1.3e-11))
+    sim.add(UniaxialAnisotropy(-1e5, (0, 0, 1)))
+
+    I = 5e-5  # current in A
+    J = I / (L * W)  # current density in A/m^2
+    theta = 40.0 * np.pi / 180  # polarisation direction
+    phi = np.pi / 2
+    p = (np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi),
+         np.cos(theta))
+    sim.set_stt(current_density=J, polarisation=0.4, thickness=H,
+               direction=p)
+
+    sim.schedule("save_averages", every=NMAG_VALIDATION_DT)
+    sim.run_until(NMAG_VALIDATION_T_MAX)
+
+    reader = Tablereader(sim.ndtfilename)
+    finmag_dynamics = np.array(reader["time", "m_x", "m_y", "m_z"]).T
+
+    nmag_dynamics = np.loadtxt(NMAG_VALIDATION_FILE)[:finmag_dynamics.shape[0]]
+
+    diff = np.abs(finmag_dynamics - nmag_dynamics)
+    assert np.max(diff[:, 0]) < NMAG_VALIDATION_EPSILON  # compare timesteps
+    assert np.max(diff[:, 1:]) < NMAG_VALIDATION_TOLERANCE
 
 
 # --------------------------------------------------------------------------
