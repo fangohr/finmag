@@ -162,10 +162,24 @@ plus this documentation commit.
 **Every ported DOLFINx test now lives at its original `master` (`b5015c5a`)
 path.** The `*_dolfinx.py` sibling-file convention adopted on 2026-07-25 is
 retired: a port sitting *beside* its ancestor cannot be diffed against it, and
-the minimal-diff phase's whole point was reviewability. Bucket-C files (the 7
-genuinely-new-under-DOLFINx tests with no master ancestor) simply dropped the
-suffix. Paths changed; test content did not, apart from carried master
-functions, `__file__`-relative fixture-path fixups and import renames.
+the minimal-diff phase's whole point was reviewability. Bucket-C files (the 8
+genuinely-new-under-DOLFINx tests with no master ancestor -- 7 under
+`src/finmag/` plus `examples/test_examples.py`) simply dropped the suffix.
+Paths changed; test content did not, apart from carried master functions,
+`__file__`-relative fixture-path fixups and import renames.
+
+A master ancestor was DELETED when every one of its test functions had a
+named covering port function -- with two disclosed exceptions in `e7041dc9`:
+`tests/zhangli/zhang_li_test.py::test_zhangli_sllg` and
+`tests/zhangli/stt_nonlocal_test.py::test_zhangli` were deleted on the
+strength of a deferral-guard witness (`test_nonstandard_kernels_are_deferred
+[sllg]` / `[llg_stt]` in `test_stt.py`) that asserts `NotImplementedError` by
+name rather than a covering port function reproducing the physics. Both
+exceptions are disclosed in `test_stt.py`'s own mapping-header; the second one
+also removed the sole master witness for the nonlocal-`LLG_STT` gap tracked as
+register **M5**, so that gap no longer surfaces as a failing test in the
+inventory lane (see register D30/M5 for the full disclosure and the pending
+owner decision on restoration vs. retroactive ratification).
 
 **How to review a port.** For any test file, the port-vs-legacy diff is:
 
@@ -201,11 +215,23 @@ INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12
 
 Every failure and error in that population falls into one of six classes, all
 expected, none of them move breakage (classified file-by-file in the Task-7
-verification report):
+verification report).
+
+Classes 1 and 2 describe two different things -- class 1 is the *mechanism*
+(why the file fails to collect/run), class 2 is the *retention reason* (why
+the file is still in the tree) -- and they can overlap: a file can have a
+module-scope `import dolfin` (class-1 mechanism) AND be kept on purpose
+because of partial port coverage (class-2 reason). `energies/anisotropy_test.py`,
+`energies/dmi_test.py` and `util/meshes_test.py` are exactly this overlap --
+they fail collection on `import dolfin` like any never-ported file, but they
+are in the tree as class-2 retained bucket-B ancestors (see the itemised list
+below), not because nobody ever attempted to port them:
 
 1. **never-ported master files** — module-scope `import dolfin` still fails
-   collection (e.g. `energies/anisotropy_test.py`, `util/meshes_test.py`,
-   `energies/dmi_test.py`, `util/fileio_test.py`);
+   collection, with no port ever attempted and no retention story beyond
+   "nobody ported it" (e.g. `field_setters_test.py`, `sim/sim_helpers_test.py`,
+   `util/fileio_test.py` — a function-scope `import dolfin` that fails at call
+   time rather than at collection, same never-ported outcome);
 2. **retained bucket-B ancestors** (10+ files) — master files kept on purpose
    because at least one of their test functions has no named covering port
    function; they are meant to fail here until ported. The itemised list with a
@@ -217,7 +243,9 @@ verification report):
    `drivers/tests/sundials_nsteps_test.py`,
    `util/ode/tests/test_sundials_stiff_ode.py`,
    `tests/slonczewski/oscillator/test_oscillator.py`, plus the energies-group
-   retentions);
+   retentions -- `energies/anisotropy_test.py`, `energies/dmi_test.py`,
+   `energies/magnetostatic_field_test.py`, `energies/test_energies_in_regions.py`,
+   `tests/test_dmi_terms.py`, `energies/demag/fk_demag_2d_test.py`);
 3. **carried `not_ported` tests** — master functions transcribed verbatim under
    `NOT PORTED` banners so nothing vanished when the port took master's path:
    34 in `sim/sim_test.py`, 8 in `util/helpers_test.py`, `test_against_oommf`
