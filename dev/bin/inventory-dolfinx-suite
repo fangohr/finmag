@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Non-gating parity inventory: run EVERY test under src/finmag in the DOLFINx
+# environment, including unported master tests. Failures and collection errors
+# are the parity backlog, not a CI verdict. Owner decision 2026-07-27.
+set -uo pipefail
+repo_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")/../.." rev-parse --show-toplevel)"
+cd "${repo_root}"
+log="${TMPDIR:-/tmp}/finmag-suite-inventory.$(date +%Y%m%d-%H%M%S).log"
+pixi run -e dolfinx dolfinx-src-suite-inventory 2>&1 | tee "${log}"
+status=${PIPESTATUS[0]}
+if (( status > 1 )); then
+    echo "ERROR: pytest infrastructure failure (exit ${status}); inventory not valid." >&2
+    exit "${status}"
+fi
+summary="$(grep -E '^(=+ .*(passed|failed|error).* =+)$' "${log}" | tail -1)"
+echo "INVENTORY: ${summary:-no summary found} (log ${log})"
