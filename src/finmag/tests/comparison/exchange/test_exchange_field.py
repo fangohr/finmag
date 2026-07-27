@@ -13,9 +13,13 @@ for the established convention):
    DOLFINx (measured max ``rel_diff`` ~1.41e-14, recorded inline).
 
    Master's file also contains ``test_against_oommf`` (an OOMMF comparison).
-   That function is OUT OF SCOPE for this port -- the task assignment is the
-   Nmag comparison only -- and is intentionally NOT transcribed here (not
-   silently dropped: this is the note).
+   That function was OUT OF SCOPE for this port's original task assignment
+   (the Nmag comparison only), but is now carried verbatim below, under the
+   ``NOT PORTED`` banner (marked ``@pytest.mark.not_ported``): the
+   canonical-test-paths move onto master's path requires every master
+   function to be accounted for, and ``finmag.util.oommf`` is not yet ported
+   (register N62/C20), so it fails visibly there in the non-gating inventory
+   lane instead of silently disappearing.
 
    Two exceptions to "only (a)/(b)/(c) diffs", both necessary just to make
    the file importable/runnable, not behavioural:
@@ -187,11 +191,12 @@ def test_interval_mesh_vertex_order_is_ascending():
 # finmag.util.helpers -> ``import dolfin``).
 # Mechanical python2->python3 fixes only (2to3-level, no behaviour change):
 # ``print "..."`` / ``print stats(rel_diff)`` statements -> ``print(...)``
-# calls. ``finmag["table"]``/``table_entries``/``s`` (sphinx_sci) referenced
-# below are master's dropped Sphinx-table machinery (see module docstring)
-# and are not defined in this file; they are unreachable in practice because
-# the oommf import above fails first, but are left exactly as master wrote
-# them (verbatim transcription).
+# calls. ``finmag["table"]``/``table_entries``/``s`` (sphinx_sci)/``stats``
+# referenced below are master's dropped Sphinx-table machinery and
+# ``finmag.util.helpers`` imports (see module docstring) and are not defined
+# in this file; they are unreachable in practice because the oommf import
+# above fails first, but are left exactly as master wrote them (verbatim
+# transcription).
 @pytest.mark.not_ported
 def test_against_oommf(finmag):
     REL_TOLERANCE = 8e-2

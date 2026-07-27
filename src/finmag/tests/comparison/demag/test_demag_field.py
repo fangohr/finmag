@@ -1,5 +1,11 @@
 """Coordinate-based DOLFINx restoration of the Magpar demag comparison.
 
+This file owns master's ``test_demag_field.py`` path and restores only the
+Magpar half of its coverage, ``test_using_magpar``; the sibling half,
+``test_using_analytical_solution``, is restored separately in
+``test_demag_sphere_analytic.py`` (same directory) -- see that file's
+docstring for why it could not also take this path.
+
 Restores ``test_demag_field.py::test_using_magpar`` (currently an M8 xfail).
 The legacy test compared the finmag demag field to a checked-in Magpar
 reference **node-for-node**, which broke when the sphere mesh was regenerated
