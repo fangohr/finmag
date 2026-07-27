@@ -70,15 +70,35 @@ FAST_EXAMPLES = [
     # measurement -- the relaunched acceptance run records the real
     # duration.
     ("cubic_anisotropy/hysteresis.py", 6000),
-    # No usable rate data: every historical timeout for this entry
-    # (full-lane-p6.log's pre-fix baseline and the first acceptance-run
-    # attempt) discarded the subprocess's partial stdout on
-    # TimeoutExpired, so there is nothing to extrapolate from. Set to
-    # 3600s as a bounded provisional guess, not a derived value; the M2
-    # fix below now captures and reports the last ~30 lines of stdout on
-    # any future timeout, so a next relaunch (if this value is still
-    # wrong) self-documents its own rate data instead of discarding it.
-    ("std_prob_3/run.py", 3600),
+    # SR1 S2, 2nd relaunch (2026-07-28): 3600s (bounded provisional guess)
+    # was measured live and refuted -- FULL mode is iteration-bounded, not
+    # open-ended, and this is now a derived estimate from real artifacts.
+    # FULL mode runs `bisect(energy_difference, 8, 8.5, xtol=0.1)`;
+    # `energy_difference()` runs ONE vortex + ONE flower relax() (10 sims
+    # total: verified empirically -- `scipy.optimize.bisect` with this
+    # exact (a, b, xtol) makes exactly 5 calls to `energy_difference`,
+    # independent of where the root falls in [8, 8.5], confirmed by
+    # instrumenting bisect with 6 different synthetic linear roots). Hard
+    # measurement: examples/std_prob_3/{data_m,data_energies}.txt (append
+    # mode; first entry = the first bisect call, lfactor=8.0, vortex) show
+    # ONE completed vortex relax (divisions=round(8*2)=16) from test start
+    # (examples/cubic_anisotropy/hysteresis.txt mtime 23:17:16.40, marking
+    # the prior FAST entry's completion) to the vortex row's write
+    # (00:09:57.39) = 3161s; the following flower relax (same mesh) had
+    # run >=441s without finishing when the 3600s timeout killed it at
+    # 00:18:13 -- consistent with, not contradicting, a similar per-sim
+    # order of magnitude. Using 3161s as the representative per-sim cost
+    # (flower assumed <= vortex order, the conservative/larger choice):
+    # 10 sims x 3161s = 31610s; ceil(x2) = 63220s; rounded up to the
+    # nearest 300s = 63300s (17.6h ceiling; expected wall time -- not
+    # timeout -- is closer to the un-doubled 31610s ~= 8.8h). NOTE for the
+    # owner: this is ~35x this script's own header comment ("the legacy
+    # behaviour; ~30 min" for the whole bisection) -- flagged as a
+    # possible port performance regression on this workload (dense
+    # per-relax() cost on a 16^3 mesh), not investigated or fixed here;
+    # the timeout below is sized to the DOLFINx port's measured behaviour,
+    # not the legacy comment.
+    ("std_prob_3/run.py", 63300),
     ("exchange_demag/test_exchange_demag.py", 300),
 ]
 
