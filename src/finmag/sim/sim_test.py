@@ -7,8 +7,10 @@ This file now lives at its master path
 shows the port diff directly. This is a PARTIAL port: the 34 master
 ``sim_test.py`` functions with no named covering port function anywhere are
 carried verbatim under the ``NOT PORTED`` banner at the bottom of the file
-(marked ``@pytest.mark.not_ported``; the focused gate deselects them, the
-non-gating inventory lane reports them as failures). The three sibling master
+(marked ``@pytest.mark.not_ported`` and, per-test, a strict
+``@pytest.mark.xfail`` naming the register row; the focused gate runs them
+unfiltered and reports them as xfailed, the non-gating inventory lane
+reports them as failures). The three sibling master
 files whose dropped coverage this port also restores
 (``tests/test_sim_ode.py``, ``drivers/tests/test_relaxation.py``,
 ``drivers/tests/test_relax_two_times.py``) were each single-function files
@@ -1534,11 +1536,16 @@ def test_probe_field_coordinates_are_mesh_units_not_metres():
 # every master function NOT covered by a named port function anywhere in the
 # tree -- is carried here verbatim from
 # ``git show b5015c5a:src/finmag/sim/sim_test.py`` and marked
-# ``@pytest.mark.not_ported``. The focused ``dolfinx-src-simulation-pytest``
-# gate deselects them; the non-gating inventory lane runs -- and reports -- them
-# as failures, which is the point. Master's own ``skipif``/``xfail``/``slow``/
-# ``requires_X_display`` markers are preserved verbatim (their verdicts are not
-# re-judged here). [owner 2026-07-27]
+# ``@pytest.mark.not_ported``. SR1 S0 (owner decision 2026-07-27) added a
+# strict ``@pytest.mark.xfail(reason="not ported: <feature> (register
+# <row>)", strict=True)`` above the label for each of them, naming the
+# relevant acceptance-register row; the focused ``dolfinx-src-simulation-pytest``
+# gate now runs unfiltered and reports them as xfailed (strict, so porting the
+# feature forces marker removal), and the non-gating inventory lane runs --
+# and reports -- them as failures, which is the point. Master's own
+# ``skipif``/``xfail``/``slow``/``requires_X_display`` markers are preserved
+# verbatim and, where they already govern the outcome, are left as the ONLY
+# outcome marker (their verdicts are not re-judged here). [owner 2026-07-27]
 #
 # The ONLY edits to the carried code are 2to3-level ones that would otherwise
 # be a SyntaxError and break collection of this whole file (three py2 ``print``
@@ -1546,6 +1553,14 @@ def test_probe_field_coordinates_are_mesh_units_not_metres():
 # behind (``xrange``, ``dict.iteritems``, ``np.NaN``) are deliberately NOT
 # modernised: they fail at call time, which is exactly the visible failure the
 # inventory lane is meant to report.
+#
+# ``test_removing_logger_handlers_allows_to_create_many_simulation_objects``
+# mutates the finmag logging level and ``resource.RLIMIT_NOFILE`` before it
+# fails and, on failure, does not restore either (its own cleanup code is
+# unreached). Now that SR1 S0 runs this gate unfiltered rather than
+# deselecting the test, that mutation happens on every run; it has been
+# empirically benign for the rest of the gate, but is called out here in
+# case a future flake in a neighbouring test traces back to it.
 #
 # Master's module-level imports are reproduced below; the ones that cannot be
 # executed under DOLFINx (they raise at import time and would break collection)
@@ -1852,7 +1867,7 @@ class TestSimulation(object):
         assert isinstance(info_string, str)
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: TimeZeeman auto-update in scheduler loop (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_timezeeman_is_updated_automatically(tmpdir):
     """
@@ -1885,7 +1900,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
             check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: .ndt writing with time-dependent field (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_ndt_writing_with_time_dependent_field(tmpdir):
     """
@@ -1919,7 +1934,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
 #@pytest.mark.skipif("True")
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: Simulation.close_logfile/instance teardown (register D24)", strict=True)
 @pytest.mark.not_ported
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
@@ -2006,7 +2021,7 @@ def test_schedule_render_scene(tmpdir):
             'barmini_scene_000002.png'])
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: Simulation.initialise_vortex (simple/feldtkeller profiles) (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_sim_initialise_vortex(tmpdir, debug=False):
     """
@@ -2041,7 +2056,7 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     save_debugging_snapshots(sim, 'barmini_with_vortex')
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: set_m discards internal relaxation state across repeated sim.relax() (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_set_m_after_relaxation(tmpdir):
     """
@@ -2079,7 +2094,7 @@ def test_set_m_after_relaxation(tmpdir):
     assert sim.m_average[2] <= -0.9
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: sim.relax(save_restart_data_as=/save_vtk_snapshot_as=) filename arguments (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_sim_relax_accepts_filename(tmpdir):
     """
@@ -2612,7 +2627,7 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     raise NotImplementedError
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: compute_energy scaling with non-normalised m (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_compute_energies_with_non_normalised_m(tmpdir):
     """
@@ -2772,7 +2787,7 @@ def test_regression_schedule_switch_off_field(tmpdir):
     sim.run_until(5e-12)
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation.run_ringdown H_ext intended-behaviour documentation (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     """
@@ -2837,7 +2852,7 @@ def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     assert(np.allclose(m_y, np.sin(2 * pi * freq * ts), atol=TOL))
 
 
-@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
+@pytest.mark.xfail(reason="not ported: m_average volume-weighting robustness across mesh discretisation (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
     """

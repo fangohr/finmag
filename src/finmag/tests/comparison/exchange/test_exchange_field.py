@@ -198,7 +198,7 @@ def test_interval_mesh_vertex_order_is_ascending():
 # in this file; they are unreachable in practice because the oommf import
 # above fails first, but are left exactly as master wrote them (verbatim
 # transcription).
-@pytest.mark.xfail(reason="not ported: finmag.util.oommf not ported (manifest N62/C20: finmag.util.oommf not ported)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.oommf comparison (manifest N62/C20)", strict=True)
 @pytest.mark.not_ported
 def test_against_oommf(finmag):
     REL_TOLERANCE = 8e-2

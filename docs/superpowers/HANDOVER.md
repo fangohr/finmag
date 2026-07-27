@@ -252,16 +252,22 @@ below), not because nobody ever attempted to port them:
    in `tests/comparison/exchange/test_exchange_field.py`, and one dipolar
    stray-field xfail in `energies/zeeman_test.py`. SR1 S0 standardised their
    handling on **strict `xfail`** rather than gate filtering: every carried
-   test bears both the `not_ported` selection label and its own
-   `@pytest.mark.xfail(reason="not ported: <feature> (register <row>)",
-   strict=True)` (master's own pre-existing `xfail`/`skipif` markers, where
-   present, are left as master wrote them and govern the outcome instead —
-   e.g. `test_pbc2d_m_init`'s skipif, the zeeman dipolar xfail). The four
-   gates that used to carry `-m "not not_ported"`
-   (`dolfinx-src-simulation-pytest`, `dolfinx-src-import-pytest`,
-   `dolfinx-src-timezeeman-pytest`, `dolfinx-src-comparison-pytest`) now run
-   unfiltered; the carried tests are reported as xfailed with register-row
-   reasons, strict, so porting the feature forces marker removal;
+   test bears the `not_ported` selection label, and 35 of the 44 additionally
+   gained their own `@pytest.mark.xfail(reason="not ported: <feature>
+   (register <row>)", strict=True)`. Master's own pre-existing `xfail`/
+   `skipif` markers, where present, are left as master wrote them and govern
+   the outcome instead rather than gaining a second marker — 5 are
+   skipif-governed (`test_pbc2d_m_init` and four unconditional
+   `skipif("True")` module-level tests), and 4 keep master's own **non-strict**
+   `xfail` (`test_mark_regions`, `test_setting_different_material_parameters_
+   in_different_regions`, `test_profile`, the zeeman dipolar test), so the
+   strict-flip guarantee (an unexpected pass fails the gate) covers those 35
+   newly-marked tests, not these 9. The four gates that used to carry
+   `-m "not not_ported"` (`dolfinx-src-simulation-pytest`,
+   `dolfinx-src-import-pytest`, `dolfinx-src-timezeeman-pytest`,
+   `dolfinx-src-comparison-pytest`) now run unfiltered; the carried tests are
+   reported as xfailed (or skipped, where master's skipif governs) with
+   register-row reasons;
 4. **one previously documented functionality gap** —
    `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`
    (register **D26**, the `get_field_as_dolfin_function` UFL-bool crash);

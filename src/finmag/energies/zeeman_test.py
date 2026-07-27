@@ -58,9 +58,12 @@ following the SR1 P5.2 minimal-diff convention (exemplar:
      airbox/surface machinery is not). Cannot be ported until that
      dependency lands -- so, rather than disappearing with master's file,
      it is CARRIED VERBATIM from ``b5015c5a`` at the bottom of this file
-     under the ``NOT PORTED`` banner, marked ``@pytest.mark.not_ported``
-     (deselected by the gates via ``-m "not not_ported"``, reported by the
-     non-gating inventory lane).
+     under the ``NOT PORTED`` banner, marked ``@pytest.mark.not_ported``.
+     Master's own ``@pytest.mark.xfail(reason='dolfin 1.5')`` already governs
+     the outcome, so SR1 S0 (owner decision 2026-07-27) adds no further
+     marker here; the ``dolfinx-src-timezeeman-pytest`` gate runs it
+     unfiltered and reports it as xfailed (non-strict, per master's own
+     marker), and it is also reported by the non-gating inventory lane.
 
    (An earlier pass's docstring described this file as "6/14 shared, 18
    new" -- that count was a literal function-NAME string match between the

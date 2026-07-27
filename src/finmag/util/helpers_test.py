@@ -867,9 +867,12 @@ def test_helpers_still_reexports_logging_file_helpers():
 # objects (or, for ``crossprod``, reads ``dolfin.parameters.reorder_dofs_serial``
 # directly), and none has a DOLFINx port anywhere in the tree. They are carried
 # here verbatim from ``git show b5015c5a:src/finmag/util/helpers_test.py`` and
-# marked ``@pytest.mark.not_ported`` so the focused gates deselect them while
-# the non-gating inventory lane runs -- and reports -- them as failures.
-# [owner 2026-07-27]
+# marked ``@pytest.mark.not_ported`` plus a strict
+# ``@pytest.mark.xfail(reason="not ported: ... (deferred: finmag.util.helpers
+# dolfin-free port)", strict=True)`` (SR1 S0, owner decision 2026-07-27) so the
+# focused ``dolfinx-src-import-pytest`` gate runs them unfiltered and reports
+# them as xfailed, while the non-gating inventory lane runs -- and reports --
+# them as failures. [owner 2026-07-27]
 #
 # Master's module-level ``import dolfin as df`` and
 # ``from finmag.util.helpers import *`` cannot run under DOLFINx (both raise at
@@ -908,7 +911,7 @@ from finmag.util.meshes import box, cylinder  # noqa: E402,F401
 from finmag.util.mesh_templates import Sphere  # noqa: E402,F401
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.vector_valued_function (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_vector_valued_function():
     """
@@ -992,7 +995,7 @@ def test_vector_valued_function():
     assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.scalar_valued_dg_function (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_scalar_valued_dg_function():
     mesh = df.UnitCubeMesh(2, 2, 2)
@@ -1022,7 +1025,7 @@ def test_scalar_valued_dg_function():
     assert f.vector().array()[0] == 9.9
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.piecewise_on_subdomains (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_piecewise_on_subdomains():
     """
@@ -1041,7 +1044,7 @@ def test_piecewise_on_subdomains():
         np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.vector_field_from_dolfin_function (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_vector_field_from_dolfin_function():
     """
@@ -1089,7 +1092,7 @@ def test_vector_field_from_dolfin_function():
     assert(np.allclose(W, W2))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.probe (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_probe():
     """
@@ -1144,7 +1147,7 @@ def test_probe():
     assert(np.ma.allclose(res2, res2_expected))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.crossprod (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_crossprod():
     """
@@ -1171,7 +1174,7 @@ def test_crossprod():
     assert(np.allclose(axb, c))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.restriction (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_restriction(tmpdir):
     """
@@ -1246,7 +1249,7 @@ def test_restriction(tmpdir):
     assert(b2.shape == (2, submesh2.num_vertices()))
 
 
-@pytest.mark.xfail(reason="not ported: finmag.util.helpers dolfin-free port (deferred: finmag.util.helpers dolfin-free port)", strict=True)
+@pytest.mark.xfail(reason="not ported: finmag.util.helpers.verify_function_space_type (deferred: finmag.util.helpers dolfin-free port)", strict=True)
 @pytest.mark.not_ported
 def test_verify_function_space_type():
     N = 10

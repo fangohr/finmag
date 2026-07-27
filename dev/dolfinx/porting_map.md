@@ -1392,8 +1392,14 @@ Before editing the matching module in `src/finmag`, check that:
   `@pytest.mark.not_ported` (34 in `sim/sim_test.py`, 8 in
   `util/helpers_test.py`, `test_against_oommf` in
   `tests/comparison/exchange/test_exchange_field.py`, one dipolar stray-field
-  xfail in `energies/zeeman_test.py`), deselected from the gates by
-  `-m "not not_ported"`. The in-tree legacy lane is retired: the `barmini-suite`
+  xfail in `energies/zeeman_test.py`). SR1 S0 (owner decision 2026-07-27)
+  standardised their handling on standard strict `xfail` rather than gate
+  filtering: each additionally bears
+  `@pytest.mark.xfail(reason="not ported: <feature> (register <row>)",
+  strict=True)` (master's own pre-existing `xfail`/`skipif`, where present,
+  is left untouched and governs instead), and the affected gates dropped
+  `-m "not not_ported"` and now run unfiltered, reporting them as xfailed.
+  The in-tree legacy lane is retired: the `barmini-suite`
   pixi task and `dev/bin/verify-python3-{m3,barmini-suite,core-suite,`
   `minimal-suite}` are deleted, and the legacy suite runs only at the frozen
   oracle commit `ba928093` via
