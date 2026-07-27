@@ -29,11 +29,20 @@ FULL = os.environ.get("FINMAG_EXAMPLE_FULL") == "1"
 
 # (relpath, timeout_seconds). Ordered cheapest-first so failures surface fast.
 #
-# SR1 S2 (2026-07-27) timeout scaling. Evidence base: SR1 Task 2 measured run
-# (this session) plus its Opus review, and the P0.2 baseline in
-# docs/superpowers/master-pixi-parity-manifest.md. Entries not called out
-# below passed comfortably in the P0.2 clean FULL run (14 fast passed, total
-# 42:14) and keep their timeouts unchanged.
+# SR1 S2 (2026-07-27) timeout scaling. Evidence base: SR1 Task 2's measured
+# cubic_anisotropy/sim.py run (this session) plus its Opus review; the P0.2
+# baseline in docs/superpowers/master-pixi-parity-manifest.md (2026-07-23
+# clean FULL worktree run: fast lane 14 passed/3 skipped); this session's
+# pre-fix full-lane-p6.log baseline (/home/sam/.claude/jobs/6b8f36a7/tmp/
+# full-lane-p6.log, 2026-07-27, dirty tree: 12 passed, 5 failed in
+# 2534.34s/0:42:14 -- those 5 failures are exactly the 5 entries this file
+# retimes below); and a first acceptance-run attempt (SR1 S2 phase 1, PID
+# 23183) that measured a live lower bound on cubic_anisotropy/hysteresis.py
+# and, on review, refuted the std_prob_4 estimate before it could even run
+# -- see the C1/C2 comments below for both. Entries not called out below
+# passed comfortably in both the P0.2 fast lane and this session's post-fix
+# fast-lane verification (14 passed, 3 skipped, 394.09s) and keep their
+# timeouts unchanged.
 FAST_EXAMPLES = [
     ("demag/test_field.py", 120),
     ("demag/test_energy.py", 120),
@@ -46,28 +55,65 @@ FAST_EXAMPLES = [
     ("spatially-varying-anisotropy/run.py", 180),
     ("precession/run.py", 180),
     ("time-dependent-applied-field/test_appfield.py", 180),
-    # provisional x3 (current_timeout x 3): P0.2 recorded this entry hitting
-    # its 240s wrapper ceiling with no progress-rate data captured (manifest
-    # "harness evidence, not a physics failure"); factor is
-    # provisional-pending-measurement -- the SR1 S2 FULL acceptance run
-    # measures the real duration.
-    ("cubic_anisotropy/hysteresis.py", 720),
-    # provisional x3, same basis as cubic_anisotropy/hysteresis.py above
-    # (P0.2: 240s wrapper ceiling, no rate data recorded).
-    ("std_prob_3/run.py", 720),
+    # C2 (SR1 S2 relaunch, 2026-07-27): the first attempt's 720s
+    # (current_timeout x3, provisional) was measured LIVE and refuted -- the
+    # FULL-mode subprocess was killed by this exact timeout at 22:14:34
+    # local (started 22:02:33), so 720s is now a measured lower bound, not
+    # a duration. Estimate: FULL mode sweeps 250 field points vs FAST
+    # mode's 6 (see the script's own
+    # `npoints = 250 if FINMAG_EXAMPLE_FULL else 6`), ~41.7x the sweep
+    # work; the FAST-lane sweep itself is estimated to cost ~45-60s
+    # excluding mesh-build/simulation-startup overhead within its 240s
+    # ceiling, so 41.7x that sweep-only cost puts the FULL sweep around
+    # 1900-2500s. ceil(measured x 2) on that range, rounded up for margin
+    # given the live >720s failure: 6000s. Estimate-based, not a direct
+    # measurement -- the relaunched acceptance run records the real
+    # duration.
+    ("cubic_anisotropy/hysteresis.py", 6000),
+    # No usable rate data: every historical timeout for this entry
+    # (full-lane-p6.log's pre-fix baseline and the first acceptance-run
+    # attempt) discarded the subprocess's partial stdout on
+    # TimeoutExpired, so there is nothing to extrapolate from. Set to
+    # 3600s as a bounded provisional guess, not a derived value; the M2
+    # fix below now captures and reports the last ~30 lines of stdout on
+    # any future timeout, so a next relaunch (if this value is still
+    # wrong) self-documents its own rate data instead of discarding it.
+    ("std_prob_3/run.py", 3600),
     ("exchange_demag/test_exchange_demag.py", 300),
 ]
 
 SLOW_EXAMPLES = [
-    # provisional x3, same basis as the two FAST entries above (P0.2: 1800s
-    # wrapper ceiling, no rate data recorded).
-    ("std_prob_4/test_std_prob_4.py", 5400),
+    # C1 (SR1 S2 relaunch, 2026-07-27): the first attempt's 5400s
+    # (current_timeout x3, provisional) was refuted before it could even
+    # run. full-lane-p6.log (this session's pre-fix FULL baseline,
+    # /home/sam/.claude/jobs/6b8f36a7/tmp/full-lane-p6.log) shows this
+    # entry TimeoutExpired at 1800s, having reached t=2.1e-10s of the
+    # 2.0e-9s target per examples/std_prob_4/dynamics.ndt's last row
+    # (corroborated by the 22 dynamics0000NN.pvtu frames it wrote,
+    # spanning 18:18:48-18:47:38 local). Linear extrapolation:
+    # 1800 * (2.0e-9/2.1e-10) ~= 17143s for the full dynamics trace alone.
+    # In that p6 baseline run, examples/std_prob_4/m_0.npy (the cached
+    # s-state relaxation output) already existed from an earlier,
+    # unrelated run (mtime 11:49 that day), so
+    # create_initial_s_state()/`if not os.path.exists(m_0_file)` skipped
+    # the relaxation; the new _clean_ignored_outputs() below now deletes
+    # m_0.npy (it matches examples/**/*.npy) before every run, so the
+    # s-state relaxation always runs from scratch: +~1920s. From-scratch
+    # estimate ~= 17143 + 1920 = 19063s. ceil(measured x 2) = 38126s,
+    # rounded up to the nearest 300s = 38400s.
+    ("std_prob_4/test_std_prob_4.py", 38400),
     # measured 3551s (~59.2 min) on 2026-07-27
     # (/tmp/cubic_anisotropy_sim_run2.log: background command started
     # 2026-07-27T17:20:06.90Z, log's own "EXIT:0" line written at
     # 2026-07-27T18:19:17.56Z -- read directly off the log file's own
     # timestamps, not the ~55 min figure floated before this measurement).
     # timeout = ceil(measured x 2) rounded up to the nearest 300s = 7200s.
+    # M4: this entry shares examples/cubic_anisotropy/ with the FAST-lane
+    # cubic_anisotropy/hysteresis.py entry above, so
+    # _clean_ignored_outputs() run before either one also wipes the
+    # other's gitignored byproducts (disk*.h5/.xdmf mesh cache,
+    # hysteresis.txt, disksim*.npy/.ndt). Benign: neither script reads the
+    # other's output, and mesh regeneration is cheap (seconds).
     ("cubic_anisotropy/sim.py", 7200),
     # NOT measured to completion (SR1 Task 2): field 1 of 3 alone ran
     # ~50m48s before the session ended it, and Opus review's
@@ -104,28 +150,62 @@ def _clean_ignored_outputs(example_dir):
     glob list: the glob list would need hand-maintenance as examples grow
     new output kinds, while ``-fdX`` only ever touches what ``.gitignore``
     already declares disposable.
+
+    Best-effort: if ``git`` itself is unavailable (or any other OS-level
+    failure occurs invoking it), this is logged as a warning and execution
+    continues -- a missing/broken ``git`` must not fail all 17 examples
+    before any of them get a chance to run.
     """
-    subprocess.run(
-        ["git", "clean", "-fdX", "--", example_dir],
-        cwd=REPO_ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,  # best-effort: a cleanup hiccup shouldn't mask the example's own result
-    )
+    # Scrub any ambient GIT_DIR/GIT_WORK_TREE so a caller's environment
+    # can't redirect the clean at a different worktree than REPO_ROOT.
+    env = dict(os.environ)
+    env.pop("GIT_DIR", None)
+    env.pop("GIT_WORK_TREE", None)
+    try:
+        subprocess.run(
+            ["git", "-C", REPO_ROOT, "clean", "-fdX", "--", example_dir],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            env=env,
+            check=False,  # best-effort: a non-zero exit shouldn't mask the example's own result
+        )
+    except OSError as exc:
+        print("WARNING: pre-run cleanup skipped for {!r}: {}".format(
+            example_dir, exc))
+
+
+def _tail_output(data, n=30):
+    """Decode subprocess output and return its last ``n`` lines, for
+    embedding in a failure message. Used so a timeout leaves behind rate
+    data (progress the child printed before being killed) instead of
+    silently discarding it -- see the C1/std_prob_3 timeout comments
+    above, which had to be set without this information.
+    """
+    if not data:
+        return "(no output captured before timeout)"
+    lines = data.decode("utf-8", "replace").splitlines()
+    return "\n".join(lines[-n:])
 
 
 def _run_example(relpath, timeout):
     script = os.path.join(EXAMPLES_DIR, relpath)
     example_dir = os.path.dirname(script)
     _clean_ignored_outputs(example_dir)
-    result = subprocess.run(
-        [sys.executable, script],
-        cwd=example_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        timeout=timeout,
-        env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", MPLBACKEND="Agg"),
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, script],
+            cwd=example_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=timeout,
+            env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", MPLBACKEND="Agg"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise AssertionError(
+            "example {!r} timed out after {}s; last output before kill "
+            "(up to 30 lines -- rate data for setting the next "
+            "timeout):\n{}".format(
+                relpath, timeout, _tail_output(exc.stdout))) from exc
     if result.returncode != 0:
         raise AssertionError(
             "example {!r} failed (exit {}):\n{}".format(
