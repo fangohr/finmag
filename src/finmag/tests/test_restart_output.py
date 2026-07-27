@@ -121,6 +121,7 @@ names (test_write_ndt_file and both column-count bug tests check only
 ``time``/``m_x``/``m_y``/``m_z`` or line-length consistency). [Claude Opus 4.8]
 """
 
+import glob
 import os
 
 import numpy as np
@@ -684,6 +685,27 @@ def test_schedule_callable_and_clear(tmpdir):
     sim.clear_schedule()
     sim.run_until(2e-11)
     assert len(hits) == 3  # cleared: no further callbacks
+
+
+def test_schedule_save_m_every(tmpdir):
+    """``schedule('save_m', every=...)`` routes onto the ``.npy`` save_m
+    surface (SR1 S1a, register D31 exercise): mirrors master's scheduler
+    contract (``b5015c5a:src/finmag/sim/sim.py`` ``scheduler_shortcuts['save_m']
+    = sim_savers._save_m_incremental``) via the port's own ``Simulation.save_m``
+    (``incremental=True``), the same routing already used for ``'save_field'``.
+    """
+    os.chdir(str(tmpdir))
+    sim = _make_sim(name="sched_m")
+    sim.set_m((1.0, 0.0, 0.0))
+    sim.add(Zeeman((0.0, 0.0, 1e6)))
+    sim.schedule("save_m", every=2e-12)
+    sim.run_until(1e-11)
+
+    saved = sorted(glob.glob("sched_m_m_[0-9]*.npy"))
+    # saves at 0, 2e-12, ..., 1e-11 -> 6 files
+    assert len(saved) == 6
+    first = np.load(saved[0])
+    assert first.shape[-1] == 3 or first.size % 3 == 0
 
 
 def test_schedule_unknown_shortcut_raises_by_name():

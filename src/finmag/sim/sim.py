@@ -228,6 +228,7 @@ class Simulation(object):
             "save_restart_data": sim_helpers.save_restart_data,
             "save_vtk": None,  # handled specially in schedule()
             "save_field": None,  # handled specially in schedule()
+            "save_m": None,  # handled specially in schedule()
             "eta": sim_helpers.eta,
             "ETA": sim_helpers.eta,
         }
@@ -698,7 +699,8 @@ class Simulation(object):
 
         ``func`` may be a callable ``func(sim, *args)`` or one of the supported
         shortcut strings: ``'save_ndt'``/``'save_averages'``, ``'save_vtk'``,
-        ``'save_field'``, ``'save_restart_data'``, ``'eta'``/``'ETA'``. Use the
+        ``'save_field'``, ``'save_m'``, ``'save_restart_data'``,
+        ``'eta'``/``'ETA'``. Use the
         ``at``/``every``/``after``/``at_end`` keywords to place the action in
         time (see :class:`finmag.scheduler.scheduler.Scheduler`). Unknown
         shortcut strings raise ``KeyError`` by name.
@@ -715,6 +717,9 @@ class Simulation(object):
                     "m", filename=filename, overwrite=overwrite)
             elif func == "save_field":
                 func = lambda sim, *a, **kw: sim.save_field(
+                    *a, incremental=True, **kw)
+            elif func == "save_m":
+                func = lambda sim, *a, **kw: sim.save_m(
                     *a, incremental=True, **kw)
             elif func in ("eta", "ETA"):
                 import time as _time
