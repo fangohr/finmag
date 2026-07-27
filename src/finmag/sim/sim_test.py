@@ -1657,6 +1657,7 @@ class TestSimulation(object):
 
         assert np.array_equal(sim.m, expect_m)
 
+    @pytest.mark.xfail(reason="not ported: .npy save_field surface (incremental=/overwrite=/'Demag') (register D31)", strict=True)
     @pytest.mark.not_ported
     def test_save_field(self, tmpdir):
         os.chdir(str(tmpdir))
@@ -1691,6 +1692,7 @@ class TestSimulation(object):
         sim.save_field('Demag', filename='demag.npy', incremental=True)
         assert(os.path.exists('demag_000000.npy'))
 
+    @pytest.mark.xfail(reason="not ported: save_m convenience shortcut (register D31)", strict=True)
     @pytest.mark.not_ported
     def test_save_m(self, tmpdir):
         """
@@ -1720,6 +1722,7 @@ class TestSimulation(object):
         sim2.save_m(incremental=True)
         assert(len(glob('barmini_m_[0-9]*.npy')) == 2)
 
+    @pytest.mark.xfail(reason="not ported: schedule('save_field', ...) shortcut (register D31)", strict=True)
     @pytest.mark.not_ported
     def test_save_field_scheduled(self, tmpdir):
         os.chdir(str(tmpdir))
@@ -1736,6 +1739,7 @@ class TestSimulation(object):
         assert(len(glob('barmini_m_[0-9]*.npy')) == 6)
         assert(len(glob('mag_[0-9]*.npy')) == 3)
 
+    @pytest.mark.xfail(reason="not ported: SLLG stochastic kernel (deferred: kernel='sllg' raises NotImplementedError)", strict=True)
     @pytest.mark.not_ported
     def test_sim_sllg(self, do_plot=False):
         mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
@@ -1782,6 +1786,7 @@ class TestSimulation(object):
 
         assert np.max(np.abs(mz - mz_ref)) < 8e-7
 
+    @pytest.mark.xfail(reason="not ported: SLLG stochastic kernel (deferred: kernel='sllg' raises NotImplementedError)", strict=True)
     @pytest.mark.not_ported
     def test_sim_sllg_time(self):
         mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(5, 5, 5), 1, 1, 1)
@@ -1837,6 +1842,7 @@ class TestSimulation(object):
         assert len(demag_bottom) == 3 * submesh_bottom.num_vertices()
         assert len(demag_full) == 3 * sim.mesh.num_vertices()
 
+    @pytest.mark.xfail(reason="not ported: Simulation.length_scales() (deferred: length_scales not ported)", strict=True)
     @pytest.mark.not_ported
     def test_length_scales(self):
         """
@@ -1846,6 +1852,7 @@ class TestSimulation(object):
         assert isinstance(info_string, str)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_timezeeman_is_updated_automatically(tmpdir):
     """
@@ -1878,6 +1885,7 @@ def test_timezeeman_is_updated_automatically(tmpdir):
             check_field_value([0, t, 0] if t < t_off else [0, 0, 0])
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_ndt_writing_with_time_dependent_field(tmpdir):
     """
@@ -1911,6 +1919,7 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
 #@pytest.mark.skipif("True")
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
@@ -1997,6 +2006,7 @@ def test_schedule_render_scene(tmpdir):
             'barmini_scene_000002.png'])
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_sim_initialise_vortex(tmpdir, debug=False):
     """
@@ -2031,6 +2041,7 @@ def test_sim_initialise_vortex(tmpdir, debug=False):
     save_debugging_snapshots(sim, 'barmini_with_vortex')
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_set_m_after_relaxation(tmpdir):
     """
@@ -2068,6 +2079,7 @@ def test_set_m_after_relaxation(tmpdir):
     assert sim.m_average[2] <= -0.9
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_sim_relax_accepts_filename(tmpdir):
     """
@@ -2096,6 +2108,7 @@ def test_sim_relax_accepts_filename(tmpdir):
 #       remaining tests without X display. (Max, 20.10.2014)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.requires_X_display
 @pytest.mark.not_ported
 def test_NormalModeSimulation(tmpdir):
@@ -2168,6 +2181,7 @@ def test_NormalModeSimulation(tmpdir):
                          1e4, 0, 0], save_m_every=2e-13, m_snapshots_filename='foobar/foo_m.npy')
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.slow
 @pytest.mark.not_ported
 def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
@@ -2192,6 +2206,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_1x1(tmpdir):
         [0, 1, 2], directory='animations', create_movies=False)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.slow
 @pytest.mark.not_ported
 def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
@@ -2224,6 +2239,7 @@ def test_normal_mode_simulation_with_periodic_boundary_conditions_9x9(tmpdir):
         [0, 1, 2], directory='animations', create_movies=False)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
     os.chdir(str(tmpdir))
@@ -2249,6 +2265,7 @@ def test_H_ext_is_set_correcy_in_normal_mode_simulation(tmpdir):
     run_check(None, None, None, None)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_compute_normal_modes(tmpdir):
     """
@@ -2330,6 +2347,7 @@ def test_compute_eigenmode_animations(tmpdir):
     assert(len(glob('movies_03/*.avi')) == 2)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_compute_normal_modes_with_different_solvers(tmpdir):
     """
@@ -2411,6 +2429,7 @@ def test_compute_normal_modes_with_different_solvers(tmpdir):
     #assert_define_same_eigenspace(w4b, w1)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.requires_X_display
 @pytest.mark.not_ported
 def test_plot_spatially_resolved_normal_modes(tmpdir):
@@ -2593,6 +2612,7 @@ def test_setting_different_material_parameters_in_different_regions(tmpdir):
     raise NotImplementedError
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_compute_energies_with_non_normalised_m(tmpdir):
     """
@@ -2643,6 +2663,7 @@ def test_compute_energies_with_non_normalised_m(tmpdir):
                     sim.compute_energy(name), a ** exponent * energies[name], atol=0, rtol=1e-12))
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.requires_X_display
 @pytest.mark.not_ported
 def test_compute_and_plot_power_spectral_density_in_mesh_region(tmpdir):
@@ -2751,6 +2772,7 @@ def test_regression_schedule_switch_off_field(tmpdir):
     sim.run_until(5e-12)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     """
@@ -2815,6 +2837,7 @@ def test_document_intended_behaviour_for_H_ext(tmpdir, debug=False):
     assert(np.allclose(m_y, np.sin(2 * pi * freq * ts), atol=TOL))
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=False):
     """
@@ -2900,6 +2923,7 @@ def test_m_average_is_robust_with_respect_to_mesh_discretization(tmpdir, debug=F
             color_by_axis='y', glyph_scale_factor=2, outfile='nanostrip.png')
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.not_ported
 def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
     """
@@ -2923,6 +2947,7 @@ def test_eigenfrequencies_scale_with_gyromagnetic_ratio(tmpdir):
         assert np.allclose(omega, a * omega_ref)
 
 
+@pytest.mark.xfail(reason="not ported: NormalModeSimulation/eigenmode module-level surface (deferred: normal modes)", strict=True)
 @pytest.mark.requires_X_display
 @pytest.mark.not_ported
 def test_plot_dynamics(tmpdir):
@@ -2962,6 +2987,7 @@ def test_profile(tmpdir):
     os.path.exists('foobar.prof')
 
 
+@pytest.mark.xfail(reason="not ported: Simulation.shutdown()/instances_delete_all_others()/close_logfile() teardown surface (register D24)", strict=True)
 @pytest.mark.not_ported
 def test_clean_up():
     """Fake test to shutdown simulation objects"""

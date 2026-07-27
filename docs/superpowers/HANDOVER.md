@@ -250,8 +250,18 @@ below), not because nobody ever attempted to port them:
    `NOT PORTED` banners so nothing vanished when the port took master's path:
    34 in `sim/sim_test.py`, 8 in `util/helpers_test.py`, `test_against_oommf`
    in `tests/comparison/exchange/test_exchange_field.py`, and one dipolar
-   stray-field xfail in `energies/zeeman_test.py`. They are deselected from
-   every gate by `-m "not not_ported"` and fail loudly here by design;
+   stray-field xfail in `energies/zeeman_test.py`. SR1 S0 standardised their
+   handling on **strict `xfail`** rather than gate filtering: every carried
+   test bears both the `not_ported` selection label and its own
+   `@pytest.mark.xfail(reason="not ported: <feature> (register <row>)",
+   strict=True)` (master's own pre-existing `xfail`/`skipif` markers, where
+   present, are left as master wrote them and govern the outcome instead —
+   e.g. `test_pbc2d_m_init`'s skipif, the zeeman dipolar xfail). The four
+   gates that used to carry `-m "not not_ported"`
+   (`dolfinx-src-simulation-pytest`, `dolfinx-src-import-pytest`,
+   `dolfinx-src-timezeeman-pytest`, `dolfinx-src-comparison-pytest`) now run
+   unfiltered; the carried tests are reported as xfailed with register-row
+   reasons, strict, so porting the feature forces marker removal;
 4. **one previously documented functionality gap** —
    `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`
    (register **D26**, the `get_field_as_dolfin_function` UFL-bool crash);

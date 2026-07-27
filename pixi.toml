@@ -149,7 +149,7 @@ dolfinx-src-import-pythonpath-fallback = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=s
 # checks into this existing gate (precedent: Task 19 folding
 # `thin_film_demag_test.py` into `dolfinx-src-energies-pytest`).
 # [Claude Opus 4.8]
-dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example.py src/finmag/util/plot_helpers_test.py src/finmag/util/helpers_test.py -m \"not not_ported\""
+dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example.py src/finmag/util/plot_helpers_test.py src/finmag/util/helpers_test.py"
 dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/field_test.py src/finmag/tests/test_field_hdf5.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
 dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_dw_fixed_energy.py"
@@ -166,7 +166,7 @@ dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/fi
 # this gate can reach the native `make` on first native import.
 # WRITE_FINMAG_VERSION=0 keeps that build from rewriting the tracked version
 # file. [Claude Opus 4.8]
-dolfinx-src-simulation-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/sim/sim_test.py src/finmag/sim/magnetisation_patterns_test.py -m \"not not_ported\""
+dolfinx-src-simulation-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/sim/sim_test.py src/finmag/sim/magnetisation_patterns_test.py"
 # Task 10: the aggregated deferred-surfaces sweep and the core Simulation
 # smoke, both new for the first direct-source DOLFINx gate. [Claude Sonnet 5]
 dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_deferred_surfaces.py"
@@ -220,9 +220,11 @@ dolfinx-src-cubicanis-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1
 # keeps that build from rewriting the tracked version file. [Claude Opus 4.8]
 # The ported time-Zeeman file now sits at master's `energies/zeeman_test.py`
 # and carries master's unported `test_compare_stray_field_of_sphere_with_dipolar_field`
-# verbatim under the NOT PORTED banner, hence `-m "not not_ported"`.
+# verbatim under the NOT PORTED banner; it already bears master's own
+# `xfail(reason='dolfin 1.5')`, so it fails via standard strict xfail (SR1 S0)
+# rather than a `-m` filter and the gate runs unfiltered.
 # [Claude Opus 4.8]
-dolfinx-src-timezeeman-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/zeeman_test.py src/finmag/sim/hysteresis_test.py -m \"not not_ported\""
+dolfinx-src-timezeeman-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/zeeman_test.py src/finmag/sim/hysteresis_test.py"
 # Task 16: field-valued material parameters (spatially varying Ms/A/K1/axis/D
 # and cubic K1/K2/K3), spatially varying Gilbert alpha (per-node in the damping
 # term and gamma_LL), and region energy/magnetisation accounting
@@ -274,7 +276,7 @@ dolfinx-src-io-utils-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src
 # (probe-at-saved-coords / m x H / analytic bounds), never by raw node order,
 # so they are immune to the M8 Netgen mesh-drift that retired the legacy
 # node-order comparisons. No live external program is invoked. [Claude Opus 4.8]
-dolfinx-src-comparison-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/comparison/test_magpar_io.py src/finmag/tests/comparison/demag/test_demag_sphere_analytic.py src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py src/finmag/tests/comparison/exchange/test_exchange_field.py src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py src/finmag/tests/comparison/demag/test_demag_field.py src/finmag/tests/comparison/anisotropy/test_anis_magpar.py -m \"not not_ported\""
+dolfinx-src-comparison-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/comparison/test_magpar_io.py src/finmag/tests/comparison/demag/test_demag_sphere_analytic.py src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py src/finmag/tests/comparison/exchange/test_exchange_field.py src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py src/finmag/tests/comparison/demag/test_demag_field.py src/finmag/tests/comparison/anisotropy/test_anis_magpar.py"
 # Full-suite parity inventory: collect and run EVERYTHING, including unported
 # master tests. NON-GATING — failures here are the parity backlog inventory
 # (owner decision 2026-07-27). Gated lanes stay the dolfinx-src-*-pytest tasks.
