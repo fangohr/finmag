@@ -24,9 +24,16 @@ import subprocess
 import pytest
 
 EXAMPLES_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(EXAMPLES_DIR)
 FULL = os.environ.get("FINMAG_EXAMPLE_FULL") == "1"
 
 # (relpath, timeout_seconds). Ordered cheapest-first so failures surface fast.
+#
+# SR1 S2 (2026-07-27) timeout scaling. Evidence base: SR1 Task 2 measured run
+# (this session) plus its Opus review, and the P0.2 baseline in
+# docs/superpowers/master-pixi-parity-manifest.md. Entries not called out
+# below passed comfortably in the P0.2 clean FULL run (14 fast passed, total
+# 42:14) and keep their timeouts unchanged.
 FAST_EXAMPLES = [
     ("demag/test_field.py", 120),
     ("demag/test_energy.py", 120),
@@ -39,23 +46,81 @@ FAST_EXAMPLES = [
     ("spatially-varying-anisotropy/run.py", 180),
     ("precession/run.py", 180),
     ("time-dependent-applied-field/test_appfield.py", 180),
-    ("cubic_anisotropy/hysteresis.py", 240),
-    ("std_prob_3/run.py", 240),
+    # provisional x3 (current_timeout x 3): P0.2 recorded this entry hitting
+    # its 240s wrapper ceiling with no progress-rate data captured (manifest
+    # "harness evidence, not a physics failure"); factor is
+    # provisional-pending-measurement -- the SR1 S2 FULL acceptance run
+    # measures the real duration.
+    ("cubic_anisotropy/hysteresis.py", 720),
+    # provisional x3, same basis as cubic_anisotropy/hysteresis.py above
+    # (P0.2: 240s wrapper ceiling, no rate data recorded).
+    ("std_prob_3/run.py", 720),
     ("exchange_demag/test_exchange_demag.py", 300),
 ]
 
 SLOW_EXAMPLES = [
-    ("std_prob_4/test_std_prob_4.py", 1800),
-    ("cubic_anisotropy/sim.py", 3600),
-    ("magnetic_grain/suess_2001.py", 3600),
+    # provisional x3, same basis as the two FAST entries above (P0.2: 1800s
+    # wrapper ceiling, no rate data recorded).
+    ("std_prob_4/test_std_prob_4.py", 5400),
+    # measured 3551s (~59.2 min) on 2026-07-27
+    # (/tmp/cubic_anisotropy_sim_run2.log: background command started
+    # 2026-07-27T17:20:06.90Z, log's own "EXIT:0" line written at
+    # 2026-07-27T18:19:17.56Z -- read directly off the log file's own
+    # timestamps, not the ~55 min figure floated before this measurement).
+    # timeout = ceil(measured x 2) rounded up to the nearest 300s = 7200s.
+    ("cubic_anisotropy/sim.py", 7200),
+    # NOT measured to completion (SR1 Task 2): field 1 of 3 alone ran
+    # ~50m48s before the session ended it, and Opus review's
+    # reviewer-validated extrapolation from that partial run (~72.6 min per
+    # simulated ns on the 419-vertex mesh x 3 field strengths x failsafe 2ns
+    # each with early-break on switching) puts field 1 alone at ~6750-8700s
+    # and the full 3-field run at "several hours". Recorded deviation from
+    # the plan's measured x2 rule: timeout set to 21600s (6h) as
+    # extrapolation x margin, not a measured x2 scaling. The real duration
+    # is to be recorded from this SR1 S2 acceptance run itself; no separate
+    # pre-measurement run was attempted.
+    ("magnetic_grain/suess_2001.py", 21600),
 ]
+
+
+def _clean_ignored_outputs(example_dir):
+    """Remove git-ignored byproducts left in an example's own directory by a
+    previous run, before executing it again.
+
+    The FULL lane is effectively one-shot per checkout: some examples write
+    incremental output files (e.g. cubic_anisotropy/sim.py's ``save_m``,
+    via ``FieldSaver``) that refuse to overwrite themselves on a second run
+    and raise ``IOError``. Those outputs (``*.npy``, ``*.ndt``, ``*.h5``,
+    ``*.xdmf``, plot files, ...) are all git-ignored (see ``.gitignore``),
+    so they are invisible to ``git status`` and the failure is silent until
+    someone re-runs the suite in the same checkout.
+
+    We scope ``git clean -fdX`` to the single example's own directory.
+    ``-X`` restricts removal to paths matched by ``.gitignore`` -- git
+    refuses to remove anything that is tracked or that is untracked but NOT
+    ignored, so this can never delete a tracked file or a non-ignored
+    untracked file, even if a stray file happens to sit in the same
+    directory. This is deliberately chosen over an explicit per-example
+    glob list: the glob list would need hand-maintenance as examples grow
+    new output kinds, while ``-fdX`` only ever touches what ``.gitignore``
+    already declares disposable.
+    """
+    subprocess.run(
+        ["git", "clean", "-fdX", "--", example_dir],
+        cwd=REPO_ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,  # best-effort: a cleanup hiccup shouldn't mask the example's own result
+    )
 
 
 def _run_example(relpath, timeout):
     script = os.path.join(EXAMPLES_DIR, relpath)
+    example_dir = os.path.dirname(script)
+    _clean_ignored_outputs(example_dir)
     result = subprocess.run(
         [sys.executable, script],
-        cwd=os.path.dirname(script),
+        cwd=example_dir,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         timeout=timeout,
