@@ -1,14 +1,19 @@
 # SR1 batch-ratification decision sheet
 
-**Date:** 2026-07-27 (SR1 S5a). **Branch:** `dolfinx-parity`, tip `a0ab028d`.
+**Date:** 2026-07-27 (SR1 S5a). **Branch:** `dolfinx-parity`.
 **For:** the repository owner. **Decision authority:** owner only.
 
 This sheet exists so SR1 can be declared with **zero rows left "pending owner
 decision"** (acceptance criterion 2). It enumerates every open row in
 [`acceptance-register.md`](../acceptance-register.md) — the authoritative
-ledger — plus one new row candidate surfaced during SR1 execution. Each entry
-is three lines: what the state actually is, what is recommended, and where the
-evidence lives.
+ledger — plus two new row candidates surfaced during SR1 execution (D32, P1).
+Each entry is three lines: what the state actually is, what is recommended,
+and where the evidence lives.
+
+**Note on scope:** the executing brief named only three section-B rows
+(M4a, M4b, M5), but 15 further M-rows sit at *pending owner decision* in the
+register; acceptance criterion 2 forces all 20 into this sheet. If you
+intended M6–M16 to stay open past SR1, that criterion is what needs relaxing.
 
 **This sheet does not change the register.** After your line-item decisions
 return, one commit (SR1 S5b) writes them into the register. Any row you
@@ -94,9 +99,12 @@ rests on "no selected workflow needs this" — only you can confirm that.
   throughout (`xxx` layout).
 - **Recommend: ACCEPT the corrected ordering** — reproducing the legacy mixture
   would mean shipping a known wrong answer for varying STT inputs.
-- **Evidence:** `src/finmag/physics/llg.py:244,292,542` (coordinate-ordered
-  `xxx` contract); uniform-input agreement pinned against the legacy oracle in
-  `src/finmag/tests/test_stt.py:290`
+- **Evidence:** the coordinate-ordered inputs themselves —
+  `src/finmag/physics/llg.py:601` (`p`, via
+  `get_ordered_numpy_array_xxx()`), `:627` (`_J` as a `Field`), `:663-670`
+  (the assembled `grad_m` term returned in `xxx` order) and `:728`
+  (`_dmdt_zhangli_numpy`, which consumes them). Uniform-input agreement
+  pinned against the legacy oracle in `src/finmag/tests/test_stt.py:290`
   `test_zhangli_rhs_and_gradient_match_legacy_oracle_fixture`; register D9.
 
 ### D13 — reading `Simulation.t` no longer creates an integrator
@@ -233,15 +241,20 @@ rests on "no selected workflow needs this" — only you can confirm that.
   register D25.
 
 ### D26 — `get_field_as_dolfin_function` raises `ValueError: UFL conditions cannot be evaluated as bool`
-- **State:** a **real port bug**, not a design divergence. Surfaced by
-  `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`.
-  Documented-deferred 2026-07-25; open only as *permanence*.
-- **Recommend: DEFER (fix in a later slice)** — the method sits on the deferred
-  region/submesh-output surface (`src/finmag/sim/sim.py:53`), not on a selected
-  SR1 capability, so it blocks nothing. **This is the closest call in section A:**
-  if you regard `get_field_as_dolfin_function` as part of the supported public
-  API, make it FIX NOW instead. *(owner knowledge decisive)*
-- **Evidence:** `src/finmag/tests/bugs/test_bug_ndt_file_writing.py`; register D26.
+- **State:** a **real port bug**, not a design divergence, and it is on the
+  **supported** call path: only the `region=` argument is deferred
+  (`src/finmag/sim/sim.py:449-458`), and the failing call is the plain
+  `get_field_as_dolfin_function('m')` — the failure happens when the returned
+  `Function` is point-evaluated. Documented-deferred 2026-07-25; open only as
+  *permanence*.
+- **Recommend: DEFER (fix in a later slice)** — the honest basis is simply
+  that **no selected SR1 workflow calls it**, not that it is a deferred
+  surface. **This is the closest call in section A:** if you regard
+  `get_field_as_dolfin_function` as part of the supported public API, make it
+  FIX NOW instead. *(owner knowledge decisive)*
+- **Evidence:** `src/finmag/tests/bugs/test_bug_ndt_file_writing.py:50`
+  (the plain call, then `m(point)` evaluation); implementation
+  `src/finmag/sim/sim.py:449`; register D26.
 
 ### D27 — `Simulation.add()` does not register per-interaction `.ndt` columns
 - **State:** master's `add()` registered `E_<name>` / `H_<name>_{x,y,z}`
@@ -300,8 +313,37 @@ rests on "no selected workflow needs this" — only you can confirm that.
   unblock the three carried tests' `df.BoxMesh` setup" as a named backlog item.
 - **Evidence:** witness `src/finmag/tests/test_restart_output.py:690`
   `test_schedule_save_m_every`; carried tests `test_save_field`, `test_save_m`,
-  `test_save_field_scheduled` in `src/finmag/sim/sim_test.py`; implementation
-  `src/finmag/sim/sim_savers.py`; commits `f7517688`, `fc502ced`; register D31.
+  `test_save_field_scheduled` in `src/finmag/sim/sim_test.py`; **live
+  implementation `src/finmag/sim/sim.py:639-665`** — note the register's
+  `sim_savers.py` pointer is stale: that module is dead legacy code and is not
+  imported by `sim.py`. Commits `f7517688`, `fc502ced`; register D31.
+
+### D32 (NEW) — legacy `method=` names rejected by name; default changed to `box-assemble`
+- **State:** an **undocumented public-interface change**, split out here from
+  M12a so it is separately answerable. Master's `EnergyBase.__init__` defaulted
+  to `method="box-matrix-petsc"` and accepted five interchangeable names; the
+  port defaults to `"box-assemble"` and raises
+  `NotImplementedError("energy method ... is not yet ported to DOLFINx; use
+  'box-assemble'")` for the other four. Two consequences differ in kind:
+  a script passing an explicit legacy `method=` **raises**; a script relying on
+  the **old default raises nothing** and silently gets box assembly (all five
+  methods agreed to `1e-13` on master, so the silent path is numerically
+  harmless).
+- **Recommend: ACCEPT option (a) — keep the raise-by-name.** An explicit
+  failure is the criterion-2-consistent way to surface a removed option, and
+  the changed default is safe because the values are equal.
+  **Defensible alternative (b):** map the four legacy names onto
+  `box-assemble` with a `DeprecationWarning` — justified precisely because
+  master asserted all five agreed to `1e-13`, so this is not "silently mapping
+  to something different". Pick (b) if you have legacy scripts passing
+  `method=` that you would rather keep running.
+- **Evidence:** `src/finmag/energies/energy_base.py:32-44` (supported vs
+  deferred lists; `NotImplementedError` for the four deferred names,
+  `ValueError` only for unknown ones; signature default `box-assemble`) vs
+  `git show b5015c5a:src/finmag/energies/energy_base.py:52-55` (five methods,
+  default `box-matrix-petsc`); gated deferral tests
+  `src/finmag/tests/test_energies.py:291` and
+  `src/finmag/tests/test_dmi.py:167`; **NEW row — not yet in the register.**
 
 ---
 
@@ -312,7 +354,7 @@ rests on "no selected workflow needs this" — only you can confirm that.
   Checked-in Nmag reference data validates the selected comparisons today.
 - **Recommend: DROP live generation permanently; retain the checked-in data**
   — the nsim stack is obsolete and no longer installable; regenerating it is
-  not a capability the port can realistically own.
+  not a capability the port can realistically own. *(owner knowledge decisive)*
 - **Evidence:** nmag comparison tests under
   `src/finmag/tests/comparison/` (checked-in data path); register M1.
 
@@ -331,7 +373,7 @@ rests on "no selected workflow needs this" — only you can confirm that.
 - **Recommend: DEFER as a *performance* backlog item** — and link it to the
   **P1** row below: the std_prob_3 measurement is the first hard number
   suggesting the Python RHS may be a serious throughput regression. Do not drop
-  a performance path while an unexplained ~17-35x slowdown is open.
+  a performance path while an unexplained ~17.6x slowdown is open.
 - **Evidence:** `src/finmag/physics/llg.py` (Python RHS); P1 below; register M3.
 
 ### M4a — Netgen binary backend
@@ -339,7 +381,8 @@ rests on "no selected workflow needs this" — only you can confirm that.
   pending. The P5.1 necessity probe found **no** selected test or geometry that
   Gmsh plus the `from_geofile` text-subset loader cannot represent or validate.
 - **Recommend: DROP permanently** — the probe is the inventory the register
-  asked for, and it came back empty. Reopen only if a required geometry appears.
+  asked for, and it came back empty. Reopen only if a required geometry
+  appears. *(owner knowledge decisive)*
 - **Evidence:** SR1 P5.1 probe (2026-07-25, no source change); register M4a.
 
 ### M4b — `nmesh_to_dolfin` conversion
@@ -347,6 +390,7 @@ rests on "no selected workflow needs this" — only you can confirm that.
   pending. Its legacy dolfin-XML output cannot be loaded by DOLFINx at all.
 - **Recommend: DROP permanently** — the output format is unusable by the
   supported stack and the same P5.1 probe identified no workflow needing it.
+  *(owner knowledge decisive)*
 - **Evidence:** SR1 P5.1 probe; register M4b.
 
 ### M5 — nonlocal `LLG_STT` spin-accumulation model
@@ -409,11 +453,17 @@ rests on "no selected workflow needs this" — only you can confirm that.
 
 ### M11a — historical transposed-Robertson SciPy xfail
 - **State:** pending. The failure was attributed to an upstream SciPy/VODE
-  regression, not to Finmag physics.
-- **Recommend: DROP** — do not copy an upstream-attributed xfail mechanically
-  into the port; it would encode a third-party bug as a finmag expectation.
-- **Evidence:** `src/finmag/util/ode/tests/test_sundials_stiff_ode.py`;
-  register M11a.
+  regression, not to Finmag physics. **Correction to the register's framing:**
+  the port already carries transposed-Robertson pins as strict `xfail`s for
+  *both* backends, so this is not an open "should we copy it?" question — the
+  behaviour is pinned and passing today.
+- **Recommend: DROP** — i.e. close the row with **no tree change**: the
+  existing strict-xfail pins stay exactly as they are, and no attempt is made
+  to re-derive or "fix" an upstream-attributed failure as if it were a finmag
+  expectation.
+- **Evidence:** `src/finmag/util/ode/tests/test_sundials_stiff_ode.py:78`
+  (`test_robertson_scipy_transposed_fails_with_excess_work`,
+  `xfail(strict=True)`) and `:126` (the CVODE mirror); register M11a.
 
 ### M11b — historical weak-Krylov-demag tolerance xfail
 - **State:** pending. A numerical-tolerance artifact whose relevance under
@@ -425,26 +475,37 @@ rests on "no selected workflow needs this" — only you can confirm that.
 - **Evidence:** `src/finmag/tests/test_interactions_scale_linearly_with_m.py`;
   register M11b.
 
-### M12a / M12b / M12c — legacy matrix / project / direct energy-assembly methods
-- **State:** master's `EnergyBase` exposed five interchangeable `method=`
-  choices (`box-assemble`, `box-matrix-numpy`, `box-matrix-petsc`, `project`,
-  `direct`) and its own test asserted every supported method agreed with the
-  default to `1e-13` — they are numerical routes to the same field, not
-  different physics. The port supports `box-assemble` only.
-  **Interface note worth your attention:** master's *default* was
-  `box-matrix-petsc`, so any script passing an explicit legacy `method=` (or
-  relying on the old default) now raises `ValueError` by name.
+### M12a / M12b / M12c — legacy matrix / project / direct energy-assembly *implementations*
+*(The `method=` **interface** question is now its own row, D32 above. These
+three rows cover only whether the implementations are ever ported back. Each ID
+is separately answerable — answer them individually if you disagree on one.)*
+
+- **State (all three):** master's `EnergyBase` exposed five interchangeable
+  `method=` choices (`box-assemble`, `box-matrix-numpy`, `box-matrix-petsc`,
+  `project`, `direct`) and its own test asserted every supported method agreed
+  with the default to `1e-13` — they are numerical routes to the same field,
+  not different physics. The port implements `box-assemble` only.
+  - **M12a** = the matrix-assembly variants (`box-matrix-numpy`,
+    `box-matrix-petsc`): precomputed-operator forms of box assembly.
+  - **M12b** = `project`: L2 projection of the energy derivative.
+  - **M12c** = `direct`: the direct/pointwise route.
 - **Recommend: DROP all three permanently** — box assembly is the validated
   implementation and the alternatives were performance/implementation variants
-  producing the same values. Record the changed default and the by-name
-  rejection in `docs/SUPPORTED.md` (S6) so the interface change is explicit
-  (criterion 2). *(owner knowledge decisive)*
-- **Evidence:** `src/finmag/energies/energy_base.py:32`
-  (`_supported_methods = ("box-assemble",)`) vs
-  `git show b5015c5a:src/finmag/energies/energy_base.py:52-55`; master's
-  equivalence assertion carried at
+  producing the same values to `1e-13`. **DROP-permanent implies an S6
+  follow-up (no test deletion):** the runtime message says the methods are
+  *"not yet ported to DOLFINx"*, which contradicts a permanent drop, so that
+  string and the wording of the two gated deferral tests
+  (`test_energies.py:291`/`:298`, `test_dmi.py:167`/`:172`) must be reworded
+  from "deferred" to "removed". *(owner knowledge decisive)*
+- **Evidence:** `src/finmag/energies/energy_base.py:32-44`
+  (`_supported_methods = ("box-assemble",)`, `_deferred_methods` = the other
+  four) vs `git show b5015c5a:src/finmag/energies/energy_base.py:52-55`;
+  master's equivalence assertion is carried at
   `src/finmag/energies/anisotropy_test.py:117`
-  `test_anisotropy_field_supported_methods`; register M12a/b/c.
+  `test_anisotropy_field_supported_methods` but is **currently vacuous** — it
+  loops over `_supported_methods` minus the default, which is now empty, so it
+  asserts nothing and cannot be cited as live evidence of equivalence;
+  register M12a/b/c.
 
 ### M13 — `batch_task` sweep tooling
 - **State:** pending. Untested even on master.
@@ -457,7 +518,7 @@ rests on "no selected workflow needs this" — only you can confirm that.
   accepted checked-in OOMMF data as sufficient for the selected comparisons.
 - **Recommend: DROP live generation permanently; retain the checked-in data**
   — same reasoning as M1; reproducible regeneration is an external-harness
-  project, not a finmag capability.
+  project, not a finmag capability. *(owner knowledge decisive)*
 - **Evidence:** OOMMF comparison data and tests under
   `src/finmag/tests/comparison/`; register M14.
 
@@ -467,7 +528,7 @@ rests on "no selected workflow needs this" — only you can confirm that.
 - **Recommend: DROP live generation permanently; retain the coordinate/
   invariant comparisons** — and note D29 established exactly what the
   checked-in data can and cannot resolve (mesh drift is inherent to comparing
-  against a saved foreign mesh).
+  against a saved foreign mesh). *(owner knowledge decisive)*
 - **Evidence:** D29 verdict; `src/finmag/tests/comparison/*/test_*_magpar.py`;
   register M15.
 
@@ -484,20 +545,24 @@ rests on "no selected workflow needs this" — only you can confirm that.
 
 ---
 
-## P. New row candidate (surfaced during SR1, not yet in the register)
+## P. New performance row candidate (surfaced during SR1, not yet in the register)
 
-### P1 — std_prob_3 FULL-mode runs ~17-35x slower than its own legacy-era header claims
+*(The other new candidate, D32, is filed with the behavioural deviations above.)*
+
+### P1 — std_prob_3 FULL-mode runs ~17.6x slower than its own legacy-era header claims
 - **State:** the FULL-mode bisection measures **~3161s per relax simulation**
   (mesh build + relax + energy + write, `lfactor=8.0`, `divisions=16`), timed
   from the killed acceptance run's own append-mode artifacts. The workload is
   iteration-bounded at exactly 10 simulations (`bisect(f, 8, 8.5, xtol=0.1)`
   makes exactly 5 calls, each running one vortex + one flower relax), so the
   full bisection is **~31610s (~8.8h)**. The script's own header comment
-  describes "the legacy behaviour; ~30 min" for the *whole* bisection. That is
-  a ~17-35x gap. It is genuinely ambiguous whether this is a port performance
-  regression or a stale/aspirational legacy comment — nobody has run legacy
-  master, and the timeout was sized to measured reality (63300s), not the
-  comment.
+  describes "the legacy behaviour; ~30 min" for the *whole* bisection. The
+  measured gap is therefore **~17.6x** (8.8h vs ~30 min). (The "~35x" figure
+  in commit `c02809bf` compares the *doubled timeout ceiling* — 63300s — to
+  the comment; that is a budget, not a slowness measurement.) It is genuinely
+  ambiguous whether this is a port performance regression or a
+  stale/aspirational legacy comment — nobody has run legacy master, and the
+  timeout was sized to measured reality, not to the comment.
 - **Recommend: DEFER — open as a register row and investigate post-SR1**
   (recommended: profile one `relax()` at these settings and attribute the cost;
   cross-ref **M3**, the compiled-RHS backend, as the leading suspect). SR1 is a
@@ -514,26 +579,33 @@ rests on "no selected workflow needs this" — only you can confirm that.
 
 ## Summary
 
-**43 open rows.** Recommended dispositions:
+**44 open rows** (42 register rows + 2 new candidates, D32 and P1).
+Recommended dispositions:
 
 | Verb | Count | Rows |
 |---|---|---|
-| **ACCEPT** (ratify as permanent contract) | 12 | D6a, D6b, D7, D9, D13, D16a, D16b, D20, D21, D25, D29, M8 |
+| **ACCEPT** (ratify as permanent contract) | 13 | D6a, D6b, D7, D9, D13, D16a, D16b, D20, D21, D25, D29, D32, M8 |
 | **DEFER** (SR1 stands; stays a named parity-backlog item) | 16 | D1, D5, D17, D19, D22, D23, D24, D26, D27, D28, D31, M3, M7, M11b, M16, P1 |
 | **DROP** (permanent omission) | 14 | M1, M2, M4a, M4b, M6, M9, M10, M11a, M12a, M12b, M12c, M13, M14, M15 |
 | **RESTORE** (reinstate deleted master tests as backlog) | 1 | M5 |
 | **FIX NOW** (blocks SR1 declaration) | **0** | — |
 
-Breakdown by register section: A = 22 rows (11 accept, 11 defer);
-B = 20 rows (1 accept, 4 defer, 14 drop, 1 restore); P = 1 row (1 defer).
+Breakdown by register section: A = 23 rows (12 accept, 11 defer — includes the
+new D32); B = 20 rows (1 accept, 4 defer, 14 drop, 1 restore); P = 1 row
+(1 defer).
 
 **Nothing on this sheet is recommended as SR1-blocking.** If you agree with
 every recommendation, SR1 declaration proceeds after one register-update commit
 plus the M5 test restoration.
 
 **Rows most worth a second look** (where a different answer is defensible):
-- **D26** — a real port bug; DEFER only holds if
-  `get_field_as_dolfin_function` is not on your supported public API.
+- **D26** — a real port bug on a *supported* call path; DEFER holds only
+  because no selected SR1 workflow calls it. If
+  `get_field_as_dolfin_function` is part of your supported public API, this is
+  FIX NOW.
+- **D32** — the `method=` interface change: raise-by-name (recommended) vs
+  map-with-deprecation-warning. Both are defensible; your legacy scripts
+  decide it.
 - **D23** — the cheapest fix on the sheet; FIX NOW is reasonable if a
   silently-NaN simulation is unacceptable.
 - **D16a/D16b** — accepting D16a as "informational metadata" decides D16b too;
@@ -550,6 +622,7 @@ D1 agree
 D6b adjust -> require pointwise normalisation
 D23 adjust -> FIX NOW
 D26 agree
+D32 adjust -> option (b), map legacy names with a deprecation warning
 M2 adjust -> DEFER (I still use GCR)
 M5 agree
 P1 adjust -> ACCEPT, document the runtime
