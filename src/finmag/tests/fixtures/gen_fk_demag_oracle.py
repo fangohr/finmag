@@ -19,7 +19,8 @@ Three cases are generated:
   and the legacy formulation: compare this datum against the port run with
   its own KSP rtol/atol tightened to 1e-12 (see
   ``test_oracle_cube_tight_tolerance_isolates_krylov_residual`` in
-  ``test_fk_demag_dolfinx.py``). Empirically (2026-07-21), tightening
+  ``energies/demag/fk_demag_test.py``, formerly ``test_fk_demag_dolfinx.py``).
+  Empirically (2026-07-21), tightening
   *both* sides collapses the pointwise gap from 6.4e-6 (relative to
   |H|_max) to ~1.4e-12, and the energy gap from 4.7e-8 to ~5.5e-14 -- proof
   the standard-tolerance residual is attributable to the oracle's own frozen

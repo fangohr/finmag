@@ -1,5 +1,9 @@
 """Field-valued material parameters, spatially varying alpha, and regions (Task 16).
 
+Formerly ``src/finmag/tests/test_variable_params_dolfinx.py``; renamed onto
+the sibling-free canonical name. It has no single master ancestor path (see
+the MASTER -> PORT MAPPING HEADER below for its four aggregated ancestors).
+
 Validates the direct DOLFINx port's acceptance of spatially varying material
 coefficients (``Ms``, ``A``, ``K1``/axis, ``D``, cubic ``K1``/``K2``/``K3``) and
 Gilbert damping ``alpha``, and the region energy/magnetisation accounting, against:
@@ -273,7 +277,8 @@ def test_variable_ms_number_matches_dg0_function(factory):
     dropped the ``Demag`` case from this sweep (audit finding) -- restored
     here using the same box mesh/Field setup as the other three cases (the
     ``FKDemag`` BEM path accepts a plain ``dolfinx``-native box mesh, verified
-    against a netgen-generated box in ``test_fk_demag_dolfinx.py``)."""
+    against a netgen-generated box in ``energies/demag/fk_demag_test.py``,
+    formerly ``test_fk_demag_dolfinx.py``)."""
     domain = mesh.create_box(
         MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (10e-9, 10e-9, 10e-9)],
         [5, 5, 5], mesh.CellType.tetrahedron)
@@ -965,7 +970,8 @@ def test_spatially_varying_cubic_axis_is_accepted():
     extension: legacy ``CubicAnisotropy.__init__`` forms ``u3 = np.cross(u1,
     u2)`` from the raw axes and crashes on any varying axis, so there is no
     legacy oracle -- the axis path is pinned by the W1 constant-reduction and W2
-    per-region witnesses in ``test_cubic_anisotropy_dolfinx.py``. Spatially
+    per-region witnesses in ``energies/cubic_anisotropy_test.py`` (formerly
+    ``test_cubic_anisotropy_dolfinx.py``). Spatially
     varying cubic K's remain supported here too."""
     domain = _interval8()
     S3, DG = _spaces(domain)

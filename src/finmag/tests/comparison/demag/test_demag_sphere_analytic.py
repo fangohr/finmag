@@ -16,7 +16,8 @@ Sphere-field coverage reconciliation (SR1 P5.2 minimal-diff pass): the
 *canonical* uniformly-magnetised-sphere field test -- the minimal-diff
 transcription of master ``fk_demag_test.py::
 test_demag_field_for_uniformly_magnetised_sphere`` -- now lives in
-``src/finmag/tests/test_fk_demag_dolfinx.py`` (demag gate), where it asserts
+``src/finmag/energies/demag/fk_demag_test.py`` (demag gate; formerly
+``src/finmag/tests/test_fk_demag_dolfinx.py``), where it asserts
 master's tighter 7e-3 absolute bound on ``sphere(r=1, maxh=0.2)`` (measured
 max diff ~4.4e-3). THIS file is retained as the distinct comparison-gate
 restoration of legacy ``test_demag_field.py`` on the *different* r=10
@@ -42,7 +43,8 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 # the r=10 sphere.geo mesh (1335 vertices) is ~1.31e-2; tightened to 1.5e-2 so
 # this comparison variant asserts at its own measured-justified bound rather
 # than duplicating the canonical master test's contract at an arbitrary
-# tolerance. (Canonical 7e-3-absolute test: test_fk_demag_dolfinx.py.)
+# tolerance. (Canonical 7e-3-absolute test: energies/demag/fk_demag_test.py,
+# formerly test_fk_demag_dolfinx.py.)
 REL_TOLERANCE = 1.5e-2
 
 

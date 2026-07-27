@@ -1,6 +1,7 @@
 """Nmag EXCHANGE-field comparison under DOLFINx (minimal-diff transcription).
 
-This file has two clearly separated parts (see ``test_fk_demag_dolfinx.py``
+This file has two clearly separated parts (see
+``src/finmag/energies/demag/fk_demag_test.py``, formerly ``test_fk_demag_dolfinx.py``,
 for the established convention):
 
 1. A MINIMAL-DIFF transcription of master's ``test_against_nmag`` from

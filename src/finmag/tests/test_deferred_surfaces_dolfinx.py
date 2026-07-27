@@ -29,9 +29,11 @@ Already pinned by name elsewhere (not duplicated here):
   ``"FK"`` path is now ported: ``::test_sim_with_default_demag_builds_fk_demag``)
 - DMI via ``sim_with(D=...)`` is now PORTED (Task 13) and covered by
   ``test_simulation_dolfinx.py::test_sim_with_dmi_builds_ported_interaction``
-  and ``test_dmi_dolfinx.py``; it is no longer deferred.
+  and ``test_dmi.py`` (formerly ``test_dmi_dolfinx.py``); it is no longer
+  deferred.
 - Cubic anisotropy is now PORTED (Task 14) and covered by
-  ``test_cubic_anisotropy_dolfinx.py``; it is no longer deferred. (Legacy
+  ``energies/cubic_anisotropy_test.py`` (formerly
+  ``test_cubic_anisotropy_dolfinx.py``); it is no longer deferred. (Legacy
   ``sim_with`` never had cubic-anisotropy parameters, so there is no
   ``sim_with`` wiring to test; ``Simulation.add(CubicAnisotropy(...))``
   coverage is the full integration surface.)
@@ -55,15 +57,17 @@ Already pinned by name elsewhere (not duplicated here):
   ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``
 - ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/
   ``TimeZeemanPython``/``DipolarField`` are now PORTED (Task 15) and covered
-  by ``test_timezeeman_dolfinx.py``; they are no longer deferred.
-  ``test_energies_dolfinx.py``'s ``TimeZeeman((1.0, 0.0, 0.0))`` case now
+  by ``energies/zeeman_test.py`` (formerly ``test_timezeeman_dolfinx.py``);
+  they are no longer deferred.
+  ``test_energies.py``'s ``TimeZeeman((1.0, 0.0, 0.0))`` case now
   pins the ported constant-array-without-``t_off`` ``ValueError`` instead of
   a by-name deferral. ``sim.relax``/``hysteresis``/``hysteresis_loop`` are
   also now PORTED (Task 15) and covered by ``test_hysteresis_dolfinx.py``.
 - ``Field.from_expression`` --
   ``test_field_dolfinx.py::test_legacy_only_features_fail_precisely``
 - ``ThinFilmDemag`` is now PORTED (Task 19) and covered by
-  ``test_thin_film_demag_dolfinx.py``; it is no longer deferred.
+  ``energies/thin_film_demag_test.py`` (formerly
+  ``test_thin_film_demag_dolfinx.py``); it is no longer deferred.
   ``FixedEnergyDW`` is now a curated by-name ``NotImplementedError``
   deferral (Task 19, Task 29 review item) -- covered by
   ``test_dw_fixed_energy_dolfinx.py``; it no longer surfaces the raw
@@ -174,7 +178,7 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     legacy ``ModuleNotFoundError`` for ``dolfin``). Task 23 ports the
     treecode-accelerated solver (``Demag(solver='Treecode')``) and the periodic
     ``MacroGeometry`` demag (``Demag(macrogeometry=...)``) on top of the native
-    ``treecode_bem`` Cython kernels (see ``test_treecode_pbc_demag_dolfinx.py``);
+    ``treecode_bem`` Cython kernels (see ``energies/demag/demag_pbc_test.py``);
     ``MacroGeometry`` now constructs a working tiling object. ``Demag2D`` stays a
     curated by-name ``NotImplementedError`` (heavy MeshEditor/Expression
     coupling, no treecode dependency; Task 29 review item), and the ``GCR``
@@ -183,7 +187,7 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     Task 13 ports ``DMI`` directly (constant scalar ``D``, ``dmi_type``
     dispatch across ``'auto'``/``'1d'``/``'2d'``/``'3d'``/``'interfacial'``);
     constructing it directly now works instead of surfacing the legacy
-    ``ModuleNotFoundError`` for ``dolfin`` (see ``test_dmi_dolfinx.py`` for
+    ``ModuleNotFoundError`` for ``dolfin`` (see ``test_dmi.py`` for
     the focused DMI suite). Task 16 update: spatially varying ``D``
     (callable/``Field``/``dolfinx.fem.Function``, placed in DG0) is now
     SUPPORTED -- it is no longer a by-name deferral. Only the undocumented
@@ -193,7 +197,7 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     Task 14 ports ``CubicAnisotropy`` directly (constant scalar
     ``K1``/``K2``/``K3`` and constant ``u1``/``u2`` axes, with
     ``u3 = u1 x u2``); constructing it directly now works too (see
-    ``test_cubic_anisotropy_dolfinx.py`` for the focused suite). Task 14 fix
+    ``energies/cubic_anisotropy_test.py`` for the focused suite). Task 14 fix
     round 1 (60ac165b) ports the legacy-default ``assemble=False``
     native/direct field path as a NumPy transcription of the closed-form
     analytic field, so ``compute_field()`` under the default now works too --
@@ -201,7 +205,7 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     always worked, matching the legacy class exactly). Task 16 update:
     spatially varying ``K1``/``K2``/``K3`` (CG1-placed) are now SUPPORTED,
     including under the ``assemble=False`` native analytic path (see
-    ``test_variable_params_dolfinx.py`` for the K2-native-typo divergence pin
+    ``test_variable_params.py`` for the K2-native-typo divergence pin
     this makes LIVE). Only spatially varying ``u1``/``u2`` axes remain
     curated by-name ``NotImplementedError``.
 
@@ -209,7 +213,7 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     True`` optional energy classes are now resolved -- no boundary gap
     remains here. ``ThinFilmDemag`` (the last legacy-tested energy that
     still imported raw ``dolfin`` at module scope) is now PORTED directly
-    (see ``test_thin_film_demag_dolfinx.py``); constructing it directly now
+    (see ``energies/thin_film_demag_test.py``); constructing it directly now
     works instead of surfacing the legacy ``ModuleNotFoundError``.
     ``FixedEnergyDW`` -- untested even on legacy master, its own legacy todo
     notes calling it broken -- is converted to a curated by-name

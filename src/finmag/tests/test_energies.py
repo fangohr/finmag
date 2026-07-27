@@ -1,12 +1,22 @@
 """DOLFINx energy-interaction tests: Exchange, Zeeman (static), UniaxialAnisotropy.
 
+Formerly ``src/finmag/tests/test_energies_dolfinx.py``; renamed onto the
+sibling-free canonical name. Of the five master ancestors mapped below only
+``energies/exchange_test.py`` is fully accounted for and removed;
+``energies/anisotropy_test.py``, ``energies/magnetostatic_field_test.py`` and
+``energies/test_energies_in_regions.py`` each keep at least one NOT-COVERED
+function and are RETAINED in the tree as visible backlog (they fail in the
+non-gating inventory lane). ``energies/zeeman_test.py`` is now the ported
+time-Zeeman file (see below).
+
 BUCKET-B aggregate port. This file does not literally transcribe any single
 master file; it AGGREGATES coverage from five master ancestors (all at git
 ``b5015c5a``) under renamed, restructured tests, plus one master test
 restored verbatim under its master name (see RESTORE below). The table
 below is the MASTER -> PORT MAPPING HEADER required by the SR1 P5.2
 bucket-B convention (exemplars: ``git show 02e2e3d8`` for the accounting
-style, ``test_fk_demag_dolfinx.py`` for the minimal-diff-transcription +
+style, ``src/finmag/energies/demag/fk_demag_test.py``, formerly
+``test_fk_demag_dolfinx.py``, for the minimal-diff-transcription +
 NEW-under-DOLFINx split). Every master function across all five ancestors
 is listed exactly once, with its fate: a covering port function, an
 explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
@@ -87,11 +97,13 @@ explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
 
 3) ``src/finmag/energies/zeeman_test.py`` (14 functions total; STATIC-Zeeman
    subset only per this file's scope -- 5 functions. The remaining 9
-   time-varying functions are covered in ``test_timezeeman_dolfinx.py``,
+   time-varying functions are covered in ``src/finmag/energies/zeeman_test.py``
+   (formerly ``test_timezeeman_dolfinx.py``),
    whose own docstring cross-references back here for the static subset.)
 
   - ``test_interaction_accepts_name`` (``Zeeman`` part only; the
     ``TimeZeeman``/``DiscreteTimeZeeman`` parts are covered in
+    ``src/finmag/energies/zeeman_test.py``, formerly
     ``test_timezeeman_dolfinx.py``) -> covered, stronger:
     ``test_zeeman_field_average_and_analytic_energy`` asserts a *custom*
     name (``zeeman.name == "Applied"``), stronger than master's bare
@@ -134,7 +146,8 @@ explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
     ``.value`` attribute as master did.
 
    Time-varying subset (9 functions, NOT covered in this file by design --
-   see ``test_timezeeman_dolfinx.py``): ``test_time_zeeman_init``,
+   see ``src/finmag/energies/zeeman_test.py``, formerly
+   ``test_timezeeman_dolfinx.py``): ``test_time_zeeman_init``,
    ``test_time_dependent_field_update``,
    ``test_time_dependent_field_switched_off``,
    ``test_discrete_time_zeeman_updates_in_intervals``,
@@ -162,7 +175,8 @@ explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
     locations, of increasing strength: (a) in THIS file, weakly, via
     ``test_zeeman_compute_energy_preserves_restricted_measure_argument``
     (restricted-``dx`` summation property only, spatially-uniform ``m``);
-    (b) more strongly, in ``test_variable_params_dolfinx.py`` via
+    (b) more strongly, in ``test_variable_params.py`` (formerly
+    ``test_variable_params_dolfinx.py``) via
     ``test_region_energies_sum_to_total_zeeman_oracle``,
     ``test_region_energies_sum_to_total_for_exchange`` and
     ``test_total_energy_over_region_sums_all_interactions``, which use
@@ -178,7 +192,8 @@ explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
     investigate"; master's own comment). Not reproduced under DOLFINx:
     low value (master never got this working either) and depends on the
     same unported ``SubMesh`` machinery as above. (Cross-checked: also
-    NOT PORTED in ``test_variable_params_dolfinx.py`` for the same reason.)
+    NOT PORTED in ``test_variable_params.py``, formerly
+    ``test_variable_params_dolfinx.py``, for the same reason.)
 
 RESTORE (P5 test-suite audit): ``test_exchange_periodic_boundary_conditions``
 was dropped from the initial DOLFINx aggregation of ``exchange_test.py``
@@ -607,7 +622,8 @@ def test_invalid_or_deferred_material_inputs_fail_explicitly():
     domain, m, Ms = _fields()
 
     # Task 16: spatially varying A/K1/K2/axis/Ms are now SUPPORTED (see
-    # test_variable_params_dolfinx.py). Only legacy string Expressions remain
+    # test_variable_params.py, formerly test_variable_params_dolfinx.py).
+    # Only legacy string Expressions remain
     # deferred by name (DOLFINx has no Expression object; pass a callable).
     with pytest.raises(NotImplementedError, match="string Expression"):
         Exchange("x[0]")
@@ -621,7 +637,8 @@ def test_invalid_or_deferred_material_inputs_fail_explicitly():
         UniaxialAnisotropy(1.0, (0.0, 0.0, 1.0), assemble=False)
     # Task 15: TimeZeeman is now ported; a constant-array field_expression
     # with no t_off raises ValueError (no time update would ever happen),
-    # not the old by-name deferral. See test_timezeeman_dolfinx.py for the
+    # not the old by-name deferral. See energies/zeeman_test.py (formerly
+    # test_timezeeman_dolfinx.py) for the
     # full ported-class suite.
     with pytest.raises(ValueError, match="t_off"):
         TimeZeeman((1.0, 0.0, 0.0))

@@ -87,7 +87,7 @@ def _make_sim(**kwargs):
 #     test_set_stt                             -> test_stt_dolfinx.py
 #     test_get_field_as_dolfin_function,
 #     test_probe_demag_field                   -> probe_field tests below the
-#                                                 banner + test_fk_demag_dolfinx.py
+#                                                 banner + energies/demag/fk_demag_test.py
 #
 #   GENUINE-GAP (surface not provided by the ported Simulation; reported for an
 #   owner decision, NOT fabricated):
@@ -635,7 +635,7 @@ def test_scalar_alpha_and_gamma_roundtrip():
 
 def test_spatially_varying_alpha_is_supported():
     """Task 16: spatially varying alpha (callable) is accepted via the sim
-    property; see test_variable_params_dolfinx.py for the oracle-pinned RHS."""
+    property; see test_variable_params.py for the oracle-pinned RHS."""
     sim = _make_sim()
     sim.set_m((1.0, 0.0, 0.0))
     sim.alpha = lambda x: 0.1 + 0.02 * x[0]
@@ -947,7 +947,7 @@ def _pbc_vs_bar(m_init, component):
 
     The pitch is 20.001 rather than the legacy default of exactly 20 (touching):
     the exactly-touching case is the coincident-node defect pinned by
-    ``test_treecode_pbc_demag_dolfinx.py::
+    ``energies/demag/demag_pbc_test.py``::
     test_pbc_coincident_tile_spacing_produces_a_non_finite_bem`` and is refused
     by name by ``sim_with``.  [Claude Opus 4.8]
     """
@@ -1028,7 +1028,7 @@ def test_sim_with_touching_macro_geometry_tiles_are_deferred_by_name():
     Legacy ``sim_with(nx=3)`` with no ``spacing_x`` meant "the tiles touch",
     i.e. pitch == mesh extent.  In this port that is the coincident-node case,
     which returns a silently wrong field (~158% error on a cube, NaN-poisoned
-    on a flat slab) -- see ``test_treecode_pbc_demag_dolfinx.py::
+    on a flat slab) -- see ``energies/demag/demag_pbc_test.py``::
     test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.  ``sim_with``
     refuses it by name rather than exposing it.  [Claude Opus 4.8]"""
     box = _box(2, 5.0)
@@ -1165,7 +1165,7 @@ def test_restart_and_output_are_available():
 
 def test_regions_are_ported_not_deferred():
     """Task 16 + SR1 P4-region: mark_regions + per-region energy/magnetisation
-    accounting are ported (see test_variable_params_dolfinx.py), and
+    accounting are ported (see test_variable_params.py), and
     ``save_m_in_region`` now registers a per-region ``<m>`` column in the .ndt
     table (faithful legacy behaviour -- NOT a field-to-file write). The
     region-restricted submesh field extraction path stays deferred by name."""

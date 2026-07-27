@@ -9,7 +9,8 @@ importable once the shared dolfin-isms are removed but are intentionally
 left unvalidated by this slice.
 
 Two clearly separated parts, following the SR1 P5.2 minimal-diff convention
-(exemplar: ``test_fk_demag_dolfinx.py``):
+(exemplar: ``energies/demag/fk_demag_test.py``, formerly
+``test_fk_demag_dolfinx.py``):
 
 1. A MINIMAL-DIFF transcription of master's single function,
    ``test_vortex_functions`` (git ``b5015c5a``,

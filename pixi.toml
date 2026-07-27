@@ -147,14 +147,14 @@ dolfinx-src-import = "PYTHONDONTWRITEBYTECODE=1 python -c \"import finmag\""
 dolfinx-src-import-pythonpath-fallback = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -c \"import finmag\""
 # SR1 P2.1 folds the ported `finmag.example` / `set_logging_level` boundary
 # checks into this existing gate (precedent: Task 19 folding
-# `test_thin_film_demag_dolfinx.py` into `dolfinx-src-energies-pytest`).
+# `thin_film_demag_test.py` into `dolfinx-src-energies-pytest`).
 # [Claude Opus 4.8]
 dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py src/finmag/tests/test_plot_helpers_dolfinx.py src/finmag/tests/test_util_helpers_dolfinx.py"
 dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_field_dolfinx.py src/finmag/tests/test_field_hdf5_dolfinx.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
-dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies_dolfinx.py src/finmag/tests/test_thin_film_demag_dolfinx.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
+dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
 dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.energies_dolfinx_mpi_probe"
-dolfinx-src-effectivefield-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_effective_field_dolfinx.py"
+dolfinx-src-effectivefield-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_effective_field.py"
 dolfinx-src-effectivefield-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.effective_field_dolfinx_mpi_probe"
 dolfinx-src-llg-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_llg_dolfinx.py"
 # Task 31: the dedicated public field-array component-ordering contract (the
@@ -183,7 +183,7 @@ dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=
 # legacy oracle comparisons (cube + barmini). WRITE_FINMAG_VERSION=0 keeps the
 # native `make` (triggered on demag setup) from rewriting the version file.
 # [Claude Opus 4.8]
-dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_fk_demag_dolfinx.py"
+dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/demag/fk_demag_test.py"
 # Task 23: the treecode + periodic (MacroGeometry) demag port -- the native
 # `treecode_bem` Cython BEM kernels rebuilt for the DOLFINx env (no libdolfin),
 # the single-tile periodic BEM pinned bit-for-bit to the 11a golden dense FK
@@ -192,7 +192,7 @@ dolfinx-src-demag-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 pyt
 # analytic out-of-plane thin-film limit. WRITE_FINMAG_VERSION=0 keeps the native
 # `make` (which now also builds treecode_bem.so) from rewriting the version
 # file. [Claude Opus 4.8]
-dolfinx-src-treecode-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_treecode_pbc_demag_dolfinx.py"
+dolfinx-src-treecode-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/demag/demag_pbc_test.py"
 # Task 12: the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
 # scheduler port. WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered by
 # the end-to-end FK demag witness) from rewriting the tracked version file.
@@ -201,14 +201,14 @@ dolfinx-src-restart-output-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTEC
 # Task 13: the direct DOLFINx DMI port -- dmi_type dispatch, exact
 # chirality/scaling pins, and coordinate-ordered legacy oracle comparisons
 # (bulk 3D + interfacial). [Claude Sonnet 5]
-dolfinx-src-dmi-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_dmi_dolfinx.py"
+dolfinx-src-dmi-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_dmi.py"
 # Task 14: the direct DOLFINx cubic-anisotropy port -- legacy analytic
 # reference values, cubic-symmetry easy/hard-axis ordering, axis-handling
 # behavior, by-name deferrals, and a coordinate-ordered legacy oracle
 # comparison. [Claude Sonnet 5] SR1 P1.3 made "sundials" the public default
 # backend, so this gate can now reach the native `make`; WRITE_FINMAG_VERSION=0
 # keeps that build from rewriting the tracked version file. [Claude Opus 4.8]
-dolfinx-src-cubicanis-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_cubic_anisotropy_dolfinx.py"
+dolfinx-src-cubicanis-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/cubic_anisotropy_test.py"
 # Task 15: the direct DOLFINx time-Zeeman (TimeZeeman/DiscreteTimeZeeman/
 # TimeZeemanPython/OscillatingZeeman/DipolarField) and relax/hysteresis/
 # hysteresis_loop port -- update/switch-off semantics (including two
@@ -218,7 +218,11 @@ dolfinx-src-cubicanis-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1
 # witness. [Claude Sonnet 5] SR1 P1.3 made "sundials" the public default
 # backend, so this gate can now reach the native `make`; WRITE_FINMAG_VERSION=0
 # keeps that build from rewriting the tracked version file. [Claude Opus 4.8]
-dolfinx-src-timezeeman-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_timezeeman_dolfinx.py src/finmag/tests/test_hysteresis_dolfinx.py"
+# The ported time-Zeeman file now sits at master's `energies/zeeman_test.py`
+# and carries master's unported `test_compare_stray_field_of_sphere_with_dipolar_field`
+# verbatim under the NOT PORTED banner, hence `-m "not not_ported"`.
+# [Claude Opus 4.8]
+dolfinx-src-timezeeman-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/energies/zeeman_test.py src/finmag/tests/test_hysteresis_dolfinx.py -m \"not not_ported\""
 # Task 16: field-valued material parameters (spatially varying Ms/A/K1/axis/D
 # and cubic K1/K2/K3), spatially varying Gilbert alpha (per-node in the damping
 # term and gamma_LL), and region energy/magnetisation accounting
@@ -228,7 +232,7 @@ dolfinx-src-timezeeman-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=
 # "sundials" the public default backend, so this gate can now reach the native
 # `make`; WRITE_FINMAG_VERSION=0 keeps that build from rewriting the tracked
 # version file. [Claude Opus 4.8]
-dolfinx-src-varparams-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_variable_params_dolfinx.py"
+dolfinx-src-varparams-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_variable_params.py"
 # Task 18: the mesh-tooling bridge -- Gmsh Python-API generators + CSG template
 # classes converted to dolfinx.mesh via dolfinx.io.gmsh.model_to_mesh, the
 # preserved Netgen-CSG md5 hashing/naming contract, the XDMF caching contract,
