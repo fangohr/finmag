@@ -1362,3 +1362,61 @@ Before editing the matching module in `src/finmag`, check that:
   `transition-notes.org` "Minimal-diff test-conversion phase" and
   `docs/superpowers/acceptance-register.md` for the authoritative disposition
   list. [Claude Sonnet 5]
+- Canonical test paths + legacy-lane retirement (complete 2026-07-27, range
+  `e10c5893`..`62aae519`, nine commits: `98e381ae`+`7d5c4177` inventory lane
+  and the `not_ported` marker, `608bf67b`+`0f9c2298` comparison/nmag,
+  `9dd89514` energies/demag, `e7041dc9`+`b97f89c8` core simulation/driver/util,
+  `8b96563a` bucket-C suffix drop, `62aae519` legacy-lane retirement; plus this
+  documentation commit). Owner decision, register **D30**: every ported DOLFINx
+  test now lives at its original master (`b5015c5a`) path and the 2026-07-25
+  `*_dolfinx.py` sibling-file convention is retired -- a port sitting BESIDE its
+  ancestor cannot be diffed against it, so the review artefact for any port is
+  now exactly `git diff b5015c5a..HEAD -- <path>`. Bucket-C files (the 7
+  genuinely-new-under-DOLFINx tests) simply dropped the suffix. The moves
+  changed PATHS, not content: bodies are unchanged apart from carried master
+  functions, `__file__`-relative fixture-path fixups and import renames.
+  A master ancestor was deleted only when every one of its test functions had a
+  named covering port function; **10+ partially-covered ancestors are RETAINED**
+  (`util/meshes_test.py`, `drivers/tests/test_integrators.py`,
+  `tests/bugs/test_bug_ndt_file_writing.py`, `tests/test_restart_simulation.py`,
+  `tests/test_writing_data.py`, `scheduler/scheduler_test.py`,
+  `tests/test_skyrmions.py`, `drivers/tests/sundials_nsteps_test.py`,
+  `util/ode/tests/test_sundials_stiff_ode.py`,
+  `tests/slonczewski/oscillator/test_oscillator.py`, plus the energies-group
+  retentions `energies/anisotropy_test.py`,
+  `energies/magnetostatic_field_test.py`, `energies/test_energies_in_regions.py`,
+  `energies/dmi_test.py`, `tests/test_dmi_terms.py`,
+  `energies/demag/fk_demag_2d_test.py`) and now fail visibly in the inventory
+  lane instead of being silently dropped. Uncovered master functions are
+  CARRIED VERBATIM under `NOT PORTED` banners and marked
+  `@pytest.mark.not_ported` (34 in `sim/sim_test.py`, 8 in
+  `util/helpers_test.py`, `test_against_oommf` in
+  `tests/comparison/exchange/test_exchange_field.py`, one dipolar stray-field
+  xfail in `energies/zeeman_test.py`), deselected from the gates by
+  `-m "not not_ported"`. The in-tree legacy lane is retired: the `barmini-suite`
+  pixi task and `dev/bin/verify-python3-{m3,barmini-suite,core-suite,`
+  `minimal-suite}` are deleted, and the legacy suite runs only at the frozen
+  oracle commit `ba928093` via
+  `dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite`. Its
+  replacement signal is the NON-GATING `dev/bin/inventory-dolfinx-suite`
+  (pixi task `dolfinx-src-suite-inventory`), which collects and runs the whole
+  `src/finmag` tree: 2026-07-27 at `62aae519`,
+  `INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12` in ~27 min
+  (pre-move baseline was only a collect-only proxy, 789 collected / 85
+  collection errors; the real pre-move pass/fail tally was lost with a crashed
+  session and is recorded as lost, not reconstructed). Every failure/error is
+  a never-ported master file, a retained ancestor, a carried `not_ported` test,
+  the pre-existing D26 `get_field_as_dolfin_function` gap, or the
+  order-dependent full-suite-only
+  `test_llg.py::test_ported_llg_does_not_load_legacy_dolfin_or_native` (which
+  passes in its own gate) -- no move breakage. Post-move
+  `dev/bin/verify-dolfinx-m5` is **33/33 green with every per-gate
+  pass/skip/xfail/deselect count identical to the pre-move measured baselines**.
+  One new parity-debt row: **D31**, `Simulation.save_field`/`save_m` (the
+  `.npy` surface in `sim/sim_savers.py`) has NO DOLFINx witness -- a claimed
+  cover was refuted during the Task-4 fix round and master's three tests are
+  carried as `not_ported`. Deferred cosmetic follow-up: ~32 in-tree files (4 of
+  them implementation modules) still name the old `*_dolfinx.py` filenames in
+  comments/docstrings; stale prose only, all live imports were repointed.
+  See `transition-notes.org` "Canonical test paths and legacy-lane retirement"
+  and `docs/superpowers/HANDOVER.md`. [Claude Opus 4.8]

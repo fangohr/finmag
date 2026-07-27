@@ -1,5 +1,15 @@
 # Canonical Test Paths (retire the `*_dolfinx.py` sibling convention) Implementation Plan
 
+**STATUS: COMPLETE (2026-07-27).** All 8 tasks done; every step box below is
+ticked. Range `e10c5893` (this plan) .. `62aae519` (Task 6), nine commits, plus
+the Task-8 documentation commit. Post-move `dev/bin/verify-dolfinx-m5` is 33/33
+green with every per-gate count identical to the pre-move measured baselines;
+the inventory lane reported `INVENTORY: passed=752 failed=34 errors=59
+skipped=25 xfailed=12` on 2026-07-27. Owner decision recorded as acceptance
+register **D30**; one new parity-debt row **D31** opened. Authoritative
+narrative: `docs/superpowers/HANDOVER.md`, "Canonical test paths, the legacy
+oracle lane, and the inventory lane".
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Move every ported DOLFINx test onto its original master (`b5015c5a`)
@@ -137,7 +147,7 @@ that is the visible backlog, by owner intent.
   exiting 0 on pytest exit codes 0/1 (test failures are DATA here), non-zero on
   pytest internal/usage errors (codes ≥2).
 
-- [ ] **Step 1: Register the marker.** Find existing pytest config
+- [x] **Step 1: Register the marker.** Find existing pytest config
   (`grep -rn "pytest" pyproject.toml setup.cfg tox.ini pytest.ini 2>/dev/null`).
   Add:
 
@@ -152,7 +162,7 @@ markers =
   `pixi run -e dolfinx dolfinx-src-field-pytest` and confirm the same pass
   count as before (42 passed).
 
-- [ ] **Step 2: Write `dev/bin/inventory-dolfinx-suite`** (mode 755), matching
+- [x] **Step 2: Write `dev/bin/inventory-dolfinx-suite`** (mode 755), matching
   the style of the existing `dev/bin/verify-*` scripts:
 
 ```bash
@@ -174,7 +184,7 @@ summary="$(grep -E '^(=+ .*(passed|failed|error).* =+)$' "${log}" | tail -1)"
 echo "INVENTORY: ${summary:-no summary found} (log ${log})"
 ```
 
-- [ ] **Step 3: Add the pixi task** next to the other `dolfinx-src-*` tasks,
+- [x] **Step 3: Add the pixi task** next to the other `dolfinx-src-*` tasks,
   same env-var style as its neighbours:
 
 ```toml
@@ -192,15 +202,15 @@ dolfinx-src-suite-inventory = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src
 dolfinx-src-suite-inventory = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag examples --continue-on-collection-errors -p no:cacheprovider"
 ```
 
-- [ ] **Step 4: Run the baseline inventory:** `dev/bin/inventory-dolfinx-suite`.
+- [x] **Step 4: Run the baseline inventory:** `dev/bin/inventory-dolfinx-suite`.
   Expected: script exits 0; MANY failures/collection errors (unported master
   files import `dolfin`). Record the INVENTORY line — this is the pre-move
   baseline. If pytest aborts with a duplicate-basename collection error
   (`import file mismatch`), fix by adding the missing `__init__.py` to the
   offending test directory (several test dirs already have them) and note which.
-- [ ] **Step 5: Confirm gates unaffected:** run
+- [x] **Step 5: Confirm gates unaffected:** run
   `pixi run -e dolfinx dolfinx-src-import-pytest` (expect 28 passed as before).
-- [ ] **Step 6: Commit** `pixi.toml`, the config file, the script:
+- [x] **Step 6: Commit** `pixi.toml`, the config file, the script:
   `git commit -m "Add non-gating full-suite parity inventory lane"`.
 
 ### Task 2: Move the comparison + nmag group onto master paths
@@ -219,7 +229,7 @@ dolfinx-src-suite-inventory = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src
 - Produces: comparison tests at master paths; gate
   `dolfinx-src-comparison-pytest` green with `-m "not not_ported"`.
 
-- [ ] **Step 1:** For each file: read its traceability header; then
+- [x] **Step 1:** For each file: read its traceability header; then
   `git rm <master original>` (where the port takes its path) and
   `git mv <port> <target>`. Example:
 
@@ -229,7 +239,7 @@ git mv src/finmag/tests/comparison/anisotropy/test_anis_magpar_dolfinx.py \
        src/finmag/tests/comparison/anisotropy/test_anis_magpar.py
 ```
 
-- [ ] **Step 2: Carry the OOMMF gap.** Into the moved
+- [x] **Step 2: Carry the OOMMF gap.** Into the moved
   `test_exchange_field.py`, append master's `test_against_oommf` verbatim from
   `git show b5015c5a:src/finmag/tests/comparison/exchange/test_exchange_field.py`
   under:
@@ -251,20 +261,20 @@ except ImportError:
     oommf_uniform_exchange = mesh_spec = None  # not_ported tests fail visibly below
 ```
 
-- [ ] **Step 3: Fix `__file__`-relative paths.** Files that MOVED directory
+- [x] **Step 3: Fix `__file__`-relative paths.** Files that MOVED directory
   (none in this group — all moves are within-directory renames except verify)
   must have fixture/reference-data paths re-checked:
   `grep -n "__file__\|MODULE_DIR\|dirname" <each moved file>`.
-- [ ] **Step 4: Repoint the gate.** In `pixi.toml`, update
+- [x] **Step 4: Repoint the gate.** In `pixi.toml`, update
   `dolfinx-src-comparison-pytest`'s file list to the new paths and append
   `-m "not not_ported"`.
-- [ ] **Step 5: Run** `pixi run -e dolfinx dolfinx-src-comparison-pytest`.
+- [x] **Step 5: Run** `pixi run -e dolfinx dolfinx-src-comparison-pytest`.
   Expected: 20 passed (same as before the move; the carried oommf test is
   deselected).
-- [ ] **Step 6:** `grep -rn "_dolfinx" pixi.toml dev/bin src/finmag/tests/comparison src/finmag/tests/nmag`
+- [x] **Step 6:** `grep -rn "_dolfinx" pixi.toml dev/bin src/finmag/tests/comparison src/finmag/tests/nmag`
   — no stale references to the moved names remain (docs references are handled
   in Task 8).
-- [ ] **Step 7: Commit:**
+- [x] **Step 7: Commit:**
   `git commit -m "Move comparison/nmag tests onto master paths (canonical-paths owner decision)"`.
 
 ### Task 3: Move the energies/demag group onto master paths
@@ -286,20 +296,20 @@ except ImportError:
 - Consumes: `not_ported` marker.
 - Produces: energies/demag tests at canonical paths; all eight gates green.
 
-- [ ] **Step 1:** Bucket-A moves (`git rm` master, `git mv` port) for
+- [x] **Step 1:** Bucket-A moves (`git rm` master, `git mv` port) for
   thin_film_demag, cubic_anisotropy, fk_demag, treecode→demag_pbc, timezeeman→
   zeeman_test. These moves CHANGE DIRECTORY (`src/finmag/tests/` →
   `src/finmag/energies[/demag]/`): after each move run
   `grep -n "__file__\|dirname\|fixtures" <file>` and repair any relative
   fixture path (oracle fixtures live under `src/finmag/tests/fixtures/` — use a
   path anchored on the new location).
-- [ ] **Step 2:** For `zeeman_test.py` (partial 9/14): cross-check the
+- [x] **Step 2:** For `zeeman_test.py` (partial 9/14): cross-check the
   timezeeman header AND the energies header; append only master fns covered by
   NEITHER, verbatim under the `NOT PORTED` banner with `@pytest.mark.not_ported`
   and guarded imports (same pattern as Task 2 Step 2).
-- [ ] **Step 3:** For `sim_test.py`-style partials in this group: none expected;
+- [x] **Step 3:** For `sim_test.py`-style partials in this group: none expected;
   verify via headers.
-- [ ] **Step 4:** Bucket-B renames: `test_energies_dolfinx.py`→
+- [x] **Step 4:** Bucket-B renames: `test_energies_dolfinx.py`→
   `test_energies.py`, `test_dmi_dolfinx.py`→`test_dmi.py` (replaces master
   `tests/test_dmi.py` iff fully covered — else name it `test_dmi_port.py` and
   keep the master; follow the header), `test_effective_field_dolfinx.py`→
@@ -308,14 +318,14 @@ except ImportError:
   ancestor the header accounts as FULLY covered: `git rm` it. For every
   ancestor with uncovered fns: leave it in the tree untouched and list it in
   the commit message as retained backlog.
-- [ ] **Step 5:** Update all eight gate file lists in `pixi.toml`; append
+- [x] **Step 5:** Update all eight gate file lists in `pixi.toml`; append
   `-m "not not_ported"` to any gate whose files now carry banner tests.
-- [ ] **Step 6:** Run each of the eight gates; expected pass counts unchanged
+- [x] **Step 6:** Run each of the eight gates; expected pass counts unchanged
   from their last recorded values (energies 45, timezeeman 34, cubicanis 30,
   demag 18, treecode 22 passed/1 xfailed, varparams 35, effectivefield and dmi
   per their last green runs — read the exact counts from the most recent
   `verify-dolfinx-m5` log or re-derive by running before the move).
-- [ ] **Step 7: Commit:**
+- [x] **Step 7: Commit:**
   `git commit -m "Move energies/demag tests onto master paths"`.
 
 ### Task 4: Move the core-simulation group onto master paths
@@ -341,30 +351,30 @@ except ImportError:
 - Consumes: `not_ported` marker.
 - Produces: core tests at canonical paths; all listed gates green.
 
-- [ ] **Step 1:** Bucket-A moves with directory changes (`tests/` → `sim/`,
+- [x] **Step 1:** Bucket-A moves with directory changes (`tests/` → `sim/`,
   `util/`, package root): after each, repair `__file__`-relative fixture paths
   (`src/finmag/tests/fixtures/…` oracles are heavily used by llg/simulation
   files) and re-check any `sys.path` or package-relative import.
-- [ ] **Step 2:** `sim_test.py` partial: from the header's accounting, append
+- [x] **Step 2:** `sim_test.py` partial: from the header's accounting, append
   master fns not covered anywhere (shutdown/instance surface — D24;
   `from finmag.example.normal_modes import disk` import-based tests) verbatim
   under the `NOT PORTED` banner + `@pytest.mark.not_ported` + guarded imports.
-- [ ] **Step 3:** `helpers_test.py` partial: append the 13 master fns the
+- [x] **Step 3:** `helpers_test.py` partial: append the 13 master fns the
   header lists as not transcribed (module-scope `import dolfin` in
   `finmag.util.helpers` — guard the import as in Task 2 Step 2 so the file
   still collects under dolfinx).
-- [ ] **Step 4:** Bucket-B renames + ancestor deletion/retention per header
+- [x] **Step 4:** Bucket-B renames + ancestor deletion/retention per header
   (same procedure as Task 3 Step 4). `test_meshes` retains ancestors covering
   the 12 deferred mesh helpers if the header marks them uncovered.
-- [ ] **Step 5:** Update every affected gate list; add `-m "not not_ported"`
+- [x] **Step 5:** Update every affected gate list; add `-m "not not_ported"`
   where banner tests were introduced. Also update the two references to
   `src/finmag/tests/test_example_dolfinx.py` ONLY IF Task 5 has not run yet —
   otherwise skip (Task 5 owns that rename).
-- [ ] **Step 6:** Run each affected gate; pass counts must match their last
+- [x] **Step 6:** Run each affected gate; pass counts must match their last
   recorded green values (field 42, llg 23, simulation 61, meshes 53, import 28,
   varparams 35, stt 27, etc. — read exact numbers from the latest
   `verify-dolfinx-m5` log before starting).
-- [ ] **Step 7: Commit:**
+- [x] **Step 7: Commit:**
   `git commit -m "Move core simulation/driver/util tests onto master paths"`.
 
 ### Task 5: Bucket-C renames (drop the `_dolfinx` suffix)
@@ -379,19 +389,19 @@ except ImportError:
   `dolfinx-src-examples-pytest`, `dolfinx-src-io-utils-pytest`,
   `dolfinx-src-comparison-pytest` (magpar_io if not already done in Task 2).
 
-- [ ] **Step 1:** `git mv` each of the 8 files to its suffix-less name. No
+- [x] **Step 1:** `git mv` each of the 8 files to its suffix-less name. No
   content changes except: if a file's own docstring names its old filename,
   update that one string.
-- [ ] **Step 2:** `grep -rn "_dolfinx.py" pixi.toml dev/ src/ examples/` —
+- [x] **Step 2:** `grep -rn "_dolfinx.py" pixi.toml dev/ src/ examples/` —
   update every remaining reference; expect ZERO hits afterwards except
   historical docs (docs/ is Task 8).
-- [ ] **Step 3:** Run the affected gates:
+- [x] **Step 3:** Run the affected gates:
   `dolfinx-src-import-pytest` (28), `dolfinx-src-deferred-pytest`,
   `dolfinx-src-native-bem-pytest`, `dolfinx-src-ordering-pytest`,
   `dolfinx-src-examples-pytest` (14 passed/3 skipped), plus legacy-env
   `pixi run src-import-pytest` if the legacy environment is installed locally
   (if the env is not materialised, note it and rely on the dolfinx variant).
-- [ ] **Step 4: Commit:**
+- [x] **Step 4: Commit:**
   `git commit -m "Drop _dolfinx suffix from genuinely-new test files"`.
 
 ### Task 6: Retire the in-tree legacy test lane
@@ -411,39 +421,39 @@ except ImportError:
   `dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite`
   (runs at the frozen oracle commit, which has its own task + test files).
 
-- [ ] **Step 1:** Verify the oracle path once:
+- [x] **Step 1:** Verify the oracle path once:
   `dev/bin/run-legacy-oracle -- git show HEAD:pixi.toml | grep -c barmini-suite`
   expected ≥1 (do NOT run the full legacy suite — minutes-long and needs the
   legacy env; existence check suffices).
-- [ ] **Step 2:** Delete the `barmini-suite` task and the identified scripts;
+- [x] **Step 2:** Delete the `barmini-suite` task and the identified scripts;
   `grep -rn "barmini-suite" pixi.toml dev/bin` → only `run-legacy-oracle`
   documentation remains (add a one-line comment in `pixi.toml` where the task
   was: `# Legacy FEniCS-2019 suite: run at the frozen oracle commit via
   dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite [owner 2026-07-27]`).
-- [ ] **Step 3:** Confirm `dev/bin/verify-dolfinx-m5` does not reference any
+- [x] **Step 3:** Confirm `dev/bin/verify-dolfinx-m5` does not reference any
   deleted script/task: `grep -n "verify-python3\|barmini-suite" dev/bin/verify-dolfinx-m5`
   → no hits.
-- [ ] **Step 4: Commit:**
+- [x] **Step 4: Commit:**
   `git commit -m "Retire in-tree legacy suite lane; legacy runs at frozen oracle commit"`.
 
 ### Task 7: Full verification + post-move inventory
 
-- [ ] **Step 1:** Clean tree check: `git status --short` → empty.
-- [ ] **Step 2:** Run `dev/bin/verify-dolfinx-m5` end-to-end. Expected: exit 0,
+- [x] **Step 1:** Clean tree check: `git status --short` → empty.
+- [x] **Step 2:** Run `dev/bin/verify-dolfinx-m5` end-to-end. Expected: exit 0,
   all 33 steps green, per-gate pass counts equal to their pre-move values.
   Any regression here is a broken move (most likely a `__file__`-relative
   fixture path or a stale pixi list) — fix in place, amend the responsible
   task's commit ONLY if not yet reviewed, otherwise commit the fix separately.
-- [ ] **Step 3:** Run `dev/bin/inventory-dolfinx-suite`. Record the INVENTORY
+- [x] **Step 3:** Run `dev/bin/inventory-dolfinx-suite`. Record the INVENTORY
   line. Compare against Task 1's baseline: passed should be ≥ baseline (moved
   files unchanged), and the failure/error population should now consist of
   (a) never-ported master files, (b) retained bucket-B ancestors, (c)
   `not_ported`-marked carried tests. Spot-check 3 failures to confirm they are
   genuine not-ported functionality (e.g. `import dolfin` / NameError `df`),
   not move breakage.
-- [ ] **Step 4:** Save both logs to `/tmp` paths named in the docs commit
+- [x] **Step 4:** Save both logs to `/tmp` paths named in the docs commit
   (Task 8 cites them).
-- [ ] **Step 5: Commit** nothing (verification only) unless fixes were needed.
+- [x] **Step 5: Commit** nothing (verification only) unless fixes were needed.
 
 ### Task 8: Documentation closure
 
@@ -455,29 +465,29 @@ except ImportError:
   `dev/dolfinx/porting_map.md`, `transition-notes.org`, this plan file
   (tick boxes).
 
-- [ ] **Step 1: Register.** Add row **D30**: canonical-paths convention —
+- [x] **Step 1: Register.** Add row **D30**: canonical-paths convention —
   owner decision 2026-07-27 supersedes the 2026-07-25 sibling convention;
   ports live at master paths; review diff = `git diff b5015c5a..HEAD --
   <path>`; in-tree legacy lane retired to the frozen oracle commit; full-suite
   inventory lane is the parity backlog. Also: flip **M4a/M4b** dispositions
   from "*pending owner decision*" to "ratified 2026-07-25: deferred for SR1"
   (the P5.1 outcome, previously recorded only in HANDOVER/porting_map).
-- [ ] **Step 2: SR1 plan file.** Tick P5.1/P5.2/P5.3 `[x]` with one-line
+- [x] **Step 2: SR1 plan file.** Tick P5.1/P5.2/P5.3 `[x]` with one-line
   completion notes pointing at HANDOVER (closing the omission from `c1d6a9fb`).
-- [ ] **Step 3: HANDOVER.** Update the "minimal-diff test-conversion" section:
+- [x] **Step 3: HANDOVER.** Update the "minimal-diff test-conversion" section:
   sibling convention superseded by canonical paths (D30); how to review
   (git diff against `b5015c5a`); how to run the legacy suite (oracle command);
   the inventory lane command and its current INVENTORY tally from Task 7.
-- [ ] **Step 4: Manifest.** Add a post-baseline note: canonical-paths
+- [x] **Step 4: Manifest.** Add a post-baseline note: canonical-paths
   relocation (paths changed, content unchanged); the inventory lane is now the
   live "which owner-Now families still lack a witness" signal.
-- [ ] **Step 5:** Update `porting_map.md` + `transition-notes.org` with the
+- [x] **Step 5:** Update `porting_map.md` + `transition-notes.org` with the
   relocation entry (commit range, INVENTORY tally, retained-ancestor list).
-- [ ] **Step 6:** `grep -rn "_dolfinx.py" docs/superpowers/*.md` — annotate the
+- [x] **Step 6:** `grep -rn "_dolfinx.py" docs/superpowers/*.md` — annotate the
   canonical docs (HANDOVER, capability-status, manifest current-state sections)
   to new paths; leave historical/archived narrative (old plans, old log entries)
   untouched.
-- [ ] **Step 7: Commit:**
+- [x] **Step 7: Commit:**
   `git commit -m "Docs closure: canonical test paths (D30), legacy lane retirement, inventory lane"`.
 
 ---

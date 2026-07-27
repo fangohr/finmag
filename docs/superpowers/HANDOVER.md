@@ -104,7 +104,23 @@ Important current limitations:
   std_prob4's broad switching window is only qualitative;
 - normal modes, thermal SLLG/LLB, MPI stepping, function-space PBC (deferred,
   D19), legacy NEB, external harnesses, HDF5/plotting/VTK-XDMF readback, and
-  the rest of the long-tail I/O/convenience surface remain unported.
+  the rest of the long-tail I/O/convenience surface remain unported;
+- **`Simulation.save_field`/`save_m` (the `.npy` snapshot surface, implemented
+  in `src/finmag/sim/sim_savers.py`) has no test coverage under DOLFINx**
+  (register **D31**): the implementation exists and is reachable, but master's
+  three tests are carried as `not_ported` in `sim/sim_test.py`. The
+  `save_field_to_vtk` (XDMF/VTK) path is a different method and *is* covered;
+  do not mistake one for the other;
+- **two GitHub workflows must be reconciled before any merge to `master`.**
+  `.github/workflows/python3-m3.yml` invokes `dev/bin/verify-python3-m3`, which
+  was deleted with the legacy lane (`62aae519`), and
+  `.github/workflows/python3-core-suite.yml` inlines a stale explicit list of
+  master test paths, several of which now hold DOLFINx ports (D30). Both jobs
+  carry `if: github.ref_name != 'dolfinx-parity' && github.head_ref !=
+  'dolfinx-parity'`, so both are **inert on this branch** and no CI here is
+  red — but both are genuine dangling references on any line where they are
+  live. Reconcile them (delete, or repoint at the oracle/inventory lanes) as
+  part of the merge, not as a parity slice.
 
 ## Install and verify the supported environment
 
@@ -134,12 +150,125 @@ lane: its three timeouts are harness evidence, and the two immediate defects
 are the scheduler `save_m` keyword and raw `dolfin` import above. See the
 manifest for exact logs and environment versions.
 
+## Canonical test paths, the legacy oracle lane, and the inventory lane
+
+Owner decision **2026-07-27** (register **D30**), implemented in the nine
+commits `e10c5893` (plan) .. `62aae519`: `98e381ae`+`7d5c4177` (inventory lane
+and the `not_ported` marker), `608bf67b`+`0f9c2298` (comparison/nmag),
+`9dd89514` (energies/demag), `e7041dc9`+`b97f89c8` (core simulation/driver/
+util), `8b96563a` (bucket-C suffix drop), `62aae519` (legacy-lane retirement),
+plus this documentation commit.
+
+**Every ported DOLFINx test now lives at its original `master` (`b5015c5a`)
+path.** The `*_dolfinx.py` sibling-file convention adopted on 2026-07-25 is
+retired: a port sitting *beside* its ancestor cannot be diffed against it, and
+the minimal-diff phase's whole point was reviewability. Bucket-C files (the 7
+genuinely-new-under-DOLFINx tests with no master ancestor) simply dropped the
+suffix. Paths changed; test content did not, apart from carried master
+functions, `__file__`-relative fixture-path fixups and import renames.
+
+**How to review a port.** For any test file, the port-vs-legacy diff is:
+
+```sh
+git diff b5015c5a..HEAD -- src/finmag/sim/sim_test.py
+```
+
+That is the whole review artefact — no ledger lookup, no sibling hunting.
+
+**How to run the legacy suite.** There is no in-tree legacy lane any more (the
+`barmini-suite` pixi task and `dev/bin/verify-python3-{m3,barmini-suite,`
+`core-suite,minimal-suite}` are deleted). Run it at the frozen oracle commit
+`ba928093`, which carries its own task and its own copies of every file:
+
+```sh
+dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite
+```
+
+**How to see the parity backlog.** `dev/bin/inventory-dolfinx-suite` is a
+**non-gating** lane that collects and runs the entire `src/finmag` tree and
+prints one summary line. It is not a verdict — `dev/bin/verify-dolfinx-m5`'s 33
+focused gates are the verdict. Run (~27 min):
+
+```sh
+dev/bin/inventory-dolfinx-suite     # or: pixi run -e dolfinx dolfinx-src-suite-inventory
+```
+
+Result on 2026-07-27 at `62aae519`:
+
+```
+INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12
+```
+
+Every failure and error in that population falls into one of six classes, all
+expected, none of them move breakage (classified file-by-file in the Task-7
+verification report):
+
+1. **never-ported master files** — module-scope `import dolfin` still fails
+   collection (e.g. `energies/anisotropy_test.py`, `util/meshes_test.py`,
+   `energies/dmi_test.py`, `util/fileio_test.py`);
+2. **retained bucket-B ancestors** (10+ files) — master files kept on purpose
+   because at least one of their test functions has no named covering port
+   function; they are meant to fail here until ported. The itemised list with a
+   per-file reason is in the Task-3/Task-4 reports under
+   `.superpowers/sdd/2026-07-27-canonical-test-paths/` (`util/meshes_test.py`,
+   `drivers/tests/test_integrators.py`, `tests/bugs/test_bug_ndt_file_writing.py`,
+   `tests/test_restart_simulation.py`, `tests/test_writing_data.py`,
+   `scheduler/scheduler_test.py`, `tests/test_skyrmions.py`,
+   `drivers/tests/sundials_nsteps_test.py`,
+   `util/ode/tests/test_sundials_stiff_ode.py`,
+   `tests/slonczewski/oscillator/test_oscillator.py`, plus the energies-group
+   retentions);
+3. **carried `not_ported` tests** — master functions transcribed verbatim under
+   `NOT PORTED` banners so nothing vanished when the port took master's path:
+   34 in `sim/sim_test.py`, 8 in `util/helpers_test.py`, `test_against_oommf`
+   in `tests/comparison/exchange/test_exchange_field.py`, and one dipolar
+   stray-field xfail in `energies/zeeman_test.py`. They are deselected from
+   every gate by `-m "not not_ported"` and fail loudly here by design;
+4. **one previously documented functionality gap** —
+   `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`
+   (register **D26**, the `get_field_as_dolfin_function` UFL-bool crash);
+5. **one order-dependent, full-suite-only artefact** —
+   `tests/test_llg.py::test_ported_llg_does_not_load_legacy_dolfin_or_native`
+   fails only when an earlier test in the same process has already imported
+   `finmag.native.*`; it passes in its own gate (`dolfinx-src-llg-pytest`,
+   24/24);
+6. **collection-error arithmetic**: the pre-move baseline was only a
+   collect-only proxy (789 collected / 85 collection errors — the real
+   pre-move pass/fail tally was lost with a crashed session and is recorded as
+   lost, not reconstructed). Errors are down to 59 post-move.
+
+Post-move `dev/bin/verify-dolfinx-m5` is **33/33 green with every per-gate
+pass/skip/xfail/deselect count identical to the pre-move measured baselines** —
+the moves regressed nothing.
+
+**Follow-up backlog** (none of it blocking, all of it visible):
+
+- burn down the retained ancestors (class 2) and the carried `not_ported`
+  tests (class 3) — that *is* the remaining P5.3 legacy-test backlog;
+- register **D31**: `Simulation.save_field`/`save_m` (`.npy`) has no witness;
+- a **deferred cosmetic sweep**: ~32 in-tree files (4 of them implementation
+  modules — `sim/sim.py`, `energies/cubic_anisotropy.py`,
+  `energies/demag/fk_demag.py`, `energies/demag/treecode_bem.py`) still carry
+  comments and docstrings naming the old `*_dolfinx.py` sibling filenames.
+  These are stale prose, not stale imports (all live imports were repointed in
+  `8b96563a`), so they were deliberately left alone rather than mixed into a
+  move commit. `grep -rn "_dolfinx\.py" src examples` finds them all.
+
 ## Safe execution protocol
 
 - Use the frozen Python-3/FEniCS-2019 oracle at
   `ba9280934e188d7f3800e7b9865e70a9422f7687` through
   `dev/bin/run-legacy-oracle`. Prefer analytic physics where it is stronger,
-  and label cross-method checks honestly.
+  and label cross-method checks honestly. Since `62aae519` (register **D30**)
+  there is **no in-tree legacy test lane**: the `barmini-suite` pixi task and
+  the `dev/bin/verify-python3-{m3,barmini-suite,core-suite,minimal-suite}`
+  scripts are deleted, and the whole legacy suite runs only at the oracle
+  commit, which carries its own task and its own copies of every file it
+  lists:
+
+  ```sh
+  dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite
+  ```
 - Probe uncertain DOLFINx mechanics under `dev/dolfinx`; implement accepted
   behavior once, minimally, in the existing `src/finmag` module.
 - For every slice: state the API and scientific invariant, obtain RED evidence,
@@ -274,7 +403,10 @@ complete** (2026-07-25), integrated on `dolfinx-parity` (tip `dadf35ae`):
   4 waves): every `*_dolfinx.py` test file was reshaped to read as a minimal
   diff of its `master` (`b5015c5a`) original, so a reviewer can check each
   port against its legacy ancestor line-by-line instead of trusting a
-  from-scratch rewrite. Bucket A (literal transcription) covers files with a
+  from-scratch rewrite. **The `*_dolfinx.py` sibling-file convention this
+  phase used is now superseded** — see the "Canonical test paths" section
+  (register **D30**); the filenames named in this paragraph are historical.
+  Bucket A (literal transcription) covers files with a
   1:1 master ancestor; bucket B adds a master->port traceability-mapping
   header where no 1:1 mapping exists (e.g. files that were split, merged, or
   renamed across the port); bucket C adds a "NO MASTER ANCESTOR" header to
@@ -300,8 +432,8 @@ authoritative list:
   ~158% wrong demag field on the affected geometry) -- this is new evidence
   for the already-registered `D17` disposition (by-name refusal kept for SR1;
   the BEM kernel fix itself stays deferred), not a new row.
-  (`test_treecode_pbc_demag_dolfinx.py`)
-- **Magpar anisotropy comparison at 8% tolerance**: `test_anis_magpar_dolfinx.py`
+  (`energies/demag/demag_pbc_test.py`)
+- **Magpar anisotropy comparison at 8% tolerance**: `tests/comparison/anisotropy/test_anis_magpar.py`
   had to loosen `REL_TOLERANCE` from legacy's `5e-7` (identical-mesh
   assumption) to `8e-2` to absorb `M8` mesh drift, but the measured maximum
   disagreement (~5.1e-2) is flagged in the test's own docstring as a genuine
@@ -320,7 +452,17 @@ authoritative list:
   (`src/finmag/sim/sim.py`), unrelated to the NDT-writing regression test it
   was found in; fixing it means touching `sim.py`, out of scope for the
   test-only conversion phase. Candidate new register row.
-  (`test_restart_output_dolfinx.py`)
+  (found via `tests/bugs/test_bug_ndt_file_writing.py`)
+
+**The canonical-test-paths restructure then followed** (2026-07-27,
+`e10c5893`..`62aae519`, register **D30**): every ported test was relocated onto
+its master path, the in-tree legacy lane was retired to the frozen oracle, and
+the non-gating inventory lane was added. Two of the four candidate rows above
+are now recorded (**D23** NaN guard, **D26** UFL-bool crash; the Magpar 8%
+residual is **D29**), and one new row was opened (**D31**, no witness for the
+`.npy` `save_field`/`save_m` surface). See "Canonical test paths, the legacy
+oracle lane, and the inventory lane" for the run commands, the current
+INVENTORY tally and the follow-up backlog.
 
 The recommended next work is **Priority 6** (full scientific acceptance and
 SR1 handoff) and the **SR1-V1 FULL-lane** diagnosis, which still shows its
@@ -338,3 +480,5 @@ detailed, superseding sequence is in
 [P3.3–P3.5 completion update: Claude Sonnet 5]
 
 [P5.1–P5.2 and minimal-diff test-conversion phase completion update: Claude Sonnet 5]
+
+[Canonical test paths (D30), legacy-lane retirement and inventory lane: Claude Opus 4.8]

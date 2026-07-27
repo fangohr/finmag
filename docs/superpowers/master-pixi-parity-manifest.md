@@ -95,7 +95,7 @@ workflow, and **qualitative** shows plausibility without establishing parity.
 | N50 | Checked Nmag reference-data comparison for a selected interaction passes | `dolfinx-src-examples-pytest` (`exchange_demag/test_exchange_demag.py`) | external-reference-data | PASS |
 | N51 | Remaining selected checked-data Nmag comparisons have DOLFINx witnesses | no positive current gate | external-reference-data | MISSING |
 | N52 | Fast converted examples execute their stated checks | `dolfinx-src-examples-pytest` | end-to-end | PASS |
-| N53 | Full converted-example lane executes its stated checks | `FINMAG_EXAMPLE_FULL=1 pytest -q examples/test_examples_dolfinx.py` | end-to-end | KNOWN-DEFECT |
+| N53 | Full converted-example lane executes its stated checks | `FINMAG_EXAMPLE_FULL=1 pytest -q examples/test_examples.py` | end-to-end | KNOWN-DEFECT |
 | N54 | Standard problem 4 has quantitative mesh-matched/convergence acceptance | no positive current gate | quantitative physics | MISSING |
 | N55 | Common box/sphere/cylinder/ellipsoid/disk/ring/cone/CSG mesh generators preserve geometry and caching contracts | `dolfinx-src-meshes-pytest` | analytic/geometry regression | PASS |
 | N56 | Spatially varying `Ms`, A, K, D, axis and alpha plus region energies/averages work | `dolfinx-src-varparams-pytest` | oracle/regression | PASS |
@@ -141,14 +141,49 @@ holds and records any unavoidable divergence in the acceptance register.
 | Frozen row | P5.2 resolution | Post-baseline evidence |
 |---|---|---|
 | N50 checked Nmag comparison (selected interaction) | already PASS; unchanged | `exchange_demag/test_exchange_demag.py` (example lane) still witnesses the checked Nmag averages/energies/Edensity data |
-| N51 remaining selected Nmag comparisons have DOLFINx witnesses | RESOLVED | Nmag exchange-field comparison `tests/comparison/exchange/test_exchange_field_nmag_dolfinx.py` (`test_against_nmag`, tol 2e-14 verbatim); Nmag 1D exchange `tests/nmag/exchange_1d/test_exchange_1d_dolfinx.py`; Nmag 1D anisotropy `tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy_dolfinx.py` |
+| N51 remaining selected Nmag comparisons have DOLFINx witnesses | RESOLVED | Nmag exchange-field comparison `tests/comparison/exchange/test_exchange_field.py` (`test_against_nmag`, tol 2e-14 verbatim); Nmag 1D exchange `tests/nmag/exchange_1d/test_exchange_1d.py`; Nmag 1D anisotropy `tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py` (D30 canonical paths) |
 | N62 selected OOMMF comparisons have DOLFINx witnesses | PARTIAL | the `exchange_demag` example now executes its OOMMF energy-density assertion in the examples gate (`d02c5458`: exch rel err 0.0395 < 5e-2, demag 0.0319 < 4e-2). The dedicated OOMMF comparison suite (`tests/oommf/*`, `comparison/anisotropy/test_anis_oommf.py`, `test_exchange_field.py::test_against_oommf`) is still NOT ported (imports legacy `dolfin`); backlog under C20 |
-| N63 selected Magpar comparisons have DOLFINx witnesses | RESOLVED | coordinate-probe / probe-at-saved-coordinates Magpar comparisons `tests/comparison/anisotropy/test_anis_magpar_dolfinx.py`, `tests/comparison/demag/test_demag_magpar_dolfinx.py`, `tests/comparison/exchange/test_exchange_compare_magpar_dolfinx.py` (M8 node-order xfails retired). Exchange holds master tol `9e-8`; anisotropy retains an ~8% residual recorded as register **D29** (physics investigation recommended); the demag periodic-tile field cases xfail(strict) against **D17** |
+| N63 selected Magpar comparisons have DOLFINx witnesses | RESOLVED | coordinate-probe / probe-at-saved-coordinates Magpar comparisons `tests/comparison/anisotropy/test_anis_magpar.py`, `tests/comparison/demag/test_demag_field.py`, `tests/comparison/exchange/test_exchange_compare_magpar.py` (D30 canonical paths; M8 node-order xfails retired). Exchange holds master tol `9e-8`; anisotropy retains an ~8% residual recorded as register **D29** (physics investigation recommended); the demag periodic-tile field cases xfail(strict) against **D17** |
 
 N49 (Netgen binary backend necessity probe) is NOT resolved by the P5.2 test
 conversion: it needs a selected-geometry probe, not a test transcription, so it
 remains MISSING. Recorded here as a non-resolution so the orchestrator does not
-mistake it for closed.
+mistake it for closed. *(P5.1 has since run that probe and found no required
+geometry; register `M4a`/`M4b` are ratified deferred for SR1.)*
+
+### Post-baseline path relocation (canonical test paths, register D30)
+
+On **2026-07-27** (owner decision, register **D30**; commits
+`e10c5893`..`62aae519`) every ported DOLFINx test was **relocated onto its
+original `master` (`b5015c5a`) path**, and the `*_dolfinx.py` sibling-file
+convention was retired. This changed **paths only** — test content is
+unchanged apart from carried master functions, `__file__`-relative fixture-path
+fixups and import renames — so no frozen row's evidence, tolerance or verdict
+above is affected. Where a row or Appendix entry below names a `*_dolfinx.py`
+file, read it as that file at its canonical master path; the current-state
+entries have been repointed, historical narrative has not.
+
+Two consequences for how this manifest is used:
+
+1. **Appendix A's "original-master" paths are no longer all master files.**
+   For every family the port has taken over, the master path now holds the
+   DOLFINx port itself, and the port-vs-legacy comparison is
+   `git diff b5015c5a..HEAD -- <path>`. Appendix A's derivation note cites
+   `dev/bin/verify-python3-core-suite`, which was deleted with the legacy lane
+   in `62aae519`; the 101-file list it produced still stands as recorded.
+2. **The live "which owner-Now family still lacks a witness" signal is now the
+   inventory lane**, not this document. `dev/bin/inventory-dolfinx-suite`
+   (non-gating) collects and runs the whole `src/finmag` tree and enumerates
+   exactly the unported/uncovered population; on 2026-07-27 at `62aae519` it
+   reported `INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12`
+   (~27 min). Its failures and errors are the parity backlog, never a CI
+   verdict — `dev/bin/verify-dolfinx-m5`'s 33 focused gates remain the verdict,
+   and post-relocation they are **33/33 green with every per-gate count
+   identical to the pre-move measured baselines**. The legacy suite itself no
+   longer runs in-tree: use
+   `dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite`.
+   See `HANDOVER.md`, "Canonical test paths, the legacy oracle lane, and the
+   inventory lane".
 
 ## Converted examples lane
 
@@ -196,10 +231,10 @@ and an owner decision, not implicit deletions.
 | Original-master file | Class | Current counterpart or missing contract |
 |---|---|---|
 | `src/finmag/tests/test_effective_field.py` | mapped-current | `dolfinx-src-effectivefield-pytest` |
-| `src/finmag/tests/test_writing_data.py` | needs-translation | NDT/VTK/XDMF gate exists: `dolfinx-src-restart-output-pytest`. HDF5 field round-trip is now covered under `dolfinx-src-field-pytest` (`field_test.py::test_save_hdf5` transcribed in `test_field_dolfinx.py`, plus the new `test_field_hdf5_dolfinx.py`; SR1 P4-hdf5, N41); VTK/XDMF function readback remains missing |
+| `src/finmag/tests/test_writing_data.py` | needs-translation | NDT/VTK/XDMF gate exists: `dolfinx-src-restart-output-pytest`. HDF5 field round-trip is now covered under `dolfinx-src-field-pytest` (`field_test.py::test_save_hdf5`, plus `tests/test_field_hdf5.py`; SR1 P4-hdf5, N41); VTK/XDMF function readback remains missing |
 | `src/finmag/field_test.py` | needs-translation | `dolfinx-src-field-pytest` covers selected basic contracts; full legacy field file is not assertion-equivalent |
 | `src/finmag/field_setters_test.py` | needs-translation | `dolfinx-src-field-pytest`; generic-vector contract remains missing |
-| `src/finmag/util/fileio_test.py` | needs-translation | `dolfinx-src-restart-output-pytest`. The legacy `dolfinh5tools` timeseries HDF5 contract is not reproduced, but the coordinate-aware HDF5 field round-trip now has a gate under `dolfinx-src-field-pytest` (`field_test.py::test_save_hdf5` transcribed in `test_field_dolfinx.py`, plus `test_field_hdf5_dolfinx.py`; SR1 P4-hdf5, N41) |
+| `src/finmag/util/fileio_test.py` | needs-translation | `dolfinx-src-restart-output-pytest`. The legacy `dolfinh5tools` timeseries HDF5 contract is not reproduced, but the coordinate-aware HDF5 field round-trip now has a gate under `dolfinx-src-field-pytest` (`field_test.py::test_save_hdf5`, plus `tests/test_field_hdf5.py`; SR1 P4-hdf5, N41) |
 | `src/finmag/util/helpers_test.py` | needs-decision | selected helper convenience contract N48 has no positive gate; Mercurial assertions remain M10 |
 | `src/finmag/util/length_scales_test.py` | needs-translation | Owner-Now convenience surface; no current DOLFINx gate |
 | `src/finmag/util/meshes_test.py` | needs-translation | `dolfinx-src-meshes-pytest` covers selected generators, not the bundled legacy file |
@@ -217,7 +252,7 @@ and an owner decision, not implicit deletions.
 | `src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py` | external-reference-data | checked OOMMF data; `dolfinx-src-cubicanis-pytest` |
 | `src/finmag/tests/comparison/demag/test_demag_field.py` | external-reference-data | checked Magpar data; `dolfinx-src-demag-pytest` |
 | `src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py` | external-reference-data | checked Magpar data; `dolfinx-src-energies-pytest` |
-| `src/finmag/tests/comparison/exchange/test_exchange_field.py` | external-reference-data | checked Nmag data; `dolfinx-src-energies-pytest`. Nmag half (`test_against_nmag`, tol 2e-14) transcribed under DOLFINx in `tests/comparison/exchange/test_exchange_field_nmag_dolfinx.py` (P5.2). The OOMMF half (`test_against_oommf`, tol 8e-2) is NOT covered under DOLFINx and is intentionally not transcribed (noted, not silently dropped) -- likely gated on porting `finmag.util.oommf`; parity backlog (C20) |
+| `src/finmag/tests/comparison/exchange/test_exchange_field.py` | external-reference-data | checked Nmag data; `dolfinx-src-energies-pytest`. Nmag half (`test_against_nmag`, tol 2e-14) transcribed under DOLFINx and, since D30, holding this very path (P5.2). The OOMMF half (`test_against_oommf`, tol 8e-2) is NOT covered under DOLFINx; since D30 it is CARRIED VERBATIM in the same file under the `NOT PORTED` banner, `@pytest.mark.not_ported` (noted and visible in the inventory lane, not silently dropped) -- likely gated on porting `finmag.util.oommf`; parity backlog (C20) |
 | `src/finmag/tests/oommf/test_anisotropy.py` | external-reference-data | OOMMF data/workflow deferred C20 |
 | `src/finmag/tests/oommf/test_exchange.py` | external-reference-data | OOMMF data/workflow deferred C20; the file still `import dolfin`s and is not run under DOLFINx. The OOMMF exchange comparison remains uncovered (parity backlog, likely gated on porting `finmag.util.oommf`) |
 | `src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py` | external-reference-data | checked Nmag data; `dolfinx-src-energies-pytest` |
@@ -284,7 +319,7 @@ and an owner decision, not implicit deletions.
 | `src/finmag/tests/test_skyrmions.py` | mapped-current | `dolfinx-src-io-utils-pytest` |
 | `src/finmag/tests/cython/test_cython.py` | obsolete-review | legacy Cython compilation fixture; no user capability |
 | `src/finmag/tests/test_sim_parallel.py` | later | serial SR1; general MPI stepping C19 |
-| `src/finmag/sim/hysteresis_test.py` | needs-translation | Transcribed in `src/finmag/tests/test_hysteresis_dolfinx.py` (P5.2, `775e6e85`). Per-stage relaxation is NOT defective: corrected under register **D4** (SR1 P2.5) -- `hysteresis()` re-relaxes each stage to its own equilibrium and the on-axis oracle stall is a genuine degenerate Stoner-Wohlfarth saddle, not a skipped relaxation |
+| `src/finmag/sim/hysteresis_test.py` | needs-translation | Transcribed under P5.2 (`775e6e85`) and, since D30, holding this very path. Per-stage relaxation is NOT defective: corrected under register **D4** (SR1 P2.5) -- `hysteresis()` re-relaxes each stage to its own equilibrium and the on-axis oracle stall is a genuine degenerate Stoner-Wohlfarth saddle, not a skipped relaxation |
 | `src/finmag/sim/magnetisation_patterns_test.py` | needs-translation | Owner-Now initialisers N45 have no positive gate |
 | `src/finmag/sim/sim_helpers_test.py` | needs-translation | `dolfinx-src-io-utils-pytest`; simulation probing and region-output helpers remain missing |
 | `src/finmag/sim/sim_test.py` | needs-translation | current simulation gate covers selected core, not bundled legacy surface |
@@ -394,6 +429,11 @@ dev/bin/verify-dolfinx-m5
 FINMAG_EXAMPLE_FULL=1 pytest -q examples/test_examples_dolfinx.py
 ```
 
+*(Frozen as run at `f1a1344c`. To re-run today, substitute
+`examples/test_examples.py` — the file was renamed on 2026-07-27 under register
+**D30**, content unchanged. This whole P0.2 block is kept verbatim as the
+execution record; only this note is new.)*
+
 The aggregate command contains the supported install/native-build/provenance
 sequence and all focused current gates. The final command is deliberately
 separate because the aggregate verifier only records the fast lane. No legacy
@@ -424,3 +464,5 @@ all-green FULL acceptance run.
 | 2026-07-23 baseline | main dirty-doc + clean detached `/tmp/finmag-p0-full-f1a1344c` at `f1a1344c` | clean FULL worktree status/diff empty | exit 0; 32 green; fast 14 passed, 3 skipped | exit 1; 12 passed, 5 failed: 3 wrapper timeouts, `save_m` KeyError, raw-`dolfin` import | `/tmp/finmag-p0-baseline-m5.log`; `/tmp/finmag-p0-baseline-full-examples-clean.log`; tracked artifacts unchanged | recorded |
 
 [Codex GPT-5.6]
+
+[Post-baseline canonical-paths note (D30) and inventory-lane signal: Claude Opus 4.8]

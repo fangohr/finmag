@@ -7589,3 +7589,153 @@ Priority 6 (full scientific acceptance and SR1 handoff), plus the still-open
 SR1-V1 FULL lane (baseline 12 passed/5 failed, untouched by any Priority
 2-5 slice), and the remaining owner decisions in =acceptance-register.md=.
 [Claude Sonnet 5]
+
+** Canonical test paths and legacy-lane retirement (2026-07-27)
+
+Owner decision 2026-07-27, recorded as acceptance-register row *D30*.
+Range =e10c5893= (plan) .. =62aae519=, nine commits, plus this documentation
+commit:
+
+- =98e381ae= + =7d5c4177= -- non-gating full-suite inventory lane and the
+  =not_ported= pytest marker (the second commit fixed the wrapper's summary
+  parsing and its silent-failure exit).
+- =608bf67b= + =0f9c2298= -- comparison/nmag group onto master paths.
+- =9dd89514= -- energies/demag group.
+- =e7041dc9= + =b97f89c8= -- core simulation/driver/util group (the second
+  commit named covering functions in the sim ledger and dropped 3 ancestors).
+- =8b96563a= -- bucket-C files drop the =_dolfinx= suffix.
+- =62aae519= -- in-tree legacy suite lane retired.
+
+*** Why
+
+The minimal-diff test-conversion phase (2026-07-25) reshaped every
+=*_dolfinx.py= port to read as a minimal diff of its master original, so a
+reviewer could check it line-by-line. But a port that sits *beside* its
+ancestor cannot actually be diffed against it -- the reviewer still has to
+find the ancestor by hand and eyeball two files. With the port *at* the master
+path, the review artefact is exactly:
+
+#+begin_src sh
+git diff b5015c5a..HEAD -- src/finmag/sim/sim_test.py
+#+end_src
+
+The 2026-07-25 sibling-file convention is therefore retired; bucket-C files
+(the 7 genuinely-new-under-DOLFINx tests with no master ancestor) simply
+dropped the suffix.
+
+*** What moved, and what did not
+
+The moves changed *paths, not content*. Test bodies are unchanged apart from
+carried master functions, =__file__=-relative fixture-path fixups and import
+renames. A master ancestor was DELETED only when every one of its test
+functions had a *named* covering port function; verdicts of =NOT COVERED=,
+=NOT PORTED=, "deferred, nothing to restore" and "vestigial in master" all
+counted as NOT covered, the conservative direction.
+
+*Retained ancestors* (kept deliberately, each with at least one uncovered
+master function; each now fails visibly in the inventory lane):
+=util/meshes_test.py=, =drivers/tests/test_integrators.py=,
+=tests/bugs/test_bug_ndt_file_writing.py=, =tests/test_restart_simulation.py=,
+=tests/test_writing_data.py=, =scheduler/scheduler_test.py=,
+=tests/test_skyrmions.py=, =drivers/tests/sundials_nsteps_test.py=,
+=util/ode/tests/test_sundials_stiff_ode.py=,
+=tests/slonczewski/oscillator/test_oscillator.py=, plus the energies-group
+retentions =energies/anisotropy_test.py=,
+=energies/magnetostatic_field_test.py=, =energies/test_energies_in_regions.py=,
+=energies/dmi_test.py=, =tests/test_dmi_terms.py= and
+=energies/demag/fk_demag_2d_test.py=. The per-file reason for each is in the
+task 3/4 reports under
+=.superpowers/sdd/2026-07-27-canonical-test-paths/=.
+
+*Carried tests*: master functions with no cover were transcribed VERBATIM into
+the port at the master path, under =NOT PORTED= banners and marked
+=@pytest.mark.not_ported= -- 34 in =sim/sim_test.py= (8 =TestSimulation=
+methods + 26 module-level), 8 in =util/helpers_test.py=, =test_against_oommf=
+in =tests/comparison/exchange/test_exchange_field.py=, and the dipolar
+stray-field xfail in =energies/zeeman_test.py=. Every gate deselects them with
+=-m "not not_ported"=, so nothing vanished when the port took master's path and
+nothing green is faked.
+
+*** Legacy lane retired to the frozen oracle
+
+There is no in-tree legacy (FEniCS-2019) test lane any more. The
+=barmini-suite= pixi task and
+=dev/bin/verify-python3-{m3,barmini-suite,core-suite,minimal-suite}= are
+deleted; the oracle commit =ba928093= carries its own =barmini-suite= task and
+its own copies of every file it lists, so the legacy suite runs there:
+
+#+begin_src sh
+dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite
+#+end_src
+
+Seven =dev/bin/verify-python3-*= scripts that touch only production modules
+(import, barmini smoke, restart smoke, native FK/BEM smoke, normal-modes
+smoke, m1, m2) were kept.
+
+*** Inventory lane -- the replacement backlog signal
+
+=dev/bin/inventory-dolfinx-suite= (pixi task =dolfinx-src-suite-inventory=) is
+*non-gating*: it collects and runs the entire =src/finmag= tree and prints one
+summary line. Its failures are the parity backlog, never a CI verdict --
+=dev/bin/verify-dolfinx-m5='s 33 focused gates remain the verdict.
+
+Run of 2026-07-27 at =62aae519= (~27 min):
+
+#+begin_example
+INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12
+#+end_example
+
+The pre-move baseline was only a *collect-only proxy* -- 789 collected / 85
+collection errors -- because the session holding the real pre-move
+pass/fail tally crashed; that loss is recorded honestly in the Task-1 commit
+rather than reconstructed. Post-move, collection errors are down to 59.
+
+Every failure/error was classified and none is move breakage: (a) never-ported
+master files whose module-scope =import dolfin= fails collection; (b) the
+retained ancestors above (and their dolfin-importing helper modules); (c) the
+carried =not_ported= tests, failing loudly by design against the absent-dolfin
+sentinel; (d) the pre-existing, already-catalogued D26
+=get_field_as_dolfin_function= UFL-bool gap
+(=tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest=); and (e)
+one order-dependent, full-suite-only artefact,
+=tests/test_llg.py::test_ported_llg_does_not_load_legacy_dolfin_or_native=,
+which fails only when an earlier test in the same process has already imported
+=finmag.native.*= and passes 24/24 in its own gate.
+
+*** Verification
+
+Post-move =dev/bin/verify-dolfinx-m5=: *33/33 green*, with every measured
+per-gate pass/skip/xfail/deselect count *identical* to the pre-move measured
+baselines recorded in the task 2-6 reports. The moves regressed nothing.
+
+*** New parity debt and follow-ups
+
+- *D31* (new register row, pending owner decision):
+  =Simulation.save_field=/=save_m= -- the =.npy= snapshot surface implemented
+  in =sim/sim_savers.py= -- has NO test coverage under DOLFINx. Found in the
+  Task-4 fix round when a claimed cover was refuted: =test_restart_output.py='s
+  only save-related function is =test_save_field_to_vtk_xdmf=, which exercises
+  the DIFFERENT =save_field_to_vtk= (XDMF/VTK) method. Master's
+  =test_save_field=, =test_save_m= and =test_save_field_scheduled= are carried
+  as =not_ported= in =sim/sim_test.py=. The =.npy= FORMAT divergence is the
+  separate, already-approved D14.
+- *Merge-time CI reconciliation*: =.github/workflows/python3-m3.yml= invokes
+  the now-deleted =dev/bin/verify-python3-m3=, and
+  =.github/workflows/python3-core-suite.yml= inlines a stale explicit list of
+  master test paths, several of which now hold DOLFINx ports. BOTH are
+  ref-gated off =dolfinx-parity= (=if: github.ref_name != 'dolfinx-parity'
+  && github.head_ref != 'dolfinx-parity'=), so both are inert here and no CI
+  is red -- but both must be reconciled before any merge to =master=.
+- *Deferred cosmetic sweep*: ~32 in-tree files, 4 of them implementation
+  modules (=sim/sim.py=, =energies/cubic_anisotropy.py=,
+  =energies/demag/fk_demag.py=, =energies/demag/treecode_bem.py=), still name
+  the old =*_dolfinx.py= sibling filenames in comments and docstrings. Stale
+  prose only -- every live import was repointed in =8b96563a=. Kept out of the
+  move commits deliberately; =grep -rn "_dolfinx\.py" src examples= finds them.
+- Burning down the retained ancestors and the carried =not_ported= tests IS
+  the remaining SR1 P5.3 legacy-test backlog.
+
+*** Next
+
+Unchanged: Priority 6 (full scientific acceptance and SR1 handoff) and the
+still-open SR1-V1 FULL lane. [Claude Opus 4.8]

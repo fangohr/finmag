@@ -170,7 +170,7 @@ call existed before or after the revert). No caller needed updating.
 
 | # | Surface | File:line (ported) | Change | Status | Blast radius |
 |---|---|---|---|---|---|
-| U1 | `Simulation.mark_regions` | `src/finmag/sim/sim.py:675` | `fun` → `fun_regions` | REVERTED | none — ported tests call positionally (`test_variable_params_dolfinx.py`, `test_simulation_dolfinx.py`); legacy `sim_test.py:1729` passes a positional variable named `fun_regions` |
+| U1 | `Simulation.mark_regions` | `src/finmag/sim/sim.py:675` | `fun` → `fun_regions` | REVERTED | none — ported tests call positionally (`tests/test_variable_params.py`, `sim/sim_test.py`; D30 canonical paths); legacy `sim_test.py:1729` passes a positional variable named `fun_regions` |
 | U2 | `Field.from_callable` | `src/finmag/field.py:99` | `function` → `func` | REVERTED | none |
 | U3 | `Field.from_constant` | `src/finmag/field.py:105` | `value` → `constant` | REVERTED | none |
 | U4 | `Field.from_array` | `src/finmag/field.py:158` | `array` → `arr` | REVERTED | none |

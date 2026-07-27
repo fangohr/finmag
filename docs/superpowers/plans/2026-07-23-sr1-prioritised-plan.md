@@ -576,20 +576,36 @@ mayavi `quiver`, paraview/X `visualization.py`, the optional PyVista adapter.
 
 ## Priority 5 — Mesh and external-reference validation
 
-### [ ] P5.1 Netgen necessity probe
+**COMPLETE (2026-07-25, docs closed `c1d6a9fb`; test paths made canonical
+2026-07-27, `62aae519`).** See `docs/superpowers/HANDOVER.md` for the
+authoritative narrative and `acceptance-register.md` for the dispositions.
+
+### [x] P5.1 Netgen necessity probe
 
 - Identify a selected test/geometry that Gmsh and the `.geo` subset cannot
   represent or validate.
 - If none exists, leave Netgen deferred. If one exists, propose a separate
   conversion design before source edits.
 
-### [ ] P5.2 Comparison data
+**Done:** the probe found none — Gmsh plus the `from_geofile` text-subset
+loader covers every selected geometry, so Netgen's binary backend stays
+deferred (register `M4a`/`M4b`, **ratified 2026-07-25**). No source change.
+See HANDOVER "All of Priority 5 ... is now also complete".
+
+### [x] P5.2 Comparison data
 
 - Restore OOMMF, Nmag and Magpar comparisons separately using checked-in data.
 - Compare by coordinates and physical invariants, not raw node ordering.
 - Do not resurrect `nsim` merely to reproduce historical execution.
 
-### [ ] P5.3 Legacy tests
+**Done** (`133a24ff`..`48e611ad`, 7 slices): Nmag/Magpar/OOMMF comparisons
+restored from checked-in data, matched by coordinate probe or analytic
+invariant (immune to the `M8` node-drift class); new dolfin-free
+`finmag.util.magpar_io`; no live `nsim`/OOMMF/Magpar execution resurrected
+(`M1`/`M14`/`M15` SR1 deferment stands). Comparison gate folded into
+`dev/bin/verify-dolfinx-m5`. See HANDOVER.
+
+### [x] P5.3 Legacy tests
 
 - Port tests in small feature-family clusters driven by P0.1.
 - Skip/xfail only after the positive replacement test is ported, or for a named
@@ -598,6 +614,17 @@ mayavi `quiver`, paraview/X `visualization.py`, the optional PyVista adapter.
 - These feature-family slices may run in parallel with other SR1 work, but SR1
   is not complete until every selected owner-Now legacy-test family has a
   positive DOLFINx witness or an explicitly linked owner disposition.
+
+**Done** (minimal-diff test-conversion phase `d9226bcb`..`dadf35ae`, 31
+commits/4 waves; independent Opus review verdict **FAITHFUL**), then made
+reviewable by path under the 2026-07-27 canonical-paths decision (register
+**D30**, `e10c5893`..`62aae519`): every ported test now sits at its master
+(`b5015c5a`) path, so each port reviews as `git diff b5015c5a..HEAD -- <path>`.
+Uncovered master functions are carried verbatim under `NOT PORTED` banners
+(`@pytest.mark.not_ported`) rather than dropped, and the remaining unported
+families are enumerated by the non-gating `dev/bin/inventory-dolfinx-suite`
+lane, which is the live P5.3 backlog signal. See HANDOVER
+"Canonical test paths" for the run commands and the current INVENTORY tally.
 
 ## Priority 6 — Full scientific acceptance and SR1 handoff
 
@@ -632,3 +659,5 @@ later full-parity planning.
 [P2.6 updates: Claude Sonnet 5]
 
 [D18 updates: Claude Sonnet 5]
+
+[P5.1–P5.3 completion ticks: Claude Opus 4.8]
