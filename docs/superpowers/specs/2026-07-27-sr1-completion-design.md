@@ -22,10 +22,18 @@ what is deferred.
    at declaration (batch-ratification, decision 1 below).
 3. **Clear documentation of working vs waiting-to-port.** A user-facing
    supported-surface document, not only internal ledgers.
-4. **Delayed functionality fails correctly in kept tests.** Deferred features
-   must fail visibly (by-name deferral tests in gates, carried/never-ported
-   master tests in the inventory lane). Tests for unported functionality are
-   KEPT — they are the port's future worklist. No deletion, no silent skip.
+4. **Delayed functionality fails correctly in kept tests — via standard
+   pytest mechanisms, not a custom system (owner 2026-07-27).** Carried
+   not-yet-ported tests are marked
+   `@pytest.mark.xfail(reason="not ported: <feature> (register row)",
+   strict=True)`: gates run them unfiltered (reported as xfailed;
+   `strict=True` forces marker removal the moment the feature is ported),
+   the `-m "not not_ported"` gate deselection filters are removed, and the
+   registered `not_ported` marker remains only as a standard selection
+   label for listing the backlog. Never-ported whole master files keep
+   failing at collection in the inventory lane (plain pytest behaviour).
+   Tests for unported functionality are KEPT — they are the port's future
+   worklist. No deletion, no silent skip.
 
 ## Owner scope decisions (2026-07-27)
 
@@ -40,11 +48,29 @@ what is deferred.
    `docs/SUPPORTED.md`; update README; tag `sr1`.
 5. **D29:** physics investigation now, before ratification.
 
-## Architecture: six slices
+## Architecture: seven slices
 
-Dependency shape: S1 → S2 → (S3 ∥ S4) → S5 → S6. S3 and S4 are independent
-of each other; S5 (ratification) consumes S4's verdict; S6 declares only
-when S1–S5 are landed and the register is pending-free.
+Dependency shape: S0 → S1 → S2 → (S3 ∥ S4) → S5 → S6. S3 and S4 are
+independent of each other; S5 (ratification) consumes S4's verdict; S6
+declares only when S0–S5 are landed and the register is pending-free.
+
+### S0 — standardise deferred-test failure handling (criterion 4)
+
+- Convert every carried not-yet-ported test (34 in `sim/sim_test.py`, 8 in
+  `util/helpers_test.py`, 1 in `comparison/exchange/test_exchange_field.py`,
+  1 in `energies/zeeman_test.py` — the last already carries master's own
+  xfail, which stays verbatim and wins) to
+  `@pytest.mark.xfail(reason="not ported: <feature> (register row)",
+  strict=True)` alongside the `not_ported` label marker.
+- Remove the `-m "not not_ported"` filters from the four gates
+  (simulation, import, timezeeman, comparison); gate pass counts must be
+  unchanged with the carried tests now reported as xfailed (or errors where
+  setup fails — verify empirically how xfail interacts with setup-phase
+  errors and record the observed behaviour honestly; if a setup-erroring
+  test cannot be made to report xfailed by standard means, it stays an
+  error in the inventory lane and the gate keeps a narrowly-scoped
+  deselection for THAT test only, documented inline).
+- Update D30's register row text and HANDOVER's mechanism description.
 
 ### S1 — FULL-lane defect fixes
 
