@@ -2,15 +2,54 @@
 # Non-gating parity inventory: run EVERY test under src/finmag in the DOLFINx
 # environment, including unported master tests. Failures and collection errors
 # are the parity backlog, not a CI verdict. Owner decision 2026-07-27.
+#
+# No-arg invocation is the real lane contract: `pixi run -e dolfinx
+# dolfinx-src-suite-inventory`. Optional args override that command — used to
+# smoke-test the summary parser below without paying for the full ~1h sweep
+# (e.g. `dev/bin/inventory-dolfinx-suite pixi run -e dolfinx python -m pytest
+# -q some/tiny/dir --color=no`).
 set -uo pipefail
 repo_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")/../.." rev-parse --show-toplevel)"
 cd "${repo_root}"
 log="${TMPDIR:-/tmp}/finmag-suite-inventory.$(date +%Y%m%d-%H%M%S).log"
-pixi run -e dolfinx dolfinx-src-suite-inventory 2>&1 | tee "${log}"
+if (( $# > 0 )); then
+    "$@" 2>&1 | tee "${log}"
+else
+    pixi run -e dolfinx dolfinx-src-suite-inventory 2>&1 | tee "${log}"
+fi
 status=${PIPESTATUS[0]}
 if (( status > 1 )); then
     echo "ERROR: pytest infrastructure failure (exit ${status}); inventory not valid." >&2
     exit "${status}"
 fi
-summary="$(grep -E '^(=+ .*(passed|failed|error).* =+)$' "${log}" | tail -1)"
-echo "INVENTORY: ${summary:-no summary found} (log ${log})"
+
+# pytest's `-q` final tally is a single unbarred line, e.g.:
+#   1 failed, 1 passed, 1 skipped, 1 error in 0.11s
+# (no leading/trailing `=` bars under -q; the suite-inventory task passes
+# --color=no so no ANSI codes either, but strip any anyway as a defensive
+# measure against FORCE_COLOR-style env overrides on other invocations).
+summary_line="$(sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g' "${log}" \
+    | grep -aE '[0-9]+ (passed|failed|errors?|skipped|xfailed|xpassed)' \
+    | tail -1)"
+if [[ -z "${summary_line}" ]]; then
+    echo "ERROR: no pytest summary line found in ${log}; inventory result unknown." >&2
+    exit 3
+fi
+
+extract_count() {
+    local label="$1"
+    if [[ "${summary_line}" =~ ([0-9]+)\ ${label} ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo 0
+    fi
+}
+
+passed="$(extract_count passed)"
+failed="$(extract_count failed)"
+errors="$(extract_count 'errors?')"
+skipped="$(extract_count skipped)"
+xfailed="$(extract_count xfailed)"
+
+echo "INVENTORY: passed=${passed} failed=${failed} errors=${errors} skipped=${skipped} xfailed=${xfailed}"
+echo "  summary: ${summary_line} (log ${log})"

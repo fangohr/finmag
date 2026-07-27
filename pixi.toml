@@ -274,7 +274,7 @@ dolfinx-src-comparison-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=
 # Full-suite parity inventory: collect and run EVERYTHING, including unported
 # master tests. NON-GATING — failures here are the parity backlog inventory
 # (owner decision 2026-07-27). Gated lanes stay the dolfinx-src-*-pytest tasks.
-dolfinx-src-suite-inventory = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag examples --continue-on-collection-errors -p no:cacheprovider"
+dolfinx-src-suite-inventory = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag examples --continue-on-collection-errors -p no:cacheprovider --color=no"
 # Pre-source-edit evidence for the local owned/ghost Field contract. These are
 # bounded probes, not production-package tests. [Codex GPT-5.6]
 dolfinx-field-ownership-probe = "PYTHONDONTWRITEBYTECODE=1 python -m dev.dolfinx.field_ownership_probe"
