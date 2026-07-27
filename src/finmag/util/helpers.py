@@ -24,6 +24,16 @@ from finmag.util.logging_helpers import (
     logging_status_str,
     logging_handler_str,
 )
+# SR1 S1b: ``cartesian_to_spherical``/``spherical_to_cartesian`` are pure-numpy
+# vector maths that never touched ``dolfin``; they now live in
+# ``finmag.util.array_helpers`` (no FEM dependency at all) so callers that only
+# need the coordinate conversion can import it dolfin-free. Re-imported here,
+# verbatim behaviour, so the legacy spelling ``from finmag.util.helpers import
+# spherical_to_cartesian`` keeps working. [Claude Sonnet 5]
+from finmag.util.array_helpers import (  # noqa: F401
+    cartesian_to_spherical,
+    spherical_to_cartesian,
+)
 from threading import Timer
 from distutils.version import LooseVersion
 import subprocess as sp
@@ -1023,36 +1033,6 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     tee = sp.Popen(["tee", filename], stdin=sp.PIPE)
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
-
-
-def cartesian_to_spherical(vector):
-    """
-    Converts cartesian coordinates to spherical coordinates.
-
-    Returns a tuple (r, theta, phi) where r is the radial distance, theta
-    is the inclination (or elevation) and phi is the azimuth (ISO standard 31-11).
-
-    """
-    r = np.linalg.norm(vector)
-    unit_vector = np.array(vector) / r
-    theta = np.arccos(unit_vector[2])
-    phi = np.arctan2(unit_vector[1], unit_vector[0])
-    return np.array((r, theta, phi))
-
-
-def spherical_to_cartesian(v):
-    """
-    Converts spherical coordinates to cartesian.
-
-    Expects the arguments r for radial distance, inclination theta
-    and azimuth phi.
-
-    """
-    r, theta, phi = v
-    x = r * np.sin(theta) * np.cos(phi)
-    y = r * np.sin(theta) * np.sin(phi)
-    z = r * np.cos(theta)
-    return np.array((x, y, z))
 
 
 def pointing_upwards(coords):

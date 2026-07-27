@@ -10,7 +10,11 @@
 #   - sim.mesh_info() is not ported (INTERFACE-DRIFT: Simulation.mesh_info); the
 #     line is replaced by printing the global vertex count.
 #   - cylinder(...) is the ported Gmsh generator (Task 18).
-# [Claude Opus 4.8]
+#   - spherical_to_cartesian is imported from finmag.util.array_helpers (SR1
+#     S1b), not finmag.util.helpers: the latter imports legacy dolfin at
+#     module scope, which broke this example under DOLFINx even though the
+#     helper itself is pure numpy.
+# [Claude Opus 4.8], [Claude Sonnet 5]
 import os
 import time
 import numpy as np
@@ -19,7 +23,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from finmag.util.meshes import cylinder, num_vertices
 from finmag.util.consts import flux_density_to_field_strength
-from finmag.util.helpers import spherical_to_cartesian
+from finmag.util.array_helpers import spherical_to_cartesian
 from finmag import Simulation
 from finmag.energies import Exchange, Zeeman, UniaxialAnisotropy, Demag
 

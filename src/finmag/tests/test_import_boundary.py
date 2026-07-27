@@ -177,6 +177,59 @@ assert not any(
     )
 
 
+def test_array_helpers_imports_dolfin_free_and_matches_master_formula():
+    """``finmag.util.array_helpers.spherical_to_cartesian`` (SR1 S1b, register
+    D31 exercise): a stdlib+numpy-only module split out of
+    ``finmag.util.helpers`` (whose module scope imports legacy ``dolfin``) so
+    ``examples/magnetic_grain/suess_2001.py`` -- which only needs the pure
+    coordinate conversion -- can import it in the DOLFINx environment. Values
+    are checked against master's ``(r, theta, phi) -> (x, y, z)`` formula
+    (``x = r sin(theta) cos(phi)``, ``y = r sin(theta) sin(phi)``,
+    ``z = r cos(theta)``), not just "does it import". [Claude Sonnet 5]"""
+    _run_isolated(
+        """
+import sys
+import numpy as np
+from finmag.util.array_helpers import (
+    cartesian_to_spherical, spherical_to_cartesian,
+)
+
+assert "dolfin" not in sys.modules
+assert "dolfinx" not in sys.modules
+
+# +z pole: theta=0 regardless of phi.
+np.testing.assert_allclose(
+    spherical_to_cartesian((1.0, 0.0, 0.0)), (0.0, 0.0, 1.0), atol=1e-12)
+# +x axis: r=1, theta=pi/2, phi=0.
+np.testing.assert_allclose(
+    spherical_to_cartesian((1.0, np.pi / 2, 0.0)), (1.0, 0.0, 0.0), atol=1e-12)
+# +y axis: r=1, theta=pi/2, phi=pi/2.
+np.testing.assert_allclose(
+    spherical_to_cartesian((1.0, np.pi / 2, np.pi / 2)), (0.0, 1.0, 0.0),
+    atol=1e-12)
+# Round-trip through the inverse.
+v = (2.0, 0.3, 1.1)
+np.testing.assert_allclose(
+    cartesian_to_spherical(spherical_to_cartesian(v)), v, atol=1e-12)
+"""
+    )
+
+    # The legacy re-export spelling still resolves to the same function object
+    # (not a copy), matching the D31 fix pattern used for logging_helpers.
+    # ``finmag.util.helpers`` imports legacy ``dolfin`` at module scope, so
+    # this half only runs where ``dolfin`` is actually importable (the
+    # DOLFINx-only environment can't even load ``helpers.py`` -- that gap is
+    # exactly what this fix routes callers around).
+    if importlib.util.find_spec("dolfin") is not None:
+        _run_isolated(
+            """
+from finmag.util.array_helpers import spherical_to_cartesian as new
+from finmag.util.helpers import spherical_to_cartesian as legacy_spelling
+assert legacy_spelling is new
+"""
+        )
+
+
 def test_no_unported_optional_energies_remain():
     """Historical note: before Task 19, ``energies.ThinFilmDemag`` was the
     last ``requires_legacy_dolfin=True`` optional energy, and accessing it
