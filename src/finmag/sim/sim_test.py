@@ -4,17 +4,17 @@ This file now lives at its master path
 ``src/finmag/sim/sim_test.py`` (formerly
 ``src/finmag/tests/test_simulation_dolfinx.py``), so
 ``git diff b5015c5a..HEAD -- src/finmag/sim/sim_test.py``
-shows the port diff directly. This is a PARTIAL port: the 31 master
+shows the port diff directly. This is a PARTIAL port: the 34 master
 ``sim_test.py`` functions with no named covering port function anywhere are
 carried verbatim under the ``NOT PORTED`` banner at the bottom of the file
 (marked ``@pytest.mark.not_ported``; the focused gate deselects them, the
 non-gating inventory lane reports them as failures). The three sibling master
 files whose dropped coverage this port also restores
 (``tests/test_sim_ode.py``, ``drivers/tests/test_relaxation.py``,
-``drivers/tests/test_relax_two_times.py``) are each fully accounted for by a
-named port function here, but are deliberately left in the tree by the
-canonical-paths move (they are outside its move table; over-retention is the
-safe direction of the no-silent-coverage-loss rule).
+``drivers/tests/test_relax_two_times.py``) were each single-function files
+fully accounted for by a named port function here (``test_sim_ode``,
+``test_easy_relaxation``, ``test_relax_two_times``, all above the
+``NOT PORTED`` banner) and were REMOVED by the Task 4 review follow-up.
 
 This file has two clearly separated parts (SR1 P5.2 restructure for
 diffability + dropped-coverage restoration):
@@ -96,14 +96,91 @@ def _make_sim(**kwargs):
 #
 #   COVERED-ELSEWHERE (a dedicated dolfinx file already ports the surface with
 #   dolfinx-native assertions; re-transcribing the heavy I/O verbatim would
-#   duplicate it):
-#     test_schedule, test_save_ndt, test_save_restart_data, test_restart,
-#     test_reset_time, test_save_vtk, test_sim_schedule_clear, test_save_field,
-#     test_save_m, test_save_field_scheduled  -> test_restart_output.py
-#     test_set_stt                             -> test_stt.py
-#     test_get_field_as_dolfin_function,
-#     test_probe_demag_field                   -> probe_field tests below the
-#                                                 banner + energies/demag/fk_demag_test.py
+#   duplicate it). Every row below names the COVERING FUNCTION, not just the
+#   covering file -- each mapping was re-verified against the b5015c5a blob and
+#   the named port function's body (review finding I1, 2026-07-27):
+#
+#     test_schedule (callable + args, ``every=``)
+#         -> tests/test_restart_output.py::test_schedule_callable_and_clear
+#            (schedule(callable, every=) fires at the expected instants)
+#            + ::test_unschedule_removes_item
+#            + ::test_schedule_unknown_shortcut_raises_by_name.
+#            NARROWING (disclosed): master also passed positional/keyword
+#            arguments THROUGH to the scheduled callable ('tag1',
+#            optional='foo'); the port's callables take only ``sim``, so the
+#            argument-forwarding path itself is not re-asserted anywhere.
+#     test_save_ndt (schedule('save_ndt', every=), 6 rows via Tablereader)
+#         -> tests/test_restart_output.py::test_schedule_save_ndt_every
+#            (same shortcut, same 6-row count assertion)
+#            + ::test_sim_save_averages_appends_rows (save_ndt/save_averages
+#            method form) + ::test_ndt_format_and_roundtrip (column contract).
+#            NARROWING (disclosed, D-row): master additionally asserted the
+#            automatic ``E_Exchange``/``H_Exchange_*``/``E_Demag``/``H_Demag_*``
+#            columns; the ported Simulation.add() does not register them (the
+#            same gap pinned strict-xfail in util/plot_helpers_test.py::
+#            test_plot_ndt_columns_and_plot_dynamics), so that half is NOT
+#            re-asserted here.
+#     test_save_restart_data (schedule('save_restart_data', at_end=True),
+#     canonical filename, sim_helpers.load_restart_data)
+#         -> tests/test_restart_output.py::
+#            test_load_restart_data_by_simulation_uses_canonical_name
+#            + ::test_restart_roundtrip_same_simulation.
+#     test_restart (save_restart_data(fname); restart(fname, t0=...))
+#         -> tests/test_restart_output.py::test_restart_roundtrip_same_simulation
+#            + ::test_restart_t0_override
+#            + ::test_restart_cross_instance_same_mesh_recipe.
+#     test_reset_time
+#         -> LEDGER CORRECTION (I1): this is NOT covered by
+#            test_restart_output.py at all. It is covered IN THIS FILE, below
+#            the NEW banner, by ``test_reset_time`` and
+#            ``test_reset_time_to_nonzero_keeps_m_and_allows_further_integration``
+#            (the latter parametrized over both integrator backends).
+#     test_save_vtk (schedule('save_vtk', overwrite=...))
+#         -> tests/test_restart_output.py::test_save_vtk_writes_pvd.
+#            NARROWING (disclosed): master's ``overwrite=False`` IOError branch
+#            on a pre-existing .pvd is not re-asserted.
+#     test_sim_schedule_clear (clear_schedule stops further saves)
+#         -> tests/test_restart_output.py::test_schedule_callable_and_clear
+#            (asserts no further callbacks fire after clear_schedule()).
+#     test_set_stt
+#         -> tests/test_stt.py::test_simulation_set_stt_activates_slonczewski.
+#     test_get_field_as_dolfin_function
+#         -> the ``region=None`` path is exercised through
+#            ``Simulation.probe_field`` (sim.py calls
+#            get_field_as_dolfin_function internally) by the probe_field block
+#            below the NEW banner: test_probe_field_single_point_returns_
+#            magnetisation, test_probe_field_array_of_points_returns_per_point_
+#            values, test_probe_field_along_line_matches_analytic_profile,
+#            test_probe_field_of_exchange_is_zero_for_uniform_magnetisation,
+#            test_probe_field_coordinates_are_mesh_units_not_metres. The
+#            ``region=`` path stays deferred and is pinned BY NAME by
+#            tests/test_variable_params.py::
+#            test_region_restricted_field_output_still_deferred_by_name.
+#     test_probe_demag_field (probe "Demag" at every vertex vs
+#     get_interaction("Demag").compute_field())
+#         -> the same probe_field block above for the probing mechanics
+#            (test_probe_field_array_of_points_returns_per_point_values proves
+#            the per-vertex stack; test_probe_field_of_exchange_is_zero_for_
+#            uniform_magnetisation proves it on a computed effective-field
+#            interaction rather than on 'm'), plus
+#            energies/demag/fk_demag_test.py::
+#            test_demag_field_for_uniformly_magnetised_sphere for the demag
+#            field values themselves.
+#
+#   NOT COVERED after all -- ledger correction from review finding I1
+#   (2026-07-27). These three were previously listed as
+#   "-> test_restart_output.py", but that file's only save-related function is
+#   ``test_save_field_to_vtk_xdmf``, which exercises
+#   ``Simulation.save_field_to_vtk`` (XDMF/VTK output) -- a DIFFERENT method
+#   from the ``.npy`` ``save_field``/``save_m`` surface master exercises here.
+#   A tree-wide grep found NO named port function covering the ``.npy`` path,
+#   even though ``Simulation.save_field``/``save_m`` and the ``'save_field'``
+#   scheduler shortcut are all implemented in the port (sim/sim_savers.py;
+#   only ``region=`` is deferred). They are therefore CARRIED VERBATIM under
+#   the ``NOT PORTED`` banner rather than left claimed-but-uncovered:
+#     test_save_field           -- .npy save, incremental=, overwrite=, 'Demag'
+#     test_save_m               -- the save_m convenience shortcut
+#     test_save_field_scheduled -- schedule('save_field', 'm', every=)
 #
 #   GENUINE-GAP (surface not provided by the ported Simulation; reported for an
 #   owner decision, NOT fabricated). CANONICAL-PATHS MOVE 2026-07-27: all six
@@ -128,8 +205,10 @@ def _make_sim(**kwargs):
 # scope here. CANONICAL-PATHS MOVE 2026-07-27: "out of scope here" is NOT
 # "covered", so all 26 of them (every master module-level function other than
 # the transcribed ``test_sim_with``) are ALSO carried verbatim under the
-# ``NOT PORTED`` banner at the bottom of this file. 31 master functions are
-# carried in total: 5 ``TestSimulation`` methods + 26 module-level ones.
+# ``NOT PORTED`` banner at the bottom of this file. 34 master functions are
+# carried in total: 8 ``TestSimulation`` methods (the 5 GENUINE-GAP ones above
+# plus the 3 NOT-COVERED save_field/save_m ones added by review finding I1) +
+# 26 module-level ones.
 # ==========================================================================
 
 
@@ -970,9 +1049,8 @@ def _pbc_vs_bar(m_init, component):
 
     The pitch is 20.001 rather than the legacy default of exactly 20 (touching):
     the exactly-touching case is the coincident-node defect pinned by
-    ``energies/demag/demag_pbc_test.py::
-    test_pbc_coincident_tile_spacing_produces_a_non_finite_bem`` and is refused
-    by name by ``sim_with``.  [Claude Opus 4.8]
+    ``energies/demag/demag_pbc_test.py::test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``
+    and is refused by name by ``sim_with``.  [Claude Opus 4.8]
     """
     Ms = 1e6
     cube = _centred_box((-10, -10, -10), (10, 10, 10), (10, 10, 10))
@@ -1051,9 +1129,10 @@ def test_sim_with_touching_macro_geometry_tiles_are_deferred_by_name():
     Legacy ``sim_with(nx=3)`` with no ``spacing_x`` meant "the tiles touch",
     i.e. pitch == mesh extent.  In this port that is the coincident-node case,
     which returns a silently wrong field (~158% error on a cube, NaN-poisoned
-    on a flat slab) -- see ``energies/demag/demag_pbc_test.py::
-    test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.  ``sim_with``
-    refuses it by name rather than exposing it.  [Claude Opus 4.8]"""
+    on a flat slab) -- see
+    ``energies/demag/demag_pbc_test.py::test_pbc_coincident_tile_spacing_produces_a_non_finite_bem``.
+    ``sim_with`` refuses it by name rather than exposing it.
+    [Claude Opus 4.8]"""
     box = _box(2, 5.0)
     with pytest.raises(NotImplementedError, match="touching"):
         sim_with(box, Ms=8.6e5, m_init=(1.0, 0.0, 0.0), unit_length=1e-9, nx=3)
@@ -1577,6 +1656,85 @@ class TestSimulation(object):
         expect_m.shape = (48,)
 
         assert np.array_equal(sim.m, expect_m)
+
+    @pytest.mark.not_ported
+    def test_save_field(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+
+        # Save the magnetisation using the default filename
+        sim.save_field('m')
+        sim.save_field('m')
+        sim.save_field('m')
+        assert(len(glob('barmini_m*.npy')) == 1)
+        os.remove('barmini_m.npy')
+
+        # Save incrementally
+        sim.save_field('m', incremental=True)
+        sim.save_field('m', incremental=True)
+        sim.save_field('m', incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
+
+        # Check that the 'overwrite' keyword works
+        sim2 = barmini()
+        with pytest.raises(IOError):
+            sim2.save_field('m', incremental=True)
+        sim2.save_field('m', incremental=True, overwrite=True)
+        sim2.save_field('m', incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 2)
+
+        sim.save_field('Demag', incremental=True)
+        assert(os.path.exists('barmini_demag_000000.npy'))
+        sim.save_field('Demag')
+        assert(os.path.exists('barmini_demag.npy'))
+
+        sim.save_field('Demag', filename='demag.npy', incremental=True)
+        assert(os.path.exists('demag_000000.npy'))
+
+    @pytest.mark.not_ported
+    def test_save_m(self, tmpdir):
+        """
+        Similar test as 'test_save_field', but for the convenience shortcut 'save_m'.
+        """
+        os.chdir(str(tmpdir))
+        sim = barmini()
+
+        # Save the magnetisation using the default filename
+        sim.save_m()
+        sim.save_m()
+        sim.save_m()
+        assert(len(glob('barmini_m*.npy')) == 1)
+        os.remove('barmini_m.npy')
+
+        # Save incrementally
+        sim.save_m(incremental=True)
+        sim.save_m(incremental=True)
+        sim.save_m(incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
+
+        # Check that the 'overwrite' keyword works
+        sim2 = barmini()
+        with pytest.raises(IOError):
+            sim2.save_m(incremental=True)
+        sim2.save_m(incremental=True, overwrite=True)
+        sim2.save_m(incremental=True)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 2)
+
+    @pytest.mark.not_ported
+    def test_save_field_scheduled(self, tmpdir):
+        os.chdir(str(tmpdir))
+        sim = barmini()
+        sim.schedule('save_field', 'm', every=1e-12)
+        sim.run_until(2.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 3)
+        sim.run_until(5.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 6)
+
+        sim.clear_schedule()
+        sim.schedule('save_field', 'm', filename='mag.npy', every=1e-12)
+        sim.run_until(7.5e-12)
+        assert(len(glob('barmini_m_[0-9]*.npy')) == 6)
+        assert(len(glob('mag_[0-9]*.npy')) == 3)
 
     @pytest.mark.not_ported
     def test_sim_sllg(self, do_plot=False):
