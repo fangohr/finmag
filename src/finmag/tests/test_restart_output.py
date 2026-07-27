@@ -705,7 +705,10 @@ def test_schedule_save_m_every(tmpdir):
     # saves at 0, 2e-12, ..., 1e-11 -> 6 files
     assert len(saved) == 6
     first = np.load(saved[0])
-    assert first.shape[-1] == 3 or first.size % 3 == 0
+    # Content check, not just shape: the saved array is the xyz-ordered
+    # magnetisation, which LLG dynamics keeps unit-norm at every mesh point.
+    rows = first.reshape(-1, 3)
+    assert np.allclose(np.linalg.norm(rows, axis=1), 1.0, atol=1e-6)
 
 
 def test_schedule_unknown_shortcut_raises_by_name():
