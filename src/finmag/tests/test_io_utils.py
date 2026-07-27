@@ -1,5 +1,14 @@
 """Task 26a: decision-free I/O/utility parity wins.
 
+Formerly ``src/finmag/tests/test_io_utils_dolfinx.py``; renamed onto the
+sibling-free canonical name (canonical-test-paths move, 2026-07-27).
+No master ancestor is removed by this rename. ``field_test.py``'s two
+``test_probe_*`` functions are covered by the ported ``src/finmag/field_test.py``
+(that file's own move), and ``tests/test_skyrmions.py`` is RETAINED: the header
+below records it as a placeholder stub with no real coverage to map, but no
+named port function covers ``test_skyrmion``, so the conservative rule keeps
+the file in the tree (it fails in the non-gating inventory lane by design).
+
 Covers the three legacy capabilities restored in this slice, each either a
 faithful mechanical port (point evaluation) or a pure analytic transcription
 (spherical conversion, skyrmion number) -- none required an owner decision.
@@ -29,18 +38,18 @@ MASTER -> PORT MAPPING-HEADER (BUCKET-B: mixed ancestor/no-ancestor file).
      5e-13``)
        -> already transcribed VERBATIM, tolerance UNCHANGED (``tol1 =
           5e-13``), as
-          ``test_field_dolfinx.py::TestField.test_probe_scalar_field``
+          ``field_test.py::TestField.test_probe_scalar_field``
           (line ~959).
    - ``field_test.py::TestField.test_probe_vector_field`` (``vector3d_fspaces``,
      same at-node/off-node pattern, ``tol1``)
        -> already transcribed VERBATIM, tolerance UNCHANGED, as
-          ``test_field_dolfinx.py::TestField.test_probe_vector_field``
+          ``field_test.py::TestField.test_probe_vector_field``
           (line ~988).
 
    These are the ONLY two ``test_probe_*``-named functions in master's
    ``field_test.py::TestField`` (checked via ``git show b5015c5a`` --
    grep for ``def test_``). Both are already ported with real assertions
-   and unchanged tolerance in ``test_field_dolfinx.py``, which per its own
+   and unchanged tolerance in ``field_test.py``, which per its own
    docstring transcribes the full ``TestField`` suite. Nothing is dropped,
    so nothing is restored here -- duplicating them in this file would just
    be redundant coverage of the same two master functions.

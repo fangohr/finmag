@@ -1,5 +1,15 @@
 """Task 20: native Sundials/CVODE backend on the DOLFINx stack.
 
+Formerly ``src/finmag/tests/test_sundials_driver_dolfinx.py``; renamed onto the
+sibling-free canonical name (canonical-test-paths move, 2026-07-27).
+Ancestors REMOVED (every test function accounted for by a named port
+function below): ``util/ode/tests/test_sundials_ode.py``,
+``drivers/tests/sundials_reinit_test.py``.
+Ancestors RETAINED: ``drivers/tests/sundials_nsteps_test.py`` and
+``util/ode/tests/test_sundials_stiff_ode.py`` -- the header accounts several of
+their functions as "covered-elsewhere: sibling file, still passing", i.e. the
+ancestor file ITSELF is the covering coverage, so it must stay.
+
 This is the gate for the dolfin-free native Sundials/CVODE port
 (``dolfinx-src-sundials-pytest``). It exercises four layers:
 
@@ -46,7 +56,7 @@ blocked from collecting here: ``finmag.util.helpers`` -> ``import dolfin``):
 | master fn                              | status                                                                 |
 |-----------------------------------------|------------------------------------------------------------------------|
 | ``test_errors``                         | covered: ``test_native_uninitialised_advance_raises_runtime_error``   |
-| ``test_simple_1d_scipy``                | covered-elsewhere: ``test_scipy_driver_dolfinx.py::test_vode_bdf_stiff_probe_matches_analytic_solution`` (different ODE -- stiff forced linear decay vs plain exponential growth -- same oracle concern: bare ``scipy.integrate.ode``/VODE/BDF matches an analytic solution) |
+| ``test_simple_1d_scipy``                | covered-elsewhere: ``drivers/tests/test_scipy.py::test_vode_bdf_stiff_probe_matches_analytic_solution`` (different ODE -- stiff forced linear decay vs plain exponential growth -- same oracle concern: bare ``scipy.integrate.ode``/VODE/BDF matches an analytic solution) |
 | ``test_simple_1d`` (Adams+BDF/functional) | covered: ``test_native_simple_ode_adams_and_bdf_functional``        |
 | ``test_simple_1d_diag`` (BDF/Newton+diag) | covered: ``test_native_simple_ode_bdf_newton_diag``                 |
 | ``test_stiff_sp_gmr`` (BDF/Newton+SPGMR/jtimes) | covered, **behaviour tightened**: ``test_native_simple_ode_bdf_newton_spgmr_jtimes``. Master's ``jtimes`` callback never wrote ``Jv`` (returned 0 having only computed nothing), so it exercised the SPGMR call path without checking the Jacobian value; the port's ``jtimes`` sets ``Jv[:] = 0.5 * v`` (the true Jacobian of ``0.5 y``), so the same <1e-6 tolerance now also certifies the Jacobian-vector product itself. Flagged inline. |

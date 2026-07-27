@@ -203,7 +203,7 @@ immediately after the plain-exchange tests.
 PBC IS A NO-OP UNDER THIS PORT -- DOCUMENTED, NOT HIDDEN. Master's test
 uses ``finmag.util.pbc2d.PeriodicBoundary2D`` (a *different* class from the
 locally-defined ``PeriodicBoundary`` investigated in the sibling
-``test_field_dolfinx.py`` PBC-no-op finding -- that one's ``inside()`` body,
+``field_test.py`` PBC-no-op finding -- that one's ``inside()`` body,
 ``x[0] < DOLFIN_EPS and x[0] > DOLFIN_EPS``, is self-contradictory and hence
 always ``False``; ``PeriodicBoundary2D.inside()`` uses genuinely different,
 non-vacuous boundary-matching logic and is not shown here to share that

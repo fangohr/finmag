@@ -24,11 +24,11 @@ sweep intentionally does not duplicate that coverage. Instead it:
 Already pinned by name elsewhere (not duplicated here):
 
 - non-FK / macro-geometry demag request via ``sim_with(demag_solver=...)`` --
-  ``test_simulation_dolfinx.py::test_sim_with_non_fk_demag_is_deferred_by_name``
+  ``sim/sim_test.py::test_sim_with_non_fk_demag_is_deferred_by_name``
   and ``::test_sim_with_macro_geometry_demag_is_deferred_by_name`` (the default
   ``"FK"`` path is now ported: ``::test_sim_with_default_demag_builds_fk_demag``)
 - DMI via ``sim_with(D=...)`` is now PORTED (Task 13) and covered by
-  ``test_simulation_dolfinx.py::test_sim_with_dmi_builds_ported_interaction``
+  ``sim/sim_test.py::test_sim_with_dmi_builds_ported_interaction``
   and ``test_dmi.py`` (formerly ``test_dmi_dolfinx.py``); it is no longer
   deferred.
 - Cubic anisotropy is now PORTED (Task 14) and covered by
@@ -38,23 +38,23 @@ Already pinned by name elsewhere (not duplicated here):
   ``sim_with`` wiring to test; ``Simulation.add(CubicAnisotropy(...))``
   coverage is the full integration surface.)
 - scheduler, restart and NDT/VTK output are now PORTED (Task 12) and covered by
-  ``test_restart_output_dolfinx.py`` and
-  ``test_simulation_dolfinx.py::test_scheduler_api_is_available`` /
+  ``test_restart_output.py`` and
+  ``sim/sim_test.py::test_scheduler_api_is_available`` /
   ``::test_restart_and_output_are_available``; they are no longer deferred.
 - STT (``set_stt``/``set_zhangli``/``toggle_stt``) are now PORTED (Task 22) as
   NumPy transcriptions of the native Slonczewski/Zhang-Li kernels; they are no
-  longer deferred and are covered by ``test_stt_dolfinx.py`` and
-  ``test_simulation_dolfinx.py::test_stt_is_ported_not_deferred`` /
-  ``test_llg_dolfinx.py::test_stt_surfaces_are_ported_not_deferred``. The
+  longer deferred and are covered by ``test_stt.py`` and
+  ``sim/sim_test.py::test_stt_is_ported_not_deferred`` /
+  ``test_llg.py::test_stt_surfaces_are_ported_not_deferred``. The
   separate nonlocal-STT ``kernel="llg_stt"`` class (``LLG_STT``) stays deferred
   by name (distinct capability, Task 29-registered).
 - ``kernel="sllg"``/``kernel="llg_stt"`` and ``parallel=True`` --
-  ``test_simulation_dolfinx.py::test_nonstandard_kernels_are_deferred`` and
+  ``sim/sim_test.py::test_nonstandard_kernels_are_deferred`` and
   ``::test_parallel_flag_is_deferred``
 - multi-rank/thermal ``LLG`` state paths --
-  ``test_llg_dolfinx.py::test_multi_rank_state_paths_raise_serial_guard``
+  ``test_llg.py::test_multi_rank_state_paths_raise_serial_guard``
 - ``backend="sundials"`` at the ``llg_integrator`` factory --
-  ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``
+  ``drivers/tests/test_scipy.py::test_llg_integrator_sundials_backend_raises_by_name``
 - ``TimeZeeman``/``DiscreteTimeZeeman``/``OscillatingZeeman``/
   ``TimeZeemanPython``/``DipolarField`` are now PORTED (Task 15) and covered
   by ``energies/zeeman_test.py`` (formerly ``test_timezeeman_dolfinx.py``);
@@ -62,9 +62,9 @@ Already pinned by name elsewhere (not duplicated here):
   ``test_energies.py``'s ``TimeZeeman((1.0, 0.0, 0.0))`` case now
   pins the ported constant-array-without-``t_off`` ``ValueError`` instead of
   a by-name deferral. ``sim.relax``/``hysteresis``/``hysteresis_loop`` are
-  also now PORTED (Task 15) and covered by ``test_hysteresis_dolfinx.py``.
+  also now PORTED (Task 15) and covered by ``sim/hysteresis_test.py``.
 - ``Field.from_expression`` --
-  ``test_field_dolfinx.py::test_legacy_only_features_fail_precisely``
+  ``field_test.py::test_legacy_only_features_fail_precisely``
 - ``ThinFilmDemag`` is now PORTED (Task 19) and covered by
   ``energies/thin_film_demag_test.py`` (formerly
   ``test_thin_film_demag_dolfinx.py``); it is no longer deferred.
@@ -74,9 +74,9 @@ Already pinned by name elsewhere (not duplicated here):
   ``ModuleNotFoundError`` for ``dolfin`` either.
 - ``Field.probe``/``Field.__call__`` (point evaluation), ``Field.get_spherical``
   and ``Simulation.skyrmion_number``/``skyrmion_number_density_function`` are
-  now PORTED (Task 26a) and covered by ``test_io_utils_dolfinx.py``. Point
+  now PORTED (Task 26a) and covered by ``test_io_utils.py``. Point
   probing/``get_spherical`` used to be curated by-name ``NotImplementedError``
-  deferrals on ``Field`` (pinned by ``test_field_dolfinx.py::
+  deferrals on ``Field`` (pinned by ``field_test.py::
   test_legacy_only_features_fail_precisely``, now removed from that test);
   ``skyrmion_number``/``skyrmion_number_density_function`` had instead been
   dropped outright in Task 9 (a plain ``AttributeError``, not a by-name
@@ -151,7 +151,7 @@ def test_sim_with_sundials_backend_raises_by_name_on_first_integrator_use():
 
 def test_bare_llg_integrator_sundials_backend_raises_by_name_reference():
     """Cross-check only: the bare factory case is the pre-existing pin in
-    ``test_scipy_driver_dolfinx.py::test_llg_integrator_sundials_backend_raises_by_name``.
+    ``drivers/tests/test_scipy.py::test_llg_integrator_sundials_backend_raises_by_name``.
     Kept here as one line so the sweep file alone demonstrates every
     ``integrator_backend="sundials"`` entry point without requiring a reader
     to open a second file."""

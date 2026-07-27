@@ -31,7 +31,7 @@ This fixture pins that same (surprising, but faithfully legacy) behavior for
 a case that *does* include uniaxial anisotropy and a field reversal well
 past the Stoner-Wohlfarth coercive field -- i.e. even though the field
 becomes strongly enough reversed to flip the macrospin in a *fresh*
-`relax()` call (see ``test_hysteresis_dolfinx.py``'s standalone
+`relax()` call (see ``sim/hysteresis_test.py``'s standalone
 Stoner-Wohlfarth witness), it does *not* flip when reached via
 ``hysteresis()``'s stage-2-onward relax() calls. This is preserved
 verbatim, not "fixed".

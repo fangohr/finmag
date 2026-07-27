@@ -1,5 +1,15 @@
 """Focused production tests for the direct DOLFINx restart and output port.
 
+Formerly ``src/finmag/tests/test_restart_output_dolfinx.py``; renamed onto the
+sibling-free canonical name (canonical-test-paths move, 2026-07-27).
+ALL FOUR master ancestors are RETAINED in the tree (none removed):
+``tests/test_restart_simulation.py``, ``tests/bugs/test_bug_ndt_file_writing.py``,
+``tests/test_writing_data.py`` and ``scheduler/scheduler_test.py``. The mapping
+header below accounts 19 of their 21 functions as "covered-elsewhere ... still
+green under dolfinx" -- i.e. the ancestor files THEMSELVES are the covering
+coverage -- and one (``test_ndt_writing_pretest``) as NOT COVERED. Removing any
+of them would delete live coverage, so all four stay.
+
 Task 12 slice. Covers:
 
 - restart persistence in the coordinate-aware format (round-trip, cross-instance

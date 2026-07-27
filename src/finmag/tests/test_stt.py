@@ -1,5 +1,16 @@
 """Production tests for the direct DOLFINx spin-transfer-torque port (Task 22).
 
+Formerly ``src/finmag/tests/test_stt_dolfinx.py``; renamed onto the
+sibling-free canonical name (canonical-test-paths move, 2026-07-27).
+Ancestors REMOVED (every test function accounted for by a named port
+function in the mapping header below): ``tests/zhangli/zhang_li_test.py``,
+``tests/zhangli/stt_nonlocal_test.py``,
+``tests/slonczewski/validation/finmag/test_finmag_validation.py``.
+Ancestor RETAINED: ``tests/slonczewski/oscillator/test_oscillator.py`` -- its
+only function is ``_test_oscillator`` (leading underscore: never collected by
+pytest, on master either), which the header explicitly does NOT restore, so
+there is no named covering port function and the file stays in the tree.
+
 Covers the Slonczewski/Xiao and Zhang-Li torques transcribed into the ported
 ``LLG`` NumPy right-hand side: coordinate-ordered legacy oracle fixtures (dm/dt
 and, for Zhang-Li, the discrete gradient field), analytic direction/scaling
@@ -19,7 +30,7 @@ zhangli/zhang_li_test.py                                       | test_zhangli   
 zhangli/zhang_li_test.py                                       | test_zhangli_sllg      | DEFERRED: kernel='sllg'
                                                                 |                        | (stochastic LLG+Zhang-Li native kernel never
                                                                 |                        | rebuilt for DOLFINx). Guard COVERED-ELSEWHERE:
-                                                                |                        | test_simulation_dolfinx.py::
+                                                                |                        | sim/sim_test.py::
                                                                 |                        | test_nonstandard_kernels_are_deferred[sllg]
                                                                 |                        | asserts NotImplementedError by name.
 ----------------------------------------------------------------------------------------------------------------------
@@ -37,7 +48,7 @@ zhangli/stt_nonlocal_test.py                                   | test_zhangli   
                                                                 |                        | has NO DOLFINx port anywhere in the tree -- a
                                                                 |                        | distinct compiled kernel from the local
                                                                 |                        | Slonczewski/Zhang-Li torques this file covers.
-                                                                |                        | Guard COVERED-ELSEWHERE: test_simulation_dolfinx.py
+                                                                |                        | Guard COVERED-ELSEWHERE: sim/sim_test.py
                                                                 |                        | ::test_nonstandard_kernels_are_deferred[llg_stt].
 ----------------------------------------------------------------------------------------------------------------------
 slonczewski/validation/finmag/                                 | test_against_nmag      | RESTORED (was genuinely dropped): see
@@ -140,7 +151,7 @@ def test_stt_does_not_load_legacy_dolfin():
     # STT kernels are not rebuilt, and legacy FEniCS must never be imported.
     # (This file *does* opt into ``finmag.native.sundials`` for the cross-backend
     # check below, so it deliberately does not assert ``finmag.native`` absence;
-    # ``test_llg_dolfinx.py`` pins that for the core RHS module.)
+    # ``test_llg.py`` pins that for the core RHS module.)
     assert LLG.__module__ == "finmag.physics.llg"
     assert "dolfin" not in sys.modules
 

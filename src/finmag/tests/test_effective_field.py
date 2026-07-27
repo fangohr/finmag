@@ -20,7 +20,7 @@ function. Both are accounted for below; there is no genuine gap.
       change is the mesh constructor, ``dolfin.IntervalMesh(10, 0, 1)`` ->
       ``dolfinx.mesh.create_interval(MPI.COMM_WORLD, 10, [0.0, 1.0])``
       (the standard dolfin->dolfinx mesh-API substitution used throughout
-      this port; see e.g. ``test_llg_dolfinx.py``). Measured: passes
+      this port; see e.g. ``test_llg.py``). Measured: passes
       unchanged under DOLFINx (barmini's FK demag + Exchange interactions
       give ``get_interaction_list() == ['Demag', 'Exchange']`` sorted, same
       as legacy's ``sorted(...)`` contract).
@@ -36,7 +36,7 @@ function. Both are accounted for below; there is no genuine gap.
       physics-layer unit-test file for ``EffectiveField`` itself (Simulation
       *integration* -- constructing a full barmini + advancing the SciPy /
       Sundials integrator -- is covered by the Simulation test suite,
-      ``test_simulation_dolfinx.py``, not duplicated here). Tolerance is
+      ``sim/sim_test.py``, not duplicated here). Tolerance is
       UNCHANGED: ``atol=0, rtol=1e-8``, identical to master's assertion.
 
 2 master functions total (1 per file): 1 restored faithfully, 1
