@@ -5,8 +5,9 @@ import numpy as np
 # need them, so this conftest module is importable in the DOLFINx environment
 # too. The legacy dolfin-based fixtures (``setup``/``setup_cubic``) still work
 # unchanged in the legacy oracle environment. Without this, pytest could not
-# even collect the dolfin-free ``test_anis_magpar_dolfinx.py`` sibling that
-# lives in this directory. [Claude Opus 4.8]
+# even collect the dolfin-free ``test_anis_magpar.py`` (canonical-test-paths
+# move; formerly ``test_anis_magpar_dolfinx.py``) that lives in this
+# directory. [Claude Opus 4.8]
 from finmag.field import Field
 from finmag.util.meshes import from_geofile
 from finmag.energies import UniaxialAnisotropy, CubicAnisotropy

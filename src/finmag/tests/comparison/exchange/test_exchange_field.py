@@ -1,11 +1,55 @@
+"""Nmag EXCHANGE-field comparison under DOLFINx (minimal-diff transcription).
+
+This file has two clearly separated parts (see ``test_fk_demag_dolfinx.py``
+for the established convention):
+
+1. A MINIMAL-DIFF transcription of master's ``test_against_nmag`` from
+   ``src/finmag/tests/comparison/exchange/test_exchange_field.py`` (git
+   ``b5015c5a``). Function names, order, and assertion structure are kept
+   identical to master; the only differences are (a) dolfin->dolfinx API
+   changes (annotated inline), (b) the py2->py3 ``print`` conversion, and
+   (c) explanatory comments -- see below for the two unavoidable exceptions.
+   Master's tolerance (``REL_TOLERANCE = 2e-14``) passes VERBATIM under
+   DOLFINx (measured max ``rel_diff`` ~1.41e-14, recorded inline).
+
+   Master's file also contains ``test_against_oommf`` (an OOMMF comparison).
+   That function is OUT OF SCOPE for this port -- the task assignment is the
+   Nmag comparison only -- and is intentionally NOT transcribed here (not
+   silently dropped: this is the note).
+
+   Two exceptions to "only (a)/(b)/(c) diffs", both necessary just to make
+   the file importable/runnable, not behavioural:
+     * ``finmag.util.helpers`` (source of master's ``vectors``/``norm``/
+       ``stats``/``sphinx_sci``) does ``import dolfin as df`` at module scope
+       and is therefore not importable in this DOLFINx env. ``vectors``/
+       ``norm`` are reimplemented locally below, logic byte-identical to the
+       originals.
+     * Master's fixture used ``request.cached_setup(setup=..., teardown=...,
+       scope="module")``, a pytest API removed from modern pytest. Replaced
+       with the equivalent ``@pytest.fixture(scope="module")``. The dropped
+       ``teardown_finmag``/``start_table``/``table_delim``/``table_entries``
+       machinery only built a Sphinx-docs RST table (``table.rst``, never
+       checked into git -- confirmed via ``git ls-files``) with no assertion
+       content, so it is not ported; the corresponding table-append line in
+       ``test_against_nmag`` is likewise dropped (commented where it was).
+
+2. A NEW-under-DOLFINx invariant guard, below the ``NEW under DOLFINx``
+   banner, with no master ancestor.
+
+[Claude Opus 4.8], [Claude Sonnet 5]
+"""
+
 import os
-import shutil
-import dolfin as df
+
 import numpy as np
+import pytest
+
+import dolfinx.mesh as dm
+import dolfinx.fem as fem
+from mpi4py import MPI
+
 from finmag.field import Field
 from finmag.energies import Exchange
-from finmag.util.helpers import vectors, norm, stats, sphinx_sci as s
-import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,8 +59,11 @@ xn = 10
 Ms = 0.86e6
 A = 1.3e-11
 
-table_delim = "    " + "=" * 10 + (" " + "=" * 30) * 4 + "\n"
-table_entries = "    {:<10} {:<30} {:<30} {:<30} {:<30}\n"
+
+def _vectors(vs):
+    """dolfin-free port of ``finmag.util.helpers.vectors`` (see module note)."""
+    number_of_nodes = len(vs) // 3
+    return vs.view().reshape((number_of_nodes, -1), order="F")
 
 
 def m_gen(r):
@@ -27,62 +74,50 @@ def m_gen(r):
     return np.array([mx, my, mz])
 
 
-def start_table():
-    table = ".. _exchange_table:\n\n"
-    table += ".. table:: Comparison of the exchange field computed with finmag against nmag and oommf\n\n"
-    table += table_delim
-    table += table_entries.format(
-        # Hack because sphinx light table syntax does not allow an empty
-        # header; escape the literal backslash so Python does not warn while
-        # the generated reST table stays unchanged. [Codex gpt-5.5 high]
-        ":math:`\\,`",
-        ":math:`\\subn{\\Delta}{test}`",
-        ":math:`\\subn{\\Delta}{max}`",
-        ":math:`\\bar{\\Delta}`",
-        ":math:`\\sigma`")
-    table += table_delim
-    return table
-
-
 def setup_finmag():
-    mesh = df.IntervalMesh(xn, x0, x1)
-    coords = np.array(list(zip(* mesh.coordinates())))
+    # df.IntervalMesh(xn, x0, x1) -> dolfinx.mesh.create_interval(comm, xn, [x0, x1])
+    mesh = dm.create_interval(MPI.COMM_WORLD, xn, [x0, x1])
+    # df mesh.coordinates() returned shape (n, 1) for an IntervalMesh, and
+    # master's `zip(*mesh.coordinates())` transposed that to one row of x
+    # values, shape (1, n). DOLFINx `mesh.geometry.x` is always (n, 3)
+    # (y/z columns are zero for a 1D mesh); take column 0 and row-wrap it to
+    # reproduce master's (1, n) shape for `m_gen`.
+    coords = np.array([mesh.geometry.x[:, 0]])
 
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
+    # df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3) -> functionspace with shape=(3,)
+    S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))
     m = Field(S3)
     m.set_with_numpy_array_debug(m_gen(coords).flatten())
 
     exchange = Exchange(A)
-    exchange.setup(m, Field(df.FunctionSpace(mesh, 'DG', 0), Ms))
+    # df.FunctionSpace(mesh, 'DG', 0) -> functionspace(mesh, ("DG", 0))
+    exchange.setup(m, Field(fem.functionspace(mesh, ("DG", 0)), Ms))
 
-    H_exc = df.Function(S3)
-    H_exc.vector()[:] = exchange.compute_field()
-    return dict(m=m, H=H_exc, table=start_table())
+    # df.Function(S3); H_exc.vector()[:] = exchange.compute_field() -> DOLFINx
+    # Exchange.compute_field() already returns the flat numpy array directly,
+    # so there is no dolfin Function/vector wrapper step to reproduce.
+    H_exc = exchange.compute_field()
+    return dict(m=m, H=H_exc)
 
-
-def teardown_finmag(finmag):
-    finmag["table"] += table_delim
-    with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
-        f.write(finmag["table"])
 
 @pytest.fixture(scope="module")
-def finmag(request):
-    finmag = setup_finmag()
-    request.addfinalizer(lambda: teardown_finmag(finmag))
-    return finmag
+def finmag():
+    # Replaces master's `request.cached_setup(setup=setup_finmag,
+    # teardown=teardown_finmag, scope="module")` (removed pytest API, see
+    # module note). No teardown is needed: the only teardown action
+    # (writing table.rst) is dropped along with it, see module note.
+    return setup_finmag()
 
 
 def test_against_nmag(finmag):
-    REL_TOLERANCE = 2e-14
+    REL_TOLERANCE = 2e-14  # master's tolerance, kept verbatim -- passes (see measured value below)
 
     m_ref = np.genfromtxt(os.path.join(MODULE_DIR, "m0_nmag.txt"))
-    m_computed = vectors(finmag["m"].get_numpy_array_debug())
+    m_computed = _vectors(finmag["m"].get_numpy_array_debug())
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
-    # DOLFIN 2019 PETSc vectors no longer expose array(); keep this
-    # checked-in Nmag reference-data comparison active without nsim. [Codex GPT-5.4]
-    H_computed = vectors(finmag["H"].vector().get_local())
+    H_computed = _vectors(finmag["H"])  # master: finmag["H"].vector().array()
     assert H_ref.shape == H_computed.shape
 
     assert m_ref.shape == H_ref.shape
@@ -90,19 +125,75 @@ def test_against_nmag(finmag):
     m_cross_H_computed = np.cross(m_computed, H_computed)
 
     diff = np.abs(m_cross_H_ref - m_cross_H_computed)
-    rel_diff = diff / max([norm(v) for v in m_cross_H_ref])
+    # master: max([norm(v) for v in m_cross_H_ref]); helpers.norm(v) on a
+    # single (3,) vector reduces to np.linalg.norm(v) (see module note on why
+    # helpers.norm itself is not imported here).
+    rel_diff = diff / max(np.linalg.norm(v) for v in m_cross_H_ref)
 
-    finmag["table"] += table_entries.format(
-        "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
+    # master appended a row to the (dropped, see module note) Sphinx table here.
 
     print("comparison with nmag, m x H, relative difference:")
-    print(stats(rel_diff))
+    print("    min, median, max = {}, {}, {}\n    mean, std = {}, {}".format(
+        np.min(rel_diff), np.median(rel_diff), np.max(rel_diff),
+        np.mean(rel_diff), np.std(rel_diff)))
+    # measured DOLFINx max(rel_diff): 1.41e-14 -- passes master's 2e-14 verbatim.
     assert np.max(rel_diff) < REL_TOLERANCE
 
 
-@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
+if __name__ == '__main__':
+    f = setup_finmag()
+    test_against_nmag(f)
+
+
+# ==========================================================================
+# ===== NEW under DOLFINx (no master ancestor) ============================
+# ==========================================================================
+
+def test_interval_mesh_vertex_order_is_ascending():
+    """Guards the row-for-row pairing in ``test_against_nmag`` above.
+
+    That comparison pairs finmag's computed ``m``/``H`` against the Nmag
+    reference files row-for-row, relying on the DOLFINx interval mesh
+    emitting its ``xn + 1`` vertices in deterministic ascending-x order (which
+    matches the Nmag reference row order). This is legitimate on this
+    structured 1D mesh -- unlike the unstructured 3D Magpar case, where node
+    order is NOT preserved under DOLFINx and the port there had to switch to a
+    coordinate-based match instead (see
+    ``test_exchange_compare_magpar.py``, formerly
+    ``test_exchange_compare_magpar_dolfinx.py``). This test pins the
+    assumption so a future mesh-generator change that reorders vertices fails
+    loudly here instead of silently corrupting the comparison above.
+    """
+    mesh = dm.create_interval(MPI.COMM_WORLD, xn, [x0, x1])
+    coords_x = mesh.geometry.x[:, 0]
+    assert np.all(np.diff(coords_x) > 0), "interval vertices not ascending"
+
+
+# ==========================================================================
+# ===== NOT PORTED (carried verbatim from master b5015c5a; expected to fail) =====
+# finmag.util.oommf is not ported (manifest N62, capability C20). Runs — and
+# fails — in the inventory lane so the gap stays visible. [owner 2026-07-27]
+# ==========================================================================
+#
+# Transcribed verbatim from master's ``test_against_oommf``
+# (src/finmag/tests/comparison/exchange/test_exchange_field.py, git b5015c5a),
+# including its function-local ``from finmag.util.oommf import ...`` /
+# ``from finmag.util.oommf.comparison import ...`` imports. Those are NOT
+# additionally guarded at module level: in master they are already local to
+# this function (not module-level), so they cannot break collection of this
+# file -- they only run, and fail, when this test is actually called.
+# Confirmed failure mode in this environment: ``ModuleNotFoundError: No
+# module named 'dolfin'`` (finmag.util.oommf -> oommf_calculator ->
+# finmag.util.helpers -> ``import dolfin``).
+# Mechanical python2->python3 fixes only (2to3-level, no behaviour change):
+# ``print "..."`` / ``print stats(rel_diff)`` statements -> ``print(...)``
+# calls. ``finmag["table"]``/``table_entries``/``s`` (sphinx_sci) referenced
+# below are master's dropped Sphinx-table machinery (see module docstring)
+# and are not defined in this file; they are unreachable in practice because
+# the oommf import above fails first, but are left exactly as master wrote
+# them (verbatim transcription).
+@pytest.mark.not_ported
 def test_against_oommf(finmag):
-    # The Python 3 core gate should run this automatically once the image carries OOMMF. [Codex GPT-5.4]
     REL_TOLERANCE = 8e-2
 
     from finmag.util.oommf import mesh, oommf_uniform_exchange
@@ -121,12 +212,6 @@ def test_against_oommf(finmag):
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print("comparison with oommf, H, relative_difference:")
-    print(stats(rel_diff))
+    print("comparison with oommf, H, relative_difference:")  # py2 print stmt -> py3 print()
+    print(stats(rel_diff))  # py2 print stmt -> py3 print()
     assert np.max(rel_diff) < REL_TOLERANCE
-
-if __name__ == '__main__':
-    f = setup_finmag()
-    test_against_nmag(f)
-    test_against_oommf(f)
-    teardown_finmag(f)
