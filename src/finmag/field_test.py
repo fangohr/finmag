@@ -1885,7 +1885,7 @@ def test_legacy_only_features_fail_precisely(spaces):
     # test_io_utils.py for their dedicated coverage.
     # save_hdf5/from_hdf5 are also no longer legacy-only failures -- the
     # single-file coordinate-aware HDF5 round-trip was restored in SR1 P4-hdf5;
-    # see test_field_hdf5_dolfinx.py for its dedicated coverage.
+    # see test_field_hdf5.py for its dedicated coverage.
     with pytest.raises(NotImplementedError, match="Field addition"):
         field + field
 

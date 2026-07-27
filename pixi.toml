@@ -149,10 +149,10 @@ dolfinx-src-import-pythonpath-fallback = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=s
 # checks into this existing gate (precedent: Task 19 folding
 # `thin_film_demag_test.py` into `dolfinx-src-energies-pytest`).
 # [Claude Opus 4.8]
-dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py src/finmag/util/plot_helpers_test.py src/finmag/util/helpers_test.py -m \"not not_ported\""
-dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/field_test.py src/finmag/tests/test_field_hdf5_dolfinx.py"
+dolfinx-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example.py src/finmag/util/plot_helpers_test.py src/finmag/util/helpers_test.py -m \"not not_ported\""
+dolfinx-src-field-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/field_test.py src/finmag/tests/test_field_hdf5.py"
 dolfinx-src-field-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.field_dolfinx_mpi_probe"
-dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_dw_fixed_energy_dolfinx.py"
+dolfinx-src-energies-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_energies.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_dw_fixed_energy.py"
 dolfinx-src-energies-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.energies_dolfinx_mpi_probe"
 dolfinx-src-effectivefield-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_effective_field.py"
 dolfinx-src-effectivefield-mpi = "PYTHONDONTWRITEBYTECODE=1 mpiexec -n 2 python -m finmag.tests.effective_field_dolfinx_mpi_probe"
@@ -160,7 +160,7 @@ dolfinx-src-llg-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finm
 # Task 31: the dedicated public field-array component-ordering contract (the
 # anti-scramble net); asymmetric analytic layouts that tell blocked from
 # interleaved and double-converted. [Claude Fable 5]
-dolfinx-src-ordering-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_ordering_contract_dolfinx.py"
+dolfinx-src-ordering-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_ordering_contract.py"
 dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/drivers/tests/test_scipy.py"
 # SR1 P1.3: `Simulation`'s default `integrator_backend` is now "sundials", so
 # this gate can reach the native `make` on first native import.
@@ -169,7 +169,7 @@ dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/fi
 dolfinx-src-simulation-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/sim/sim_test.py src/finmag/sim/magnetisation_patterns_test.py -m \"not not_ported\""
 # Task 10: the aggregated deferred-surfaces sweep and the core Simulation
 # smoke, both new for the first direct-source DOLFINx gate. [Claude Sonnet 5]
-dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_deferred_surfaces_dolfinx.py"
+dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_deferred_surfaces.py"
 # SR1 P1.3: the smoke now runs on the restored "sundials" default, so it can
 # trigger the native `make`; WRITE_FINMAG_VERSION=0 keeps that build from
 # rewriting the tracked version file. [Claude Opus 4.8]
@@ -177,7 +177,7 @@ dolfinx-src-core-smoke = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 pytho
 # Task 11a: the array-only FK BEM native surface, compiled and imported in the
 # DOLFINx env with no legacy dolfin. WRITE_FINMAG_VERSION=0 keeps the native
 # `make` from rewriting the tracked version file. [Claude Opus 4.8]
-dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_native_bem_arrays_dolfinx.py"
+dolfinx-src-native-bem-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_native_bem_arrays.py"
 # Task 11b: the direct DOLFINx FK demag port -- boundary-ordering pin against
 # the 11a golden BEM, analytic uniform-cube demag factor, and coordinate-ordered
 # legacy oracle comparisons (cube + barmini). WRITE_FINMAG_VERSION=0 keeps the
@@ -260,7 +260,7 @@ dolfinx-src-stt-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 pytho
 # Task 30: run the converted examples/ scripts as subprocesses against the
 # installed package (the practical-parity witness). The heavy muMAG /
 # long-dynamics examples run only with FINMAG_EXAMPLE_FULL=1. [Claude Opus 4.8]
-dolfinx-src-examples-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q examples/test_examples_dolfinx.py"
+dolfinx-src-examples-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q examples/test_examples.py"
 # Task 26a: decision-free I/O/utility parity wins -- Field point-in-cell
 # probing (Field.probe/Field.__call__, promoted from the Task 30
 # exchange_demag density workaround into the shared
@@ -292,12 +292,12 @@ dolfinx = { features = ["dolfinx"], no-default-feature = true }
 [tasks]
 # Keep the lazy import contract executable in the FEniCS-2019 environment as
 # well as the focused DOLFINx source lane. [Codex GPT-5.6]
-# SR1 P2.1 adds `test_example_dolfinx.py` here too: its
-# `test_helpers_still_reexports_set_logging_level` check needs legacy dolfin,
-# so this legacy lane is the only place it can actually execute (it skips in
-# the dolfinx lane). Its dolfinx-requiring checks skip here in turn.
-# [Claude Opus 4.8]
-src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example_dolfinx.py"
+# SR1 P2.1 adds `test_example.py` (formerly `test_example_dolfinx.py`) here
+# too: its `test_helpers_still_reexports_set_logging_level` check needs
+# legacy dolfin, so this legacy lane is the only place it can actually
+# execute (it skips in the dolfinx lane). Its dolfinx-requiring checks skip
+# here in turn. [Claude Opus 4.8]
+src-import-pytest = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m pytest -q src/finmag/tests/test_import_boundary.py src/finmag/tests/test_example.py"
 # This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
 # to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]
 import-finmag = "PYTHONPATH=src python -c \"import finmag; print(finmag)\""

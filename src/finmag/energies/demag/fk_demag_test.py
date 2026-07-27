@@ -67,7 +67,7 @@ from finmag.energies import Demag
 from finmag.energies.demag import Demag2D, MacroGeometry
 from finmag.energies.demag.fk_demag import FKDemag, boundary_bem_arrays
 from finmag.native.bem_arrays import compute_bem_fk_from_arrays
-from finmag.tests.test_native_bem_arrays_dolfinx import (
+from finmag.tests.test_native_bem_arrays import (
     CUBE_COORDS, CUBE_CELLS, GOLDEN_BEM_FK)
 from finmag.util.consts import mu0  # master imported mu0 from consts (== 4*pi*1e-7)
 from finmag.util.meshes import sphere, box

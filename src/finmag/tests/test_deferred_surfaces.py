@@ -70,8 +70,8 @@ Already pinned by name elsewhere (not duplicated here):
   ``test_thin_film_demag_dolfinx.py``); it is no longer deferred.
   ``FixedEnergyDW`` is now a curated by-name ``NotImplementedError``
   deferral (Task 19, Task 29 review item) -- covered by
-  ``test_dw_fixed_energy_dolfinx.py``; it no longer surfaces the raw
-  ``ModuleNotFoundError`` for ``dolfin`` either.
+  ``test_dw_fixed_energy.py`` (formerly ``test_dw_fixed_energy_dolfinx.py``);
+  it no longer surfaces the raw ``ModuleNotFoundError`` for ``dolfin`` either.
 - ``Field.probe``/``Field.__call__`` (point evaluation), ``Field.get_spherical``
   and ``Simulation.skyrmion_number``/``skyrmion_number_density_function`` are
   now PORTED (Task 26a) and covered by ``test_io_utils.py``. Point
@@ -218,8 +218,9 @@ def test_demag_dmi_cubic_anisotropy_and_optional_energies_are_ported_or_curated_
     ``FixedEnergyDW`` -- untested even on legacy master, its own legacy todo
     notes calling it broken -- is converted to a curated by-name
     ``NotImplementedError`` deferral (Task 29 review item; see
-    ``test_dw_fixed_energy_dolfinx.py`` and the module docstring in
-    ``finmag/energies/dw_fixed_energy.py``) rather than a raw import error.
+    ``test_dw_fixed_energy.py`` (formerly ``test_dw_fixed_energy_dolfinx.py``)
+    and the module docstring in ``finmag/energies/dw_fixed_energy.py``)
+    rather than a raw import error.
     No ``finmag.energies`` public name is ``requires_legacy_dolfin=True``
     any more (``test_import_boundary.py::
     test_no_unported_optional_energies_remain`` pins this directly)."""

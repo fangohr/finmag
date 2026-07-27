@@ -95,7 +95,7 @@ from finmag.energies.demag.fk_demag import (
 from finmag.energies.demag.treecode_bem import TreecodeBEM
 from finmag.energies.demag.fk_demag_pbc import BMatrixPBC
 from finmag.native.bem_arrays import compute_bem_fk_from_arrays
-from finmag.tests.test_native_bem_arrays_dolfinx import (
+from finmag.tests.test_native_bem_arrays import (
     CUBE_COORDS, GOLDEN_BEM_FK)
 
 mu0 = 4.0 * pi * 1e-7

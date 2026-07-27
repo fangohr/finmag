@@ -631,7 +631,7 @@ def test_hdf5_field_readback_roundtrips(tmpdir):
     (XDMF/VTK function read-back remains genuinely unavailable -- DOLFINx 0.10's
     ``XDMFFile``/``vtkhdf`` expose no ``read_function`` -- so the coordinate-aware
     HDF5 checkpoint is the supported Field round-trip; see
-    test_field_hdf5_dolfinx.py for its dedicated coverage.)
+    test_field_hdf5.py for its dedicated coverage.)
     """
     sim = _make_sim()
     sim.set_m(lambda pt: (np.sin(pt[0]), np.cos(pt[1]), 0.0))

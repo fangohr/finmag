@@ -52,8 +52,8 @@ following the SR1 P5.2 minimal-diff convention (exemplar:
      master, and it depends on ``finmag.example.sphere_inside_airbox``,
      which under DOLFINx is a deferred surface/example that raises
      ``NotImplementedError`` by name
-     (see ``test_example_dolfinx.py::test_deferred_surfaces_raise_named_not_implemented_error``
-     and ``test_deferred_surfaces_dolfinx.py``, whose docstring confirms
+     (see ``test_example.py::test_deferred_surfaces_raise_named_not_implemented_error``
+     and ``test_deferred_surfaces.py``, whose docstring confirms
      ``TimeZeemanPython``/``DipolarField`` themselves are ported while the
      airbox/surface machinery is not). Cannot be ported until that
      dependency lands -- so, rather than disappearing with master's file,
