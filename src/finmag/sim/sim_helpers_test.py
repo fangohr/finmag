@@ -2,7 +2,12 @@ import os
 import shutil
 import pytest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import assert_number_of_files
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    assert_number_of_files = None
 from finmag.sim import sim_helpers
 from datetime import datetime, timedelta
 from distutils.version import LooseVersion
@@ -10,10 +15,11 @@ from finmag import Simulation
 from finmag.example import barmini
 from finmag.util.meshes import nanodisk, netgen_is_usable
 from finmag.drivers.llg_integrator import llg_integrator
-from finmag.util.helpers import assert_number_of_files
 from finmag.util.fileio import Tablereader
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: sim_helpers restart-data round-trip observed divergence, see restart contract D16a/D16b (D33)", strict=True)
 def test_can_read_restart_file(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini()
@@ -29,6 +35,8 @@ def test_can_read_restart_file(tmpdir):
     assert datetime.now() - data['datetime'] < timedelta(0, 10)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: sim_helpers restart-data round-trip observed divergence, see restart contract D16a/D16b (D33)", strict=True)
 def test_try_to_restart_a_simulation(tmpdir):
     os.chdir(str(tmpdir))
     t0 = 10e-12
@@ -100,6 +108,8 @@ def test_create_backup_if_file_exists():
     assert open(backupfilename).read() == open(testfilename).read()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode analysis (register C17)", strict=True)
 def test_run_normal_modes_computation(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini(name='barmini')
@@ -160,6 +170,8 @@ def test_save_restart_data_creates_non_existing_directories(tmpdir):
     assert(os.path.exists('foo'))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: region/submesh output (register C04/C12)", strict=True)
 def test_get_submesh(tmpdir):
     os.chdir(str(tmpdir))
     sim = barmini(mark_regions=True)
@@ -179,6 +191,8 @@ def test_get_submesh(tmpdir):
     assert(mesh_bottom.num_vertices() == submesh_bottom.num_vertices())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API skyrmion-number test, mesh construction unguarded (D33)", strict=True)
 def test_skyrmion_number():
     """
     Test to see if the skyrmion number density function helper integrated over

@@ -7,7 +7,13 @@
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
 import unittest
-from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+    from finmag.tests.jacobean.domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+except ImportError:
+    # not ported (D33): tests below xfail
+    setup_domain_wall_cobalt = None
+    domain_wall_error = None
 from finmag.drivers.llg_integrator import llg_integrator
 from datetime import datetime
 
@@ -32,20 +38,32 @@ class IntegratorTests(unittest.TestCase):
             integrator.n_rhs_evals,
             domain_wall_error(llg.m_field.as_array(), NODE_COUNT)))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_scipy_bdf(self):
         self.run_test("scipy", "bdf")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_scipy_adams(self):
         self.run_test("scipy", "adams")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_sundials_adams(self):
         self.run_test("sundials", "bdf_diag")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_sundials_bdf_diag(self):
         self.run_test("sundials", "adams")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_sundials_bdf_gmres_no_prec(self):
         self.run_test("sundials", "bdf_gmres_no_prec")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API integrator-backend matrix, full legacy integrator matrix is not mapped (D33)", strict=True)
     def test_sundials_bdf_gmres_prec_id(self):
         self.run_test("sundials", "bdf_gmres_prec_id")

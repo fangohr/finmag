@@ -2,13 +2,18 @@ import os
 import pytest
 import subprocess as sp
 import numpy as np
-import run_finmag
+try:  # master: import run_finmag
+    import run_finmag
+except ImportError:
+    run_finmag = None  # not ported (D33): tests below xfail
 from finmag.util.fileio import Tablereader
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: nmag_example_2 (Task 30 deferred example, requires the not-ported OOMMF/Nmag comparison harness) (D33)", strict=True)
 def test_against_nmag():
     cwd_backup = os.getcwd()
     os.chdir(MODULE_DIR)
