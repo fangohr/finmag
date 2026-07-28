@@ -197,7 +197,10 @@ dolfinx-src-treecode-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 
 # scheduler port. WRITE_FINMAG_VERSION=0 keeps the native `make` (triggered by
 # the end-to-end FK demag witness) from rewriting the tracked version file.
 # [Claude Opus 4.8]
-dolfinx-src-restart-output-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_restart_output.py"
+# CI T2: fileio_test.py (canonical path, never previously ported) joins this
+# gate -- it is the Tablewriter/Tablereader ndt unit-test home this file's
+# surface belongs to. [Claude Sonnet 5]
+dolfinx-src-restart-output-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_restart_output.py src/finmag/util/fileio_test.py"
 # Task 13: the direct DOLFINx DMI port -- dmi_type dispatch, exact
 # chirality/scaling pins, and coordinate-ordered legacy oracle comparisons
 # (bulk 3D + interfacial). [Claude Sonnet 5]
