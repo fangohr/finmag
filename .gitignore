@@ -72,3 +72,9 @@ examples/exchange_1D/1d_M.txt
 examples/exchange_1D/1d_coord.txt
 examples/cubic_anisotropy/hysteresis.txt
 examples/time-dependent-applied-field/fittedresults.txt
+
+# Task 7 (CI nail-down): nanodisk_with_spherical_particle test fixture writes
+# its mesh cache beside the test module on every gate run; recurring litter,
+# not tracked output. [Claude Sonnet 5]
+src/finmag/sim/nanodisk_with_spherical_particle.h5
+src/finmag/sim/nanodisk_with_spherical_particle.xdmf

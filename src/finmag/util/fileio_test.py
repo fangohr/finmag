@@ -58,6 +58,10 @@ def test_Table_writer_and_reader(tmpdir):
     assert np.allclose(dm, np.array(data['m_x', 'm_y', 'm_z']).T)
 
     # Reading an incomplete dataset should raise a runtime error
+    # Note (CI T7): 'test-incomplete-data.ndt' has never existed in git
+    # history at any commit (carried over unchanged from master); this still
+    # passes because Tablereader also raises RuntimeError for a missing
+    # file, just not for the "incomplete data" reason the test name implies.
     with pytest.raises(RuntimeError):
         Tablereader(os.path.join(MODULE_DIR, 'test-incomplete-data.ndt'))
 

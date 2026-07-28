@@ -1358,7 +1358,8 @@ Before editing the matching module in `src/finmag`, check that:
   `get_field_as_dolfin_function('m')(point)` raises `ValueError: UFL
   conditions cannot be evaluated as bool in a Python context` (pre-existing
   `sim.py` gap, out of scope for this test-only phase,
-  `test_restart_output_dolfinx.py`, candidate new row). See
+  `test_restart_output_dolfinx.py`, candidate new row -- **2026-07-28 update
+  (CI T4, commit `a86fb294`): FIXED, register D26**). See
   `transition-notes.org` "Minimal-diff test-conversion phase" and
   `docs/superpowers/acceptance-register.md` for the authoritative disposition
   list. [Claude Sonnet 5]

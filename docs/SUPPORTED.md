@@ -372,8 +372,8 @@ Part of the full-parity target. Not available in SR1; not dropped.
 | Treecode factory selector via `sim_with(demag_solver='Treecode')` | C07 |
 | Coincident-node BEM fix (touching macro-geometry tiles) | **D17** |
 | XDMF/VTK **function readback**; `Field.__add__`; region/submesh *field* output (`get_submesh`, `get_field_as_dolfin_function(region=...)`) | C04, C12 |
-| `Simulation.shutdown()` / `instances_delete_all_others()` / `close_logfile()` | **D24** |
-| `get_field_as_dolfin_function` UFL-bool crash | **D26** |
+| ~~`Simulation.shutdown()` / `instances_delete_all_others()` / `close_logfile()`~~ **FIXED 2026-07-28 (CI T3, `f12cf995`)** | **D24** |
+| ~~`get_field_as_dolfin_function` UFL-bool crash~~ **FIXED 2026-07-28 (CI T4, `a86fb294`)** | **D26** |
 | Per-interaction `E_<name>` / `H_<name>_*` `.ndt` columns | **D27** |
 | SciPy `reinit()` rhs-eval counter reset | **D28** |
 | `set_m` NaN guard | **D23** |
@@ -464,15 +464,18 @@ kept — it was never a CI verdict.** The verdict is
 dev/bin/inventory-dolfinx-suite      # or: pixi run -e dolfinx dolfinx-src-suite-inventory
 ```
 
-Tally at declaration (2026-07-27, pre-CI-nail-down):
+Tally at declaration (2026-07-27, pre-CI-nail-down) — **SUPERSEDED**, see
+below:
 
 ```
 INVENTORY: passed=754 failed=5 errors=55 skipped=25 xfailed=47
 ```
 
-Post-CI-nail-down tally (2026-07-28, CI T1-T5: the 5 real failures fixed,
-`fileio_test.py` ported, `Simulation` teardown ported, the D26
-point-evaluation bug fixed, and the 53-file conversion wave above):
+**Green baseline (2026-07-28, CI T1-T5, CONFIRMED by CI T7):** the 5 real
+failures fixed, `fileio_test.py` ported, `Simulation` teardown ported
+(D24), the D26 point-evaluation bug fixed, and the 53-file conversion wave
+above (D33). Re-confirmed on the CI-nail-down-closure tree, logs
+`/home/sam/.claude/jobs/6b8f36a7/tmp/t7-verify.log` and `t7-inventory.log`:
 
 ```
 INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271
@@ -483,12 +486,15 @@ INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271
 `tests/nmag/exchange_3d/test_dynamics_3D.py` and
 `tests/nmag/spinwaves/test_spinwaves.py`, invisible to a `--collect-only`
 pass and so absent from the wave's collect-only-derived file list; converted
-the same way, commit `828f45d6`. `xfailed=271` reflects that fix; a
-confirmation re-run is in flight, see the CI T5 task report for the final
-recorded line.)
+the same way, commit `828f45d6`. `xfailed=271` reflects that fix, and the
+CI T7 re-run reproduced this exact tally with zero deltas.)
 
-`errors=0` is now the expected, enforced shape (the weekly/dispatch sweep CI
-job greps for it); every remaining failure/skip is either a master-governed
+`errors=0`/`failed=0` is now the expected, enforced shape (the
+`test-python.yml` weekly/on-demand CI job greps the inventory line for it —
+see "Continuous integration" in `README.md` for all three CI tiers:
+`dolfinx-m5.yml` push/PR fast gate, `test-python.yml` weekly-on-default-branch
++ on-demand full-suite inventory, `test-slow.yml` on-demand-only heavy FULL
+example lane); every remaining failure/skip is either a master-governed
 skip/xfail or the D22 outer-face caveat. The exhaustive per-file
 classification (superseded post-T5, now two mechanisms only) was in the
 Task-7 verification report under

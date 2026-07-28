@@ -47,16 +47,19 @@ below means "verified passing there just now", not "assumed still valid".
     comparisons, which is tighter, not looser.
 
 2) ``src/finmag/tests/bugs/test_bug_ndt_file_writing.py`` (5 test functions):
-  - test_ndt_writing_pretest -> NOT COVERED, and not restored. Currently
-    FAILS under dolfinx (measured just now: ``ValueError: UFL conditions
-    cannot be evaluated as bool in a Python context`` from
-    ``get_field_as_dolfin_function('m')(point)``). This is a pre-existing
-    porting gap in ``Simulation.get_field_as_dolfin_function`` unrelated to
-    NDT writing (the thing this file is actually a regression test for) --
-    it is a sanity precondition check on the barmini initial condition, not
-    an NDT-output assertion. Fixing it means touching
-    ``src/finmag/sim/sim.py``, which is out of scope for this test-only
-    task; reported here rather than silently dropped.
+  - test_ndt_writing_pretest -> at the time this file was written, NOT
+    COVERED and not restored: it FAILED under dolfinx (measured then:
+    ``ValueError: UFL conditions cannot be evaluated as bool in a Python
+    context`` from ``get_field_as_dolfin_function('m')(point)``), a
+    pre-existing porting gap in ``Simulation.get_field_as_dolfin_function``
+    unrelated to NDT writing (the thing this file is actually a regression
+    test for) -- it was a sanity precondition check on the barmini initial
+    condition, not an NDT-output assertion. **2026-07-28 update (CI T4,
+    commit `a86fb294`, register D26 fixed):** the underlying
+    ``get_field_as_dolfin_function`` point-eval bug is fixed; all five
+    tests in ``test_bug_ndt_file_writing.py``, including this pretest, now
+    pass and the file is added to the ``dolfinx-src-simulation-pytest``
+    gate.
   - test_ndt_writing_correct_number_of_columns_1line -> covered-elsewhere
     (passes verbatim under dolfinx) + re-exercised here in spirit by
     test_ndt_format_and_roundtrip (header/units row shape asserted

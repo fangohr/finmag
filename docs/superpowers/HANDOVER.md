@@ -512,8 +512,13 @@ complete** (2026-07-25), integrated on `dolfinx-parity` (tip `dadf35ae`):
 
 The transcription phase also surfaced four HIGH-priority parity-debt findings,
 each test-pinned and left as a known divergence (fixes deferred to a later
-slice, per owner decision); see `acceptance-register.md` for the itemised,
-authoritative list:
+slice, per owner decision, at the time this phase ran); see
+`acceptance-register.md` for the itemised, authoritative list. **2026-07-28
+update (CI T3/T4):** two of the four -- the teardown surface (D24) and the
+`get_field_as_dolfin_function` UFL-bool crash (D26) -- are now FIXED, not
+deferred; see their register rows for the fix commits. The other two (the
+Magpar 8% residual, D29; the `set_m` NaN guard, D23) remain as described
+below:
 
 - **treecode/PBC coincident-node BEM defect** (register `D17`): restoring
   master's own `demag_pbc_test.py` as a strict `xfail` reproduces the
@@ -780,7 +785,35 @@ anything was hidden:
 Note for the next runner: the inventory lane writes two untracked artifacts
 (`src/finmag/sim/nanodisk_with_spherical_particle.{h5,xdmf}`) that are **not**
 gitignored. They were deleted before the declaration commit; do not let them
-into a commit.
+into a commit. **2026-07-28 update (CI T7):** these two files are now
+gitignored (`.gitignore`), so this note describes a problem that no longer
+recurs.
+
+**2026-07-28 update (CI T7): the declaration tally above is SUPERSEDED.**
+CI T1-T5 fixed all 5 real inventory-lane failures (D23, D24, D26, and the two
+llg/fileio ordering-artifact/never-ported items) and converted the remaining
+53 never-ported files from raw collection `errors=` to guarded strict `xfail`
+(register **D33**). Re-measured 2026-07-28 on the CI-nail-down-closure tree
+(logs `/home/sam/.claude/jobs/6b8f36a7/tmp/t7-verify.log` and
+`t7-inventory.log`):
+
+```
+dev/bin/verify-dolfinx-m5         exit 0 — all 33 steps green
+dev/bin/inventory-dolfinx-suite   INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271
+```
+
+`errors=0`/`failed=0` is now the expected, enforced shape: the
+`test-python.yml` weekly/on-demand CI job greps the inventory line for this.
+CI tiers (unchanged since CI T6, see "merge blocker cleared" above and
+`README.md`'s "Continuous integration" section, kept consistent here):
+`dolfinx-m5.yml` runs the 33-gate fast witness on every push/PR;
+`test-python.yml` runs this full-suite inventory weekly (Mondays) on the
+default branch plus on-demand, gated on `failed=0 errors=0`; `test-slow.yml`
+runs the heavy `FINMAG_EXAMPLE_FULL=1` example lane on-demand only (no
+schedule). Every remaining `skipped`/`xfailed` entry is either a
+master-governed skip/xfail, a D33-converted never-ported file, or the D22
+outer-face caveat — none is a CI verdict; the verdict stays the 33 focused
+gates.
 
 ### Next work
 

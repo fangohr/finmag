@@ -999,6 +999,13 @@ class PointEvaluableFunction(fem.Function):
     vertex; strictly interior points are correct. Points outside this rank's
     local mesh partition raise ``RuntimeError``, mirroring legacy dolfin's
     "point not inside domain" failure.
+
+    Note: ``fem.Function.copy()``, ``.sub()`` and ``.collapse()`` each
+    construct their result with a hardcoded ``Function(...)`` call (not
+    ``type(self)(...)``), so calling any of them on a
+    ``PointEvaluableFunction`` returns a plain ``fem.Function`` -- the
+    point-callable override does NOT survive; re-wrap the result in
+    :func:`as_point_evaluable` if point-calling is needed on it.
     """
 
     def __call__(self, *args):
@@ -1007,6 +1014,11 @@ class PointEvaluableFunction(fem.Function):
         Both legacy spellings are accepted: ``f([x, y, z])`` (the one every
         in-tree caller uses) and ``f(x, y, z)``.
         """
+        # UFL restriction syntax (f('+')/f('-')) is not point evaluation;
+        # delegate to ufl.Coefficient.__call__ so this subclass stays usable
+        # inside forms (no in-tree caller uses this today; hardening only).
+        if args in (("+",), ("-",)):
+            return super().__call__(*args)
         if not args:
             raise TypeError("a point is required to evaluate this function")
         point = args[0] if len(args) == 1 else args

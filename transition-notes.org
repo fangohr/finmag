@@ -7581,7 +7581,7 @@ none is fixed by this documentation-only/test-only phase. See
   (=src/finmag/sim/sim.py=), unrelated to the NDT-writing regression test it
   was found in (=test_restart_output_dolfinx.py=); fixing it means touching
   =sim.py=, out of scope for this test-only phase -- candidate new register
-  row.
+  row. **2026-07-28 update (CI T4, commit =a86fb294=): FIXED, register D26.**
 
 *** Next
 

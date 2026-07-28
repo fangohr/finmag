@@ -83,10 +83,13 @@ Already pinned by name elsewhere (not duplicated here):
   deferral -- see ``dev/dolfinx/porting_map.md``). None of the three were
   ever asserted as deferred *in this sweep file*, so nothing here is removed;
   this bullet exists only to keep this file's aggregated reviewer reference
-  current. ``Simulation.probe_field``/``probe_field_along_line`` remain
-  deferred by name (they depend on region-restricted
-  ``get_field_as_dolfin_function``, out of scope for Task 26a -- see its
-  ``save_m_in_region``/``get_submesh`` siblings above).
+  current. ``Simulation.probe_field``/``probe_field_along_line`` are now
+  PORTED (SR1 P4-probe, ``584820a0``): masked-array point evaluation in mesh
+  coordinates via the ported ``evaluate_at_point``, so they are no longer
+  deferred. Only their ``region=`` argument remains deferred by name (it
+  depends on region-restricted ``get_field_as_dolfin_function``, out of scope
+  for Task 26a -- see its ``save_m_in_region``/``get_submesh`` siblings
+  above).
 """
 
 import pytest
