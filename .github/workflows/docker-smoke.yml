@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  workflow:
+  docker-smoke:
     runs-on: ubuntu-latest
 
     steps:

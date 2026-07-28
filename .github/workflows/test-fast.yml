@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  dolfinx-m5:
+  test-fast:
     runs-on: ubuntu-latest
 
     steps:

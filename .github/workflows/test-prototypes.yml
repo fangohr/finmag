@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  dolfinx-m4:
+  test-prototypes:
     runs-on: ubuntu-latest
 
     steps:
