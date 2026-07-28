@@ -1,0 +1,26 @@
+# Formerly workflow.yml: master's docker-smoke tier, a pre-pixi ad hoc
+# Docker/pytest smoke workflow. `workflow_dispatch`-only (never fired by
+# push/pull_request) since before this task; left that way deliberately rather
+# than deleted -- it is superseded by the pixi-based test-prototypes/test-fast
+# (formerly dolfinx-m4.yml/dolfinx-m5.yml), test-python, and test-slow gates,
+# which are the maintained CI (CI T6, 2026-07-28: the legacy
+# python3-m1/m2/m3/core-suite workflows were retired). Kept for manual/
+# historical use only. [Claude Sonnet 5]
+name: docker-smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  workflow:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Initialisation
+      uses: actions/checkout@v2
+
+    - name: Build Docker image
+      run: docker build --no-cache -f install/docker/workflows/Dockerfile -t dockertestimage .
+
+    - name: Run tests
+      run: docker run dockertestimage bash -c "python -m pytest -v"

@@ -27,10 +27,11 @@ jobs:
         cache: true
 
     # Task 21's documented explicit two-step native story (mirrors
-    # dolfinx-m5.yml's verify-dolfinx-m5, which runs these same pixi tasks
-    # internally before its focused gates) -- test-python invokes the
-    # inventory script directly rather than through verify-dolfinx-m5, so the
-    # env build has to happen here instead. [Claude Sonnet 5]
+    # test-fast.yml's (formerly dolfinx-m5.yml) verify-dolfinx-m5, which runs
+    # these same pixi tasks internally before its focused gates) --
+    # test-python invokes the inventory script directly rather than through
+    # verify-dolfinx-m5, so the env build has to happen here instead.
+    # [Claude Sonnet 5]
     - name: Install editable package
       run: pixi run -e dolfinx dolfinx-install-editable
 

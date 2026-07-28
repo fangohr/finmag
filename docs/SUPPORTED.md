@@ -492,9 +492,10 @@ CI T7 re-run reproduced this exact tally with zero deltas.)
 `errors=0`/`failed=0` is now the expected, enforced shape (the
 `test-python.yml` weekly/on-demand CI job greps the inventory line for it —
 see "Continuous integration" in `README.md` for all three CI tiers:
-`dolfinx-m5.yml` push/PR fast gate, `test-python.yml` weekly-on-default-branch
-+ on-demand full-suite inventory, `test-slow.yml` on-demand-only heavy FULL
-example lane); every remaining failure/skip is either a master-governed
+`test-fast.yml` (formerly `dolfinx-m5.yml`) push/PR fast gate,
+`test-python.yml` weekly-on-default-branch + on-demand full-suite inventory,
+`test-slow.yml` on-demand-only heavy FULL example lane); every remaining
+failure/skip is either a master-governed
 skip/xfail or the D22 outer-face caveat. The exhaustive per-file
 classification (superseded post-T5, now two mechanisms only) was in the
 Task-7 verification report under

@@ -185,8 +185,8 @@ package. The immutable legacy-oracle comparison lane
 
 ### Continuous integration
 
-- `.github/workflows/dolfinx-m5.yml` — runs on every push/PR: the fast,
-  focused port-gate witness (~33 gates).
+- `.github/workflows/test-fast.yml` (formerly `dolfinx-m5.yml`) — runs on
+  every push/PR: the fast, focused port-gate witness (~33 gates).
 - `.github/workflows/test-python.yml` — weekly (Mondays) + on-demand: the
   full `src/finmag` suite inventory, gated on `failed=0 errors=0`.
 - `.github/workflows/test-slow.yml` — on-demand only (no schedule): the

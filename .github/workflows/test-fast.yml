@@ -1,4 +1,7 @@
-name: dolfinx-m5
+# master's test-fast tier: the per-push 33-gate aggregate (runs
+# dev/bin/verify-dolfinx-m5; keeps the M5 milestone script name). Formerly
+# dolfinx-m5.yml. [Claude Sonnet 5]
+name: test-fast
 
 on:
   push:

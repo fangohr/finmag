@@ -31,9 +31,10 @@ jobs:
         pixi-version: v0.62.1
         cache: true
 
-    # Same documented two-step native story as dolfinx-m5.yml's
-    # verify-dolfinx-m5 runs internally; test-slow calls the examples gate
-    # directly, so the env build happens here instead. [Claude Sonnet 5]
+    # Same documented two-step native story as test-fast.yml's (formerly
+    # dolfinx-m5.yml) verify-dolfinx-m5 runs internally; test-slow calls the
+    # examples gate directly, so the env build happens here instead.
+    # [Claude Sonnet 5]
     - name: Install editable package
       run: pixi run -e dolfinx dolfinx-install-editable
 

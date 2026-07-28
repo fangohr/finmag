@@ -1,4 +1,6 @@
-name: dolfinx-m4
+# master's test-prototypes tier: the frozen early-DOLFINx prototype gate
+# (formerly dolfinx-m4.yml). [Claude Sonnet 5]
+name: test-prototypes
 
 on:
   push:

@@ -126,9 +126,10 @@ Important current limitations:
   (which invoked `dev/bin/verify-python3-m3`, deleted with the legacy lane in
   `62aae519`), and `python3-core-suite.yml` (which inlined a stale explicit
   list of master test paths, several of which now held DOLFINx ports, D30)
-  are all deleted. CI on this branch is now `.github/workflows/dolfinx-m5.yml`
-  (push/PR fast gate), `.github/workflows/test-python.yml` (weekly + on-demand
-  full-suite inventory sweep, gated on `failed=0 errors=0`), and
+  are all deleted. CI on this branch is now
+  `.github/workflows/test-fast.yml` (formerly `dolfinx-m5.yml`; push/PR fast
+  gate), `.github/workflows/test-python.yml` (weekly + on-demand full-suite
+  inventory sweep, gated on `failed=0 errors=0`), and
   `.github/workflows/test-slow.yml` (on-demand-only heavy FULL-workload
   examples lane).
 
@@ -812,7 +813,8 @@ dev/bin/inventory-dolfinx-suite   INVENTORY: passed=769 failed=0 errors=0 skippe
 `test-python.yml` weekly/on-demand CI job greps the inventory line for this.
 CI tiers (unchanged since CI T6, see "merge blocker cleared" above and
 `README.md`'s "Continuous integration" section, kept consistent here):
-`dolfinx-m5.yml` runs the 33-gate fast witness on every push/PR;
+`test-fast.yml` (formerly `dolfinx-m5.yml`) runs the 33-gate fast witness on
+every push/PR;
 `test-python.yml` runs this full-suite inventory weekly (Mondays) on the
 default branch plus on-demand, gated on `failed=0 errors=0`; `test-slow.yml`
 runs the heavy `FINMAG_EXAMPLE_FULL=1` example lane on-demand only (no
