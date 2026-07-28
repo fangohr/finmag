@@ -465,11 +465,12 @@ files; retained bucket-B ancestors; carried `not_ported` tests; the D26
 functionality gap; one order-dependent full-suite-only artefact; and collection
 arithmetic). The six classes, with the retained-ancestor files named inline, are
 in [`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) under "Canonical test
-paths, the legacy oracle lane, and the inventory lane"; that section also
-itemises the delta against the previous run. The exhaustive per-file
-classification lives in the Task-7 verification report under
-`.superpowers/sdd/2026-07-27-canonical-test-paths/` (session-local, not part of
-a clean clone).
+paths, the legacy oracle lane, and the inventory lane"; the delta against the
+previous run lives in that document's "SR1 declared" section. The exhaustive
+per-file classification was in the Task-7 verification report under
+`.superpowers/sdd/2026-07-27-canonical-test-paths/`; that session record no
+longer exists — the authoritative in-repo record is HANDOVER's six inventory
+classes (files named inline) plus git history.
 
 ---
 

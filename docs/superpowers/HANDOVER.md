@@ -191,6 +191,14 @@ register **M5**, so that gap no longer surfaces as a failing test in the
 inventory lane (see register D30/M5 for the full disclosure and the pending
 owner decision on restoration vs. retroactive ratification).
 
+**2026-07-28 update (SR1 S5b, owner batch ratification, M5 RESTORE):** both
+files were restored verbatim from `b5015c5a`; they fail at collection
+(Python-2 source; also module-scope `import dolfin`), so
+`dev/bin/inventory-dolfinx-suite` again surfaces the nonlocal-`LLG_STT` gap in
+the non-gating lane (+2 collection errors, counted in this document's own
+inventory delta below). Restore-vs-ratify is no longer a pending decision —
+see register D30/M5 for the full disposition.
+
 **How to review a port.** For any test file, the port-vs-legacy diff is:
 
 ```sh
@@ -245,8 +253,10 @@ below), not because nobody ever attempted to port them:
 2. **retained bucket-B ancestors** (10+ files) — master files kept on purpose
    because at least one of their test functions has no named covering port
    function; they are meant to fail here until ported. The itemised list with a
-   per-file reason is in the Task-3/Task-4 reports under
-   `.superpowers/sdd/2026-07-27-canonical-test-paths/` (`util/meshes_test.py`,
+   per-file reason was in the Task-3/Task-4 reports under
+   `.superpowers/sdd/2026-07-27-canonical-test-paths/`; that session record no
+   longer exists — the authoritative in-repo record is this document's six
+   inventory classes (files named inline) plus git history (`util/meshes_test.py`,
    `drivers/tests/test_integrators.py`, `tests/bugs/test_bug_ndt_file_writing.py`,
    `tests/test_restart_simulation.py`, `tests/test_writing_data.py`,
    `scheduler/scheduler_test.py`, `tests/test_skyrmions.py`,
@@ -427,7 +437,8 @@ documentation commit, integrated on `dolfinx-parity` (`1a9df5eb`):
   eagerly import it. Two new register rows are **pending owner decision**:
   **D20** (corrected `M`/`M_average` physics vs legacy's unit bug) and **D21**
   (`save_m_in_region` restores intent with a region-id calling convention, since
-  legacy's version was itself non-functional).
+  legacy's version was itself non-functional) (both since ratified ACCEPT,
+  2026-07-28 batch).
 - Deferred by evidence (not owner-refused): mayavi `quiver`, paraview/X
   `visualization.py`, the optional PyVista adapter (pyvista absent); and the
   Simulation instance-lifecycle/`shutdown` methods and the skyrmion initialiser
