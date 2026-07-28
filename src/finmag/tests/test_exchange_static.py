@@ -1,15 +1,24 @@
 import numpy as np
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import vectors, angle
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    vectors = None
+    angle = None
 from finmag import Simulation as Sim
 from finmag.energies import Exchange
-from finmag.util.helpers import vectors, angle
 
 TOLERANCE = 8e-7
 
 # define the mesh
 length = 20e-9  # m
 simplexes = 10
-mesh = df.IntervalMesh(simplexes, 0, length)
+try:  # master: mesh = df.IntervalMesh(simplexes, 0, length)
+    mesh = df.IntervalMesh(simplexes, 0, length)
+except AttributeError:
+    mesh = None  # not ported (D33): tests below xfail
 Ms = 8.6e5
 A = 1.3e-11
 
@@ -35,6 +44,8 @@ def angles_after_a_nanosecond(initial_M, pins=[]):
     return angles
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API exchange static-equilibrium test, N14 static equilibrium is missing (D33)", strict=True)
 def test_all_orientations_without_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0)
@@ -43,6 +54,8 @@ def test_all_orientations_without_pinning():
         assert np.nanmax(angles) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API exchange static-equilibrium test, N14 static equilibrium is missing (D33)", strict=True)
 def test_all_orientations_with_pinning():
     for m0 in possible_orientations:
         angles = angles_after_a_nanosecond(m0, [0, 10])
@@ -51,6 +64,8 @@ def test_all_orientations_with_pinning():
         assert np.abs(np.max(angles) - np.min(angles)) < TOLERANCE + 1e-7
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API exchange static-equilibrium test, N14 static equilibrium is missing (D33)", strict=True)
 def test_exchange_field_should_change_when_M_changes():
     sim = Sim(mesh, Ms)
     sim.set_m(df.Expression(('(2*x[0]-L)/L',

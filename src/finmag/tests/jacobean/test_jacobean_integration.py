@@ -9,7 +9,13 @@
 import numpy as np
 import scipy.integrate
 import unittest
-from .domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: from .domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+    from .domain_wall_cobalt import setup_domain_wall_cobalt, domain_wall_error
+except ImportError:
+    # not ported (D33): tests below xfail
+    setup_domain_wall_cobalt = None
+    domain_wall_error = None
 from finmag.native import sundials
 from finmag.util.ode import scipy_to_cvode_rhs
 from datetime import datetime
@@ -38,9 +44,13 @@ class JacobeanIntegrationTests(unittest.TestCase):
         dt = datetime.now() - t
         print("scipy integration: method=%s, n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian/integration test, J-times witness exists elsewhere but full legacy contract is unmapped (D33)", strict=True)
     def test_scipy_bdf(self):
         self.run_scipy_test("bdf")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian/integration test, J-times witness exists elsewhere but full legacy contract is unmapped (D33)", strict=True)
     def test_scipy_adams(self):
         self.run_scipy_test("adams")
 
@@ -64,12 +74,18 @@ class JacobeanIntegrationTests(unittest.TestCase):
         dt = datetime.now() - t
         print("sundials integration, no jacobean (%s, diagonal): n_rhs_evals=%d, error=%g, elapsed time=%s" % (method, self.n_rhs_evals, domain_wall_error(ys, NODE_COUNT), dt))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian/integration test, J-times witness exists elsewhere but full legacy contract is unmapped (D33)", strict=True)
     def test_sundials_diag_bdf(self):
         self.run_sundials_test_no_jacobean("bdf")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian/integration test, J-times witness exists elsewhere but full legacy contract is unmapped (D33)", strict=True)
     def test_sundials_diag_adams(self):
         self.run_sundials_test_no_jacobean("adams")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian/integration test, J-times witness exists elsewhere but full legacy contract is unmapped (D33)", strict=True)
     def test_sundials_test_with_jacobean(self):
         self.llg = setup_domain_wall_cobalt(node_count=NODE_COUNT)
 

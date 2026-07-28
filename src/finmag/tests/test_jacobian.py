@@ -1,5 +1,8 @@
 import pytest
-from dolfin import *
+try:  # master: from dolfin import *
+    from dolfin import *
+except ImportError:
+    pass  # not ported (D33): tests below xfail; names below stay undefined
 from ufl import replace
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange
@@ -113,6 +116,8 @@ def convergence_rates(hs, ys):
 
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian test, Sundials J-times is current but this legacy variational-form test is unmapped (D33)", strict=True)
 def test_convergence_linear():
     """All convergence rates should be 1 as the differences
     should convert as O(n)."""
@@ -124,6 +129,8 @@ def test_convergence_linear():
         assert abs(rate - 1) < h * CONV_TOL
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API Jacobian test, Sundials J-times is current but this legacy variational-form test is unmapped (D33)", strict=True)
 def test_derivative_linear():
     """This should be zero because the rhs of LLG is linear in M."""
     J = llg.compute_jacobian()
@@ -133,23 +140,28 @@ def test_derivative_linear():
         assert abs(err) < h ** 2 * DERIV_TOL
 
 
-m = 1e-5
-mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
-S1 = FunctionSpace(mesh, "Lagrange", 1)
-S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
-llg = MyLLG(S1, S3)
-llg.set_m((1, 0, 0))
+try:  # master: module-level MyLLG/mesh/variational-form setup (relies on `from dolfin import *`)
+    m = 1e-5
+    mesh = BoxMesh(Point(0, 0, 0), Point(m, m, m), 5, 5, 5)
+    S1 = FunctionSpace(mesh, "Lagrange", 1)
+    S3 = VectorFunctionSpace(mesh, "Lagrange", 1)
+    llg = MyLLG(S1, S3)
+    llg.set_m((1, 0, 0))
 
-M, V = llg._m_field.f, llg.S3
-a, L = llg.variational_forms()
+    M, V = llg._m_field.f, llg.S3
+    a, L = llg.variational_forms()
 
-x = Function(V)
-s = 0.25  # some random number
-x.vector()[:] = s
-hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
+    x = Function(V)
+    s = 0.25  # some random number
+    x.vector()[:] = s
+    hs = [2.0 / n for n in (1, 2, 4, 8, 16, 32)]
 
-CONV_TOL = 1.5e-12
-DERIV_TOL = 1.3e-13
+    CONV_TOL = 1.5e-12
+    DERIV_TOL = 1.3e-13
+except NameError:
+    # not ported (D33): tests below xfail
+    llg = M = V = a = L = x = hs = None
+    CONV_TOL = DERIV_TOL = None
 
 
 

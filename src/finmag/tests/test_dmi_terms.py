@@ -1,9 +1,15 @@
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import times_curl
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    times_curl = None
 import numpy as np
 
-from finmag.util.helpers import times_curl
 
-
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-term test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_term3d_matches_analytical_solution():
     # Reinstate this DMI-term check as a real Python 3 regression rather than dead skipped code. [Codex GPT-5.4]
     """
@@ -22,6 +28,8 @@ def test_dmi_term3d_matches_analytical_solution():
     assert np.allclose(df.assemble(3.0 * energy_density * df.dx), 6.0, atol=1e-12)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-term test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_term2d_matches_3d_expression_for_in_plane_derivatives():
     """
     On a 2D mesh, times_curl should agree with the 3D expression when the
@@ -42,6 +50,8 @@ def test_dmi_term2d_matches_3d_expression_for_in_plane_derivatives():
     assert np.allclose(E_2d, E_3d, atol=1e-13)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-term test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_term_can_be_differentiated_and_assembled():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1)

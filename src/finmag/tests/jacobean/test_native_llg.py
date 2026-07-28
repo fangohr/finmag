@@ -1,12 +1,18 @@
 import numpy as np
 import unittest
-from finmag.native import llg as native_llg
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: from finmag.native import llg as native_llg
+    from finmag.native import llg as native_llg
+except ImportError:
+    native_llg = None  # not ported (D33): tests below xfail
 from .test_jacobean_computation import setup_llg_params_near_one
 from finmag.util.time_counter import counter
 
 
 class NativeLlgTests(unittest.TestCase):
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: native legacy LLG kernel, NumPy LLG path is current but this native assertion is unmapped (D33)", strict=True)
     def test_llg_performance(self):
         # Unfortunately 100000 nodes is not enough to even fill the L3 cache
         # TODO: Increase the number of nodes when this is fast enough

@@ -3,7 +3,10 @@ import sys
 import pytest
 import subprocess
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy, Exchange, Demag, DMI
 from finmag.util.consts import mu0
@@ -80,6 +83,8 @@ def test_exchange_energy_density():
     # is 1.05e-8, 30 June 2012
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API energy-density test, energy-density output contract not separately current (D33)", strict=True)
 def test_anisotropy_energy_density():
     """
     Written in sperical coordinates, the equation for the
@@ -123,6 +128,8 @@ def test_anisotropy_energy_density():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API energy-density test, energy-density output contract not separately current (D33)", strict=True)
 def test_DMI_energy_density_2D():
     # Keep the DMI energy-density path under active Python 3 coverage instead of the old skip. [Codex GPT-5.4]
     """
@@ -148,6 +155,8 @@ def test_DMI_energy_density_2D():
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API energy-density test, energy-density output contract not separately current (D33)", strict=True)
 def test_DMI_energy_density_3D():
     # Keep the 3D DMI energy-density path paired with the reinstated 2D coverage. [Codex GPT-5.4]
     """Same as above, on a 3D mesh."""

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 from finmag.field import Field
 import pytest
@@ -8,9 +11,14 @@ from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag, DMI
 
 np.random.seed(0)
 
-mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(40, 40, 5), 15, 15, 1)
-N = mesh.num_vertices()
-V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+try:  # master: mesh = df.BoxMesh(...); N = mesh.num_vertices(); V = df.VectorFunctionSpace(...)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(40, 40, 5), 15, 15, 1)
+    N = mesh.num_vertices()
+    V = df.VectorFunctionSpace(mesh, 'CG', 1, dim=3)
+except AttributeError:
+    mesh = None  # not ported (D33): tests below xfail
+    N = 0
+    V = None
 
 randvec1 = np.random.random_sample(3 * N)
 randvec2 = np.random.random_sample(3 * N)
@@ -64,6 +72,8 @@ def create_demag_params(atol, rtol, maxiter):
         Demag, {'solver_type': 'Krylov', 'parameters': create_demag_params(1e-6, 1e-6, 1e4)}, 1e-8,
         marks=pytest.mark.xfail),
 ])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API interaction-linearity test, selected energy checks exist but this bundled linearity contract is not mapped (D33)", strict=True)
 def test_interactions_scale_linearly_with_m(EnergyClass, init_args, TOL):
     """
     For each energy class, compute the associated effective field
@@ -90,6 +100,8 @@ def test_interactions_scale_linearly_with_m(EnergyClass, init_args, TOL):
             fld, a * fld_1 + b * fld_2 + c * fld_3, atol=TOL, rtol=TOL)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API interaction-linearity test, selected energy checks exist but this bundled linearity contract is not mapped (D33)", strict=True)
 def test_demag_with_weak_krylov_tolerances_is_not_linear_in_m():
     """
     The demag field is only numerically linear when the Krylov solves use

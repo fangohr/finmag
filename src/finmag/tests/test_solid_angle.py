@@ -1,15 +1,22 @@
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
 import numpy as np
 from finmag.util.solid_angle_magpar import return_csa_magpar
-from finmag.native import llg as native_llg
+try:  # master: from finmag.native import llg as native_llg
+    from finmag.native import llg as native_llg
+    csa = native_llg.compute_solid_angle
+except ImportError:
+    native_llg = None  # not ported (D33): tests below xfail
+    csa = None
 
 # native_llg.compute_solid_angle returns a signed angle, magpar does not.
 
 TOLERANCE = 1e-15
 
-csa = native_llg.compute_solid_angle
 csa_magpar = return_csa_magpar()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: native solid-angle kernel, no separate DOLFINx solid-angle gate (D33)", strict=True)
 def test_solid_angle_first_octant():
     """
     In spherical coordinates, the solid angle is defined as
@@ -37,6 +44,8 @@ def test_solid_angle_first_octant():
     assert abs(angle - magpar) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: native solid-angle kernel, no separate DOLFINx solid-angle gate (D33)", strict=True)
 def test_solid_angle_one_minus_sign():
     origin = np.zeros((3, 1))
 
@@ -54,6 +63,8 @@ def test_solid_angle_one_minus_sign():
     assert abs(abs(angle) - magpar) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: native solid-angle kernel, no separate DOLFINx solid-angle gate (D33)", strict=True)
 def test_solid_angle_two_minus_signs():
     origin = np.zeros((3, 1))
 
@@ -71,6 +82,8 @@ def test_solid_angle_two_minus_signs():
     assert abs(angle - magpar) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: native solid-angle kernel, no separate DOLFINx solid-angle gate (D33)", strict=True)
 def test_octants_solid_angle():
     """
     By the same reasing as above, we get 4PI for the solid angle of a sphere

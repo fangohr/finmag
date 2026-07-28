@@ -1,6 +1,10 @@
 import numpy as np
 import warnings
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy
 from aeon import timer
@@ -33,6 +37,8 @@ def M0(r):
     return 0 * mz, np.sqrt(1.0 - mz * mz), mz
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API 1D domain-wall profile test, profile equilibrium N14 is missing (D33)", strict=True)
 def test_domain_wall_profile(do_plot=False):
 
     simplices = 500

@@ -1,11 +1,17 @@
 import numpy as np
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from finmag import Simulation as Sim
 from finmag.energies import Zeeman
 
 Ms = 8.6e5
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API applied-field test, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_uniform_external_field():
     TOLERANCE = 3.5e-10
 
@@ -22,6 +28,8 @@ def test_uniform_external_field():
     assert np.max(diff) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API applied-field test, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_negative_uniform_external_field():
     TOLERANCE = 1e-10
 
@@ -40,6 +48,8 @@ def test_negative_uniform_external_field():
     assert np.max(diff) < TOLERANCE
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API applied-field test, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_non_uniform_external_field():
     TOLERANCE = 1e-9
     length = 10e-9

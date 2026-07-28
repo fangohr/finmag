@@ -1,10 +1,16 @@
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, Demag
 
 epsilon = 1e-16
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API time-lifecycle test, backend-specific time getter/reset lifecycle not fully mapped (D33)", strict=True)
 def test_current_time():
     size = 20e-9
     simplices = 4

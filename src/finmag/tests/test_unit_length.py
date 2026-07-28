@@ -1,6 +1,10 @@
 import os
 import numpy as np
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from finmag.field import Field
 from finmag.energies import Exchange
 
@@ -21,6 +25,8 @@ def exchange(mesh, unit_length):
     return m.get_numpy_array_debug(), H, E
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API unit-length test, capability covered by dolfinx-src-energies-pytest/dolfinx-src-simulation-pytest (D33)", strict=True)
 def test_compare_exchange_for_two_dolfin_meshes():
     """
     Check that a mesh expressed in nanometers gives the same results

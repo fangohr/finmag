@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import shutil
 from finmag.field import Field
 from finmag.util.meshes import sphere, netgen_is_usable
@@ -34,6 +37,8 @@ def uniformly_magnetised_sphere():
     return solutions
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API demag-sphere test, capability covered by dolfinx-src-demag-pytest (D33)", strict=True)
 def test_H_demag(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:
         H = solution.H.reshape((3, -1)).mean(1)
@@ -44,6 +49,8 @@ def test_H_demag(uniformly_magnetised_sphere):
         assert diff < TOL
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API demag-sphere test, capability covered by dolfinx-src-demag-pytest (D33)", strict=True)
 def test_H_demag_deviation(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:
         H = solution.H.reshape((3, -1))
