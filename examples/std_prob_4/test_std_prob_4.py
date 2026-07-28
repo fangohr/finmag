@@ -142,6 +142,12 @@ def run_simulation(stop_when_mx_eq_zero):
                 print("The average m_x first crossed zero at t = {} "
                       "(interpolated), <m> = {}.".format(
                           crossing["time"], crossing["m"]))
+                # NB: this is the full field at the first SAMPLE past the
+                # crossing (up to 1 ps late), not the interpolated
+                # crossing-time state -- interpolating a whole |m|=1 field
+                # would need renormalisation and has no consumer. The anchor
+                # uses crossing["m"] (interpolated averages), not this file;
+                # nothing in the repo currently reads m_at_crossing.npy.
                 np.save(m_at_crossing_file, sim.m)
             # Return True -> "event done, keep running" (full trace);
             # return False -> stop the simulation at the crossing.
@@ -179,6 +185,8 @@ def reference_crossing():
     """
     t, mx, my, _ = np.loadtxt(reference_file, unpack=True)
     i = int(np.flatnonzero(mx <= 0)[0])
+    assert i > 0, "reference trajectory starts already past the <m_x>=0 " \
+                  "crossing; there is no bracketing sample to interpolate"
     dt = t[i] - t[i - 1]
     t_ref, m_ref = interpolate_to_mx_zero(
         t[i - 1], (mx[i - 1], my[i - 1]), t[i], (mx[i], my[i]))
@@ -193,6 +201,8 @@ def derived_tolerances():
     tol_my)``."""
     _, _, dmx_dt, dmy_dt = reference_crossing()
     l_ex_nm = sqrt(2 * A / (mu0 * Ms ** 2)) * 1e9      # 5.6858 nm
+    # C = 1/8 (1D-tight) is ADOPTED; C = 3/16 (sharp full-3D, Jung) is the
+    # pre-committed fallback -- see assert_matches_reference()'s docstring.
     eps = 0.125 * (MESH_H_NM / l_ex_nm) ** 2           # 0.131421
     tol_t = eps / abs(dmx_dt)                          # 0.0080894 ns
     tol_my = eps * (1.0 + abs(dmy_dt) / abs(dmx_dt))   # 0.16339
@@ -207,29 +217,55 @@ def assert_matches_reference(t_cross_s, my_cross):
     No number below was chosen to make an observed result pass.
 
     (1) Discretisation error scale eps in a component of <m>.
-        The port meshes bar.geo with Gmsh OCC, not the legacy Netgen
-        tetrahedraliser, so the two discretisations differ at the
-        discretisation level (same geometry, same material, same maxh
-        directive; different element layout). For P1 elements the pointwise
-        interpolation error of a field varying on a length scale L over
-        elements of diameter h is bounded by (h^2/8)*max|d2m/ds2|, and the
-        sharpest micromagnetic structure varies on the exchange length
+        What is being compared is THIS discretisation (the port's P1 solution
+        on the Gmsh OCC mesh of bar.geo) against an EXTERNAL published
+        reference trajectory -- not one in-house mesh against another. eps
+        is therefore an error SCALE for our own discretisation, used as a
+        proxy for the whole discrepancy budget.
+
+        For P1 elements the pointwise interpolation error of a field varying
+        on a length scale L over elements of diameter h is bounded by
+        C*h^2*max|d2m/ds2|, and the sharpest micromagnetic structure varies
+        on the exchange length
             l_ex = sqrt(2A/(mu0*Ms^2)) = 5.6858 nm,
-        so max|d2m/ds2| <= 1/l_ex^2 (conservative: for a tanh wall of width
-        l_ex the true maximum is 0.385/l_ex^2). With the measured
-        representative element diameter h = 5.830 nm (see MESH_H_NM):
-            eps = (1/8)*(h/l_ex)^2 = 0.125 * 1.0513 = 0.1314.
-        The 1D-tight constant 1/8 is used rather than the crude
-        multi-dimensional 1/2 because the reversal structure varies
-        essentially along one direction (the 500 nm axis) while h is
-        isotropic. Recorded for transparency: with 1/2 the time tolerance
-        below would be 32.4 ps, only ~1.2x tighter than the coarse window --
-        i.e. the choice of constant is what makes this anchor worth having.
-        eps is an UPPER bound on the pointwise error and takes no credit for
-        the cancellation that volume-averaging gives <m_x>; the anchor is
-        therefore conservative by construction. (Corroboration, not an input:
-        the t=0 s-state <m_x> differs from the reference's first sample by
-        1.6e-3, ~80x below eps.)
+        so max|d2m/ds2| <= 1/l_ex^2 (mildly conservative: for a tanh wall of
+        width l_ex the true maximum is 0.770/l_ex^2, i.e. 1.30x, not 2.6x --
+        an earlier draft dropped the factor 2 in d2/ds2 tanh). With the
+        measured representative element diameter h = 5.830 nm (MESH_H_NM):
+            eps = C * (h/l_ex)^2 = C * 1.0513,
+            C = 1/8   ->  eps = 0.1314,  tol_t =  8.09 ps  (4.94x tighter
+                                                            than the window)
+            C = 3/16  ->  eps = 0.1971,  tol_t = 12.13 ps  (3.30x tighter)
+        C = 1/8 is the 1D-tight constant and is ADOPTED here because the
+        reversal structure varies essentially along one direction (the 500 nm
+        axis) while h is isotropic. C = 3/16 = 0.1875 is the correct sharp
+        FULL-3D P1 constant (Jung's theorem: a simplex of diameter h has
+        maximum variance 3h^2/8, giving h^2/2 * 3/8). (A constant of 1/2 --
+        floated in an earlier draft as "the multi-dimensional constant" --
+        is not sharp and is not the alternative on the table.)
+
+        PRE-COMMITTED FALLBACK RULE (recorded BEFORE the full-resolution run,
+        so that invoking it later cannot be tolerance-to-fit): if the FULL
+        run's crossing deviation lands between 8.09 ps and 12.13 ps, the
+        principled response is to adopt C = 3/16 -- i.e. the already-derived,
+        already-documented sharp 3D constant -- and NOT to invent a new
+        number. A deviation beyond 12.13 ps is a physics finding and must be
+        reported as such, not accommodated.
+
+        eps is an a-priori error-SCALE ESTIMATE, not a rigorous upper bound
+        on the discrepancy. Terms deliberately OMITTED from the budget (each
+        would enlarge it): the reference's own discretisation error; the Cea
+        constant relating the interpolation error to the actual FE solution
+        error; time-integration (CVODE tolerance) error; the demag
+        approximation (FK/BEM); and the difference in the s-state input,
+        which is itself relaxed on this mesh rather than shared with the
+        reference. Conservatism deliberately omitted on the other side (each
+        would shrink it): the cancellation that volume-averaging gives
+        <m_x>/<m_y>; h as element DIAMETER rather than extent along the
+        direction of variation; and the fact that at the crossing the
+        magnetisation is far smoother than a l_ex-width wall. The two sides
+        are not quantified here -- the estimate is a scale, and the FULL-lane
+        run plus the fallback rule above is what adjudicates it.
 
     (2) Crossing-time sensitivity. A displacement eps of <m_x> near the
         crossing moves the crossing by eps / |d<m_x>/dt|. The slope is read
@@ -247,12 +283,19 @@ def assert_matches_reference(t_cross_s, my_cross):
         section is met, dragging <m_y> along by |d<m_y>/dt| * tol_t:
             d<m_y>/dt = -3.952 /ns,
             tol_my = eps * (1 + 3.952/16.246) = 0.1634.
-        Against the reference value <m_y> = 0.7340 this excludes 92% of the
-        a-priori range [-1, 1], where the current suite constrains <m_y> not
-        at all.
+        Against the reference value <m_y> = 0.7340 the two-sided band of
+        half-width 0.1634 is 0.3268 wide out of the a-priori range [-1, 1]
+        (width 2), i.e. it excludes 83.7% of it -- where the suite constrains
+        <m_y> not at all. Be clear about its weakness: this bound is ~100x
+        looser than the deviation actually observed in pre-flight and will
+        NOT detect sub-20% <m_y> regressions.
 
     Reference values (recomputed at runtime from the checked-in file, quoted
     here for audit): t_ref = 0.138255 ns, <m_y>_ref = 0.733963.
+
+    Corroboration (NOT an input to any number above): the t=0 s-state <m_x>
+    of this port differs from the reference's first tabulated sample by
+    1.6e-3, ~80x below eps.
 
     STATUS: pre-flighted against the 10 ps-sampled dynamics.ndt trace this
     port produced on 2026-07-28 (partial run, 0 .. 0.55 ns, which contains
