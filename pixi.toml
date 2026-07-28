@@ -166,7 +166,11 @@ dolfinx-src-scipy-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/fi
 # this gate can reach the native `make` on first native import.
 # WRITE_FINMAG_VERSION=0 keeps that build from rewriting the tracked version
 # file. [Claude Opus 4.8]
-dolfinx-src-simulation-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/sim/sim_test.py src/finmag/sim/magnetisation_patterns_test.py src/finmag/tests/test_cyclic_references_in_sim.py"
+# CI T4: `tests/bugs/test_bug_ndt_file_writing.py` joins this gate -- it had no
+# gate home at all, yet it exercises `get_field_as_dolfin_function` point
+# evaluation (register D26, fixed here) plus the `.ndt` column/magnitude
+# regression it was originally written for. [Claude Opus 4.8]
+dolfinx-src-simulation-pytest = "WRITE_FINMAG_VERSION=0 PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/sim/sim_test.py src/finmag/sim/magnetisation_patterns_test.py src/finmag/tests/test_cyclic_references_in_sim.py src/finmag/tests/bugs/test_bug_ndt_file_writing.py"
 # Task 10: the aggregated deferred-surfaces sweep and the core Simulation
 # smoke, both new for the first direct-source DOLFINx gate. [Claude Sonnet 5]
 dolfinx-src-deferred-pytest = "PYTHONDONTWRITEBYTECODE=1 python -m pytest -q src/finmag/tests/test_deferred_surfaces.py"

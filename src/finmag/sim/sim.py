@@ -65,7 +65,7 @@ import ufl
 from dolfinx import fem, mesh as dmesh
 from mpi4py import MPI
 
-from finmag.field import Field
+from finmag.field import Field, as_point_evaluable
 from finmag.physics.llg import LLG
 from finmag.drivers.llg_integrator import llg_integrator
 from finmag.energies import DMI, Exchange, UniaxialAnisotropy, Zeeman
@@ -563,15 +563,36 @@ class Simulation(object):
             self.get_interaction("Zeeman").set_value([0, 0, 0])
 
     def get_field_as_dolfin_function(self, field_type, region=None):
-        """Return an interaction field (or ``m``) as a DOLFINx ``Function``."""
+        """Return an interaction field (or ``m``) as a DOLFINx ``Function``.
+
+        The returned object is **point-evaluable**, honouring master's
+        contract that this method hands back a plain dolfin ``Function``:
+        ``m = sim.get_field_as_dolfin_function('m'); m((x, y, z))`` gives the
+        field's component vector at that point. DOLFINx ``fem.Function``
+        objects are not point-callable by themselves (a call is UFL-symbolic
+        and the first comparison on its result raises "UFL conditions cannot
+        be evaluated as bool" -- register D26), so the field is returned as a
+        :class:`finmag.field.PointEvaluableFunction`: a real ``fem.Function``
+        sharing this field's dof storage (a live view, as in master) whose
+        ``__call__`` routes through :func:`finmag.field.evaluate_at_point`.
+
+        Point evaluation inherits that helper's caveats: a point exactly on an
+        OUTER mesh face may resolve to the wrong boundary vertex (register
+        D22; strictly interior points are correct), and a point outside this
+        rank's local mesh partition raises ``RuntimeError``. Coordinates are
+        MESH units, as for :meth:`probe_field` (``unit_length`` is not
+        applied).
+        """
         if region is not None:
             _deferred(
                 "get_field_as_dolfin_function",
                 "region-restricted field extraction",
             )
         if field_type == "m":
-            return self.llg._m_field.f
-        return self.llg.effective_field.get_dolfin_function(field_type)
+            function = self.llg._m_field.f
+        else:
+            function = self.llg.effective_field.get_dolfin_function(field_type)
+        return as_point_evaluable(function)
 
     # -- integrator ---------------------------------------------------------
 

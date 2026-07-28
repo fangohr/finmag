@@ -975,6 +975,59 @@ def evaluate_at_point(function, point):
     return value.copy()
 
 
+class PointEvaluableFunction(fem.Function):
+    """A ``dolfinx.fem.Function`` that is point-callable like legacy dolfin's.
+
+    Legacy dolfin ``Function`` objects evaluated themselves at a physical
+    point when called (``m((x, y, z))`` -> component vector), and legacy
+    finmag exposed that contract directly to users through
+    ``Simulation.get_field_as_dolfin_function``. DOLFINx ``fem.Function``
+    inherits ``__call__`` from ``ufl.Coefficient`` instead, where a call means
+    *symbolic* evaluation: it silently returns a UFL object (warning
+    "Couldn't map 'm' to a float"), and the first Python comparison on the
+    result raises ``ValueError: UFL conditions cannot be evaluated as bool in
+    a Python context`` (register D26).
+
+    This subclass restores the legacy contract by routing ``__call__`` through
+    :func:`evaluate_at_point`, the port's shared point-in-cell evaluator. It
+    is a real ``fem.Function`` (so ``isinstance`` checks, ``.x``, ``.eval``,
+    ``.function_space``, ``.interpolate`` and use inside forms all behave
+    normally), which is why this is a subclass rather than a proxy object.
+
+    Caveat inherited from :func:`evaluate_at_point` (register D22): a point
+    lying exactly on an OUTER mesh face may resolve to the wrong boundary
+    vertex; strictly interior points are correct. Points outside this rank's
+    local mesh partition raise ``RuntimeError``, mirroring legacy dolfin's
+    "point not inside domain" failure.
+    """
+
+    def __call__(self, *args):
+        """Evaluate at a point given as one coordinate sequence or as scalars.
+
+        Both legacy spellings are accepted: ``f([x, y, z])`` (the one every
+        in-tree caller uses) and ``f(x, y, z)``.
+        """
+        if not args:
+            raise TypeError("a point is required to evaluate this function")
+        point = args[0] if len(args) == 1 else args
+        return evaluate_at_point(self, point)
+
+
+def as_point_evaluable(function):
+    """Return ``function`` as a point-callable :class:`PointEvaluableFunction`.
+
+    The returned Function SHARES its degree-of-freedom storage with
+    ``function`` (DOLFINx' documented ``Function(V, x=...)`` constructor), so
+    it is a live view -- not a snapshot copy -- exactly as legacy's
+    ``get_field_as_dolfin_function`` returned the live ``m`` Function itself.
+    Already-callable inputs are returned unchanged.
+    """
+    if isinstance(function, PointEvaluableFunction):
+        return function
+    return PointEvaluableFunction(
+        function.function_space, x=function.x, name=function.name)
+
+
 def _assemble_scalar(domain, expression):
     local_value = fem.assemble_scalar(fem.form(expression))
     return domain.comm.allreduce(local_value, op=MPI.SUM)
