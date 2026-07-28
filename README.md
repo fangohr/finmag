@@ -192,6 +192,15 @@ package. The immutable legacy-oracle comparison lane
 - `.github/workflows/test-slow.yml` — on-demand only (no schedule): the
   heavy `FINMAG_EXAMPLE_FULL=1` example lane; long-running by design.
 
+GitHub only fires `schedule`/`workflow_dispatch` from the repo's default
+branch, so `test-python.yml`/`test-slow.yml` are inert on non-default
+branches until merged; run their equivalents locally meanwhile:
+`dev/bin/inventory-dolfinx-suite` and `FINMAG_EXAMPLE_FULL=1 pixi run -e
+dolfinx dolfinx-src-examples-pytest`. Also note GitHub-hosted runners cap
+jobs at 360 minutes, below the FULL lane's current ~10-13h runtime (register
+P1); `test-slow.yml`'s `timeout-minutes: 360` documents the tier rather than
+guaranteeing completion until the post-SR1 performance work lands.
+
 ### Current DOLFINx status and limitations
 
 The DOLFINx branch is at **SR1** (tag `sr1`, declared 2026-07-28): a serial

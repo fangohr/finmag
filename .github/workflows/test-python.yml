@@ -1,3 +1,10 @@
+# CI T6 review fix (2026-07-28): GitHub only fires `schedule` and
+# `workflow_dispatch` from the repository's DEFAULT branch (master). This
+# workflow is therefore inert on `dolfinx-parity` -- it will not run, either
+# on the weekly cron or via manual dispatch, until this branch merges to
+# master. Until then, run the equivalent locally:
+#   dev/bin/inventory-dolfinx-suite
+# [Claude Sonnet 5]
 name: test-python
 
 on:
@@ -29,6 +36,9 @@ jobs:
 
     - name: Build native extensions
       run: pixi run -e dolfinx dolfinx-native-build
+
+    - name: Provenance check
+      run: pixi run -e dolfinx dolfinx-provenance-check
 
     - name: Run full-suite inventory (non-gating parity sweep, gated on failed=0 errors=0)
       run: |
