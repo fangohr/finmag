@@ -515,6 +515,47 @@ reclassified by any Priority 2-5 slice. All of Priority 1-5 is complete. The
 detailed, superseding sequence is in
 `plans/2026-07-23-sr1-prioritised-plan.md`.
 
+## Open items (2026-07-28 update)
+
+**Batch ratification landed 2026-07-28 (SR1 S5b).** The repository owner
+agreed to every recommendation in the
+[SR1 batch-ratification decision sheet](specs/2026-07-27-sr1-ratification-sheet.md)
+(13 ACCEPT, 16 DEFER, 14 DROP, 1 RESTORE, 0 FIX NOW across 44 rows: the 42
+open `acceptance-register.md` rows plus two new rows, **D32** and **P1**).
+`acceptance-register.md` is now **pending-free**: every row
+(D1-D32, M1-M16, P1) carries a finalised `ratified 2026-07-28 (owner, batch):
+...` disposition; see the sheet for full per-row rationale and evidence. The
+M5 witnesses (`src/finmag/tests/zhangli/stt_nonlocal_test.py`,
+`zhang_li_test.py`) were restored verbatim from `b5015c5a` per the sheet's
+RESTORE recommendation -- they fail at collection (module-scope `import
+dolfin`) in the non-gating inventory lane, and no pixi gate references them.
+
+**S6 documentation obligations this ratification creates** (for whoever picks
+up S6/T8):
+
+- **D6a/D6b** (`UniaxialAnisotropy` axis normalisation: constant axis
+  normalised, varying axis used as supplied) -- both ACCEPTed; document both
+  contracts in `docs/SUPPORTED.md`.
+- **D16a/D16b** (restart does not reapply/validate material/interaction
+  metadata; varying-material restart metadata is a lossy scalar summary) --
+  both ACCEPTed (D16a as the SR1 restart contract, D16b relabelled
+  *informational*); document in `docs/SUPPORTED.md`.
+- **D32** (legacy `method=` names raise by name; default changed to
+  `box-assemble`) -- ACCEPTed option (a), keep the raise-by-name; document the
+  interface change and the changed default in `docs/SUPPORTED.md`.
+- **M12a/M12b/M12c** (legacy matrix/project/direct energy-assembly
+  implementations) -- DROPped permanently, which **implies a wording fix, not
+  a test deletion**: the `NotImplementedError` runtime message in
+  `src/finmag/energies/energy_base.py` currently says the methods are "not yet
+  ported to DOLFINx", which contradicts a permanent drop, and the two gated
+  deferral tests (`src/finmag/tests/test_energies.py:291`/`:298`,
+  `src/finmag/tests/test_dmi.py:167`/`:172`) must be reworded from "deferred"
+  to "removed".
+
+None of these five items are SR1-blocking (all ratified ACCEPT/DROP, not FIX
+NOW), but they are unclosed documentation/wording debt this ratification
+created and should not be silently dropped.
+
 [Codex GPT-5]
 
 [P2.1 updates: Claude Opus 4.8]
@@ -526,3 +567,5 @@ detailed, superseding sequence is in
 [P5.1–P5.2 and minimal-diff test-conversion phase completion update: Claude Sonnet 5]
 
 [Canonical test paths (D30), legacy-lane retirement and inventory lane: Claude Opus 4.8]
+
+[SR1 S5b batch ratification and M5 restore: Claude Sonnet 5]
