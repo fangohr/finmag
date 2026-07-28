@@ -9,8 +9,10 @@ shows the port diff directly.
 
 import json
 import os
+import subprocess
 import sys
 import types
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -25,6 +27,27 @@ from finmag.physics.llg import LLG
 FIXTURE = os.path.join(
     os.path.dirname(__file__), "fixtures", "llg_rhs_nonuniform.json"
 )
+
+SRC_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = SRC_ROOT.parent
+
+
+def _run_isolated(code, cwd=None, check=True):
+    # Same pattern as ``finmag.tests.test_example._run_isolated``: run in a
+    # fresh child interpreter so ``sys.modules`` reflects only what this
+    # process actually imported, immune to whole-suite import ordering.
+    # [Claude Sonnet 5]
+    env = os.environ.copy()
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONPATH"] = str(SRC_ROOT)
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=str(cwd or REPO_ROOT),
+        env=env,
+        check=check,
+        capture_output=True,
+        text=True,
+    )
 
 
 # ``finmag.util.helpers`` imports ``dolfin`` at module load and is therefore
@@ -104,9 +127,23 @@ def _nodal_dmdt(dmdt_flat):
 # --------------------------------------------------------------------------
 
 def test_ported_llg_does_not_load_legacy_dolfin_or_native():
-    assert LLG.__module__ == "finmag.physics.llg"
-    assert "dolfin" not in sys.modules
-    assert not any(name.startswith("finmag.native") for name in sys.modules)
+    # Run in a subprocess: under whole-suite ordering, earlier tests
+    # legitimately import legacy ``dolfin``/``finmag.native`` into THIS
+    # process, which would make the same in-process assertion fail on a
+    # pollution the ported ``LLG`` itself never caused. A fresh child
+    # interpreter is order-immune while asserting the identical contract.
+    # [Claude Sonnet 5]
+    result = _run_isolated(
+        """
+import sys
+from finmag.physics.llg import LLG
+
+assert LLG.__module__ == "finmag.physics.llg"
+assert "dolfin" not in sys.modules
+assert not any(name.startswith("finmag.native") for name in sys.modules)
+"""
+    )
+    assert result.returncode == 0, result.stderr
 
 
 # --------------------------------------------------------------------------
