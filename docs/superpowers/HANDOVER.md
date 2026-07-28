@@ -197,7 +197,10 @@ files were restored verbatim from `b5015c5a`; they fail at collection
 `dev/bin/inventory-dolfinx-suite` again surfaces the nonlocal-`LLG_STT` gap in
 the non-gating lane (+2 collection errors, counted in this document's own
 inventory delta below). Restore-vs-ratify is no longer a pending decision —
-see register D30/M5 for the full disposition.
+see register D30/M5 for the full disposition. **2026-07-28 update (CI T5/D33,
+`c0de5349`):** these files were since converted to guarded strict xfail —
+they now collect cleanly (3 tests, xfailed) and the gap surfaces as xfails,
+not collection errors.
 
 **How to review a port.** For any test file, the port-vs-legacy diff is:
 
@@ -583,7 +586,10 @@ module-scope `import dolfin`): pytest's AST-rewrite import raises
 `SyntaxError: Missing parentheses in call to 'print'` on the Python-2 `print`
 statements before either file's `import dolfin` is ever reached, so a future
 porter should read this as "needs a real port", not just a missing legacy
-`dolfin` install. No pixi gate references them.
+`dolfin` install. No pixi gate references them. **2026-07-28 update (CI
+T5/D33, `c0de5349`):** these files were since converted to guarded strict
+xfail -- they now collect cleanly (3 tests, xfailed) and the gap surfaces as
+xfails, not collection errors.
 
 **S6 documentation obligations this ratification creates** (for whoever picks
 up S6/T8):
