@@ -18,6 +18,13 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 | DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011) |
 
 
+
+## About the `main` branch (python3)
+
+We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md).
+
+For production computation, use the Python2 version (see next section).
+
 ## About the python2 version
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project.
