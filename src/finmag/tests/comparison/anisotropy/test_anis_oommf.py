@@ -3,9 +3,15 @@ import shutil
 import numpy as np
 import pytest
 import conftest
-from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
-from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
-from finmag.util.helpers import stats
+try:  # master: from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
+    from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
+    from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
+    from finmag.util.helpers import stats
+except ImportError:
+    # not ported (D33): tests below xfail (or skip -- oommf executable is
+    # also unavailable in this environment, see skipif below)
+    oommf_m0 = finmag_to_oommf = mesh = oommf_uniaxial_anisotropy = None
+    stats = None
 
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")

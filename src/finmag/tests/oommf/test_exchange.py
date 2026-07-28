@@ -1,12 +1,19 @@
 import os
 import shutil
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import stats
+    from finmag.util.oommf import mesh
+    from finmag.util.oommf.comparison import compare_exchange
+except ImportError:
+    # not ported (D33): tests below xfail (or skip -- oommf executable is
+    # also unavailable in this environment, see pytestmark below)
+    df = None
+    stats = None
+    mesh = compare_exchange = None
 import matplotlib.pyplot as plt
 import pytest
-from finmag.util.helpers import stats
-from finmag.util.oommf import mesh
-from finmag.util.oommf.comparison import compare_exchange
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 Ms = 8.6e6

@@ -1,11 +1,18 @@
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.oommf import mesh, oommf_dmdt
+    from finmag.util.helpers import stats
+except ImportError:
+    # not ported (D33): tests below xfail (or skip -- oommf executable is
+    # also unavailable in this environment, see skipif below)
+    df = None
+    mesh = oommf_dmdt = None
+    stats = None
 import numpy as np
 import shutil
 import pytest
 from finmag.physics.llg import LLG
 from finmag.energies import Zeeman
-from finmag.util.oommf import mesh, oommf_dmdt
-from finmag.util.helpers import stats
 
 TOLERANCE = 1e-15
 
@@ -15,9 +22,12 @@ H = 1e-9
 nL = 20
 nW = 10
 nH = 1
-msh = df.BoxMesh(df.Point(0, 0, 0), df.Point(L, W, H), nL, nW, nH)
-S1 = df.FunctionSpace(msh, "Lagrange", 1)
-S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
+try:  # master: msh = df.BoxMesh(...); S1 = df.FunctionSpace(...); S3 = df.VectorFunctionSpace(...)
+    msh = df.BoxMesh(df.Point(0, 0, 0), df.Point(L, W, H), nL, nW, nH)
+    S1 = df.FunctionSpace(msh, "Lagrange", 1)
+    S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
+except AttributeError:
+    msh = S1 = S3 = None  # not ported (D33): tests below xfail
 
 
 @pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
