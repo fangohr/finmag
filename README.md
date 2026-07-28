@@ -183,6 +183,15 @@ package. The immutable legacy-oracle comparison lane
 (`dev/bin/run-legacy-oracle`) is unaffected: its reference checkouts predate
 `pyproject.toml` and do not need it.
 
+### Continuous integration
+
+- `.github/workflows/dolfinx-m5.yml` — runs on every push/PR: the fast,
+  focused port-gate witness (~33 gates).
+- `.github/workflows/test-python.yml` — weekly (Mondays) + on-demand: the
+  full `src/finmag` suite inventory, gated on `failed=0 errors=0`.
+- `.github/workflows/test-slow.yml` — on-demand only (no schedule): the
+  heavy `FINMAG_EXAMPLE_FULL=1` example lane; long-running by design.
+
 ### Current DOLFINx status and limitations
 
 The DOLFINx branch is at **SR1** (tag `sr1`, declared 2026-07-28): a serial

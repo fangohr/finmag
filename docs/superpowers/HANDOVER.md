@@ -121,16 +121,16 @@ Important current limitations:
   three tests are still carried as `not_ported` in `sim/sim_test.py`. The
   `save_field_to_vtk` (XDMF/VTK) path is a different method and *is* covered;
   do not mistake one for the other;
-- **two GitHub workflows must be reconciled before any merge to `master`.**
-  `.github/workflows/python3-m3.yml` invokes `dev/bin/verify-python3-m3`, which
-  was deleted with the legacy lane (`62aae519`), and
-  `.github/workflows/python3-core-suite.yml` inlines a stale explicit list of
-  master test paths, several of which now hold DOLFINx ports (D30). Both jobs
-  carry `if: github.ref_name != 'dolfinx-parity' && github.head_ref !=
-  'dolfinx-parity'`, so both are **inert on this branch** and no CI here is
-  red — but both are genuine dangling references on any line where they are
-  live. Reconcile them (delete, or repoint at the oracle/inventory lanes) as
-  part of the merge, not as a parity slice.
+- **merge blocker cleared 2026-07-28 (CI T6): legacy workflows removed.**
+  `.github/workflows/python3-m1.yml`, `python3-m2.yml`, `python3-m3.yml`
+  (which invoked `dev/bin/verify-python3-m3`, deleted with the legacy lane in
+  `62aae519`), and `python3-core-suite.yml` (which inlined a stale explicit
+  list of master test paths, several of which now held DOLFINx ports, D30)
+  are all deleted. CI on this branch is now `.github/workflows/dolfinx-m5.yml`
+  (push/PR fast gate), `.github/workflows/test-python.yml` (weekly + on-demand
+  full-suite inventory sweep, gated on `failed=0 errors=0`), and
+  `.github/workflows/test-slow.yml` (on-demand-only heavy FULL-workload
+  examples lane).
 
 ## Install and verify the supported environment
 

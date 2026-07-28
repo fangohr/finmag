@@ -1,0 +1,44 @@
+name: test-slow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-slow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1200
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    # Same documented two-step native story as dolfinx-m5.yml's
+    # verify-dolfinx-m5 runs internally; test-slow calls the examples gate
+    # directly, so the env build happens here instead. [Claude Sonnet 5]
+    - name: Install editable package
+      run: pixi run -e dolfinx dolfinx-install-editable
+
+    - name: Build native extensions
+      run: pixi run -e dolfinx dolfinx-native-build
+
+    - name: Run FULL-workload examples (heavy muMAG / long-dynamics cases)
+      run: |
+        set -o pipefail
+        FINMAG_EXAMPLE_FULL=1 pixi run -e dolfinx dolfinx-src-examples-pytest 2>&1 | tee examples.log
+
+    - name: Publish examples summary
+      if: always()
+      run: |
+        {
+          echo "### test-slow (FULL examples) summary"
+          echo
+          echo '```'
+          tail -n 20 examples.log
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
