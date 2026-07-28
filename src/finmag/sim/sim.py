@@ -58,6 +58,7 @@ Deliberate deviations from the legacy module (all documented in
 
 import itertools
 import logging
+import sys
 
 import numpy as np
 import ufl
@@ -161,8 +162,11 @@ def _reject_touching_macro_geometry(mesh, macrogeometry):
 class Simulation(object):
     """Unified interface to finmag's micromagnetic simulation capabilities."""
 
-    # Lightweight instance accounting is retained for API compatibility; it no
-    # longer holds any cyclic references (no table writer / scheduler).
+    # Instance accounting, as on master: ``instances`` maps ``instance_id`` ->
+    # live ``Simulation``. The mapping holds a STRONG reference, so a
+    # simulation stays alive until ``shutdown()`` (or ``instances_delete_all``
+    # / ``instances_delete_all_others``) removes it -- exactly master's
+    # contract. [Claude Opus 4.8]
     instance_counter_max = 0
     instances = {}
 
@@ -233,10 +237,23 @@ class Simulation(object):
             "ETA": sim_helpers.eta,
         }
 
-        # instance booking (no cyclic references retained)
+        # instance booking (master: sim.py:93-98)
         self.instance_id = Simulation.instance_counter_max
         Simulation.instance_counter_max += 1
+        assert self.instance_id not in Simulation.instances.keys()
         Simulation.instances[self.instance_id] = self
+
+        # Master attached a per-simulation RotatingFileHandler here
+        # (``helpers.start_logging_to_file(self.logfilename, mode='w')``), which
+        # is precisely what made ``close_logfile()`` necessary: a script that
+        # created many Simulation objects exhausted the process file-descriptor
+        # limit. The DOLFINx port deliberately does NOT open a per-simulation
+        # logfile (finmag logging goes to the global logfile configured in
+        # ``finmag.sim.init``), so that failure mode cannot occur here.
+        # ``close_logfile()`` is kept as a working part of the public teardown
+        # surface and closes whatever handler is attached to this attribute.
+        # [Claude Opus 4.8]
+        self.logging_handler = None
 
         log.info("Creating Sim object name='{}', instance_id={}.".format(
             self.name, self.instance_id))
@@ -266,6 +283,105 @@ class Simulation(object):
         self.reltol = 1e-6
         self.abstol = 1e-6
         self.parallel = False
+
+    # -- teardown / instance management ------------------------------------
+    # Ported from master ``src/finmag/sim/sim.py`` (b5015c5a): ``shutdown``
+    # (:236), ``instances_delete_all_others`` (:273), ``instances_list_all``
+    # (:283), ``instances_delete_all`` (:291), ``instances_alive_count``
+    # (:303). Master's public SEMANTICS are the contract; the *mechanism* is
+    # adapted to the port, which has fewer cyclic references to break (no
+    # eagerly-created Tablewriter and no bound-method scheduler shortcuts).
+    # [Claude Opus 4.8]
+
+    def shutdown(self):
+        """Attempt to clear all cyclic dependencies and close all files.
+        The simulation object is unusable after this has been called, but
+        should be garbage collected if going out of scope subsequently.
+
+        Returns the number of references to self -- in my tests in March 2015,
+        this number was 4 when all cyclic references were removed, and thus
+        the next GC did work."""
+
+        log.info("Shutting down Simulation object {}".format(self.__str__()))
+
+        # instance book keeping
+        assert self.instance_id in Simulation.instances.keys()
+        # remove reference to this simulation object from dictionary
+        del Simulation.instances[self.instance_id]
+
+        log.debug("{} other Simulation instances alive.".format(
+            self.instances_alive_count()))
+
+        # now start to remove (potential) references to 'self':
+
+        # The Tablewriter is created lazily here (master created it in
+        # ``__init__``), so there is only a cycle to break if an .ndt file was
+        # actually written. Its ``sim`` back-reference and its per-entity
+        # 'get' closures both close over this object.
+        if self._tablewriter is not None:
+            self._tablewriter.delete_entity_get_methods()
+            del self._tablewriter.sim
+            self._tablewriter = None
+        self.clear_schedule()
+        del self.scheduler
+        del self.scheduler_shortcuts
+        # Field savers hold open file objects in the incremental case.
+        self.field_savers = {}
+        self.close_logfile()
+        return sys.getrefcount(self)
+
+    def instances_delete_all_others(self):
+        for id_ in sorted(Simulation.instances.keys()):
+            if id_ is not None:   # can happen if instances have been deleted
+                if id_ != self.instance_id:  # do not delete ourselves, here
+                    sim = Simulation.instances[id_]
+                    sim.shutdown()
+                    del sim
+
+    @staticmethod
+    def instances_list_all():
+        log.info("Showing all Simulation object instances:")
+        for id_ in sorted(Simulation.instances.keys()):
+            if id_ is not None:   # can happen if instances have been deleted
+                log.info("    sim instance_id={}: name='{}'".format(
+                    id_, Simulation.instances[id_].name))
+
+    @staticmethod
+    def instances_delete_all():
+        log.info("instances_delete_all() starting:")
+        if len(Simulation.instances) == 0:
+            log.debug("  no instances found")
+            return   # no objects exist
+        else:
+            for id_ in sorted(Simulation.instances.keys()):
+                sim = Simulation.instances[id_]
+                sim.shutdown()
+                del sim
+            log.debug("instances_delete_all() ending")
+
+    def instances_alive_count(self):
+        return sum([1 for id_ in Simulation.instances.keys()
+                    if id_ is not None])
+
+    def close_logfile(self):
+        """
+        Stop logging to the logfile associated with this simulation object.
+
+        This closes the file and removed the associated logging
+        handler from the 'finmag' logger. Note that logging to other
+        files (in particular the global logfile) is not affected.
+
+        """
+        if hasattr(self.logging_handler, 'stream'):
+            log.info("Closing logging_handler {} for sim object {}".format(
+                self.logging_handler, self.name))
+            self.logging_handler.stream.close()
+            log.removeHandler(self.logging_handler)
+            self.logging_handler = None
+        else:
+            log.info(
+                "No stream found for logging_handler {} for sim object "
+                "{}".format(self.logging_handler, self.name))
 
     def __str__(self):
         return "finmag.Simulation(name='{}', instance_id={}) with {}".format(

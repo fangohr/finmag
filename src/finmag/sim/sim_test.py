@@ -196,10 +196,13 @@ def _make_sim(**kwargs):
 #     test_mark_regions                  -- region-restricted field->vtk export
 #         deferred; master itself xfail on dolfin>=1.5.
 #     test_length_scales                 -- Simulation.length_scales() not ported.
-#     test_clean_up                      -- Simulation.instances_delete_all_others()
-#         / shutdown() NOT ported: the port keeps a plain ``instances`` dict but
-#         deliberately holds no cyclic references (see sim.py class comment), so
-#         the master cyclic-reference cleanup surface is absent. See report.
+#     test_clean_up                      -- GAP CLOSED (CI T3, 2026-07-28): the
+#         teardown surface (``shutdown``/``instances_delete_all_others``/
+#         ``instances_list_all``/``instances_delete_all``/
+#         ``instances_alive_count``/``close_logfile``) IS now ported, so this
+#         test is PROMOTED: it runs LIVE (both markers removed). It stays at the
+#         bottom of the file -- master's own position -- because it shuts down
+#         every other live ``Simulation`` instance and so must run last.
 #
 # All NormalModeSimulation / eigenmode / plotting / X-display / gmsh / csg
 # module-level functions in sim_test.py belong to the (separate)
@@ -1562,6 +1565,20 @@ def test_probe_field_coordinates_are_mesh_units_not_metres():
 # empirically benign for the rest of the gate, but is called out here in
 # case a future flake in a neighbouring test traces back to it.
 #
+# CI T3 (2026-07-28) closed the register-D24 gap this test's xfail reason
+# used to name (``close_logfile``/instance teardown IS now ported --
+# ``test_clean_up`` below is proof, promoted to live). This test still
+# xfails, but for a DIFFERENT, unrelated reason, same class as D31's
+# ``df.BoxMesh`` setup blocker: its own body constructs
+# ``mesh = df.UnitIntervalMesh(1)`` with legacy ``dolfin`` absent (stubbed
+# by ``_DolfinAbsent`` above), so it fails at that line with
+# ``AttributeError`` before the logfile-teardown logic it actually tests is
+# ever reached. Verified empirically (``pytest --runxfail``): promoting it
+# (removing both markers) does NOT make it pass. Per the carry convention
+# (runtime-level dolfin/py2-isms are deliberately not modernised), it stays
+# under ``@pytest.mark.not_ported`` with a corrected xfail reason instead of
+# the stale D24 one.
+#
 # Master's module-level imports are reproduced below; the ones that cannot be
 # executed under DOLFINx (they raise at import time and would break collection)
 # are guarded, per the carry convention.
@@ -1934,7 +1951,11 @@ def test_ndt_writing_with_time_dependent_field(tmpdir):
 #@pytest.mark.skipif("True")
 
 
-@pytest.mark.xfail(reason="not ported: Simulation.close_logfile/instance teardown (register D24)", strict=True)
+@pytest.mark.xfail(reason="setup blocker unrelated to register D24 (now closed): "
+                    "mesh = df.UnitIntervalMesh(1) with legacy dolfin absent "
+                    "(_DolfinAbsent stub) raises AttributeError before the "
+                    "logfile-teardown logic under test ever runs; same class "
+                    "as D31's df.BoxMesh setup blocker", strict=True)
 @pytest.mark.not_ported
 def test_removing_logger_handlers_allows_to_create_many_simulation_objects(tmpdir):
     """
@@ -3002,8 +3023,13 @@ def test_profile(tmpdir):
     os.path.exists('foobar.prof')
 
 
-@pytest.mark.xfail(reason="not ported: Simulation.shutdown()/instances_delete_all_others()/close_logfile() teardown surface (register D24)", strict=True)
-@pytest.mark.not_ported
+# PROMOTED (CI T3, 2026-07-28, register D24 gap closed): the teardown
+# surface (shutdown/instances_delete_all_others/instances_list_all/
+# instances_delete_all/instances_alive_count/close_logfile) is now ported
+# in sim.py, so this master test runs live. Both the strict xfail and the
+# not_ported marker are removed. Master's own placement (bottom of the
+# file) is kept: it shuts down every other live Simulation instance and so
+# must run last.
 def test_clean_up():
     """Fake test to shutdown simulation objects"""
     s = barmini()
