@@ -165,7 +165,13 @@ def test_dmi_export_does_not_load_legacy_dolfin():
     "method", ("box-matrix-numpy", "box-matrix-petsc", "project", "direct")
 )
 def test_deferred_dmi_methods_are_rejected_precisely(method):
-    with pytest.raises(NotImplementedError, match="not yet ported"):
+    """Master's four alternate ``method=`` names are REMOVED, not deferred.
+
+    See register M12a/M12b/M12c (permanent drop, owner-ratified 2026-07-28)
+    and D32 (raise-by-name plus the changed ``box-assemble`` default). The
+    function name is historical.
+    """
+    with pytest.raises(NotImplementedError, match="was removed"):
         DMI(1e-3, method=method)
 
 

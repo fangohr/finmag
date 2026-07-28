@@ -51,8 +51,9 @@ explicit "not covered", a "deferred + reason", or "covered elsewhere + file".
   - ``test_exchange_field_supported_methods`` -> deferred + reason:
     covered by ``test_deferred_energy_methods_are_rejected_precisely``.
     Alternate methods (``box-matrix-numpy``, ``box-matrix-petsc``,
-    ``direct``) are NOT ported under DOLFINx and raise
-    ``NotImplementedError("... not yet ported")`` by name; only
+    ``direct``) are REMOVED under DOLFINx (register M12a-c/D32, ratified
+    2026-07-28) and raise
+    ``NotImplementedError("... was removed (D32/M12 ratified ...)")``; only
     ``box-assemble`` exists, so a same-vs-alternate-method equivalence test
     is moot by construction. (Master itself excluded ``"project"`` from the
     comparison as "too bad"; DOLFINx additionally rejects ``"project"``
@@ -289,9 +290,16 @@ def test_ported_energy_exports_do_not_load_legacy_dolfin():
     "method", ("box-matrix-numpy", "box-matrix-petsc", "project", "direct")
 )
 def test_deferred_energy_methods_are_rejected_precisely(method):
-    with pytest.raises(NotImplementedError, match="not yet ported"):
+    """Master's four alternate ``method=`` names are REMOVED, not deferred.
+
+    The owner ratified dropping them permanently on 2026-07-28 (register
+    M12a/M12b/M12c; raise-by-name and the changed ``box-assemble`` default
+    are register D32), so the runtime message says "removed", not "not yet
+    ported". The function name is historical.
+    """
+    with pytest.raises(NotImplementedError, match="was removed"):
         EnergyBase(method=method)
-    with pytest.raises(NotImplementedError, match="not yet ported"):
+    with pytest.raises(NotImplementedError, match="was removed"):
         Exchange(1.0, method=method)
 
 

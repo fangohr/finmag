@@ -84,12 +84,17 @@ More detailed comments on the installation of finmag on a host machine are in [`
 
 ### Installing the DOLFINx port (pixi)
 
-The in-progress DOLFINx port (`src/finmag` on Python 3.12 + `fenics-dolfinx`)
-is installed as a regular editable Python package via [pixi](https://pixi.sh)
-and a `pyproject.toml` (setuptools, src-layout). This is currently the only
-supported install path for this lane: there is no published wheel, and
-`PYTHONPATH=src` (the earlier transitional workaround, see
-`transition-notes.org`) is kept only as a single fallback task.
+The DOLFINx port (`src/finmag` on Python 3.12 + `fenics-dolfinx`) is installed
+as a regular editable Python package via [pixi](https://pixi.sh) and a
+`pyproject.toml` (setuptools, src-layout). This is currently the only supported
+install path for this lane: there is no published wheel, and `PYTHONPATH=src`
+(the earlier transitional workaround, see `transition-notes.org`) is kept only
+as a single fallback task.
+
+**Read [`docs/SUPPORTED.md`](docs/SUPPORTED.md) before using this lane.** It is
+the user-facing statement of exactly what SR1 supports, how each family is
+validated and to what tolerance, what is still waiting to be ported, what was
+dropped, and how an unavailable surface fails.
 
 ```bash
 # 1. Create/sync the dolfinx pixi environment (conda-forge fenics-dolfinx,
@@ -117,6 +122,43 @@ pixi run -e dolfinx dolfinx-native-build
 pixi run -e dolfinx dolfinx-provenance-check
 ```
 
+#### Verify the install
+
+One command runs the whole supported verification (it performs the editable
+install, native build and provenance check itself, then the 33 focused gates —
+so do not run steps 1-4 above redundantly unless you are diagnosing an
+install/build failure):
+
+```bash
+dev/bin/verify-dolfinx-m5      # expect: 33/33 green
+```
+
+For the non-gating parity backlog (the whole `src/finmag` tree, ~30 min, **not**
+a verdict — see `docs/SUPPORTED.md` §7):
+
+```bash
+dev/bin/inventory-dolfinx-suite
+```
+
+#### Quickstart
+
+```python
+import finmag
+
+sim = finmag.example.barmini()      # 3x3x10 nm Py bar, m0 = (1, 0, 1)
+sim.run_until(1e-10)                # deterministic time integration
+print(sim.m_average)                # volume-averaged magnetisation
+print(sim.total_energy())           # total energy, J
+sim.relax()                         # relax to equilibrium
+```
+
+Build your own simulation with `finmag.sim_with(mesh, Ms, m_init, A=...,
+K1=..., K1_axis=..., H_ext=..., D=..., alpha=..., unit_length=...)`, where
+`mesh` is a `dolfinx.mesh.Mesh`. See
+[`docs/SUPPORTED.md`](docs/SUPPORTED.md) for the full supported API,
+[`examples/`](examples) for seventeen converted examples, and
+`pixi run -e dolfinx dolfinx-src-examples-pytest` to run the fast lane of them.
+
 `pyproject.toml`'s static `version = "0.1.0"` is packaging metadata only; it
 has no runtime meaning. Runtime provenance remains `finmag.__version__` (a
 git revision SHA written into `src/finmag/__version__.py` by
@@ -143,24 +185,35 @@ package. The immutable legacy-oracle comparison lane
 
 ### Current DOLFINx status and limitations
 
-The DOLFINx branch is an in-progress compatibility port, not yet a full Finmag
-release. It already provides a useful serial deterministic simulator with the
-common energy terms, FK and treecode demag, varying materials, regions, local
-spin-transfer torque, SciPy/native-CVODE integration, scheduling and common
-output. The aggregate test gate being green means that this **ported subset**
-passes; it does not mean every original Finmag feature is available.
+The DOLFINx branch is at **SR1** (tag `sr1`, declared 2026-07-28): a serial
+deterministic micromagnetic simulator, **not** yet full parity with original
+`master`. It provides the common energy terms, FK and treecode/MacroGeometry
+demag, varying materials, regions, local spin-transfer torque, SciPy and native
+CVODE integration, scheduling, restart and common output. The aggregate test
+gate being green means this **ported subset** passes; it does not mean every
+original Finmag feature is available.
 
 Major work still outstanding includes thermal SLLG/LLB, normal modes and
 FFT/PSD, legacy NEB, general MPI time stepping, `Simulation(pbc=)`, nonlocal
-STT, external comparison harnesses, HDF5 readback, plotting and specialist
-utilities. Some top-level compatibility names still expose legacy `dolfin`
-imports. Native Sundials is restored as the public `Simulation`/`sim_with`
+STT, live external comparison harnesses, VTK/XDMF function readback, and
+specialist plotting/utilities. Some top-level compatibility names still expose
+legacy `dolfin` imports. Native Sundials is the public `Simulation`/`sim_with`
 default; SciPy remains a fully supported explicit opt-in
 (`integrator_backend="scipy"`).
 
+**Performance caveat:** the port is currently ~17.6x slower than legacy-era
+expectations on the heaviest examples (register `P1`); the root cause is
+per-evaluation form re-assembly and a fix is planned in
+[`docs/superpowers/plans/2026-07-28-post-sr1-performance.md`](docs/superpowers/plans/2026-07-28-post-sr1-performance.md).
+Budget accordingly.
+
+**Start here:** [`docs/SUPPORTED.md`](docs/SUPPORTED.md) — supported API,
+validation classes and tolerances, the "waiting to be ported" list, the
+permanently-dropped list, and how deferred surfaces fail.
+
 For the exact tested boundary and known failures, see
 [`docs/superpowers/capability-status.md`](docs/superpowers/capability-status.md).
-For behavior changes that still need an owner decision, see
+For every recorded behavior deviation and its owner disposition, see
 [`docs/superpowers/acceptance-register.md`](docs/superpowers/acceptance-register.md).
 For the file-by-file master/pixi test and example mapping, see
 [`docs/superpowers/master-pixi-parity-manifest.md`](docs/superpowers/master-pixi-parity-manifest.md).

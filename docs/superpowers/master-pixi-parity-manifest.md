@@ -462,6 +462,50 @@ all-green FULL acceptance run.
 | Run date/time | Worktree/commit | Dirty status captured | Aggregate result | Full lane result | Logs/artifacts | Orchestrator |
 |---|---|---|---|---|---|---|
 | 2026-07-23 baseline | main dirty-doc + clean detached `/tmp/finmag-p0-full-f1a1344c` at `f1a1344c` | clean FULL worktree status/diff empty | exit 0; 32 green; fast 14 passed, 3 skipped | exit 1; 12 passed, 5 failed: 3 wrapper timeouts, `save_m` KeyError, raw-`dolfin` import | `/tmp/finmag-p0-baseline-m5.log`; `/tmp/finmag-p0-baseline-full-examples-clean.log`; tracked artifacts unchanged | recorded |
+| 2026-07-27 | main worktree, `cubic_anisotropy/sim.py` alone | n/a (single-entry measurement) | n/a | **PASS in 3551s (~59.2 min)** | `/tmp/cubic_anisotropy_sim_run2.log` | SR1 T2 |
+| 2026-07-28 (attempt 3) | main worktree, SR1 S2 timeouts | n/a | n/a | **14/14 fast entries PASS at FULL workload in 9.2h**, including the previously-failing `cubic_anisotropy/hysteresis.py` and `std_prob_3/run.py` (complete 10-simulation bisection). Run stopped before the three `test_slow_example_runs` entries completed | `/home/sam/.claude/jobs/6b8f36a7/tmp/full-lane-final.log` | SR1 T3 phase 2 |
+
+### FULL-lane closure at SR1 declaration (2026-07-28, SR1 T3 phase 2 / S6)
+
+**Standing at declaration: 15 of 17 entries witnessed green at full workload;
+the other 2 are DEFERRED BY OWNER DECISION, not failing.**
+
+| Entry | FULL-workload standing at declaration |
+|---|---|
+| the 14 `test_example_runs` entries | **green** in the attempt-3 run (9.2h) — this includes `cubic_anisotropy/hysteresis.py` and `std_prob_3/run.py`, which had failed every earlier FULL attempt |
+| `cubic_anisotropy/sim.py` | **green**, separately measured at 3551s (SR1 T2), after `f7517688` registered `save_m` as a scheduler shortcut |
+| `std_prob_4/test_std_prob_4.py` | **deferred by owner decision 2026-07-28** to a re-run after `plans/2026-07-28-post-sr1-performance.md` (budgeted timeout 38400s) |
+| `magnetic_grain/suess_2001.py` | **deferred by owner decision 2026-07-28**, same re-run (budgeted timeout 21600s) |
+
+The two deferrals are a **sequencing** decision: those two entries are the
+primary beneficiaries of the planned speedups (register **P1**, root-caused
+2026-07-28 to per-evaluation `fem.form` + `assemble_vector` in
+`src/finmag/energies/energy_base.py:183` versus legacy's assemble-once
+`box-matrix-petsc` at `b5015c5a:.../energy_base.py:214-222`). Re-running them
+at today's speed costs ~16 h of the machine for evidence the perf work will
+make cheap. `capability-status.md` C15 therefore stays **partial
+(declaration-qualified)**, not PASS, and the T4 muMAG anchor on `std_prob_4`
+(derived tolerance 8.089 ps, pre-flight PASS 11x inside on the checked-in
+trajectory at `5e572745`) remains **pre-flighted, not full-resolution
+confirmed**.
+
+**Timeout-scaling evidence chain** — every FULL-lane wrapper timeout in the
+tree was derived from a *measured* rate, never raised to make a run pass:
+
+| Commit | Basis |
+|---|---|
+| `20a0a22c` | first scaling pass: `cubic_anisotropy/sim.py` 3600s → 7200s from the measured 3551s (`ceil(measured x 2)`, rounded to 300s); `magnetic_grain` 3600s → 21600s from a reviewer-validated extrapolation (recorded explicitly as a deviation from the measured-x2 rule); the three no-rate-data entries scaled `x3` as provisional-pending-measurement. Also added `_clean_ignored_outputs()` (`git clean -fdX`, scoped to each example's own directory, so it can never touch a tracked or non-ignored file), which ended the lane's one-shot-per-checkout behaviour |
+| `71dfc064` | fixed the budgets the first acceptance attempt refuted: `std_prob_4` 5400s → 38400s, from `full-lane-p6.log` showing `TimeoutExpired` at 1800s having reached `t = 2.1e-10 s` of a `2.0e-9 s` target (linear extrapolation ~17143s, plus the now-always-run relaxation, `ceil(x2)` = 38400s) |
+| `c02809bf` | `std_prob_3` from a hard measurement: FULL mode runs `bisect(..., 8, 8.5, xtol=0.1)`, instrumented to make exactly 5 calls → 10 relax simulations; the killed run's own append-mode artifacts timed one complete simulation (mesh build + relax + energy + write, `lfactor=8.0`, `divisions=16`) at 3161s |
+
+**Artifact policy outcome.** The FULL lane regenerates the tracked
+`examples/std_prob_3/doc_table.rst`. The regenerated file differed from the
+tracked one by a **1-character RST column shift with byte-identical content**,
+so it was **restored** (`git checkout`) rather than committed. Recording the
+rule this sets: a formatting-only regeneration artifact from an evidence run is
+not a source change and does not enter a declaration commit. (The lane's other
+tracked-artifact risk, `examples/magnetic_grain/mz.png`, was untouched — its
+example is one of the two deferred entries.)
 
 [Codex GPT-5.6]
 

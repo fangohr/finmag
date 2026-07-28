@@ -8,9 +8,17 @@
 
 **Maintainer contact:** Sam Holt
 
+> **SR1 is declared** (tag `sr1`, 2026-07-28). Jump to
+> ["SR1 declared"](#sr1-declared-2026-07-28) for what that means, the evidence,
+> and what comes next. Users should read
+> [`../SUPPORTED.md`](../SUPPORTED.md), not this file.
+
 This is the short entry point for a human or agent resuming the port. Read, in
 order:
 
+0. [`../SUPPORTED.md`](../SUPPORTED.md) — the user-facing SR1 contract:
+   supported API, validation classes and tolerances, Later list, Not-now list,
+   and how deferred surfaces fail;
 1. [`capability-status.md`](capability-status.md) — canonical current scope,
    evidence, known failures, and the interim release target;
 2. [`owner-porting-checklist.md`](owner-porting-checklist.md) — completed owner
@@ -97,18 +105,20 @@ Important current limitations:
   crashes on any varying axis at construction); K2 physics is unchanged. The
   by-name serial function-space PBC deferral (P3.1/P3.2, register D19) is a
   deliberate owner decision, not a gap;
-- the clean FULL baseline remains the recorded P0.2 evidence (12 passed,
-  5 failed) — three unchanged wrapper timeouts, a missing scheduler `save_m`
-  keyword, and a raw legacy `dolfin` import through `finmag.util.helpers`. No P2
-  slice reran or reclassified it; SR1-V1 (FULL-lane diagnosis) is still open, and
-  std_prob4's broad switching window is only qualitative;
+- the FULL example lane stands at **15 of 17 green at full workload**, with
+  `std_prob_4` and `magnetic_grain` deferred by owner decision to a post-
+  performance re-run. The 2026-07-23 P0.2 baseline (12 passed, 5 failed) is
+  **superseded** — see "SR1 declared" below and the manifest's "FULL-lane
+  closure at SR1 declaration";
 - normal modes, thermal SLLG/LLB, MPI stepping, function-space PBC (deferred,
   D19), legacy NEB, external harnesses, HDF5/plotting/VTK-XDMF readback, and
   the rest of the long-tail I/O/convenience surface remain unported;
 - **`Simulation.save_field`/`save_m` (the `.npy` snapshot surface, implemented
-  in `src/finmag/sim/sim_savers.py`) has no test coverage under DOLFINx**
-  (register **D31**): the implementation exists and is reachable, but master's
-  three tests are carried as `not_ported` in `sim/sim_test.py`. The
+  at `src/finmag/sim/sim.py:639-665`; `sim_savers.py` is dead legacy code) has
+  only PARTIAL test coverage under DOLFINx** (register **D31**): `f7517688`
+  added a live witness for the *scheduled* `save_m` path, but direct
+  (non-scheduled) `save_field`/`save_m` calls remain uncovered and master's
+  three tests are still carried as `not_ported` in `sim/sim_test.py`. The
   `save_field_to_vtk` (XDMF/VTK) path is a different method and *is* covered;
   do not mistake one for the other;
 - **two GitHub workflows must be reconciled before any merge to `master`.**
@@ -508,12 +518,11 @@ residual is **D29**), and one new row was opened (**D31**, no witness for the
 oracle lane, and the inventory lane" for the run commands, the current
 INVENTORY tally and the follow-up backlog.
 
-The recommended next work is **Priority 6** (full scientific acceptance and
-SR1 handoff) and the **SR1-V1 FULL-lane** diagnosis, which still shows its
-recorded baseline (12 passed, 5 failed) and has not been rerun or
-reclassified by any Priority 2-5 slice. All of Priority 1-5 is complete. The
-detailed, superseding sequence is in
-`plans/2026-07-23-sr1-prioritised-plan.md`.
+**Superseded.** Priority 6 / SR1-V1 was executed as the SR1-completion
+pipeline (S0–S6, 2026-07-27..28) and **SR1 is now declared** — see
+["SR1 declared"](#sr1-declared-2026-07-28) below for the current standing,
+evidence and next work. The paragraph above is retained as the state of play
+at the end of Priority 5.
 
 ## Open items (2026-07-28 update)
 
@@ -570,6 +579,198 @@ None of these five items are SR1-blocking (all ratified ACCEPT/DROP, not FIX
 NOW), but they are unclosed documentation/wording debt this ratification
 created and should not be silently dropped.
 
+## SR1 declared (2026-07-28)
+
+**Tag:** `sr1` (annotated) on the declaration commit, branch `dolfinx-parity`.
+Not pushed — the owner pushes.
+
+**User-facing contract:** [`../SUPPORTED.md`](../SUPPORTED.md). That file, not
+this one, is what a user reads: supported API, validation classes and
+tolerances, the muMAG anchor, the "waiting to be ported" list, the
+permanently-dropped list, and the three mechanisms by which an unavailable
+surface fails.
+
+### What is declared
+
+A **serial, deterministic DOLFINx micromagnetic simulator** with a substantial
+legacy-compatible `Simulation`/`sim_with` interface and an explicit,
+register-traceable statement of everything that is unavailable. Concretely:
+
+- installs from a clean clone via pixi + editable install + native build, and
+  `finmag.example.barmini()` runs;
+- Exchange, DMI, uniaxial and cubic anisotropy (incl. spatially varying axes),
+  the Zeeman family, FK demag, treecode/MacroGeometry demag, ThinFilmDemag,
+  spatially varying parameters, regions and each **local** STT mode compose in
+  serial simulations;
+- `run_until`, `relax`, `hysteresis`, scheduling, `.ndt`, `.npy` snapshots,
+  VTK/XDMF write, HDF5 field round-trip and coordinate-aware v2 restart work
+  through the documented lifecycle;
+- native Sundials is the public default and SciPy a fully supported opt-in;
+  both construct, advance, reset/reinitialise, schedule, save and restart;
+- physics is covered by oracle, analytic, cross-method, external-reference-data,
+  regression and end-to-end tests, per family, at stated tolerances;
+- every unavailable public surface fails by **feature name**, never through an
+  incidental raw `dolfin` import (two recorded holes remain, both in C02).
+
+**SR1 is explicitly not full parity.** Thermal SLLG/LLB, normal modes, legacy
+NEB, general MPI stepping, function-space PBC, nonlocal `LLG_STT`, live external
+harnesses and the long I/O tail remain in the parity backlog.
+
+### Evidence
+
+**1. Clean-install validation (fresh clone, 2026-07-28).** `git clone` of this
+repository into `/home/sam/.claude/jobs/6b8f36a7/tmp/sr1-clone`, `git checkout
+dolfinx-parity` at `5e572745`, then `pixi run -e dolfinx
+dolfinx-install-editable`, `dolfinx-native-build`, `dolfinx-provenance-check`,
+`dev/bin/verify-dolfinx-m5`, and a from-scratch physics script. Full transcript:
+`/home/sam/.claude/jobs/6b8f36a7/tmp/sr1-clean-install.log`.
+
+- provenance resolved to the clone's own `src/finmag/__init__.py`;
+- `dev/bin/verify-dolfinx-m5` **exit 0, all 33 steps green**;
+- barmini relax to `t = 1e-10`: max `|m|` unit-norm deviation
+  **9.969e-08** (< 1e-5), `E_demag = 4.641e-21 J`, `E_exch = 5.942e-24 J`,
+  both finite;
+- `src/finmag/tests/comparison/demag/test_demag_sphere_analytic.py` run
+  directly: **1 passed**.
+
+There is no clean-install defect.
+
+**2. Declaration-tree verifier and inventory.** See the two tallies recorded
+below under "Tallies at declaration".
+
+**3. FULL example lane — 15 of 17, two deferred by owner decision.** This is
+the one acceptance criterion that is **declaration-qualified**, and it is
+recorded as such rather than rounded up.
+
+- **15 of the 17 entries are witnessed green at full workload.** Fourteen —
+  every `test_example_runs` entry, including the two that had failed every
+  earlier FULL attempt, `cubic_anisotropy/hysteresis.py` and `std_prob_3/run.py`
+  (the complete 10-simulation bisection) — passed in the attempt-3 acceptance
+  run (9.2 h, log
+  `/home/sam/.claude/jobs/6b8f36a7/tmp/full-lane-final.log`). The fifteenth,
+  `cubic_anisotropy/sim.py`, was separately measured green at 3551 s
+  (~59.2 min) on 2026-07-27 (`/tmp/cubic_anisotropy_sim_run2.log`, SR1 T2),
+  after `f7517688` registered `save_m` as a scheduler shortcut.
+- **The remaining two — `std_prob_4/test_std_prob_4.py` (full 2 ns trace) and
+  `magnetic_grain/suess_2001.py` (full three-field physics) — are DEFERRED BY
+  OWNER DECISION (2026-07-28)** to a re-run scheduled after
+  [`plans/2026-07-28-post-sr1-performance.md`](plans/2026-07-28-post-sr1-performance.md),
+  because those two entries are the primary beneficiaries of the planned
+  speedups (their measured-rate budgets are 38400 s and 21600 s). This is an
+  owner-decided **sequencing** choice, not a silent evidence downgrade:
+  `capability-status.md` C15 stays **partial (declaration-qualified)**, never
+  PASS.
+- **`std_prob_4` additionally carries the T4 quantitative muMAG anchor**
+  (commit `5e572745`): tolerance **8.089 ps**, derived a priori from the mesh
+  and the reference trajectory before any output was compared
+  (`eps = (1/8)(h/l_ex)^2` with `l_ex = 5.6858 nm`, `h = 5.830 nm`, divided by
+  the reference slope `|d<m_x>/dt| = 16.246 /ns`), 4.9x tighter than the coarse
+  switching window. Pre-flight against the checked-in 10 ps-sampled partial
+  trajectory: **PASS, `|dt| = 0.75 ps`, 11x inside tolerance**. It is therefore
+  **pre-flighted, not full-resolution confirmed** — confirming it end-to-end is
+  part of the same deferred re-run.
+- This also closes **SR1-T3 phase 2**. The full FULL-lane record, including the
+  timeout-scaling evidence chain (`20a0a22c`, `71dfc064`, `c02809bf` — every
+  budget derived from a measured rate, never raised to make a run pass) and the
+  `doc_table.rst` artifact-policy outcome, is in
+  [`master-pixi-parity-manifest.md`](master-pixi-parity-manifest.md),
+  "FULL-lane closure at SR1 declaration".
+
+**4. Decision ledger.** `acceptance-register.md` is pending-free: all 44 open
+rows (D1–D32, M1–M16, P1) carry a finalised owner disposition as of the
+2026-07-28 batch ratification. The five S6 documentation obligations that
+ratification created (D6a/D6b axis contracts, D16a/D16b restart contract, D32
+`method=` rejection, the M12a–c "not yet ported" → "removed" rewording, and the
+`capability-status.md` disposition sweep) are all discharged in the declaration
+commit.
+
+### Criterion 4 — the inventory lane is the kept worklist
+
+**The `dev/bin/inventory-dolfinx-suite` failure population is not a defect
+list and not a CI verdict: it is the deliberately kept future worklist, and it
+is expected to be non-empty at SR1.** Master files that were never ported stay
+in the tree and fail visibly there rather than being silently deleted; the
+verdict is `dev/bin/verify-dolfinx-m5`'s 33 focused gates, which are green.
+Every failure and error falls into one of the six classes itemised in "Canonical
+test paths, the legacy oracle lane, and the inventory lane" above.
+
+### Tallies at declaration
+
+Measured 2026-07-28 on the declaration-candidate tree (logs
+`/home/sam/.claude/jobs/6b8f36a7/tmp/sr1-final-verify.log` and
+`sr1-final-inventory.log`):
+
+```
+dev/bin/verify-dolfinx-m5         exit 0 — all 33 steps green
+dev/bin/inventory-dolfinx-suite   INVENTORY: passed=754 failed=5 errors=55 skipped=25 xfailed=47
+```
+
+**Inventory delta vs the 2026-07-27 baseline** (`INVENTORY: passed=752
+failed=34 errors=59 skipped=25 xfailed=12` at `62aae519`). Every number moved,
+and every move is accounted for — the population did not shrink because
+anything was hidden:
+
+- **errors 59 → 55 = −6 + 2.** The **+2** are the restored M5 witnesses
+  `src/finmag/tests/zhangli/stt_nonlocal_test.py` and
+  `zhang_li_test.py`, brought back verbatim from `b5015c5a` by the SR1 S5b
+  batch ratification's **RESTORE** decision as retained never-ported backlog.
+  Both are Python-2 source, so pytest's AST-rewrite import raises
+  `SyntaxError: Missing parentheses in call to 'print'` before either file's
+  module-scope `import dolfin` is even reached — two collection errors, zero
+  collected. That is exactly what criterion 4 prescribes: the
+  nonlocal-`LLG_STT` gap (register **M5**) surfaces in the non-gating lane
+  instead of vanishing. No pixi gate references `zhangli`, so the 33-gate
+  verdict is unaffected. The **−6** are six `sim/sim_test.py::TestSimulation`
+  entries (`test_length_scales`, `test_save_field`, `test_save_field_scheduled`,
+  `test_save_m`, `test_sim_sllg`, `test_sim_sllg_time`) whose carried-master
+  `setup_class` fails on `df.BoxMesh`: SR1 S0 gave them strict `xfail` markers,
+  so pytest now reports them as **xfailed** rather than as setup errors. They
+  are the same six items, relabelled — none was fixed or removed.
+- **failed 34 → 5 and xfailed 12 → 47 (−29 / +35).** The same SR1 S0 change:
+  35 carried `not_ported` master tests gained
+  `@pytest.mark.xfail(reason="not ported: … (register <row>)", strict=True)`,
+  so 29 of them moved failed → xfailed and the 6 above moved error → xfailed.
+  Nothing was deleted and nothing was made non-strict; **strict** means each
+  flips the gate red the day someone ports the feature.
+- The 5 residual failures are all previously-classified:
+  `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`
+  (register **D26**), the two
+  `tests/test_cyclic_references_in_sim.py` cases (the dropped teardown surface,
+  **D24**), `tests/test_llg.py::test_ported_llg_does_not_load_legacy_dolfin_or_native`
+  (the order-dependent full-suite-only artefact — 24/24 in its own gate), and
+  `util/fileio_test.py::test_Table_writer_and_reader` (never-ported master file).
+- **passed 752 → 754** from the SR1 S1a scheduler-`save_m` witness and its
+  neighbours.
+
+Note for the next runner: the inventory lane writes two untracked artifacts
+(`src/finmag/sim/nanodisk_with_spherical_particle.{h5,xdmf}`) that are **not**
+gitignored. They were deleted before the declaration commit; do not let them
+into a commit.
+
+### Next work
+
+1. **[`plans/2026-07-28-post-sr1-performance.md`](plans/2026-07-28-post-sr1-performance.md)
+   — register P1.** Root-caused 2026-07-28: the port re-does `fem.form(...)` +
+   `assemble_vector(...)` on **every** field evaluation
+   (`src/finmag/energies/energy_base.py:183`), where legacy's default
+   `box-matrix-petsc` assembled the field operator once at setup and merely
+   applied it (`b5015c5a:src/finmag/energies/energy_base.py:214-222`); the
+   numpy LLG RHS versus master's compiled `Equation` backend (**M3**) compounds
+   it. The plan rebuilds assemble-once as an **internal** optimisation of
+   `box-assemble` semantics — it does **not** resurrect the removed legacy
+   `method=` names (**D32** stands).
+2. **Complete the FULL lane to 17/17**, immediately after (1): re-run
+   `std_prob_4/test_std_prob_4.py` and `magnetic_grain/suess_2001.py` at full
+   workload, confirm the 8.089 ps muMAG anchor end-to-end on a completed 2 ns
+   trajectory, recalibrate the wrapper timeouts **downward** to the new
+   measured rates, and lift C15 from *partial (declaration-qualified)*.
+3. Then the parity backlog proper: the inventory lane's retained ancestors and
+   carried `not_ported` tests, and the Later list in
+   [`../SUPPORTED.md`](../SUPPORTED.md) §5.
+4. **Before any merge to `master`**, reconcile the two dangling GitHub
+   workflows described under "Important current limitations" above — they are
+   inert on `dolfinx-parity` but genuine dangling references anywhere else.
+
 [Codex GPT-5]
 
 [P2.1 updates: Claude Opus 4.8]
@@ -583,3 +784,5 @@ created and should not be silently dropped.
 [Canonical test paths (D30), legacy-lane retirement and inventory lane: Claude Opus 4.8]
 
 [SR1 S5b batch ratification and M5 restore: Claude Sonnet 5]
+
+[SR1 declaration (S6): Claude Opus 4.8]

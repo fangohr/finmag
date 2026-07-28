@@ -24,12 +24,23 @@ mu0 = 4.0 * pi * 1e-7
 class EnergyBase:
     """Base class for DOLFINx energy terms.
 
-    The first direct DOLFINx slice supports the historical lumped
-    ``box-assemble`` algorithm only. Setup and every assembly/reduction method
-    are collective over the magnetisation mesh communicator.
+    The DOLFINx port supports the historical lumped ``box-assemble``
+    algorithm only. Setup and every assembly/reduction method are collective
+    over the magnetisation mesh communicator.
+
+    Master's other four ``method=`` names (``box-matrix-numpy``,
+    ``box-matrix-petsc``, ``project``, ``direct``) are **removed**, not
+    merely unported: they were implementation/performance variants that
+    agreed with box assembly to ``1e-13`` on master, and the repository owner
+    ratified dropping them permanently on 2026-07-28 (register M12a/M12b/M12c;
+    the changed default and the raise-by-name are register D32). They are
+    refused by name so a script carrying an explicit legacy ``method=``
+    fails loudly instead of silently changing algorithm.
     """
 
     _supported_methods = ("box-assemble",)
+    # Removed permanently under register M12a/M12b/M12c (owner, 2026-07-28).
+    # The attribute name is retained for continuity with existing callers.
     _deferred_methods = (
         "box-matrix-numpy",
         "box-matrix-petsc",
@@ -40,7 +51,7 @@ class EnergyBase:
     def __init__(self, method="box-assemble", in_jacobian=False):
         if method in self._deferred_methods:
             raise NotImplementedError(
-                "energy method {!r} is not yet ported to DOLFINx; "
+                "energy method {!r} was removed (D32/M12 ratified 2026-07-28); "
                 "use 'box-assemble'".format(method)
             )
         if method not in self._supported_methods:
