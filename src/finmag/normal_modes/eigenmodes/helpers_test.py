@@ -2,9 +2,14 @@ from __future__ import division
 import numpy as np
 import pytest
 from scipy.sparse.linalg import LinearOperator
-from .helpers import *
+try:  # master: from .helpers import *
+    from .helpers import *
+except ImportError:
+    pass  # not ported (D33): tests below xfail; names below stay undefined
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_iseven():
     for n in [0, 2, 6, 1223456, -18]:
         assert(iseven(n))
@@ -12,6 +17,8 @@ def test_iseven():
         assert(not iseven(n))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_is_hermitian():
     A1 = np.array([[1, -2, 3, 4],
                    [-2, 5, 12, -33],
@@ -44,11 +51,15 @@ def test_is_hermitian():
      ([0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]),
      ([1e-14, 1e-14, 1e-13, 1e-13], [1e-14, 1e-14, 1e-13, 1e-12]),
      ])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_normalise_if_not_zero(v, vn_expected):
     vn = normalise_if_not_zero(v)
     assert(np.allclose(vn, vn_expected))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_normalise_rows():
     A = np.array([[2, 0, 0, 0, 0],
                   [0, -3, 0, 0, 0],
@@ -64,6 +75,8 @@ def test_normalise_rows():
     assert(np.allclose(A_normalised, A_normalised_ref))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_is_diagonal_matrix():
     A1 = np.array([[1, 2, 3],
                    [4, 5, 6],
@@ -80,6 +93,8 @@ def test_is_diagonal_matrix():
                           (1.42e-8, 5e-5),
                           (5.4e4, 1e-8),
                           (1.2 + 4.4j, 1e-8)])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_is_scalar_multiple(a, tol):
     """
     Create two random arrays of dtype `float` and `complex`, respectively.
@@ -103,6 +118,8 @@ def test_is_scalar_multiple(a, tol):
                           (1e-5, 5),
                           (5e-6, 50),
                           ])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_not_is_scalar_multiple(eps, num_elements):
     print("[DDD] eps={}, num_elements={}".format(eps, num_elements))
     N = 100
@@ -112,6 +129,8 @@ def test_not_is_scalar_multiple(eps, num_elements):
     assert(not is_scalar_multiple(v, w))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_find_matching_eigenpair():
     """
     Construct a list of reference eigenpairs and check for a few artificial
@@ -150,6 +169,8 @@ def test_find_matching_eigenpair():
         find_matching_eigenpair((omega6, w6), eigenpairs_ref)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_standard_basis_vector():
     e_1_5 = [1, 0, 0, 0, 0]
     e_4_5 = [0, 0, 0, 1, 0]
@@ -159,6 +180,8 @@ def test_standard_basis_vector():
     assert(np.allclose(e_5_7, std_basis_vector(5, N=7, dtype=complex)))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_sort_eigensolutions():
     w1 = [0, 1, 2, 3, 4, 5]
     w2 = [10, 11, 12, 13, 14, 15]
@@ -176,6 +199,8 @@ def test_sort_eigensolutions():
     assert(np.allclose(ws_sorted, [w3, w5, w2, w1, w4]))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_best_linear_combination():
     """
     TODO: Write me!!
@@ -227,6 +252,8 @@ def scipy_sparse_linear_operator_to_dense_array():
         assert(np.allclose(A, A_dense))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_as_dense_array():
     """
     Define a dense tridiagonal matrix (with 'periodic boundary
@@ -277,6 +304,8 @@ def test_as_dense_array():
     #assert(np.allclose(A, as_dense_array(A_petsc_dolfin)))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_as_petsc_matrix():
     N = 20
 

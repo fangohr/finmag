@@ -2,11 +2,22 @@ from __future__ import division
 import pytest
 import logging
 import os
-from .eigenproblems import *
-from .eigensolvers import *
-from .helpers import is_diagonal_matrix
+try:  # master: from .eigenproblems import *
+    from .eigenproblems import *
+    from .eigensolvers import *
+    from .helpers import is_diagonal_matrix
+except ImportError:
+    # not ported (D33): tests below xfail. `AbstractEigenproblem` is defined
+    # as a stand-in so `class MockEigenproblem(AbstractEigenproblem)` below
+    # (evaluated at import time) does not itself raise; every other
+    # wildcard-imported name stays undefined and surfaces as a NameError
+    # when a test actually runs.
+    class AbstractEigenproblem:
+        pass
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_assert_eigenproblems_were_defined():
     """
     Check that `available_eigenproblems` is not the empty set and that
@@ -47,6 +58,8 @@ class AbstractEigenproblemTest(object):
     """
 
     @pytest.mark.requires_X_display
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_plot_analytical_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
         fig = self.eigenproblem.plot_analytical_solutions(
@@ -55,6 +68,8 @@ class AbstractEigenproblemTest(object):
         plt.close(fig)
 
     @pytest.mark.requires_X_display
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_plot_computed_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
         solver = ScipyLinalgEig()
@@ -89,6 +104,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         self.eigenpairs_ref = zip(self.omega_ref, self.w_ref)
         self.eigenpairs_wrong = zip(self.omega_ref, self.w_wrong)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_instantiate(self):
         """
         Check that the matrices instantiated by DiagonalEigenproblem are
@@ -102,6 +119,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
                 assert(A.dtype == dtype)
                 assert(M == None)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_solve(self):
         """
         Call 'self.solve()' with two different solvers and check that
@@ -117,6 +136,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(
             self.eigenproblem.verify_eigenpairs_analytically(zip(omega2, w2)))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_print_analytical_eigenvalues(self):
         self.eigenproblem.print_analytical_eigenvalues(10, unit='Hz')
         self.eigenproblem.print_analytical_eigenvalues(4, unit='KHz')
@@ -129,16 +150,22 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             # which should lead to an error.
             self.eigenproblem.print_analytical_eigenvalues(10, 'Hz')
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_kth_analytical_eigenvalue(self):
         for k in range(self.num):
             omega = self.eigenproblem.get_kth_analytical_eigenvalue(k=k)
             omega_ref = self.omega_ref[k]
             assert(np.allclose(omega, omega_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_analytical_eigenvalues(self):
         omega = self.eigenproblem.get_analytical_eigenvalues(num=self.num)
         assert(np.allclose(omega, self.omega_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_kth_analytical_eigenvector(self):
         for k in range(self.num):
             w = self.eigenproblem.get_kth_analytical_eigenvector(
@@ -146,11 +173,15 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             w_ref = self.w_ref[k]
             assert(np.allclose(w, w_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_analytical_eigenvectors(self):
         w = self.eigenproblem.get_analytical_eigenvectors(
             num=self.num, size=self.size)
         assert(np.allclose(w, self.w_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_kth_analytical_eigenpair(self):
         for k in range(self.num):
             omega, w = self.eigenproblem.get_kth_analytical_eigenpair(
@@ -159,12 +190,16 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             w_ref = self.w_ref[k]
             assert(np.allclose(omega, omega_ref) and np.allclose(w, w_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_analytical_eigenpairs(self):
         omega, w = self.eigenproblem.get_analytical_eigenpairs(
             num=self.num, size=self.size)
         assert(np.allclose(omega, self.omega_ref))
         assert(np.allclose(w, self.w_ref))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_get_analytical_eigenspace_basis(self):
         N = self.size
         omega1 = 1.0
@@ -218,6 +253,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(len(esp3) == 3)
         assert(len(esp4) == 3)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_verify_eigenpair_numerically(self):
         """
         Apply the method `verify_eigenpair_numerically()` to the
@@ -244,12 +281,16 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             v_wrong_shape = [[1, 2, 3], [4, 5, 6]]
             self.eigenproblem.verify_eigenpair_numerically(1.0, v_wrong_shape)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_verify_eigenpairs_numerically(self):
         assert(self.eigenproblem.verify_eigenpairs_numerically(
             self.eigenpairs_ref) == True)
         assert(self.eigenproblem.verify_eigenpairs_numerically(
             self.eigenpairs_wrong) == False)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_verify_eigenpair_analytically(self):
         """
         Apply the method `verify_eigenpair_analytically()` to the
@@ -277,6 +318,8 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             v_wrong_shape = [[1, 2, 3], [4, 5, 6]]
             self.eigenproblem.verify_eigenpair_analytically(1.0, v_wrong_shape)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_verify_eigenpairs_analytically(self):
         assert(self.eigenproblem.verify_eigenpairs_analytically(
             self.eigenpairs_ref) == True)
@@ -289,6 +332,8 @@ class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
     def setup_method(self):
         self.eigenproblem = RingGraphLaplaceEigenproblem()
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
     def test_instantiate(self):
         """
         Check that the matrices instantiated by RingGraphLaplaceEigenproblem

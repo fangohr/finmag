@@ -3,9 +3,27 @@ import pytest
 import numpy as np
 import itertools
 import warnings
-from .eigensolvers import *
-from .eigenproblems import *
-from .helpers import normalise_rows
+try:  # master: from .eigensolvers import *
+    from .eigensolvers import *
+    from .eigenproblems import *
+    from .helpers import normalise_rows
+except ImportError:
+    # not ported (D33): tests below xfail. Module level below instantiates
+    # eigensolvers and builds a parametrize fixture list at IMPORT time, so
+    # bare placeholders are needed for collection to succeed; every actual
+    # solve/verify call still raises at test time (undefined names or
+    # AttributeError on the placeholder).
+    class ScipyLinalgEig:
+        def __init__(self, *a, **kw): pass
+    class ScipyLinalgEigh:
+        def __init__(self, *a, **kw): pass
+    class ScipySparseLinalgEigs:
+        def __init__(self, *a, **kw): pass
+    class ScipySparseLinalgEigsh:
+        def __init__(self, *a, **kw): pass
+    class SLEPcEigensolver:
+        def __init__(self, *a, **kw): pass
+    available_eigenproblems = [None]  # keeps `fixtures` non-empty so test_eigensolvers still surfaces as xfailed
 np.set_printoptions(precision=3)
 
 
@@ -20,6 +38,8 @@ sample_eigensolvers = [
 ]
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_str():
     """
     Test the __str__ method for each of the `sample_eigensolvers`.
@@ -34,6 +54,8 @@ def test_str():
                 ]))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_scipy_dense_solvers_num_argument():
     """
     By default, the Scipy dense solvers compute all eigenpairs of the
@@ -87,6 +109,8 @@ def test_scipy_dense_solvers_num_argument():
     assert(w8.shape == (3, 10))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_scipy_sparse_solvers_num_argument():
     """
     We can limit the number of solutions returned by the sparse
@@ -128,6 +152,8 @@ def test_scipy_sparse_solvers_num_argument():
 @pytest.mark.parametrize("dtype, solver",
                          itertools.product([float, complex],
                                            sample_eigensolvers))
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_compute_eigenvalues_of_diagonal_matrix(dtype, solver):
     N = 60
 
@@ -149,6 +175,8 @@ def test_compute_eigenvalues_of_diagonal_matrix(dtype, solver):
 
 
 @pytest.mark.parametrize("solver", [ScipyLinalgEig(), ScipyLinalgEigh()])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_scipy_dense_solvers_accept_sparse_argument(solver):
     N = 10
     A, _ = DiagonalEigenproblem().instantiate(N=N, dtype=float)
@@ -231,6 +259,8 @@ known_failures = {}
 
 
 @pytest.mark.parametrize("solver, eigenproblem", fixtures)
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_eigensolvers(solver, eigenproblem):
     print("\n[DDD] solver: {}".format(solver))
     print("[DDD] eigenproblem: {}".format(eigenproblem))
@@ -303,6 +333,8 @@ def test_strange_degenerate_case():
     omega, w, _ = eigenproblem.solve(solver, N=100, dtype=float)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_document_failures():
     """
     This test documents some cases where the eigensolvers fail. This
