@@ -4,7 +4,10 @@ we don't assign a new dolfin function, but only overwrite the values of the
 existing function.
 
 """
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 import pytest
 from .field import Field
@@ -21,6 +24,8 @@ def setup():
     return Field(F), Field(F_DG), Field(V)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_dolfin_constant(setup):
     scalar_field, scalar_field_dg, vector_field = setup
 
@@ -39,6 +44,8 @@ def test_set_with_dolfin_constant(setup):
     assert np.allclose(f(0), (1, 2, 3))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_dolfin_expression(setup):
     scalar_field, scalar_field_dg, vector_field = setup
 
@@ -56,6 +63,8 @@ def test_set_with_dolfin_expression(setup):
     assert np.allclose(f(1), (1, 2, 3))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_dolfin_function():
     mesh = df.UnitIntervalMesh(1)
     F = df.FunctionSpace(mesh, "CG", 1)
@@ -68,6 +77,8 @@ def test_set_with_dolfin_function():
     assert abs(function_of_field(0) - 1) <= EPSILON
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_another_field():
     mesh = df.UnitIntervalMesh(1)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -81,6 +92,8 @@ def test_set_with_another_field():
     assert np.allclose(function_of_field2(1), (1, 2, 3))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_another_field_new_but_same_function_space():
     mesh = df.UnitIntervalMesh(1)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -95,6 +108,8 @@ def test_set_with_another_field_new_but_same_function_space():
     assert np.allclose(function_of_fieldW(1), (1, 2, 3))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_assumption_that_interpolate_better_than_project_same_vectorspace():
     mesh = df.UnitCubeMesh(2, 2, 2)
 
@@ -111,6 +126,8 @@ def test_assumption_that_interpolate_better_than_project_same_vectorspace():
     assert diff_w1.max() <= diff_w2.max()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_assumption_that_interpolate_better_than_project_different_vectorspace(do_plot=False):
     mesh = df.UnitSquareMesh(5, 5)
 
@@ -135,6 +152,8 @@ def test_assumption_that_interpolate_better_than_project_different_vectorspace(d
     assert diff_w_i.max() <= diff_w_p.max()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_dolfin_generic_vector():
     mesh = df.UnitIntervalMesh(1)
     F = df.FunctionSpace(mesh, "CG", 1)
@@ -147,6 +166,8 @@ def test_set_with_dolfin_generic_vector():
     assert abs(function_of_field(0) - 1) <= EPSILON
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API field_setters_test.py, generic-vector contract missing (D33)", strict=True)
 def test_set_with_dolfin_expression_ingredients():
     mesh = df.UnitIntervalMesh(1)
     field = Field(df.FunctionSpace(mesh, "CG", 1))

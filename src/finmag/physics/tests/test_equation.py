@@ -1,11 +1,16 @@
 import pytest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    import finmag.physics.equation as eqn
+    from finmag.physics.equation import Equation
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    eqn = None
+    Equation = None
 import json
 from time import perf_counter
 from os import path
-import finmag.physics.equation as eqn
-from finmag.physics.equation import Equation
 
 
 @pytest.fixture
@@ -90,11 +95,15 @@ def native_and_python_equation_modules():
     return eqn.get_native_equation_module(True), eqn.get_python_equation_module()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_new_equation(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_new_equation_wrong_size(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     W = df.VectorFunctionSpace(mesh, "CG", 2, dim=3)  # W like Wrong
@@ -103,6 +112,8 @@ def test_new_equation_wrong_size(setup):
         equation = Equation(m.vector(), H_W.vector(), dmdt.vector())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_regression_vector_wrong_state(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -115,6 +126,8 @@ def test_regression_vector_wrong_state(setup):
     operation = dmdt.vector() - m.vector()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_alpha_not_set(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -123,6 +136,8 @@ def test_alpha_not_set(setup):
         equation.solve()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_alpha_keeps_track_of_change(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -134,6 +149,8 @@ def test_alpha_keeps_track_of_change(setup):
     assert same(alpha.vector(), equation.get_alpha())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_solve(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -147,6 +164,8 @@ def test_solve(setup):
     assert same(dmdt.vector(), dmdt_expected.vector())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_pinning(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -165,6 +184,8 @@ def test_pinning(setup):
     assert not np.all(dmdt_node_others == 0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_slonczewski(setup):
     mesh, V, alpha, W, m, H, dmdt = setup
     equation = Equation(m.vector(), H.vector(), dmdt.vector())
@@ -183,6 +204,8 @@ def test_slonczewski(setup):
     equation.solve()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_matches_checked_in_reference_solve(setup):
     """
     Check the Python fallback against stored native solve output.
@@ -204,6 +227,8 @@ def test_python_equation_matches_checked_in_reference_solve(setup):
         rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_matches_checked_in_reference_pinning(setup):
     """
     Check the Python fallback pinning branch against stored native output.
@@ -228,6 +253,8 @@ def test_python_equation_matches_checked_in_reference_pinning(setup):
         rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_matches_checked_in_reference_slonczewski(setup):
     """
     Check the Python Slonczewski branch against stored native output.
@@ -255,6 +282,8 @@ def test_python_equation_matches_checked_in_reference_slonczewski(setup):
         rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_matches_native_solve(setup, native_and_python_equation_modules):
     """
     Compare live native and Python Equation.solve() outputs directly.
@@ -278,6 +307,8 @@ def test_python_equation_matches_native_solve(setup, native_and_python_equation_
         rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_matches_native_pinning(setup, native_and_python_equation_modules):
     """
     Compare live native and Python pinning outputs directly.
@@ -305,6 +336,8 @@ def test_python_equation_matches_native_pinning(setup, native_and_python_equatio
         rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_python_equation_jtimes_matches_finite_difference(setup):
     """
     Check Python jtimes against its finite-difference contract.
@@ -346,6 +379,8 @@ def test_python_equation_jtimes_matches_finite_difference(setup):
     assert np.allclose(python_jtimes, finite_difference, atol=1e-9, rtol=0.0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled Equation backend (register M3)", strict=True)
 def test_native_and_python_equation_benchmark_report(native_and_python_equation_modules):
     """
     Report native-vs-Python solve timing without gating on a hard threshold.

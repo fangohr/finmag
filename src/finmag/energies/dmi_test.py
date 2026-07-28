@@ -1,14 +1,21 @@
 import pytest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import vector_valued_function
+    from finmag.util.pbc2d import PeriodicBoundary2D
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    vector_valued_function = None
+    PeriodicBoundary2D = None
 from math import pi
 from finmag.energies import DMI, Exchange
 from finmag import Simulation
 from finmag.field import Field
-from finmag.util.helpers import vector_valued_function
-from finmag.util.pbc2d import PeriodicBoundary2D
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API dmi_test.py, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_uses_unit_length_2dmesh():
     """
     Set up a helical state in two meshes (one expressed in SI units
@@ -70,6 +77,8 @@ def test_interaction_accepts_name():
     dmi = DMI(1)
     assert hasattr(dmi, 'name')
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API dmi_test.py, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_pbc2d():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 0.1), 2, 2, 1)
 
@@ -84,6 +93,8 @@ def test_dmi_pbc2d():
 
     assert np.max(np.abs(field)) < 1e-9
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API dmi_test.py, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_pbc2d_1D(plot=False):
 
     def m_init_fun(p):

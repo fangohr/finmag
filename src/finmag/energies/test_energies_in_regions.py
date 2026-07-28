@@ -1,6 +1,11 @@
 from __future__ import division
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import vector_valued_function
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    vector_valued_function = None
 import pytest
 import os
 import shutil
@@ -10,7 +15,6 @@ from finmag.field import Field
 from finmag.energies import Zeeman
 #from finmag.util.consts import mu0
 from finmag.util.meshes import pair_of_disks, netgen_is_usable
-from finmag.util.helpers import vector_valued_function
 #from math import sqrt, pi, cos, sin
 
 
@@ -118,6 +122,8 @@ def test_energies_in_separated_subdomains(tmpdir):
     multi_domain_test.check_energy_consistency(zeeman)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API multi-domain energy test, capability covered by dolfinx-src-varparams-pytest (D33)", strict=True)
 def test_energies_in_touching_subdomains():
 
     # Max, I fixed some things in here (missing m_vals, Ms, Zeeman and unit_length.)

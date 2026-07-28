@@ -1,10 +1,15 @@
 import os
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.physics.llb.sllg import SLLG
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    SLLG = None
 import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
-from finmag.physics.llb.sllg import SLLG
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 
@@ -41,6 +46,8 @@ def plot_random_number_np():
         plt.savefig(os.path.join(MODULE_DIR, "test_np_%d.png" % i))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: thermal SLLG stochastic native kernel (register C16/M16)", strict=True)
 def test_random_mt19937_gaussian_smoke():
     # Keep this as a lightweight availability check for the native stochastic kernel on Python 3. [Codex GPT-5.4]
     from finmag.native.llb import RandomMT19937

@@ -1,5 +1,9 @@
 import os
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
@@ -12,6 +16,8 @@ from finmag.energies import Exchange, UniaxialAnisotropy
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy NEB / path methods (register C18)", strict=True)
 def test_compute_dm():
     from finmag.physics.neb import compute_dm
 
@@ -21,6 +27,8 @@ def test_compute_dm():
     assert(compute_dm(a1, a2) ** 2 - 2.0) < 1e-15
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy NEB / path methods (register C18)", strict=True)
 def test_cartesian2spherical_field():
     from finmag.physics.neb import cartesian2spherical_field
 

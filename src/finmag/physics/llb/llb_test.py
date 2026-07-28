@@ -1,17 +1,26 @@
 import os
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail markers below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.physics.llb.llb import LLB
+    from finmag.physics.llb.exchange import Exchange
+    from finmag.physics.llb.material import Material
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    LLB = None
+    Exchange = None
+    Material = None
 import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
 import matplotlib.pyplot as plt
-from finmag.physics.llb.llb import LLB
-from finmag.physics.llb.exchange import Exchange
 from finmag.energies import Zeeman
 from finmag.energies import Demag
-from finmag.physics.llb.material import Material
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: thermal LLB (register C16/M16)", strict=True)
 def test_llb_sundials(do_plot=False):
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
 
@@ -113,6 +122,8 @@ def sim_llb_100(do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: thermal LLB (register C16/M16)", strict=True)
 def test_llb_save_data():
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 2)
     # Keep two z layers so both saved regions remain non-empty in the Python 3 path. [Codex GPT-5.4]
