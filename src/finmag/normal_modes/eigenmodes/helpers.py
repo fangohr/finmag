@@ -7,10 +7,22 @@ from finmag.util.helpers import make_human_readable
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import csr_matrix
 from scipy.optimize import minimize_scalar
-from custom_exceptions import EigenproblemVerifyError
-from types import NoneType
+from .custom_exceptions import EigenproblemVerifyError
 
 logger = logging.getLogger("finmag")
+
+
+def _lstsq_compat(A, b):
+    """
+    Run ``np.linalg.lstsq`` in a way that works on both the modern NumPy stack
+    and the legacy NumPy 1.13 build used by the Python 3 core-suite image.
+    The newer stack needs an explicit ``rcond`` to avoid warnings, while the
+    older stack raises ``TypeError`` for ``rcond=None``. [Codex GPT-5.4]
+    """
+    try:
+        return np.linalg.lstsq(A, b, rcond=None)
+    except TypeError:
+        return np.linalg.lstsq(A, b)
 
 
 def iseven(n):
@@ -55,7 +67,7 @@ def print_eigenproblem_memory_usage(mesh, generalised=False):
 
 
 def compute_relative_error(A, M, omega, w):
-    if not isinstance(A, np.ndarray) or not isinstance(M, (np.ndarray, NoneType)):
+    if not isinstance(A, np.ndarray) or (M is not None and not isinstance(M, np.ndarray)):
         logger.warning(
             "Converting sparse matrix to numpy.array as this is the only "
             "supported matrix type at the moment for computing relative errors.")
@@ -63,7 +75,13 @@ def compute_relative_error(A, M, omega, w):
         M = as_dense_array(M)
     lhs = np.dot(A, w)
     rhs = omega * w if (M == None) else omega * np.dot(M, w)
-    rel_err = np.linalg.norm(lhs - rhs) / np.linalg.norm(omega * w)
+    denom = np.linalg.norm(omega * w)
+    numer = np.linalg.norm(lhs - rhs)
+    # Zero-eigenvalue modes are valid here; avoid a warning for the exact 0/0 case. [Codex GPT-5.4]
+    if denom == 0:
+        rel_err = 0.0 if numer == 0 else np.inf
+    else:
+        rel_err = numer / denom
     return rel_err
 
 
@@ -109,7 +127,7 @@ def is_scalar_multiple(v, w, tol=1e-12):
     """
     v_colvec = v.reshape(-1, 1)
     w_colvec = w.reshape(-1, 1)
-    _, residuals, _, _ = np.linalg.lstsq(v_colvec, w_colvec)
+    _, residuals, _, _ = _lstsq_compat(v_colvec, w_colvec)
     assert(len(residuals) == 1)
     rel_err = residuals[0] / np.linalg.norm(v)
     return (rel_err < tol)
@@ -133,7 +151,7 @@ def is_matching_eigenpair(pair1, pair2, tol_eigenval=1e-8, tol_eigenvec=1e-6):
     return eigenvals_coincide and eigenvecs_coincide
 
 
-def find_matching_eigenpair((omega, w), ref_eigenpairs,
+def find_matching_eigenpair(eigenpair, ref_eigenpairs,
                             tol_eigenval=1e-8, tol_eigenvec=1e-6):
     """
     Given a pair `(omega, w)` consisting of a computed eigenvalue and
@@ -143,6 +161,7 @@ def find_matching_eigenpair((omega, w), ref_eigenpairs,
     linearly dependent (up to `tolerance_eigenvec`).
 
     """
+    omega, w = eigenpair
     matching_indices = \
         [i
          for (i, pair_ref) in enumerate(ref_eigenpairs)
@@ -194,7 +213,7 @@ def sort_eigensolutions(eigvals, eigvecs):
 
 
 def best_linear_combination(v, basis_vecs):
-    """
+    r"""
     Given a vector `v` and a list <e_i> of basis vectors in `basis_vecs`,
     determine the coefficients b_i which minimise the residual:
 
@@ -214,7 +233,7 @@ def best_linear_combination(v, basis_vecs):
     v_colvec = np.asarray(v).reshape(-1, 1)
     basis_vecs = np.asarray(basis_vecs)
     assert(basis_vecs.shape == (num, N))
-    coeffs, residuals, _, _ = np.linalg.lstsq(basis_vecs.T, v_colvec)
+    coeffs, residuals, _, _ = _lstsq_compat(basis_vecs.T, v_colvec)
     assert(coeffs.shape == (num, 1))
     coeffs.shape = (num,)
     # XXX TODO: Figure out why it can happen that residuals.shape == (0,)!!
@@ -271,7 +290,7 @@ def as_dense_array(A, dtype=None):
     #           petsc4py.  -- Max, 20.3.2014
     from petsc4py import PETSc
 
-    if A == None:
+    if A is None:
         return None
 
     if isinstance(A, np.ndarray):
@@ -329,7 +348,7 @@ def as_petsc_matrix(A):
     A_petsc.setType('aij')  # sparse
     A_petsc.setUp()
 
-    for j in xrange(0, n):
+    for j in range(0, n):
         col = get_jth_column(j)
         if col.dtype == complex:
             if np.allclose(col.imag, 0.0):
@@ -338,7 +357,7 @@ def as_petsc_matrix(A):
                 raise TypeError("Array with complex entries cannot be converted "
                                 "to a PETSc matrix.")
 
-        for i in xrange(0, m):
+        for i in range(0, m):
             # We try to keep A_petsc as sparse as possible by only
             # setting nonzero entries.
             if col[i] != 0.0:
@@ -374,7 +393,7 @@ def irregular_interval_mesh(xmin, xmax, n):
     for (i, x) in enumerate(coords):
         editor.add_vertex(i, np.array([x], dtype=float))
     editor.add_vertex(n - 1, np.array([xmax], dtype=float))
-    for i in xrange(n - 1):
+    for i in range(n - 1):
         editor.add_cell(i, np.array([i, i + 1], dtype='uintp'))
 
     editor.close()

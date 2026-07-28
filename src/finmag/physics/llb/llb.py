@@ -7,7 +7,8 @@ import finmag.native.llb as native_llb
 from finmag.energies import Zeeman
 from finmag.energies import Demag
 from finmag.physics.llb.exchange import Exchange
-from finmag.physics.llb.material import Material
+from finmag.physics.llb.material import Material, _vector_as_numpy
+from finmag.field import Field
 from finmag.util import helpers
 from finmag.util.vtk_saver import VTKSaver
 from finmag.util.fileio import Tablewriter
@@ -25,7 +26,7 @@ class LLB(object):
     def __init__(self, mat, method='RK2b', name='unnamed', pbc2d=None):
         self.material = mat
         self._m = mat._m
-        self.m = self._m.vector().array()
+        self.m = _vector_as_numpy(self._m.vector())
         self.S1 = mat.S1
         self.S3 = mat.S3
         self.mesh = self.S1.mesh()
@@ -53,7 +54,7 @@ class LLB(object):
             self.logfilename, mode='w', level=logging.DEBUG)
         self.scheduler = scheduler.Scheduler()
 
-        self.domains = df.CellFunction("uint", self.mesh)
+        self.domains = df.MeshFunction("size_t", self.mesh, self.mesh.topology().dim())
         self.domains.set_all(0)
         self.region_id = 0
 
@@ -77,8 +78,9 @@ class LLB(object):
         self.t = 0.0  # s
         self.do_precession = True
 
-        self.vol = df.assemble(df.dot(df.TestFunction(self.S3),
-                                      df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = _vector_as_numpy(
+            df.assemble(df.dot(df.TestFunction(self.S3),
+                               df.Constant([1, 1, 1])) * df.dx))
         self.real_vol = self.vol * self.material.unit_length ** 3
 
         self.nxyz = self.mesh.num_vertices()
@@ -172,8 +174,8 @@ class LLB(object):
     pins = property(pins, set_pins)
 
     def set_spatial_alpha(self, value):
-        self._alpha[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+        self._alpha[:] = _vector_as_numpy(
+            helpers.scalar_valued_function(value, self.S1).vector())[:]
 
     def setup_parameters(self):
         self.integrator.set_parameters(self.dt,
@@ -185,9 +187,19 @@ class LLB(object):
                                        self.using_type_II)
 
     def add(self, interaction):
-        interaction.setup(self.material._m,
-                          self.material.Ms0,
-                          unit_length=self.material.unit_length)
+        if isinstance(interaction, Exchange):
+            # LLB exchange uses its own setup signature; do not send it through the standard interaction path. [Codex GPT-5.4]
+            interaction.setup(self.S3,
+                              self.material._m,
+                              self.material.Ms0,
+                              unit_length=self.material.unit_length)
+        else:
+            # Wrap Ms as a DG0 Field here so standard Finmag interactions still see the API they expect. [Codex GPT-5.4]
+            Ms = Field(self.material._Ms_dg.function_space(),
+                       self.material._Ms_dg)
+            interaction.setup(self.material._m,
+                              Ms,
+                              unit_length=self.material.unit_length)
         self.interactions.append(interaction)
 
         if interaction.__class__.__name__ == 'Zeeman':
@@ -230,7 +242,7 @@ class LLB(object):
         timer.start("sundials_rhs", self.__class__.__name__)
         # Use the same characteristic time as defined by c
 
-        native_llb.calc_llb_dmdt(self._m.vector().array(),
+        native_llb.calc_llb_dmdt(y,
                                  self.H_eff,
                                  self.dm_dt,
                                  self.material.T,
@@ -292,7 +304,7 @@ class LLB(object):
                 if self.pbc2d:
                     self.pbc2d.modify_m(self._m.vector())
                 self._t += self._dt
-        except Exception, error:
+        except Exception as error:
             log.info(error)
             raise Exception(error)
 
@@ -301,18 +313,18 @@ class LLB(object):
         log.debug("Integrating dynamics up to t = %g" % t)
 
     def m_average_fun(self, dx=df.dx):
-        """
+        r"""
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
         """
 
         mx = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([1, 0, 0])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([1, 0, 0])) * dx)
         my = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([0, 1, 0])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([0, 1, 0])) * dx)
         mz = df.assemble(
-            self.material._Ms_dg * df.dot(self._m, df.Constant([0, 0, 1])) * dx)
+            self.material._Ms_dg * df.dot(self._m.f, df.Constant([0, 0, 1])) * dx)
         volume = df.assemble(self.material._Ms_dg * dx)
 
         return np.array([mx, my, mz]) / volume
@@ -348,7 +360,8 @@ class LLB(object):
                 log.error(msg)
                 raise KeyError(msg)
 
-        func_args = inspect.getargspec(func).args
+        getargspec = inspect.getfullargspec if hasattr(inspect, 'getfullargspec') else inspect.getargspec
+        func_args = getargspec(func).args
         illegal_argnames = ['at', 'after', 'every', 'at_end', 'realtime']
         for kw in illegal_argnames:
             if kw in func_args:
@@ -434,7 +447,7 @@ if __name__ == '__main__':
     mlist = []
     Ms_average = []
     for t in ts:
-        print t
+        print(t)
         sim.run_until(t)
         mlist.append(sim.m)
         df.plot(sim._m)

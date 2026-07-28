@@ -11,10 +11,10 @@ def create_test_ndt_file(dirname, t_step, t_ini, t_end, omega, alpha, debug=Fals
     data for testing purposes.
 
     """
-    print "Precessional frequency: {} GHz".format(omega / 1e9)
+    print("Precessional frequency: {} GHz".format(omega / 1e9))
 
     ts = np.arange(t_ini, t_end, t_step)
-    print len(ts)
+    print(len(ts))
 
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
@@ -48,11 +48,11 @@ def create_test_npy_files(dirname, t_step, t_ini, t_end, omega, alpha, num_verti
     Construct a time series of artificial magnetisation data and save
     it to a bunch of .npy files.
     """
-    print "Precessional frequency: {} GHz".format(omega / 1e9)
+    print("Precessional frequency: {} GHz".format(omega / 1e9))
 
     ts = np.arange(t_ini, t_end, t_step)
     num_timesteps = len(ts)
-    print "Number of timesteps: {}".format(num_timesteps)
+    print("Number of timesteps: {}".format(num_timesteps))
 
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx = exp(-ts * 1e8 / alpha) * sin(omega * ts)
@@ -61,7 +61,7 @@ def create_test_npy_files(dirname, t_step, t_ini, t_end, omega, alpha, num_verti
 
     # Write the data to a series of .npy files
     a = np.zeros((3, num_vertices))
-    for i in xrange(num_timesteps):
+    for i in range(num_timesteps):
         a[0, :] = mx[i]
         a[1, :] = my[i]
         a[2, :] = mz[i]
@@ -77,12 +77,12 @@ def create_test_npy_files_with_two_regions(dirname, t_step, t_ini, t_end, omega1
     Construct a time series of artificial magnetisation data and save
     it to a bunch of .npy files.
     """
-    print "Precessional frequency in region 1: {} GHz".format(omega1 / 1e9)
-    print "Precessional frequency in region 2: {} GHz".format(omega2 / 1e9)
+    print("Precessional frequency in region 1: {} GHz".format(omega1 / 1e9))
+    print("Precessional frequency in region 2: {} GHz".format(omega2 / 1e9))
 
     ts = np.arange(t_ini, t_end, t_step)
     num_timesteps = len(ts)
-    print "Number of timesteps: {}".format(num_timesteps)
+    print("Number of timesteps: {}".format(num_timesteps))
 
     # Use damped harmonic oscillator to create fake magnetisation dynamics
     mx1 = exp(-ts * 1e8 / alpha1) * sin(omega1 * ts)
@@ -96,7 +96,7 @@ def create_test_npy_files_with_two_regions(dirname, t_step, t_ini, t_end, omega1
     # Write the data to a series of .npy files
     N = num_vertices1 + num_vertices2
     a = np.zeros((3, N))
-    for i in xrange(num_timesteps):
+    for i in range(num_timesteps):
         # Write values in region 1
         a[0, :num_vertices1] = mx1[i]
         a[1, :num_vertices1] = my1[i]

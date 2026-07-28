@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# Run the first practical M3 verification workflow for the Python 3
+# FEniCS-2019 compatibility track.
+#
+# Usage:
+#   dev/bin/verify-python3-m3
+#
+# This wrapper keeps the first M3 gate reproducible as one command while the
+# 2019.1.0 compatibility matrix is still intentionally small. [Codex GPT-5.4]
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi cache state out of the checkout so the pixi path does not recreate
+# repo-local environment artefacts that interfere with the Docker witnesses. [Codex GPT-5.4]
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+echo "==> pixi run native-fk-bem-smoke"
+pixi run native-fk-bem-smoke
+
+echo "==> pixi run barmini-suite"
+pixi run barmini-suite

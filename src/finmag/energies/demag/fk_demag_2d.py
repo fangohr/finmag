@@ -6,7 +6,7 @@ from finmag.native.llg import compute_bem_fk
 from finmag.util.consts import mu0
 from finmag.util.meshes import nodal_volume
 from finmag.util import helpers
-from fk_demag import FKDemag
+from .fk_demag import FKDemag
 
 
 class Demag2D(FKDemag):
@@ -26,6 +26,7 @@ class Demag2D(FKDemag):
         super(Demag2D, self).__init__(name=name, thin_film=thin_film)
 
     def create_3d_mesh(self, mesh):
+        # The 2D demag path works by extruding into a minimal 3D FK problem on purpose. [Codex GPT-5.4]
 
         nv = mesh.num_vertices()
         nc = mesh.num_cells()
@@ -33,24 +34,29 @@ class Demag2D(FKDemag):
 
         mesh3 = df.Mesh()
         editor = df.MeshEditor()
-        editor.open(mesh3, 3, 3)
+        # DOLFIN 2019 expects the cell type string here, while 2017 still uses
+        # the older numeric-only MeshEditor signature. [Codex GPT-5.4]
+        try:
+            editor.open(mesh3, "tetrahedron", 3, 3)
+        except TypeError:
+            editor.open(mesh3, 3, 3)
         editor.init_vertices(2 * nv)
         editor.init_cells(3 * nc)
 
         for v in df.vertices(mesh):
             i = v.index()
             p = v.point()
-            editor.add_vertex(i, p.x(), p.y(), 0)
-            editor.add_vertex(i + nv, p.x(), p.y(), h)
+            editor.add_vertex(i, np.asarray([p.x(), p.y(), 0.0], dtype=np.float64))
+            editor.add_vertex(i + nv, np.asarray([p.x(), p.y(), h], dtype=np.float64))
 
         gid = 0
         for c in df.cells(mesh):
-            i, j, k = c.entities(0)
-            editor.add_cell(gid, i, j, k, i + nv)
+            i, j, k = [int(v) for v in c.entities(0)]
+            editor.add_cell(gid, np.asarray([i, j, k, i + nv], dtype=np.uintp))
             gid = gid + 1
-            editor.add_cell(gid, j, j + nv, k, i + nv)
+            editor.add_cell(gid, np.asarray([j, j + nv, k, i + nv], dtype=np.uintp))
             gid = gid + 1
-            editor.add_cell(gid, k, k + nv, j + nv, i + nv)
+            editor.add_cell(gid, np.asarray([k, k + nv, j + nv, i + nv], dtype=np.uintp))
             gid = gid + 1
 
         editor.close()
@@ -71,8 +77,9 @@ class Demag2D(FKDemag):
 
         n2d = S3.dim()
         for i in range(n2d):
-            map_2d_to_3d[i] = vert_to_dof3[dof_to_vert2[i]]
-            map_2d_to_3d[i + n2d] = vert_to_dof3[dof_to_vert2[i] + n2d]
+            source_vertex = int(dof_to_vert2[i])
+            map_2d_to_3d[i] = vert_to_dof3[source_vertex]
+            map_2d_to_3d[i + n2d] = vert_to_dof3[source_vertex + n2d]
 
         self.map_2d_to_3d = map_2d_to_3d
         # print map_2d_to_3d
@@ -80,7 +87,8 @@ class Demag2D(FKDemag):
         n3d = V3.dim()
         map_3d_to_2d = np.zeros(V3.dim(), dtype=np.int32)
         for i in range(V3.dim()):
-            map_3d_to_2d[i] = vert_to_dof2[dof_to_vert3[i] % n2d]
+            source_vertex = int(dof_to_vert3[i] % n2d)
+            map_3d_to_2d[i] = vert_to_dof2[source_vertex]
 
         self.map_3d_to_2d = map_3d_to_2d
         # print map_3d_to_2d
@@ -89,16 +97,20 @@ class Demag2D(FKDemag):
 
         self.dg3 = df.FunctionSpace(mesh, 'DG', 0)
 
+        if isinstance(dg2, (int, float)):
+            fun = df.Function(self.dg3)
+            fun.vector()[:] = dg2
+            return fun
+
         class HelperExpression(df.Expression):
 
-            def __init__(self, value):
-                super(HelperExpression, self).__init__()
+            def __init__(self, value, **kwargs):
                 self.fun = value
 
             def eval(self, value, x):
                 value[0] = self.fun((x[0], x[1]))
 
-        hexp = HelperExpression(dg2)
+        hexp = HelperExpression(dg2, degree=0)
         fun = df.interpolate(hexp, self.dg3)
 
         return fun
@@ -123,7 +135,7 @@ class Demag2D(FKDemag):
             The length (in m) represented by one unit on the mesh. Default 1.
 
         """
-        self.m = m
+        self.m_2d = m
         self.unit_length = unit_length
 
         mesh = m.mesh()
@@ -175,13 +187,15 @@ class Demag2D(FKDemag):
 
         """
         self._H_func.vector()[:] = self.__compute_field()
-        nodal_E = df.assemble(self._nodal_E).array() * \
+        nodal_E = df.assemble(self._nodal_E).get_local() * \
             self.unit_length ** self.m.mesh_dim()
         return nodal_E / self._nodal_volumes
 
     def __compute_field(self):
+        # Lift the 2d magnetisation to the corresponding top and bottom
+        # vertices of the auxiliary 3d mesh before solving the FK problem.
         self.m.set_with_numpy_array_debug(
-            self.m.get_numpy_array_debug()[self.map_3d_to_2d])
+            self.m_2d.get_numpy_array_debug()[self.map_3d_to_2d])
         self._compute_magnetic_potential()
         return self._compute_gradient()
 

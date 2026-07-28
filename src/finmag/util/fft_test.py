@@ -1,12 +1,12 @@
 from __future__ import division
-from fft import *
+from finmag.util.fft import *
 from numpy import sqrt, sin, cos, pi, exp, real, conj
 from finmag.util.consts import gamma
 import numpy as np
 import os
 import pytest
 import matplotlib.pyplot as plt
-import fft_test_helpers
+from finmag.util import fft_test_helpers
 
 
 def test_analytical_inverse_DFT(tmpdir, debug=False):
@@ -68,7 +68,7 @@ def test_analytical_inverse_DFT(tmpdir, debug=False):
         A_k = rfft_vals[k]  # Fourier coefficient at the peak
         B_k = A_k.real
         C_k = A_k.imag
-        print "Fourier coefficient at index k={} is: {}".format(k, A_k)
+        print("Fourier coefficient at index k={} is: {}".format(k, A_k))
 
         tt = 2 * pi * k * np.arange(n) / n
         signal_analytical_1 = np.squeeze(
@@ -79,7 +79,7 @@ def test_analytical_inverse_DFT(tmpdir, debug=False):
 
         base_oscillation = sin(ts) if (k == 2) else 2 * cos(3 * ts)
 
-        print "Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered)))
+        print("Maximum deviation of filtered signal from the base sinusoidal oscillation: {}".format(max(abs(base_oscillation - signal_filtered))))
         assert np.allclose(
             base_oscillation, signal_filtered, atol=0.05, rtol=0)
         assert np.allclose(
@@ -314,7 +314,7 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
     # Compute Fourier transform of resampled time series using FFT_m
     freqs_computed, psd_mx_computed, psd_my_computed, psd_mz_computed = \
         compute_power_spectral_density('m_ringdown*.npy', t_step_res, t_ini=t_ini_res,
-                                       t_end=t_end_res, subtract_values=None, restrict_to_vertices=xrange(N1))
+                                       t_end=t_end_res, subtract_values=None, restrict_to_vertices=range(N1))
 
     # Check that the analytically determined power spectra are the same as the
     # computed ones.

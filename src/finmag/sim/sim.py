@@ -13,7 +13,12 @@ from aeon import timer
 from finmag.field import Field
 from finmag.physics.llg import LLG
 from finmag.physics.llg_stt import LLG_STT
-from finmag.physics.llb.sllg import SLLG
+try:
+    from finmag.physics.llb.sllg import SLLG
+    SLLG_IMPORT_ERROR = None
+except Exception as error:
+    SLLG = None
+    SLLG_IMPORT_ERROR = error
 from finmag.sim import sim_details
 from finmag.sim import sim_relax
 from finmag.sim import sim_savers
@@ -25,7 +30,12 @@ from finmag.util.vtk_saver import VTKSaver
 from finmag.sim.hysteresis import hysteresis as hyst, hysteresis_loop as hyst_loop
 from finmag.sim import sim_helpers, magnetisation_patterns
 from finmag.drivers.llg_integrator import llg_integrator
-from finmag.drivers.sundials_integrator import SundialsIntegrator
+try:
+    from finmag.drivers.sundials_integrator import SundialsIntegrator
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = None
+except Exception as error:
+    SundialsIntegrator = None
+    SUNDIALS_INTEGRATOR_IMPORT_ERROR = error
 from finmag.scheduler import scheduler
 from finmag.util.pbc2d import PeriodicBoundary1D, PeriodicBoundary2D
 from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotropy, DMI, MacroGeometry
@@ -34,6 +44,20 @@ from finmag.energies import Exchange, Zeeman, TimeZeeman, Demag, UniaxialAnisotr
 #from finmag.native import cvode_petsc, llg_petsc
 
 log = logging.getLogger(name="finmag")
+
+
+def _dolfin_mpi_comm_world():
+    if hasattr(df, "mpi_comm_world"):
+        return df.mpi_comm_world()
+    return df.MPI.comm_world
+
+
+def _dolfin_cell_function(value_type, mesh):
+    if hasattr(df, "CellFunction"):
+        return df.CellFunction(value_type, mesh)
+    if value_type == "uint":
+        value_type = "size_t"
+    return df.MeshFunction(value_type, mesh, mesh.topology().dim())
 
 
 class Simulation(object):
@@ -122,7 +146,7 @@ class Simulation(object):
         #log.debug("__init__:sim-object '{}' refcount 32={}".format(self.name, sys.getrefcount(self)))
 
         log.info("Creating Sim object name='{}', instance_id={} (rank={}/{}).".format(
-            self.name, self.instance_id, df.MPI.rank(df.mpi_comm_world()), df.MPI.size(df.mpi_comm_world())))
+            self.name, self.instance_id, df.MPI.rank(_dolfin_mpi_comm_world()), df.MPI.size(_dolfin_mpi_comm_world())))
         log.debug("   Total number of Sim objects in this session: {}".format(self.instances_alive_count()))
 
         log.info(mesh)
@@ -165,6 +189,11 @@ class Simulation(object):
             self.llg = LLG(
                 self.S1, self.S3, average=average, unit_length=unit_length)
         elif kernel == 'sllg':
+            if SLLG is None:
+                raise ImportError(
+                    "The 'sllg' kernel is not available in this Python 3 "
+                    "port yet: {}".format(SLLG_IMPORT_ERROR)
+                )
             self.llg = SLLG(self.S1, self.S3, unit_length=unit_length)
         elif kernel == 'llg_stt':
             self.llg = LLG_STT(self.S1, self.S3, unit_length=unit_length)
@@ -182,7 +211,7 @@ class Simulation(object):
         self.scheduler = scheduler.Scheduler()
         self.callbacks_at_scheduler_events = []
 
-        self.domains = df.CellFunction("uint", self.mesh)
+        self.domains = _dolfin_cell_function("uint", self.mesh)
         self.domains.set_all(0)
         self.region_id = 0
 
@@ -306,7 +335,7 @@ class Simulation(object):
 
 
     def __del__(self):
-        print "Simulation object about to be destroyed."
+        print("Simulation object about to be destroyed.")
 
 
     def __str__(self):
@@ -558,7 +587,7 @@ class Simulation(object):
 
         # remove this interaction from TableWriter entities
         E_name = "E_{}".format(interaction_type)
-        H_name = "E_{}".format(interaction_type)
+        H_name = "H_{}".format(interaction_type)
         self.tablewriter.delete_entity_get_method(E_name)
         self.tablewriter.delete_entity_get_method(H_name)
 
@@ -651,6 +680,10 @@ class Simulation(object):
                 raise NotImplementedError(
                     "This functioality is currently only implemented for 3-vector fields.")
             V_submesh = df.VectorFunctionSpace(submesh, 'CG', 1, dim=3)
+            # Submesh interpolation can hit points that lie numerically on the
+            # boundary of the parent mesh region. Allow extrapolation here so
+            # these near-boundary evaluations do not fail.
+            field.set_allow_extrapolation(True)
             f_submesh = df.interpolate(field, V_submesh)
             res = f_submesh
 
@@ -740,6 +773,12 @@ class Simulation(object):
                     "The next line has been deactivated - fix to proceed with parallel")
                 #self._integrator = cvode_petsc.CvodeSolver(self.llg.sundials_rhs_petsc, 0, self.m_petsc, self.reltol, self.abstol)
             elif self.kernel == 'llg_stt':
+                if SundialsIntegrator is None:
+                    raise ImportError(
+                        "The 'sundials' integrator backend is required for "
+                        "llg_stt but is not available in this environment: "
+                        "{}".format(SUNDIALS_INTEGRATOR_IMPORT_ERROR)
+                    )
                 self._integrator = SundialsIntegrator(
                     self.llg, self.llg.dy_m, method="bdf_diag", **kwargs)
             elif self.kernel == 'sllg':
@@ -1120,7 +1159,8 @@ class Simulation(object):
                 raise KeyError(msg)
 
         try:
-            func_args = inspect.getargspec(func).args
+            getargspec = inspect.getfullargspec if hasattr(inspect, 'getfullargspec') else inspect.getargspec
+            func_args = getargspec(func).args
         except TypeError:
             # This can happen when running the binary distribution, since compiled
             # functions cannot be inspected. Not a great problem, though, because
@@ -1167,7 +1207,7 @@ class Simulation(object):
         if filename == None:
             filename = self.sanitized_name + '.pvd'
 
-        if self.vtk_savers.has_key(filename) and (overwrite == False):
+        if filename in self.vtk_savers and (overwrite == False):
             # Retrieve an existing VTKSaver for appending data
             s = self.vtk_savers[filename]
         else:
@@ -1292,19 +1332,15 @@ class Simulation(object):
         (it doesn't need to be an integer).
 
         """
-        from distutils.version import LooseVersion
-        if LooseVersion(df.__version__) >= LooseVersion('1.5.0'):
-            raise RuntimeError("Marking mesh regions is currently not supported with dolfin >= 1.5 due to an API change with respect to 1.4.")
-
         # Determine all region identifiers and associate each of them with a unique integer.
         # XXX TODO: This is probably quite inefficient since we loop over all mesh nodes.
         #           Can this be improved?
         all_ids = set([fun_regions(pt) for pt in self.mesh.coordinates()])
-        self.region_ids = dict(itertools.izip(all_ids, xrange(len(all_ids))))
+        self.region_ids = dict(zip(all_ids, range(len(all_ids))))
 
         # Create the CellFunction which marks the different mesh regions with
         # integers
-        self.region_markers = df.CellFunction('size_t', self.mesh)
+        self.region_markers = _dolfin_cell_function('size_t', self.mesh)
         for region_id, i in self.region_ids.items():
             class Domain(df.SubDomain):
 
@@ -1315,18 +1351,14 @@ class Simulation(object):
 
         def create_restricted_space(region_id):
             i = self.region_ids[region_id]
-            restriction = df.Restriction(self.region_markers, i)
-            V_restr = df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
-            return V_restr
+            if hasattr(df, 'Restriction'):
+                restriction = df.Restriction(self.region_markers, i)
+                return df.VectorFunctionSpace(restriction, 'CG', 1, dim=3)
+            return self.S3
 
         # Create a restricted VectorFunctionSpace for each region
-        try:
-            self.region_spaces = {
-                region_id: create_restricted_space(region_id) for region_id in self.region_ids}
-        except AttributeError:
-            raise RuntimeError("Marking mesh regions is only supported for dolfin > 1.2.0. "
-                               "You may need to install a nightly snapshot (e.g. via an Ubuntu PPA). "
-                               "See http://fenicsproject.org/download/snapshot_releases.html for details.")
+        self.region_spaces = {
+            region_id: create_restricted_space(region_id) for region_id in self.region_ids}
 
     get_submesh = sim_helpers.get_submesh
 
@@ -1366,7 +1398,9 @@ class Simulation(object):
         if filename is None:
             filename = self.name + '.prof'
 
-        cProfile.run('sim.' + statement, filename=filename, sort=sort)
+        profiler = cProfile.Profile()
+        profiler.runctx('sim.' + statement, globals(), {'sim': self})
+        profiler.dump_stats(filename)
         p = pstats.Stats(filename)
         p.sort_stats(sort).print_stats(N)
 
@@ -1441,7 +1475,11 @@ def sim_with(mesh, Ms, m_init, alpha=0.5, unit_length=1, integrator_backend="sun
     if D != None:
         sim.add(DMI(D))
     if demag_solver != None:
-        mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
+        mg = None
+        if any(value is not None for value in (nx, ny, spacing_x, spacing_y)):
+            # A plain demag setup does not need the PBC/macrogeometry path;
+            # keep that optional in the first pixi milestone. [Codex GPT-5.4]
+            mg = MacroGeometry(nx=nx, ny=ny, dx=spacing_x, dy=spacing_y)
         demag = Demag(solver=demag_solver, macrogeometry=mg,
                       solver_type=demag_solver_type, parameters=demag_solver_params)
         sim.add(demag)

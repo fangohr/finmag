@@ -14,12 +14,39 @@ import dolfin as df
 import numpy as np
 import numbers
 import os
-import dolfinh5tools
+try:
+    import dolfinh5tools
+except ImportError:
+    dolfinh5tools = None
 from finmag.util import helpers
 from finmag.util.helpers import expression_from_python_function
-from finmag.util.visualization import plot_dolfin_function
+try:
+    from finmag.util.visualization import plot_dolfin_function
+except Exception:
+    plot_dolfin_function = None
 
 log = logging.getLogger(name="finmag")
+
+# DOLFIN 2017 only exposes Expression, while newer paths also expose UserExpression. [Codex GPT-5.4]
+_DOLFIN_EXPRESSION_TYPES = tuple(
+    t for t in (df.Expression, getattr(df, "UserExpression", None)) if t is not None
+)
+
+
+def _dolfin_vector_array(vector):
+    if hasattr(vector, "get_local"):
+        return vector.get_local()
+    return vector.array()
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 def associated_scalar_space(functionspace):
@@ -109,7 +136,7 @@ class Field(object):
         in which case it will build the dolfin expression for you.
 
         """
-        if not isinstance(expr, df.Expression):
+        if not isinstance(expr, _DOLFIN_EXPRESSION_TYPES):
             if isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == 0:
                 assert (isinstance(expr, basestring) or
                         isinstance(expr, (tuple, list)) and len(expr) == 1)
@@ -118,7 +145,7 @@ class Field(object):
                self.functionspace.num_sub_spaces() == 3:
                 assert isinstance(expr, (tuple, list)) and len(expr) == 3
                 assert all(isinstance(item, basestring) for item in expr)
-                map(str, expr)  # dolfin does not like unicode in the expression
+                expr = tuple(map(str, expr))  # dolfin does not like unicode in the expression
             expr = df.Expression(expr, degree=1, **kwargs)
         temp_function = df.interpolate(expr, self.functionspace)
         self.f.vector().set_local(temp_function.vector().get_local())
@@ -167,7 +194,7 @@ class Field(object):
         """
         if isinstance(value, df.Constant):
             self.from_constant(value)
-        elif isinstance(value, df.Expression):
+        elif isinstance(value, _DOLFIN_EXPRESSION_TYPES):
             self.from_expression(value)
         elif isinstance(value, df.Function):
             self.from_function(value)
@@ -318,20 +345,20 @@ class Field(object):
         from the half-open interval `vrange` (default: vrange=[-1, 1)).
 
         """
-        shape = self.f.vector().array().shape
+        shape = _dolfin_vector_array(self.f.vector()).shape
         a, b = vrange
         vals = np.random.random_sample(shape) * float(b - a) + a
         self.set(vals)
 
     def as_array(self):
-        return self.f.vector().array()
+        return _dolfin_vector_array(self.f.vector())
 
     def as_vector(self):
         return self.f.vector()
 
     def get_numpy_array_debug(self):
         """ONLY for debugging"""
-        return self.f.vector().array()
+        return _dolfin_vector_array(self.f.vector())
 
     def is_scalar_field(self):
         """
@@ -418,7 +445,7 @@ class Field(object):
             # Function values are defined at nodes.
             coords = self.functionspace.mesh().coordinates()
             num_nodes = self.functionspace.mesh().num_vertices()
-            f_array = self.f.vector().array()  # numpy array
+            f_array = _dolfin_vector_array(self.f.vector())  # numpy array
             vtd_map = df.vertex_to_dof_map(self.functionspace)
 
             value_dim = self.value_dim()
@@ -490,6 +517,8 @@ class Field(object):
         v_res = df.assemble(df.dot(self.f / a.f, w) * df.dP)
         return Field(self.functionspace, value=v_res)
 
+    __truediv__ = __div__
+
     def cross(self, other):
         """
         Return vector field representing the cross product of this field with `other`.
@@ -541,8 +570,8 @@ class Field(object):
             raise TypeError("Argument `other` must be of type'Field'. "
                             "Got: {} (type {}).".format(other, type(other)))
 
-        a = other.f.vector().array()
-        b = self.f.vector().array()
+        a = _dolfin_vector_array(other.f.vector())
+        b = _dolfin_vector_array(self.f.vector())
 
         return np.allclose(a, b, rtol=rtol, atol=atol)
 
@@ -652,7 +681,7 @@ class Field(object):
 
         """
         dofmap = df.vertex_to_dof_map(self.functionspace)
-        reordered = self.f.vector().array()[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
+        reordered = _dolfin_vector_array(self.f.vector())[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
         vectors = reordered.reshape((3, -1))  # [[x1, y1, z1], ..., [xn, yn, zn]]
         lengths = np.sqrt(np.add.reduce(vectors * vectors, axis=1))
         normalised = np.dot(vectors.T, np.diag(1 / lengths)).T.ravel()

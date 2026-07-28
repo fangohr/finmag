@@ -22,8 +22,8 @@ class OdeSundialsTests(unittest.TestCase):
             integrator.advance_time(1, y)
             self.fail("Exception was not raised")
             pass
-        except RuntimeError, ex:
-            print ex
+        except RuntimeError as ex:
+            print(ex)
 
     def test_simple_1d_scipy(self):
         import scipy.integrate

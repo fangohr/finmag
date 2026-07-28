@@ -6,4 +6,9 @@
 #
 # AUTHOR(S) OF THIS FILE: Dmitri Chernyshenko (d.chernyshenko@soton.ac.uk)
 
-from .plot import *
+try:
+    from .plot import *
+except ImportError:
+    # Plotting depends on optional third-party packages such as matplotlib.
+    # Keep finmag importable when the core simulation stack is present.
+    pass

@@ -30,7 +30,7 @@ def norm_axis(a):
 
 def compute_finmag_anis(m_gen, Ms, K1, axis, dolfin_mesh):
     S3 = df.VectorFunctionSpace(dolfin_mesh, "Lagrange", 1, dim=3)
-    coords = np.array(zip(* dolfin_mesh.coordinates()))
+    coords = np.array(list(zip(* dolfin_mesh.coordinates())))
     m0 = m_gen(coords).flatten()
     m = Field(S3)
     m.set_with_numpy_array_debug(m0)
@@ -60,7 +60,7 @@ def compare_exchange(m_gen, Ms, A, dolfin_mesh, oommf_mesh, dims=3, name=""):
 
 def compute_finmag_exc(dolfin_mesh, m_gen, Ms, A):
     S3 = df.VectorFunctionSpace(dolfin_mesh, "Lagrange", 1, dim=3)
-    coords = np.array(zip(* dolfin_mesh.coordinates()))
+    coords = np.array(list(zip(* dolfin_mesh.coordinates())))
     m0 = m_gen(coords).flatten()
     m = Field(S3)
     m.set_with_numpy_array_debug(m0)
@@ -74,7 +74,7 @@ def compute_finmag_exc(dolfin_mesh, m_gen, Ms, A):
 
 
 def oommf_m0(m_gen, oommf_mesh):
-    coords = np.array(zip(* oommf_mesh.iter_coords()))
+    coords = np.array(list(zip(* oommf_mesh.iter_coords())))
     m0 = oommf_mesh.new_field(3)
     m0.flat = m_gen(coords)
     m0.flat /= np.sqrt(

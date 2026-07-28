@@ -1,12 +1,17 @@
+import shutil
+
 import numpy as np
+import pytest
 import conftest
 from finmag.util.oommf.comparison import oommf_m0, finmag_to_oommf
 from finmag.util.oommf import mesh, oommf_uniaxial_anisotropy
 from finmag.util.helpers import stats
 
 
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf():
-    finmag=conftest.setup(K2=0)
+    # This turns back into a real cross-code regression as soon as OOMMF is present. [Codex GPT-5.4]
+    finmag = conftest.setup(K2=0)
 
     REL_TOLERANCE = 9e-2
 
@@ -22,8 +27,8 @@ def test_against_oommf():
         np.sqrt(
             (np.max(oommf_anis[0] ** 2 + oommf_anis[1] ** 2 + oommf_anis[2] ** 2)))
 
-    print "comparison with oommf, H, relative_difference:"
-    print stats(rel_diff)
+    print("comparison with oommf, H, relative_difference:")
+    print(stats(rel_diff))
 
     finmag["table"] += conftest.table_entry("oommf", REL_TOLERANCE, rel_diff)
     assert np.max(rel_diff) < REL_TOLERANCE

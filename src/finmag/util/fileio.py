@@ -1,11 +1,16 @@
 import os
 import logging
-import types
 import numpy as np
 from glob import glob
-from types import TupleType, StringType
 from aeon import timer
 logger = logging.getLogger(name='finmag')
+
+try:
+    StringType = basestring
+except NameError:
+    StringType = str
+
+TupleType = tuple
 
 
 class Tablewriter(object):
@@ -176,7 +181,7 @@ class Tablewriter(object):
             self.delete_entity_get_method(key)
 
     def default_entity_order(self):
-        keys = self._entities.keys()
+        keys = list(self._entities.keys())
         # time needs to go first
         if 'time' in keys:
             keys.remove('time')
@@ -247,7 +252,7 @@ class Tablewriter(object):
 
                 elif isinstance(value, float) or isinstance(value, int):
                     f.write(self.float_format % value)
-                elif isinstance(value, types.NoneType):
+                elif value is None:
                     #f.write(self.string_format % value)
                     f.write(self.string_format % "nan")
                 else:
@@ -284,20 +289,28 @@ class Tablereader(object):
 
         assert len(headers) == len(units)
 
-        # use numpy to read remaining data (genfromtxt will
-        # complain if there are rows with different sizes)
+        expected_columns = len(headers) - 1
+        rows = []
         try:
-            self.data = np.genfromtxt(self.f)
-        except ValueError:
+            for line in self.f:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#'):
+                    continue
+
+                values = stripped.split()
+                if len(values) != expected_columns:
+                    raise RuntimeError
+                rows.append([float(value) for value in values])
+        except (TypeError, ValueError, RuntimeError):
             raise RuntimeError("Cannot load data from file '{}'." +
                                "Maybe the file was incompletely written?".
-                               format(self.f))
+                               format(self.filename))
         self.f.close()
 
-        # Make sure we have a 2d array even if the file only contains a single
-        # line (or none)
-        if self.data.ndim == 1:
-            self.data = self.data[np.newaxis, :]
+        if rows:
+            self.data = np.array(rows, dtype=float)
+        else:
+            self.data = np.empty((0, expected_columns))
 
         # Check if the number of data columns is equal to the number of headers
         assert self.data.shape[1] == len(headers) - 1
@@ -435,8 +448,8 @@ def demo1():
 
     # now open file for reading
     f = Tablereader(filename)
-    print f.timesteps()
-    print f['m_x']
+    print(f.timesteps())
+    print(f['m_x'])
 
 if __name__ == "__main__":
     print("Demo 1")

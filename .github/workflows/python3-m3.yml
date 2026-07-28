@@ -1,0 +1,25 @@
+name: python3-m3
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python3-m3:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    - name: Verify Python 3 M3 FEniCS-2019 gate
+      run: |
+        # Keep the initial M3 gate focused on the barmini-first pytest subset while the 2019 compatibility matrix grows. [Codex GPT-5.4]
+        dev/bin/verify-python3-m3

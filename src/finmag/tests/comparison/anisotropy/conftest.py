@@ -9,10 +9,10 @@ import pytest
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def finmag(request):
-    finmag = request.cached_setup(setup=setup,
-                                  teardown=teardown, scope="session")
+    finmag = setup()
+    request.addfinalizer(lambda: teardown(finmag))
     return finmag
 
 Ms = 0.86e6
@@ -36,9 +36,9 @@ def m_gen(r):
 
 
 def setup(K2=K2):
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)
@@ -56,9 +56,9 @@ def setup(K2=K2):
 
 
 def setup_cubic():
-    print "Running finmag..."
+    print("Running finmag...")
     mesh = from_geofile(os.path.join(MODULE_DIR, "bar.geo"))
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)
@@ -87,8 +87,10 @@ def start_table():
     table += ".. table:: Comparison of the anisotropy field computed with finmag against nmag, oommf and magpar\n\n"
     table += table_delim
     table += table_entries.format(
-        # hack because sphinx light table syntax does not allow an empty header
-        ":math:`\,`",
+        # Hack because sphinx light table syntax does not allow an empty
+        # header; escape the literal backslash so Python does not warn while
+        # the generated reST table stays unchanged. [Codex gpt-5.5 high]
+        ":math:`\\,`",
         ":math:`\\subn{\\Delta}{test}`",
         ":math:`\\subn{\\Delta}{max}`",
         ":math:`\\bar{\\Delta}`",

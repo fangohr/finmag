@@ -15,18 +15,34 @@ import re
 import sys
 import copy
 import math
+import shlex
 import shutil
-import commands
+import subprocess
 import logging
 import textwrap
 import hashlib
 import tempfile
+import functools
 import dolfin as df
 import numpy as np
-from types import ListType, TupleType
 from math import sin, cos, pi
 
 logger = logging.getLogger(name='finmag')
+
+try:
+    ListType
+except NameError:
+    ListType = list
+
+try:
+    TupleType
+except NameError:
+    TupleType = tuple
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 def from_geofile(geofile, save_result=True):
@@ -72,9 +88,12 @@ def from_geofile(geofile, save_result=True):
             # TODO: If save_result is False but the .xml.gz file
             # already exists, it will be updated (hence, saved)
             # anyway. Is this desired?
-            logger.warn("The mesh file '{}' is outdated (since it is "
-                        "older than the .geo file '{}') and will be "
-                        "overwritten.".format(result_filename, geofile))
+            # Use logger.warning rather than the deprecated warn alias so the
+            # mesh-generation tests stay warning-free under modern Python.
+            # [Codex GPT-5.4]
+            logger.warning("The mesh file '{}' is outdated (since it is "
+                           "older than the .geo file '{}') and will be "
+                           "overwritten.".format(result_filename, geofile))
         else:
             logger.debug("The mesh '{}' already exists and is "
                          "automatically returned.".format(result_filename))
@@ -116,6 +135,8 @@ def from_csg(csg, save_result=True, filename="", directory=""):
     `directory` is ignored.
     """
     if filename == "":
+        if isinstance(csg, str):
+            csg = csg.encode("utf-8")
         filename = hashlib.md5(csg).hexdigest()
     if os.path.isabs(filename) and directory != "":
         logger.warning("Ignoring 'directory' argument (value given: '{}') because 'filename' contains an absolute path: '{}'".format(
@@ -131,8 +152,10 @@ def from_csg(csg, save_result=True, filename="", directory=""):
             # double-check that.
             directory = os.curdir
 
+        # Raw regex keeps this helper quiet on modern Python while preserving
+        # the historical filename handling. [Codex GPT-5.4]
         # strip '.xml.gz' extension if present
-        filename = re.sub('\.xml\.gz$', '', filename)
+        filename = re.sub(r'\.xml\.gz$', '', filename)
         geofile = os.path.abspath(os.path.join(directory, filename) + ".geo")
 
         # Make sure that 'directory' actually contains all the
@@ -146,11 +169,11 @@ def from_csg(csg, save_result=True, filename="", directory=""):
 
         if not os.path.exists(geofile):
             with open(geofile, "w") as f:
-                f.write(csg)
+                f.write(csg.decode("utf-8") if isinstance(csg, bytes) else csg)
         mesh = from_geofile(geofile, save_result=True)
     else:
         tmp = tempfile.NamedTemporaryFile(suffix='.geo', delete=False)
-        tmp.write(csg)
+        tmp.write(csg if isinstance(csg, bytes) else csg.encode("utf-8"))
         tmp.close()
         mesh = from_geofile(tmp.name, save_result=False)
         # Since we used delete=False in NamedTemporaryFile, we are
@@ -177,15 +200,17 @@ def run_netgen(geofile):
 
     logger.debug(
         "Using netgen to convert {} to DIFFPACK format.".format(geofile))
-    netgen_cmd = "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode".format(
-        geofile, diffpackfile)
-
-    status, output = commands.getstatusoutput(netgen_cmd)
+    status, output = _run_netgen(geofile, diffpackfile)
     if status == 34304:
         logger.warning("Warning: Ignoring netgen's output status of 34304.")
+    elif _netgen_output_is_usable(status, output, diffpackfile):
+        # Newer Netgen can abort after already writing a usable mesh; keep that path working. [Codex GPT-5.4]
+        logger.warning(
+            "Netgen exited with status %s after writing '%s'; proceeding with the generated mesh.",
+            status, diffpackfile)
     elif status != 0:
-        print output
-        print "netgen failed with exit code", status
+        print(output)
+        print("netgen failed with exit code", status)
         sys.exit(2)
     elif output.lower().find("error") != -1:
         logger.warning(
@@ -196,6 +221,106 @@ def run_netgen(geofile):
         logger.warning("<====\n")
     logger.debug('Done!')
     return diffpackfile
+
+
+def _netgen_command(geofile, diffpackfile):
+    netgen_inner_cmd = (
+        "env "
+        "NETGENDIR=/usr/share/netgen "
+        "TIX_LIBRARY=/usr/share/tcltk/tcl8.5/Tix8.4 "
+        "TCLLIBPATH=/usr/share/tcltk/tcl8.5 "
+        "netgen -geofile={} -meshfiletype='DIFFPACK Format' -meshfile={} -batchmode"
+    ).format(shlex.quote(geofile), shlex.quote(diffpackfile))
+    if os.environ.get("DISPLAY") or shutil.which("xvfb-run") is None:
+        return netgen_inner_cmd
+    # Netgen's batch mode still touches Tk/OpenGL startup paths, so run it
+    # under a virtual X server when no display is available. [Codex GPT-5.4]
+    return "xvfb-run -a {}".format(netgen_inner_cmd)
+
+
+def _run_netgen_via_python_api(geofile, diffpackfile):
+    from netgen.csg import CSGeometry
+
+    geo = CSGeometry(geofile)
+    mesh = geo.GenerateMesh()
+    mesh.Export(diffpackfile, "DIFFPACK Format")
+    return 0, "Generated mesh via netgen Python API."
+
+
+def _run_netgen(geofile, diffpackfile, timeout=None):
+    if shutil.which("netgen") is None:
+        try:
+            return _run_netgen_via_python_api(geofile, diffpackfile)
+        except Exception as exc:
+            return 127, "netgen executable not found and Python API fallback failed: {}".format(exc)
+
+    proc = subprocess.Popen(
+        _netgen_command(geofile, diffpackfile),
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    try:
+        output, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        output, _ = proc.communicate()
+        if not isinstance(output, str):
+            output = output.decode('utf-8', 'replace')
+        output += "\n[finmag] netgen probe timed out after {}s".format(timeout)
+        return -1, output
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    return proc.returncode, output
+
+
+def _netgen_output_is_usable(status, output, diffpackfile):
+    if status == 0:
+        return True
+    if not (os.path.isfile(diffpackfile) and os.path.getsize(diffpackfile) > 0):
+        return False
+    output_lower = output.lower()
+    return (
+        "export mesh to file .... done!" in output_lower or
+        "save mesh to file .... done!" in output_lower
+    )
+
+
+@functools.lru_cache(maxsize=1)
+def netgen_is_usable():
+    """
+    Return True if Netgen is present and can complete a minimal mesh-generation
+    run in the current environment. [Codex GPT-5.4]
+    """
+    has_netgen_cli = shutil.which("netgen") is not None
+    if not has_netgen_cli:
+        try:
+            import netgen.csg  # noqa: F401
+        except ImportError:
+            return False
+
+    tmpdir = tempfile.mkdtemp(prefix="finmag-netgen-probe-")
+    geofile = os.path.join(tmpdir, "probe.geo")
+    diffpackfile = os.path.join(tmpdir, "probe.grid")
+    csg = textwrap.dedent("""\
+        algebraic3d
+        solid main = sphere (0, 0, 0; 1.0) -maxh = 0.8;
+        tlo main;""")
+
+    try:
+        with open(geofile, "w") as f:
+            f.write(csg)
+        # Keep the probe deterministic, but treat a launched-and-hung Netgen
+        # process as a real failure rather than optional-tool unavailability. [Codex GPT-5.4]
+        status, output = _run_netgen(geofile, diffpackfile, timeout=20)
+        if status == -1:
+            raise RuntimeError(output)
+        if not _netgen_output_is_usable(status, output, diffpackfile):
+            logger.debug("Netgen usability probe failed with exit code %s.", status)
+            logger.debug("Netgen usability probe output:\n%s", output)
+            return False
+        return os.path.isfile(diffpackfile)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def convert_diffpack_to_xml(diffpackfile):
@@ -210,11 +335,16 @@ def convert_diffpack_to_xml(diffpackfile):
 
     basename = os.path.splitext(diffpackfile)[0]
     xmlfile = basename + ".xml"
-    dolfin_conv_cmd = 'dolfin-convert {0} {1}'.format(diffpackfile, xmlfile)
-    status, output = commands.getstatusoutput(dolfin_conv_cmd)
+    dolfin_conv_cmd = _dolfin_convert_command(diffpackfile, xmlfile)
+    proc = subprocess.Popen(
+        dolfin_conv_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    status = proc.returncode
     if status != 0:
-        print output
-        print "dolfin-convert failed with exit code", status
+        print(output)
+        print("dolfin-convert failed with exit code", status)
         sys.exit(3)
 
     files = ["%s.xml.bak" % basename,
@@ -225,6 +355,55 @@ def convert_diffpack_to_xml(diffpackfile):
             os.remove(f)
 
     return xmlfile
+
+
+def _dolfin_convert_command(infile, outfile):
+    if shutil.which("dolfin-convert") is not None:
+        return "dolfin-convert {} {}".format(
+            shlex.quote(infile), shlex.quote(outfile))
+    # Fall back to the Python meshconvert entry point because `dolfin-convert` is often absent now. [Codex GPT-5.4]
+    return (
+        "{python} -c "
+        "\"from dolfin_utils.meshconvert.meshconvert import convert2xml; "
+        "convert2xml({infile}, {outfile})\""
+    ).format(
+        python=shlex.quote(sys.executable),
+        infile=repr(infile),
+        outfile=repr(outfile))
+
+
+def _run_shell_command(cmd, failure_message):
+    proc = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    if proc.returncode != 0:
+        print(output)
+        raise RuntimeError("{} (exit code {}).".format(
+            failure_message, proc.returncode))
+    return output
+
+
+def _gmsh_to_dolfin_mesh(filename, dim):
+    mshfile = filename + ".msh"
+    xmlfile = filename + ".xml"
+    gmsh_cmd = "gmsh {geo} -{dim} -format msh2 -o {msh}".format(
+        geo=shlex.quote(filename + ".geo"),
+        dim=int(dim),
+        msh=shlex.quote(mshfile))
+    _run_shell_command(gmsh_cmd, "gmsh failed to generate '{}'".format(mshfile))
+    _run_shell_command(
+        _dolfin_convert_command(mshfile, xmlfile),
+        "dolfin mesh conversion failed for '{}'".format(mshfile))
+    try:
+        return df.Mesh(xmlfile)
+    finally:
+        for path in (xmlfile, filename + ".geo", mshfile,
+                     filename + ".xml.bak", filename + "_physical_region.xml",
+                     filename + "_facet_region.xml"):
+            if os.path.exists(path):
+                os.remove(path)
 
 
 def change_xml_marker_starts_with_zero(xmlfile):
@@ -294,10 +473,15 @@ def compress(filename):
     """
     logger.debug("Compressing {}".format(filename))
     compr_cmd = 'gzip -f %s' % filename
-    status, output = commands.getstatusoutput(compr_cmd)
+    proc = subprocess.Popen(
+        compr_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, _ = proc.communicate()
+    if not isinstance(output, str):
+        output = output.decode('utf-8', 'replace')
+    status = proc.returncode
     if status != 0:
-        print output
-        print "gzip failed with exit code", status
+        print(output)
+        print("gzip failed with exit code", status)
         sys.exit(4)
     return filename + ".gz"
 
@@ -770,10 +954,14 @@ def nodal_volume(space, unit_length=1):
     """
     v = df.TestFunction(space)
     dim = space.mesh().topology().dim()
+    def _vector_array(vector):
+        if hasattr(vector, "get_local"):
+            return vector.get_local()
+        return vector.array()
     if isinstance(space, df.FunctionSpace) and space.num_sub_spaces() == 3:
-        return df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array() * unit_length ** dim
+        return _vector_array(df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx)) * unit_length ** dim
     else:
-        return df.assemble(v * df.dx).array() * unit_length ** dim
+        return _vector_array(df.assemble(v * df.dx)) * unit_length ** dim
 
 
 def mesh_info(mesh):
@@ -880,7 +1068,7 @@ def longest_edges(mesh):
 
 
 def print_mesh_info(mesh):
-    print mesh_info(mesh)
+    print(mesh_info(mesh))
 
 
 def order_of_magnitude(value):
@@ -979,7 +1167,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
         follows:
 
            import matplotlib.pyplot as plt
-           ax = plt.gca(projection='3d')
+           ax = plt.gcf().add_subplot(111, projection='3d')
 
     figsize : pair of floats
 
@@ -1023,7 +1211,7 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
     # work reasonably well for most cases. (However, for very oblong
     # structures it may make more sense to check the extent in each
     # dimension individually rather than the mesh volume as a whole.)
-    if not kwargs.has_key('linewidth'):
+    if 'linewidth' not in kwargs:
         lw_threshold = 500.0 if geom_dim == 2 else 5000.0
         a = mesh.num_cells() / mesh_volume(mesh)
         if a > lw_threshold:
@@ -1032,9 +1220,9 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
                          "(new value: linewidth = {})".format(kwargs['linewidth']))
 
     # Set default values for some keyword arguments
-    if not kwargs.has_key('color'):
+    if 'color' not in kwargs:
         kwargs['color'] = 'blue'
-    if kwargs.has_key('cmap'):
+    if 'cmap' in kwargs:
         if scalar_field is None:
             kwargs.pop('cmap')
             logger.warning("Ignoring 'cmap' argument since no 'scalar_field' "
@@ -1115,12 +1303,12 @@ def plot_mesh(mesh, scalar_field=None, ax=None, figsize=None, elev=None, azim=No
 
         if scalar_field != None:
             try:
-                scalar_field = np.array(map(scalar_field, coords))
+                scalar_field = np.array(list(map(scalar_field, coords)))
             except TypeError:
                 scalar_field = np.array(scalar_field)
 
         # Set shade = False by default because it looks nicer
-        if not kwargs.has_key('shade'):
+        if 'shade' not in kwargs:
             kwargs['shade'] = False
 
         try:
@@ -1272,11 +1460,14 @@ def plot_mesh_regions(fun_mesh_regions, regions, colors=None, alphas=None,
                         "Got: '{}' ({})".format(regions, type(regions)))
 
     if ax is None:
-        ax = plt.gca(projection='3d')
+        ax = plt.gcf().add_subplot(111, projection='3d')
 
     mesh = fun_mesh_regions.mesh()
-    midpoints = [[c.midpoint() for c in df.cells(mesh)
-                  if fun_mesh_regions[c.index()] == r] for r in regions]
+    # Iterate region cells through DOLFIN's subset iterator instead of manual
+    # MeshFunction indexing. The iterator works on both the legacy DOLFIN 2017
+    # core-suite image and the newer M3 stack. [Codex GPT-5.4]
+    midpoints = [[c.midpoint() for c in df.SubsetIterator(fun_mesh_regions, r)]
+                 for r in regions]
 
     pts = [[(pt.x(), pt.y(), pt.z()) for pt in m] for m in midpoints]
 
@@ -1411,10 +1602,12 @@ def build_mesh(vertices, cells):
 
     geom_dim = vertices.shape[-1]
     top_dim = cells.shape[-1] - 1
+    cell_type = {1: "interval", 2: "triangle", 3: "tetrahedron"}[top_dim]
 
     mesh = df.Mesh()
     editor = df.MeshEditor()
-    editor.open(mesh, top_dim, geom_dim)
+    # DOLFIN 2019 requires the cell-type string when opening a MeshEditor. [Codex GPT-5.4]
+    editor.open(mesh, cell_type, top_dim, geom_dim)
     editor.init_vertices(len(vertices))
     editor.init_cells(len(cells))
 
@@ -1440,7 +1633,7 @@ def mesh_is_periodic(mesh, axes):
 
     # Convert 'axes' into a list of values between 0 and 2
     try:
-        axes = map(lambda val: {'x': 0, 'y': 1, 'z': 2}[val], axes)
+        axes = [{'x': 0, 'y': 1, 'z': 2}[val] for val in axes]
     except KeyError:
         raise ValueError(
             "Argument 'axes' should be a string containing only 'x', 'y' and 'z'.")
@@ -1536,19 +1729,12 @@ def regular_polygon(n, r, f):
         csg = csg + "{}".format(i)
         if (i!=n):
             csg += ","
-    csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+    csg+="};\n\nPlane Surface(1) = {1};\n\nPhysical Surface(1) = {1};"
     filename = filename="polygon_{}_{}_{}".format(n,r,f)
     csg_saved=open(filename+".geo",'w')
     csg_saved.write(csg)
     csg_saved.close()
-    cmd="gmsh " + filename + ".geo -2 -o "+filename+".msh"
-    os.system(cmd)
-    cmd="dolfin-convert "+filename+".msh "+filename+".xml"
-    os.system(cmd)
-    mesh = df.Mesh(filename+".xml")
-    cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
-    os.system(cmd)
-    return mesh
+    return _gmsh_to_dolfin_mesh(filename, dim=2)
 
 
 
@@ -1580,7 +1766,7 @@ def regular_polygon_extruded(n,r,t,f):
         csg=csg+"{}".format(i)
         if (i!=n):
             csg += ","
-    csg += "};\n\nPlane Surface(1) = {1};\n\nPhysical Surface = {1};"
+    csg += "};\n\nPlane Surface(1) = {1};\n\nPhysical Surface(1) = {1};"
     if (t!=0):
         n_layers = math.ceil(t/f)
         csg += "\n\nExtrude {{0,0,{}}} {{\nSurface{{1}}; \nLayers{{{}}};\n}}".format(t,n_layers)
@@ -1590,17 +1776,7 @@ def regular_polygon_extruded(n,r,t,f):
     csg_saved=open(filename+".geo",'w')
     csg_saved.write(csg)
     csg_saved.close()
-    if (t==0):
-        cmd = "gmsh " + filename + ".geo -2 -o " + filename + ".msh"
-    else:
-        cmd = "gmsh " + filename + ".geo -3 -o " + filename + ".msh"
-    os.system(cmd)
-    cmd = "dolfin-convert "+filename+".msh "+filename+".xml"
-    os.system(cmd)
-    mesh = df.Mesh(filename+".xml")
-    cmd = "rm " + filename +".xml " + filename + ".geo " + filename +".msh"
-    os.system(cmd)
-    return mesh
+    return _gmsh_to_dolfin_mesh(filename, dim=2 if t == 0 else 3)
 
 
 

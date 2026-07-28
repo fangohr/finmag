@@ -5,6 +5,18 @@ from finmag import Simulation
 from finmag.energies import Exchange, DMI, Demag
 from finmag import MacroGeometry
 
+try:
+    import finmag.native.treecode_bem as _treecode_bem  # noqa: F401
+except ImportError:
+    _treecode_bem = None
+
+pytestmark = pytest.mark.skipif(
+    _treecode_bem is None,
+    reason="PBC demag checks require finmag.native.treecode_bem")
+# Keep the PBC demag checks collected as explicit skips when treecode_bem is
+# absent; module-level importorskip returns exit code 5 for this file alone on
+# modern pytest, which makes focused M3 probes awkward. [Codex gpt-5.5 high]
+
 mesh_1 = df.BoxMesh(df.Point(-10, -10, -10), df.Point(10, 10, 10), 10, 10, 10)
 mesh_3 = df.BoxMesh(df.Point(-30, -10, -10), df.Point(30, 10, 10), 30, 10, 10)
 mesh_9 = df.BoxMesh(df.Point(-30, -30, -10), df.Point(30, 30, 10), 30, 30, 10)
@@ -17,6 +29,7 @@ def compute_field(mesh, nx=1, ny=1, m0=(1, 0, 0), pbc=None):
 
     sim.set_m(m0)
 
+    # Use strict Krylov tolerances here so the PBC comparison exercises physics, not solver drift. [Codex GPT-5.4]
     parameters = {
         'absolute_tolerance': 1e-10,
         'relative_tolerance': 1e-10,
@@ -42,14 +55,14 @@ def test_field_1d():
     f1 = compute_field(mesh_1, nx=3, m0=m0)
     f2 = compute_field(mesh_3, nx=1, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.012
 
     m0 = (0, 0, 1)
     f1 = compute_field(mesh_1, nx=3, m0=m0)
     f2 = compute_field(mesh_3, nx=1, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.02
 
 
@@ -59,14 +72,14 @@ def test_field_2d():
     f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
     f2 = compute_field(mesh_9, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.01
 
     m0 = (0, 0, 1)
     f1 = compute_field(mesh_1, nx=3, ny=3, m0=m0)
     f2 = compute_field(mesh_9, m0=m0)
     error = abs((f1 - f2) / f2)
-    print f1, f2, error
+    print(f1, f2, error)
     assert max(error) < 0.004
 
 if __name__ == '__main__':

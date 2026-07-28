@@ -2,9 +2,9 @@ from __future__ import division
 import pytest
 import logging
 import os
-from eigenproblems import *
-from eigensolvers import *
-from helpers import is_diagonal_matrix
+from .eigenproblems import *
+from .eigensolvers import *
+from .helpers import is_diagonal_matrix
 
 
 def test_assert_eigenproblems_were_defined():
@@ -49,23 +49,25 @@ class AbstractEigenproblemTest(object):
     @pytest.mark.requires_X_display
     def test_plot_analytical_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
-        self.eigenproblem.plot_analytical_solutions(
+        fig = self.eigenproblem.plot_analytical_solutions(
             [0, 2, 5, 6], N=20, figsize=(12, 3), filename='solutions.png')
         assert(os.path.exists('solutions.png'))
+        plt.close(fig)
 
     @pytest.mark.requires_X_display
     def test_plot_computed_solutions(self, tmpdir):
         os.chdir(str(tmpdir))
         solver = ScipyLinalgEig()
-        self.eigenproblem.plot_computed_solutions(
+        fig = self.eigenproblem.plot_computed_solutions(
             [0, 2, 5, 6], solver=solver, N=50, dtype=float, tol_eigval=1e-1,
             figsize=(12, 3), filename='solutions.png')
         assert(os.path.exists('solutions.png'))
+        plt.close(fig)
 
 
 class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = DiagonalEigenproblem()
         self.omega_ref = [1, 2, 3, 4]
         self.num = 4
@@ -128,7 +130,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
             self.eigenproblem.print_analytical_eigenvalues(10, 'Hz')
 
     def test_get_kth_analytical_eigenvalue(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             omega = self.eigenproblem.get_kth_analytical_eigenvalue(k=k)
             omega_ref = self.omega_ref[k]
             assert(np.allclose(omega, omega_ref))
@@ -138,7 +140,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(np.allclose(omega, self.omega_ref))
 
     def test_get_kth_analytical_eigenvector(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             w = self.eigenproblem.get_kth_analytical_eigenvector(
                 k=k, size=self.size)
             w_ref = self.w_ref[k]
@@ -150,7 +152,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
         assert(np.allclose(w, self.w_ref))
 
     def test_get_kth_analytical_eigenpair(self):
-        for k in xrange(self.num):
+        for k in range(self.num):
             omega, w = self.eigenproblem.get_kth_analytical_eigenpair(
                 k=k, size=self.size)
             omega_ref = self.omega_ref[k]
@@ -225,7 +227,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
         """
         # Check all correct eigenpairs (should succeed)
-        for k in xrange(self.num):
+        for k in range(self.num):
             a = self.omega_ref[k]
             v = self.w_ref[k]
             res = self.eigenproblem.verify_eigenpair_numerically(a, v)
@@ -257,7 +259,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
         """
         # Check all correct eigenpairs (should succeed)
-        for k in xrange(self.num):
+        for k in range(self.num):
             a = self.omega_ref[k]
             v = self.w_ref[k]
             res = self.eigenproblem.verify_eigenpair_analytically(a, v)
@@ -284,7 +286,7 @@ class TestDiagonalEigenproblem(AbstractEigenproblemTest):
 
 class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = RingGraphLaplaceEigenproblem()
 
     def test_instantiate(self):
@@ -325,6 +327,6 @@ class TestRingGraphLaplaceEigenproblem(AbstractEigenproblemTest):
 
 class TestNanostrip1dEigenproblemFinmag(AbstractEigenproblemTest):
 
-    def setup(self):
+    def setup_method(self):
         self.eigenproblem = Nanostrip1dEigenproblemFinmag(
             13e-12, 8e5, 0, 100, unit_length=1e-9)

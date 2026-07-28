@@ -1,11 +1,11 @@
 import pytest
 from dolfin import *
+from ufl import replace
 from finmag.physics.llg import LLG
 from finmag.energies import Exchange
 from math import log
 
 
-@pytest.mark.xfail
 def test_this_needs_fixing():
     print("The content of the code in `setup()` above needs to be distributed into the other ")
     print("test routines here. It used to be global code that was imported when py.test")
@@ -34,9 +34,9 @@ class MyLLG(LLG):
 
         # Comment out these two lines if you don't want exchange.
         exch = Exchange(1.3e-11)
-        print "About to call setup"
+        print("About to call setup")
         exch.setup(self._m_field, self.Ms)
-        H_ex.vector().array()[:] = exch.compute_field()
+        H_ex.vector().set_local(exch.compute_field())
 
         H_eff = H_ex + H_app
         return H_eff
@@ -87,10 +87,10 @@ def derivative_test(L, M, x, hs, J=None):
     errors = []
     for h in hs:
         H = Function(V)
-        H.vector().set_local(h * x.vector().array())
+        H.vector().set_local(h * x.vector().get_local())
 
         P = Function(V)
-        P.vector().set_local(M.vector().array() + H.vector().array())
+        P.vector().set_local(M.vector().get_local() + H.vector().get_local())
 
         L_P = assemble(replace(L, {M: P}))  # Compute exact result
 
@@ -120,7 +120,7 @@ def test_convergence_linear():
     errors = derivative_test(L, M, x, hs)
     rates = convergence_rates(hs, errors)
     for h, rate in zip(hs, rates):
-        print "h= %g, rate=%g, rate-1=%g " % (h, rate, rate - 1)
+        print("h= %g, rate=%g, rate-1=%g " % (h, rate, rate - 1))
         assert abs(rate - 1) < h * CONV_TOL
 
 
@@ -129,7 +129,7 @@ def test_derivative_linear():
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
     for h, err in zip(hs, errors):
-        print "h= %g, error=%g" % (h, err)
+        print("h= %g, error=%g" % (h, err))
         assert abs(err) < h ** 2 * DERIV_TOL
 
 
@@ -162,21 +162,21 @@ if __name__ == '__main__':
 
 
     # L is linear
-    print "Testing linear functional."
-    print "This should convert as O(h):"
+    print("Testing linear functional.")
+    print("This should convert as O(h):")
     errors = derivative_test(L, M, x, hs)
-    print errors
-    print "This should be close to one:"
-    print convergence_rates(hs, errors)
+    print(errors)
+    print("This should be close to one:")
+    print(convergence_rates(hs, errors))
     J = llg.compute_jacobian()
     errors = derivative_test(L, M, x, hs, J=J)
-    print "This should be close to zero since L is linear:"
-    print errors
+    print("This should be close to zero since L is linear:")
+    print(errors)
 
     test_derivative_linear()
     test_convergence_linear()
 
-    print ''
+    print('')
     '''
     # L is nonlinear
     print "Testing nonlinear functional."

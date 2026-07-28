@@ -4,13 +4,31 @@ import numpy as np
 import logging
 import os
 import scipy.sparse.linalg
-from time import time
+from time import perf_counter, time
 from finmag.util import helpers
 from finmag.util.meshes import embed3d
-from itertools import izip
 from math import pi
 from finmag.field import Field
 logger = logging.getLogger('finmag')
+
+_timer_start = None
+
+
+def _tic():
+    # The deprecated normal-modes code still uses the old DOLFIN timing hooks.
+    # Mirror them here so the module can run on the FEniCS 2019 pixi stack
+    # without rewriting all instrumentation call sites. [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 # Matrix-vector or Matrix-matrix product
@@ -27,9 +45,9 @@ def _mult_one(a, b):
     # of the resulting array by adding two elements of the argument arrays
     res = np.zeros(
         (a.shape[0], b.shape[1], a.shape[2]), dtype=type(a[0, 0, 0] + b[0, 0, 0]))
-    for i in xrange(res.shape[0]):
-        for j in xrange(res.shape[1]):
-            for k in xrange(a.shape[1]):
+    for i in range(res.shape[0]):
+        for j in range(res.shape[1]):
+            for k in range(a.shape[1]):
                 res[i, j, :] += a[i, k, :] * b[k, j, :]
 
     return res
@@ -41,7 +59,7 @@ def mf_mult(*args):
         raise Exception("mult requires at least 2 arguments")
 
     res = args[0]
-    for i in xrange(1, len(args)):
+    for i in range(1, len(args)):
         res = _mult_one(res, args[i])
 
     return res
@@ -229,14 +247,14 @@ def compute_eigenproblem_matrix(sim, frequency_unit=1e9, filename=None, differen
         res.shape = (-1,)
         return res
 
-    df.tic()
+    _tic()
     logger.info("Assembling eigenproblem matrix.")
     D = np.zeros((2 * n, 2 * n), dtype=dtype)
     logger.debug("Eigenproblem matrix D will occupy {:.2f} MB of memory.".format(
         D.nbytes / 1024. ** 2))
     for i, w in enumerate(np.eye(2 * n)):
         if i % 50 == 0:
-            t_cur = df.toc()
+            t_cur = _toc()
             completion_info = '' if (i == 0) else ', estimated remaining time: {}'.format(
                 helpers.format_time(t_cur * (2 * n / i - 1)))
             logger.debug("Processing row {}/{}  (time elapsed: {}{})".format(i,
@@ -380,7 +398,7 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
         res.shape = (3, 1, n)
         return res
 
-    df.tic()
+    _tic()
     logger.info("Assembling eigenproblem matrix.")
     A = np.zeros((2 * n, 2 * n), dtype=complex)
     logger.debug("Eigenproblem matrix A occupies {:.2f} MB of memory.".format(
@@ -388,10 +406,10 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
     # Compute A
     w = np.zeros(2 * n)
-    for i in xrange(2 * n):
+    for i in range(2 * n):
         if i % 50 == 0:
             logger.debug(
-                "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, df.toc()))
+                "Processing row {}/{}  (time taken so far: {:.2f} seconds)".format(i, 2 * n, _toc()))
 
         # Ensure that w is the i-th standard basis vector
         w.shape = (2 * n,)
@@ -449,11 +467,11 @@ def compute_generalised_eigenproblem_matrices(sim, alpha=0.0, frequency_unit=1e9
 
 def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
     logger.debug("Solving eigenproblem. This may take a while...")
-    df.tic()
+    _tic()
     omega, w = scipy.sparse.linalg.eigs(
         D, n_values, which=which, sigma=0., tol=tol, return_eigenvectors=True)
     logger.debug(
-        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(_toc()))
 
     return omega, w
 
@@ -461,10 +479,17 @@ def compute_normal_modes(D, n_values=10, sigma=0., tol=1e-8, which='LM'):
 def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negative_frequencies=False, sigma=None, which='LM',
                                      v0=None, ncv=None, maxiter=None, Minv=None, OPinv=None, mode='normal'):
     logger.debug("Solving eigenproblem. This may take a while...")
-    df.tic()
+    _tic()
 
     if discard_negative_frequencies:
         n_values *= 2
+
+    if v0 is None:
+        # ARPACK's implicit random start vector is unstable for the deprecated
+        # generalised Kittel-mode problem on SciPy 1.17. A deterministic
+        # alternating start keeps the expected +/- pair visible without
+        # changing callers that already provide v0. [Codex gpt-5.5 high]
+        v0 = np.where(np.arange(M.shape[0]) % 2, 1.0, -1.0)
 
     # XXX TODO: The following call seems to increase memory consumption quite a bit. Why?!?
     #
@@ -473,7 +498,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
     omega_inv, w = scipy.sparse.linalg.eigsh(M, k=n_values, M=A, which=which, tol=tol, return_eigenvectors=True, sigma=sigma,
                                              v0=v0, ncv=ncv, maxiter=maxiter, Minv=Minv, OPinv=OPinv, mode=mode)
     logger.debug(
-        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(df.toc()))
+        "Computing the eigenvalues and eigenvectors took {:.2f} seconds".format(_toc()))
 
     # The true eigenfrequencies are given by 1/omega_inv because we swapped M
     # and A above and thus computed the inverse eigenvalues.
@@ -481,9 +506,9 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     # Sanity check: the eigenfrequencies should occur in +/- pairs.
     TOL = 1e-3
-    positive_freqs = filter(lambda x: x > 0, omega)
-    negative_freqs = filter(lambda x: x < 0, omega)
-    freq_pairs = izip(positive_freqs, negative_freqs)
+    positive_freqs = list(filter(lambda x: x > 0, omega))
+    negative_freqs = list(filter(lambda x: x < 0, omega))
+    freq_pairs = list(zip(positive_freqs, negative_freqs))
     if (n_values % 2 == 0 and len(positive_freqs) != len(negative_freqs)) or \
             (n_values % 2 == 0 and len(positive_freqs) - len(negative_freqs) not in [0, 1]) or \
             any([abs(x + y) > TOL for (x, y) in freq_pairs]):
@@ -498,7 +523,7 @@ def compute_normal_modes_generalised(A, M, n_values=10, tol=1e-8, discard_negati
 
     if discard_negative_frequencies:
         # Discard indices corresponding to negative frequencies
-        sorted_indices = filter(lambda i: omega[i] >= 0.0, sorted_indices)
+        sorted_indices = list(filter(lambda i: omega[i] >= 0.0, sorted_indices))
 
     omega = omega[sorted_indices]
     # XXX TODO: can we somehow avoid copying the columns to save memory?!?
@@ -587,7 +612,11 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
     a = np.absolute(w_flat)
     a = a / a.max()  # normalised amplitudes of the oscillations
 
-    t_end = num_cycles * 2 * pi / freq
+    # Zero-frequency modes are still useful to export; treat them as a static frame. [Codex GPT-5.4]
+    if np.isclose(freq, 0.0):
+        t_end = 0.0
+    else:
+        t_end = num_cycles * 2 * pi / freq
     timesteps = np.linspace(
         0, t_end, num_cycles * num_snapshots_per_cycle, endpoint=False)
     m_osc = np.zeros(3 * n)
@@ -616,7 +645,7 @@ def export_normal_mode_animation(mesh, m0, freq, w, filename, num_cycles=1, num_
 
 def get_colormap_from_name(cmap_name):
     from matplotlib import cm
-    import custom_colormaps
+    from . import custom_colormaps
 
     colormaps = {'coolwarm': cm.coolwarm,
                  'cool': cm.cool,
@@ -660,11 +689,12 @@ def extract_mesh_slice(mesh, slice_z):
     V_slice = df.FunctionSpace(slice_mesh, 'CG', 1)
     f_slice = df.Function(V_slice)
 
-    lg = df.LagrangeInterpolator()
     def restrict_to_slice_mesh(a):
         f.vector().set_local(a)
-        lg.interpolate(f_slice, f)
-        return f_slice.vector().array()
+        # DOLFIN 2019 exposes Lagrange interpolation as a static helper rather
+        # than a constructible object. [Codex GPT-5.4]
+        df.LagrangeInterpolator.interpolate(f_slice, f)
+        return f_slice.vector().get_local()
 
     return slice_mesh, restrict_to_slice_mesh
 
@@ -760,8 +790,6 @@ def plot_spatially_resolved_normal_mode(
     import matplotlib.tri as tri
     from matplotlib.ticker import FormatStrFormatter
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    from matplotlib import rcParams
-    rcParams.update({'figure.autolayout': True})
 
     coords = mesh.coordinates()
 

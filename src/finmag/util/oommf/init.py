@@ -1,6 +1,6 @@
-from oommf_calculator import calculate_oommf_fields
+from .oommf_calculator import calculate_oommf_fields
 import numpy as np
-from mesh import MeshField
+from .mesh import MeshField
 
 
 def mesh_spec(mesh):
@@ -33,8 +33,8 @@ def oommf_demag(s0, Ms):
 
     assert demag_field.dims == (3,)
     if not (np.max(np.abs(s_field.flat - s0.flat)) < 1e-14):
-        print s_field.flat
-        print s0.flat
+        print(s_field.flat)
+        print(s0.flat)
     assert np.max(np.abs(s_field.flat - s0.flat)) < 1e-14
 
     return demag_field
@@ -50,8 +50,8 @@ def oommf_uniform_exchange(s0, Ms, A):
 
     assert exchange_field.dims == (3,)
     if not (np.max(np.abs(s_field.flat - s0.flat)) < 1e-14):
-        print s_field.flat
-        print s0.flat
+        print(s_field.flat)
+        print(s0.flat)
     assert np.max(np.abs(s_field.flat - s0.flat)) < 1e-14
 
     return exchange_field
@@ -67,8 +67,8 @@ def oommf_uniaxial_anisotropy(m0, Ms, K1, axis):
 
     assert uniaxial_anisotropy_field.dims == (3,)
     if not (np.max(np.abs(m_field.flat - m0.flat)) < 1e-14):
-        print m_field.flat
-        print m0.flat
+        print(m_field.flat)
+        print(m0.flat)
     assert np.max(np.abs(m_field.flat - m0.flat)) < 1e-14
 
     return uniaxial_anisotropy_field
@@ -86,8 +86,8 @@ def oommf_cubic_anisotropy(m0, Ms, u1, u2, K1, K2=0, K3=0):
 
     assert cubic_anisotropy_field.dims == (3,)
     if not (np.max(np.abs(m_field.flat - m0.flat)) < 1e-14):
-        print m_field.flat
-        print m0.flat
+        print(m_field.flat)
+        print(m0.flat)
     assert np.max(np.abs(m_field.flat - m0.flat)) < 1e-14
 
     return cubic_anisotropy_field
@@ -103,8 +103,8 @@ def oommf_fixed_zeeman(s0, Ms, H):
 
     assert field.dims == (3,)
     if not (np.max(np.abs(s_field.flat - s0.flat)) < 1e-14):
-        print s_field.flat
-        print s0.flat
+        print(s_field.flat)
+        print(s0.flat)
     assert np.max(np.abs(s_field.flat - s0.flat)) < 1e-14
 
     return field
@@ -124,8 +124,8 @@ def oommf_dmdt(s0, Ms, A, H, alpha, gamma_G):
 
     assert field.dims == (3,)
     if not (np.max(np.abs(s_field.flat - s0.flat)) < 1e-14):
-        print s_field.flat
-        print s0.flat
+        print(s_field.flat)
+        print(s0.flat)
     assert np.max(np.abs(s_field.flat - s0.flat)) < 1e-14
 
     return field

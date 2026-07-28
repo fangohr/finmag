@@ -10,6 +10,18 @@ from math import pi, cos
 log = logging.getLogger("finmag")
 
 
+def _vector_as_numpy(vec):
+    """
+    Return a NumPy copy of a DOLFIN vector on both the legacy and PETSc-backed
+    paths. The Python 3 core-suite image still exposes ``array()``, while the
+    pixi/FEniCS-2019 stack only provides ``get_local()``. [Codex GPT-5.4]
+    """
+    try:
+        return vec.get_local()
+    except AttributeError:
+        return vec.array()
+
+
 class Zeeman(object):
 
     def __init__(self, H, name='Zeeman', **kwargs):
@@ -173,7 +185,7 @@ class TimeZeeman(Zeeman):
                     "this is what you really want.")
             # Convert the array to a dolfin constant so that we can proceed as
             # normal
-            field_expression = df.Constant(map(str, field_expression))
+            field_expression = df.Constant(tuple(map(float, field_expression)))
 
         assert isinstance(field_expression, (df.Expression, df.Constant))
         super(TimeZeeman, self).__init__(field_expression, name=name)
@@ -309,7 +321,7 @@ class TimeZeemanPython(TimeZeeman):
             self.S1 = df.FunctionSpace(
                 m.mesh(), "Lagrange", 1, constrained_domain=dofmap.constrained_domain)
             self.h0 = helpers.scalar_valued_function(
-                self.df_expression, self.S1).vector().array()
+                self.df_expression, self.S1).vector().get_local()
             self.H0 = df.Function(m.functionspace)
         else:
             self.H0 = helpers.vector_valued_function(
@@ -317,7 +329,7 @@ class TimeZeemanPython(TimeZeeman):
 
         self.E = - mu0 * self.Ms.f * df.dot(self.m.f, self.H0)
 
-        self.H_init = self.H0.vector().array()
+        self.H_init = _vector_as_numpy(self.H0.vector())
         self.H = self.H_init.copy()
 
     def update(self, t):
@@ -395,7 +407,7 @@ class OscillatingZeeman(TimeZeemanPython):
             Time at which the field is switched off.
 
         """
-        H0_expr = df.Constant(map(str, H0))
+        H0_expr = df.Constant(tuple(map(float, H0)))
 
         def amplitude(t):
             return cos(2 * pi * freq * t + phase)

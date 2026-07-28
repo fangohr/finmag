@@ -69,6 +69,9 @@ def test_zhangli():
 
 
 def test_zhangli_sllg():
+    # Keep the deterministic Zhang-Li path in M3, but only exercise the
+    # stochastic sllg variant when the separate llb native module is built. [Codex GPT-5.4]
+    pytest.importorskip("finmag.native.llb")
 
     #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)
@@ -115,10 +118,10 @@ def compare_gradient_field1():
 
     f2 = field.copy()
     f2.shape = (3, -1)
-    print f2
+    print(f2)
     i = 0
     for c in coords:
-        print c, field_at(c)
+        print(c, field_at(c))
         f2[0][i], f2[1][i], f2[2][i] = field_at(c)
         i += 1
     f2.shape = (-1,)
@@ -128,7 +131,7 @@ def compare_gradient_field1():
     df.plot(v2)
 
     df.interactive()
-    print field
+    print(field)
 
 
 def init_J_xy(pos):
@@ -190,8 +193,8 @@ def compare_gradient_field2():
     df.plot(v)
     df.plot(v2)
 
-    print np.abs(field - f2)
-    print f2
+    print(np.abs(field - f2))
+    print(f2)
 
     df.interactive()
 

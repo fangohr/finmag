@@ -3,7 +3,7 @@ import numpy as np
 import dolfin as df
 from finmag import Simulation
 from finmag.energies import Exchange, DMI, Zeeman
-from dmi_helper import compute_skyrmion_number_2d
+from finmag.util.dmi_helper import compute_skyrmion_number_2d
 
 
 def init_skx_down(pos):
@@ -36,7 +36,7 @@ def compute_skyrmion_number_2d_example():
 
     #sim.m_field.plot_with_dolfin(interactive=True)
 
-    print compute_skyrmion_number_2d(sim.m_field.f)
+    print(compute_skyrmion_number_2d(sim.m_field.f))
 
 
 def test_compute_skyrmion_number_2d_pbc():
@@ -57,11 +57,11 @@ def test_compute_skyrmion_number_2d_pbc():
 
     #df.plot(sim.m_field.f)
     #df.interactive()
-    print np.max(sim.m_field.as_array())
+    print(np.max(sim.m_field.as_array()))
 
     sky_num = compute_skyrmion_number_2d(sim.m_field.f)
 
-    print 'sky_num = %g' % sky_num
+    print('sky_num = %g' % sky_num)
 
     assert sky_num < -0.95 and sky_num > -1.0
 

@@ -33,7 +33,7 @@ if __name__ == "__main__":
         test_compare_averages()
     cProfile.run("do_it()", "test_profile")
     p = pstats.Stats("test_profile")
-    print "TOP10 Cumulative time:"
+    print("TOP10 Cumulative time:")
     p.sort_stats("cumulative").print_stats(10)
-    print "TOP10 Time inside a function:"
+    print("TOP10 Time inside a function:")
     p.sort_stats("time").print_stats(10)

@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# Run the practical M1 verification workflow for the Python 3 legacy-DOLFIN
+# transition stack.
+#
+# Usage:
+#   dev/bin/verify-python3-m1
+#
+# This wrapper keeps the M1 acceptance claim reproducible as one command rather
+# than a checklist spread across multiple notes. [Codex GPT-5.4]
+
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/../.." && pwd)"
+image_name="finmag-py3-dolfin2017"
+
+docker build \
+    -f "${repo_root}/install/docker/python3-dolfin2017-snapshot/Dockerfile" \
+    -t "${image_name}" \
+    "${repo_root}"
+
+docker run --rm \
+    -e OMPI_MCA_plm=isolated \
+    -v "${repo_root}:/repo:ro" \
+    "${image_name}" \
+    bash -lc '
+        rm -rf /tmp/finmag &&
+        mkdir -p /tmp/finmag &&
+        cd /repo &&
+        tar --exclude=.pixi -cf - . | tar -xf - -C /tmp/finmag &&  # Skip repo-local pixi state so the M1 witness stays portable. [Codex GPT-5.4]
+        cd /tmp/finmag &&
+        PYTHONPATH=/tmp/finmag/src python3 - <<"PY"
+import os
+import numpy as np
+import finmag
+
+print("==> verify-python3-import")
+print(finmag)
+
+print()
+print("==> verify-python3-barmini-smoke")
+sim = finmag.example.barmini(name="barmini_py3_smoke")
+print("constructed", sim.__class__.__name__)
+sim.run_until(1e-12)
+print("advanced", sim.t)
+
+print()
+print("==> verify-python3-restart-smoke")
+restart_sim = finmag.example.barmini(name="barmini_restart_py3_smoke")
+restart_sim.run_until(1e-11)
+restart_sim.save_restart_data()
+
+t_saved = restart_sim.t
+m_saved = restart_sim.m.copy()
+canonical_restart = restart_sim.name + "-restart.npz"
+assert os.path.exists(canonical_restart)
+
+restart_sim.run_until(2e-11)
+restart_sim.restart()
+assert restart_sim.t == t_saved
+assert np.allclose(restart_sim.m, m_saved)  # Restart should recover the saved state, not just the saved time. [Codex GPT-5.4]
+
+restart_sim_copy = finmag.example.barmini(name="barmini_restart_py3_smoke_copy")
+restart_sim_copy.restart(canonical_restart)
+assert restart_sim_copy.t == t_saved
+assert np.allclose(restart_sim_copy.m, m_saved)
+
+print("saved_time", t_saved)
+print("restarted_time", restart_sim.t)
+print("copied_time", restart_sim_copy.t)
+print("restart_file", canonical_restart)
+
+print()
+print("==> verify-python3-normal-modes-smoke")
+nm_sim = finmag.example.normal_modes.disk(relaxed=True, name="normal_modes_py3_smoke")
+print("constructed", nm_sim.__class__.__name__)
+
+omega, eigenvecs, rel_errors = nm_sim.compute_normal_modes(n_values=2)
+assert len(omega) == 2
+assert len(eigenvecs) == 2
+assert len(rel_errors) >= 2  # The solver reports extra conjugate-pair diagnostics here. [Codex GPT-5.4]
+
+print("modes", len(omega))
+print("first_freq", omega[0])
+print("first_rel_error", rel_errors[0])
+PY
+    '

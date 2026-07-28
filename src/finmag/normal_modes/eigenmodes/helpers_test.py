@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 import pytest
 from scipy.sparse.linalg import LinearOperator
-from helpers import *
+from .helpers import *
 
 
 def test_iseven():
@@ -86,7 +86,7 @@ def test_is_scalar_multiple(a, tol):
     Multiply each by the scalar factor `a` and check that the result is
     recognised as a scalar multiple.
     """
-    print "[DDD] a={}".format(a)
+    print("[DDD] a={}".format(a))
 
     N = 100
     rand_vec = np.random.random_sample(N)
@@ -104,7 +104,7 @@ def test_is_scalar_multiple(a, tol):
                           (5e-6, 50),
                           ])
 def test_not_is_scalar_multiple(eps, num_elements):
-    print "[DDD] eps={}, num_elements={}".format(eps, num_elements)
+    print("[DDD] eps={}, num_elements={}".format(eps, num_elements))
     N = 100
     w = np.random.random_sample(N)
     v = 3.24 * w
@@ -239,7 +239,7 @@ def test_as_dense_array():
 
     # Define dense matrix
     A = np.zeros((N, N))
-    for i in xrange(N):
+    for i in range(N):
         A[i, i] = 2.4
         A[i, i - 1] = 5.5
         A[i, (i + 1) % N] = 3.7
@@ -288,15 +288,15 @@ def test_as_petsc_matrix():
     A += np.diag(a, k=-1)
     A += np.diag(b, k=0)
     A += np.diag(c, k=+1)
-    print "[DDD] A:"
-    print A
+    print("[DDD] A:")
+    print(A)
 
     # Convert to PETSC matrix
     A_petsc = as_petsc_matrix(A)
 
     # Check that the sparsity pattern is as expected
     indptr, _, data = A_petsc.getValuesCSR()
-    indptr_expected = [0] + range(2, 3 * (N - 1), 3) + [3 * N - 2]
+    indptr_expected = [0] + list(range(2, 3 * (N - 1), 3)) + [3 * N - 2]
     assert(all(indptr == indptr_expected))
 
     # Convert back to numpy array

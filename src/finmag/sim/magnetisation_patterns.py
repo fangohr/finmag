@@ -101,7 +101,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
     This function returns nothing.
     """
 
-    if centres == "singleCentre":
+    if isinstance(centres, str) and centres == "singleCentre":
         dim = sim.mesh.topology().dim()
         centres = np.array([np.zeros(dim)])
 
@@ -116,8 +116,8 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
 
     # Determine whether there is skyrmion overlap.
     if numCentres > 1:
-        for zI in xrange(numCentres):
-            for zJ in xrange(zI + 1, numCentres):
+        for zI in range(numCentres):
+            for zJ in range(zI + 1, numCentres):
                 if norm(centres[zI] - centres[zJ]) < 2 * skyrmionRadius:
                     raise ValueError("Skyrmions at centres {} and {} overlap."
                                      .format(centres[zI], centres[zJ]))
@@ -127,7 +127,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
 
         # For each skyrmion, check if the position vector exists within it.
         # Will pass until one is obtained.
-        for zI in xrange(numCentres):
+        for zI in range(numCentres):
 
             loc = copy(pos)  # Assignment means the original will change if "="
             # operator is used.

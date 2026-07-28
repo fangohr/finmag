@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import os
 from glob import glob
-from fileio import *
+from finmag.util.fileio import *
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,7 +30,7 @@ def test_Table_writer_and_reader(tmpdir):
 
     # now open file for reading
     data = Tablereader(filename)
-    print data.timesteps() - times
+    print(data.timesteps() - times)
     print("III")
     assert np.all(np.abs(data.timesteps() - times)) < 1e-25
     mx, my, mz = sim.m_average

@@ -42,7 +42,7 @@ def run_simulation():
                "0"))
 
     m = llg.m_numpy
-    for i in xrange(nb_nodes):
+    for i in range(nb_nodes):
         x, y, z = mesh.coordinates()[i]
         mx = 1
         my = 0

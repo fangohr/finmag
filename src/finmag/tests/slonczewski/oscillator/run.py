@@ -21,7 +21,7 @@ def m_gen(rs):
 
 
 def create_initial_state():
-    print "Creating initial relaxed state."
+    print("Creating initial relaxed state.")
     sim = Sim(mesh, Ms=Ms, unit_length=1e-9)
     sim.set_m(m_gen)
     sim.alpha = 0.5
@@ -32,7 +32,7 @@ def create_initial_state():
 
 
 def run_simulation():
-    print "Running simulation of STT dynamics."
+    print("Running simulation of STT dynamics.")
     sim = Sim(mesh, Ms=Ms, unit_length=1e-9)
     sim.set_m(np.loadtxt(initial_m_file))
     sim.alpha = 0.01

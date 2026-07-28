@@ -7,7 +7,12 @@ HF 1 Feb 2013
 
 import subprocess
 import os
+import shutil
 
+import pytest
+
+# Accept Debian's `cython3` executable so this smoke test runs in the transition image. [Codex GPT-5.4]
+CYTHON = shutil.which("cython") or shutil.which("cython3")
 
 # Cython complains about this:
 #  f_callable_normalised = vector_valued_function(lambda (x,y,z): (a*x, b*y, c*z), S3, normalise=True)
@@ -15,8 +20,8 @@ import os
 # try to reproduce with a simple example
 
 def myfunc(callable):
-    print callable((0, 1, 2))
-    print callable((10, 10, 10))
+    print(callable((0, 1, 2)))
+    print(callable((10, 10, 10)))
 
 
 def cython_test_code():
@@ -38,11 +43,12 @@ def cython_test_code():
     myfunc(myf)
 
 
+@pytest.mark.skipif(CYTHON is None, reason="cython executable is not available")
 def test_cython_compiles_this_file():
 
-    cmd = "cython {}".format(os.path.abspath(__file__))
+    cmd = [CYTHON, os.path.abspath(__file__)]
     print("about to execute {}".format(cmd))
-    subprocess.check_call(cmd, shell=True)
+    subprocess.check_call(cmd)
 
 if __name__ == '__main__':
     test_cython_compiles_this_file()

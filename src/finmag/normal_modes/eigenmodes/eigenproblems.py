@@ -11,10 +11,10 @@ from finmag.field import Field
 from finmag.energies import Exchange
 from finmag.util.consts import gamma, mu0
 from math import pi
-from helpers import normalise_rows, find_matching_eigenpair, \
+from .helpers import normalise_rows, find_matching_eigenpair, \
     std_basis_vector, best_linear_combination, as_dense_array, \
     irregular_interval_mesh, iseven
-from custom_exceptions import EigenproblemVerifyError
+from .custom_exceptions import EigenproblemVerifyError
 
 color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
@@ -128,7 +128,7 @@ class AbstractEigenproblem(object):
         For most eigenproblems the eigenvalues depend on the size of the
         matrix. In this case the argument `size` must be specified.
         """
-        return np.array([self.get_kth_analytical_eigenvalue(k, size) for k in xrange(num)])
+        return np.array([self.get_kth_analytical_eigenvalue(k, size) for k in range(num)])
 
     def get_kth_analytical_eigenvalue(self, k, size=None):
         """
@@ -144,7 +144,7 @@ class AbstractEigenproblem(object):
         Return a `numpy.array` of shape `(num, size)` containing the
         first `num` analytical eigenvectors of this eigenproblem.
         """
-        return np.array([self.get_kth_analytical_eigenvector(k, size) for k in xrange(num)])
+        return np.array([self.get_kth_analytical_eigenvector(k, size) for k in range(num)])
 
     def get_kth_analytical_eigenvector(self, k, size):
         """
@@ -200,7 +200,7 @@ class AbstractEigenproblem(object):
             self.plot(w, fig=fig, label=label)
 
         h, l = fig.gca().get_legend_handles_labels()
-        fig.legend(h, l, 'lower center')
+        fig.legend(h, l, loc='lower center')
         title_str = 'Solutions to {}, N={}'.format(self, N)
         self._set_plot_title(fig, title_str)
         if filename != None:
@@ -278,7 +278,7 @@ class AbstractEigenproblem(object):
             self.plot(w, fmt=fmt, fig=fig, label=label)
 
         h, l = fig.gca().get_legend_handles_labels()
-        fig.legend(h, l, 'lower center')
+        fig.legend(h, l, loc='lower center')
         dtype_str = {float: 'float', complex: 'complex'}[dtype]
         # XXX TODO: Make sure the title reflects the specific values
         #           of the solver used during the 'compute' method.
@@ -340,7 +340,7 @@ class AbstractEigenproblem(object):
         indices = []
         k_left = None
         k_right = None
-        for k in xrange(size):
+        for k in range(size):
             a = self.get_kth_analytical_eigenvalue(k, size)
             if np.allclose(a, eigval, atol=tol_eigval, rtol=tol_eigval):
                 indices.append(k)
@@ -373,7 +373,7 @@ class AbstractEigenproblem(object):
         return eigenspace_basis
 
     def best_analytical_approximation(self, a, v, tol_eigval=1e-8):
-        """
+        r"""
         Compute a basis <e_i> of the eigenspace associated with `a` and find
         the vector w which minimise the residual:
 

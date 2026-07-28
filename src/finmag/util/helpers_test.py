@@ -5,10 +5,10 @@ import logging
 import pytest
 import os
 import re
+import shutil
 from finmag.util.helpers import *
-from finmag.util.meshes import box, cylinder
+from finmag.util.meshes import box, cylinder, netgen_is_usable
 from finmag.util.mesh_templates import Sphere
-from finmag.util.visualization import render_paraview_scene
 from finmag.example import barmini
 import finmag
 
@@ -17,13 +17,33 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 TOLERANCE = 1e-15
 
 
+def _require_netgen():
+    if not netgen_is_usable():
+        # Netgen-backed helper tests are environment-dependent in the transition image. [Codex GPT-5.4]
+        pytest.skip("netgen is not usable in the Python 3 transition container")
+
+
+def _has_movie_export():
+    if shutil.which("mencoder") is None:
+        return False
+    try:
+        import sh  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _has_paraview_movie_export():
+    return _has_movie_export() and shutil.which("paraview") is not None
+
+
 def test_logging_handler_str():
     """
     """
     hdlr = logging.NullHandler()
     hdlr_str = logging_handler_str(hdlr)
-    print hdlr_str
-    assert(re.match("^<logging.NullHandler object at .*>$", hdlr_str) != None)
+    print(hdlr_str)
+    assert("NullHandler" in hdlr_str)
 
 
 def test_logging_status_str():
@@ -32,7 +52,7 @@ def test_logging_status_str():
     non-empty string.
     """
     status_str = logging_status_str()
-    print status_str
+    print(status_str)
     assert(isinstance(status_str, str) and (status_str != ""))
 
 
@@ -92,9 +112,9 @@ def test_fnormalise():
 
     c = np.sqrt(4 ** 2 + 5 ** 2)
     expected = np.array([0, 0, 1, 4 / c, 0, 1, 0, 5 / c, 1, 0, 0, 0])
-    print "a3=\n", a3
-    print "expected=\n", expected
-    print "fnormalise(a3)=\n", fnormalise(a3)
+    print("a3=\n", a3)
+    print("expected=\n", expected)
+    print("fnormalise(a3)=\n", fnormalise(a3))
     assert np.allclose(fnormalise(a3), expected, rtol=TOLERANCE)
 
     # check that normalisation also works if input vector happens to be an
@@ -103,9 +123,9 @@ def test_fnormalise():
     a4 = np.array([0., 1., 1.])
     c = np.sqrt(1 ** 2 + 1 ** 2)  # sqrt(2)
     expected = np.array([0, 1 / c, 1 / c])
-    print "a4=\n", a4
-    print "expected=\n", expected
-    print "fnormalise(a4)=\n", fnormalise(a4)
+    print("a4=\n", a4)
+    print("expected=\n", expected)
+    print("fnormalise(a4)=\n", fnormalise(a4))
     assert np.allclose(fnormalise(a4), expected, rtol=TOLERANCE)
 
     # the same test with ints (i.e.
@@ -189,21 +209,21 @@ def test_vector_valued_function():
 
     # Check that the function vectors are as expected
     #import ipdb; ipdb.set_trace()
-    assert(all(f_tuple.vector() == v_ref))
-    assert(all(f_list.vector() == v_ref))
-    assert(all(f_array3.vector() == v_ref))
-    assert(all(f_dfconstant.vector() == v_ref))
-    assert(all(f_expr.vector() == v_ref_expr))
-    assert(all(f_array3xN.vector() == v_ref))
-    assert(all(f_arrayN3.vector() == v_ref))
-    assert(all(f_callable.vector() == v_ref_expr))
+    assert(np.allclose(f_tuple.vector().get_local(), v_ref))
+    assert(np.allclose(f_list.vector().get_local(), v_ref))
+    assert(np.allclose(f_array3.vector().get_local(), v_ref))
+    assert(np.allclose(f_dfconstant.vector().get_local(), v_ref))
+    assert(np.allclose(f_expr.vector().get_local(), v_ref_expr))
+    assert(np.allclose(f_array3xN.vector().get_local(), v_ref))
+    assert(np.allclose(f_arrayN3.vector().get_local(), v_ref))
+    assert(np.allclose(f_callable.vector().get_local(), v_ref_expr))
 
-    assert(all(f_tuple_normalised.vector() == v_ref_normalised))
-    print "[DDD] #1: {}".format(f_expr_normalised.vector().array())
-    print "[DDD] #2: {}".format(v_ref_expr_normalised)
+    assert(np.allclose(f_tuple_normalised.vector().get_local(), v_ref_normalised))
+    print("[DDD] #1: {}".format(f_expr_normalised.vector().get_local()))
+    print("[DDD] #2: {}".format(v_ref_expr_normalised))
 
-    assert(all(f_expr_normalised.vector() == v_ref_expr_normalised))
-    assert(all(f_callable_normalised.vector() == v_ref_expr_normalised))
+    assert(np.allclose(f_expr_normalised.vector().get_local(), v_ref_expr_normalised))
+    assert(np.allclose(f_callable_normalised.vector().get_local(), v_ref_expr_normalised))
 
 
 def test_scalar_valued_dg_function():
@@ -222,7 +242,7 @@ def test_scalar_valued_dg_function():
     assert f(0.5, 0.7, 0.51) == 10.0
     assert f(0.4, 0.3, 0.96) == 10.0
     assert f(0, 0, 0.49) == 1.0
-    fa = f.vector().array().reshape(2, -1)
+    fa = f.vector().get_local().reshape(2, -1)
 
     assert np.min(fa[0]) == np.max(fa[0]) == 1
     assert np.min(fa[1]) == np.max(fa[1]) == 10
@@ -231,7 +251,7 @@ def test_scalar_valued_dg_function():
     dgf = df.Function(dg)
     dgf.vector()[0] = 9.9
     f = scalar_valued_dg_function(dgf, mesh)
-    assert f.vector().array()[0] == 9.9
+    assert f.vector().get_local()[0] == 9.9
 
 
 def test_angle():
@@ -256,7 +276,7 @@ def test_cartesian_to_spherical():
         (1, hapi, np.pi), (2, hapi, -hapi), (1, np.pi, 0)))
     for i, v in enumerate(test_vectors):
         v_spherical = cartesian_to_spherical(v)
-        print "Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i])
+        print("Testing vector {}. Got {}. Expected {}.".format(v, v_spherical, expected[i]))
         assert np.max(np.abs(v_spherical - expected[i])) < TOLERANCE
 
 
@@ -292,7 +312,7 @@ def test_piecewise_on_subdomains():
     # check that p is a proper Function, not a MeshFunction
     assert(isinstance(p, df.Function))
     assert(
-        np.allclose(p.vector().array(), np.array([42, 42, 23, -3.14, 42, -3.14])))
+        np.allclose(p.vector().get_local(), np.array([42, 42, 23, -3.14, 42, -3.14])))
 
 
 def test_vector_field_from_dolfin_function():
@@ -303,6 +323,7 @@ def test_vector_field_from_dolfin_function():
     values with the ones obtained by directly computing the field
     values from the grid coordinates and check that they coincide.
     """
+    _require_netgen()
 
     (xmin, xmax) = (-2, 3)
     (ymin, ymax) = (-1, 2.5)
@@ -349,6 +370,7 @@ def test_probe():
     supplying a function which should be applied to the probed field
     points. The results are compared with the expected values.
     """
+    _require_netgen()
     # Define a vector-valued function on the mesh
     mesh = cylinder(10, 1, 3)
     V = df.VectorFunctionSpace(mesh, 'Lagrange', 1, dim=3)
@@ -393,8 +415,11 @@ def test_probe():
     assert(np.ma.allclose(res1, res1_expected))
     assert(np.ma.allclose(res2, res2_expected))
 
-@pytest.mark.skipif(True,reason="test for hg")
+@pytest.mark.skipif(
+    shutil.which("hg") is None or not os.path.isdir(os.path.join(MODULE_DIR, ".hg")),
+    reason="historical Mercurial helper; no Mercurial checkout is available in the Python 3 transition environment")
 def test_get_hg_revision_info(tmpdir):
+    """Historical coverage for the pre-Git Mercurial revision helper. [Codex GPT-5.4]"""
     finmag_repo = MODULE_DIR
     os.chdir(str(tmpdir))
     os.mkdir('invalid_repo')
@@ -437,14 +462,13 @@ def test_crossprod():
     w = df.interpolate(
         df.Expression(['x[1]*x[2]', '-x[0]*x[2]', 'x[0]*x[0]+x[1]*x[1]'], degree=1), V)
 
-    a = u.vector().array()
-    b = v.vector().array()
-    c = w.vector().array()
+    a = u.vector().get_local()
+    b = v.vector().get_local()
+    c = w.vector().get_local()
 
     axb = crossprod(a, b)
     assert(np.allclose(axb, c))
 
-@pytest.mark.skip(reason='Broken, but not used anywhere')
 def test_apply_vertexwise():
     xmin = ymin = zmin = -2
     xmax = ymax = zmax = 3
@@ -461,7 +485,7 @@ def test_apply_vertexwise():
     uxv = apply_vertexwise(np.cross, u, v)
     #udotv = apply_vertexwise(np.dot, u, v)
 
-    assert(np.allclose(uxv.vector().array(), w.vector().array()))
+    assert(np.allclose(uxv.vector().get_local(), w.vector().get_local()))
     #assert(np.allclose(udotv.vector().array(), w2.vector().array()))
 
 
@@ -540,13 +564,15 @@ def test_run_cmd_with_timeout():
     assert(returncode == -9)
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_paraview_movie_export(),
+                    reason="Paraview rendering and mencoder are not available")
 def test_jpg2avi(tmpdir):
     """
     Test whether we can create an animation from a series of .jpg images.
 
     """
     os.chdir(str(tmpdir))
+    from finmag.util.visualization import render_paraview_scene
     sim = finmag.example.normal_modes.disk()
     sim.compute_normal_modes(n_values=3)
     sim.export_normal_mode_animation(k=0, filename='foo/bar.pvd')
@@ -564,7 +590,8 @@ def test_jpg2avi(tmpdir):
     assert(os.path.exists('animation.avi'))
 
 
-@pytest.mark.skipif("True")
+@pytest.mark.skipif(not _has_paraview_movie_export(),
+                    reason="Paraview rendering and mencoder are not available")
 def test_pvd2avi(tmpdir):
     """
     Test whether we can create an animation from the timesteps in a .pvd file.
@@ -608,6 +635,7 @@ def test_restriction(tmpdir):
     have the correct lengths.
 
     """
+    _require_netgen()
     os.chdir(str(tmpdir))
     sphere1 = Sphere(10, center=(-20, 0, 0), name="sphere1")
     sphere2 = Sphere(20, center=(+30, 0, 0), name="sphere2")
@@ -623,7 +651,7 @@ def test_restriction(tmpdir):
 
         def inside(self, pt, on_boundary):
             return pt[0] > 0
-    region_markers = df.CellFunction('size_t', mesh)
+    region_markers = df.MeshFunction('size_t', mesh, mesh.topology().dim())
     subdomain1 = Sphere1()
     subdomain2 = Sphere2()
     subdomain1.mark(region_markers, 1)
@@ -646,12 +674,12 @@ def test_restriction(tmpdir):
     f1 = r1(f)
     f2 = r2(f)
 
-    assert(np.allclose(f1.vector().array(), 42.0))
-    assert(np.allclose(f2.vector().array(), 23.0))
-    assert(len(f1.vector().array()) == submesh1.num_vertices())
-    assert(len(f2.vector().array()) == submesh2.num_vertices())
+    assert(np.allclose(f1.vector().get_local(), 42.0))
+    assert(np.allclose(f2.vector().get_local(), 23.0))
+    assert(len(f1.vector().get_local()) == submesh1.num_vertices())
+    assert(len(f2.vector().get_local()) == submesh2.num_vertices())
 
-    a = f.vector().array()
+    a = f.vector().get_local()
     a1 = r1(a)
     a2 = r2(a)
     assert(set(a) == set([23.0, 42.0]))

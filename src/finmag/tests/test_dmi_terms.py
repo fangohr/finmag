@@ -1,153 +1,58 @@
-import pytest
-
 import dolfin as df
-mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 10, 10, 10)
+import numpy as np
 
-V1 = df.VectorFunctionSpace(mesh, "CG", 1)
-VT = df.TensorFunctionSpace(mesh, "CG", 1)
-Vs = df.FunctionSpace(mesh, "CG", 1)
-tf = df.TestFunction(Vs)
+from finmag.util.helpers import times_curl
 
 
-#from finmag.energies.dmi import dmi_term3d, dmi_term2d, dmi_term3d_dolfin
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def compare_dmi_term3d_with_dolfin(Mexp):
-    """Expects string to feed into df.Expression for M"""
-    print "Working on Mexp=", Mexp
-    Mexp = df.Expression(Mexp, degree=1)
-    M = df.interpolate(Mexp, V1)
-    E = dmi_term3d(M, tf, 1)[0] * df.dx
-    E1 = df.assemble(E)
-    E_dolfin = dmi_term3d_dolfin(M, tf, 1)[0] * df.dx
-    dolfin_curl = df.project(df.curl(M), V1)
-    curlx, curly, curlz = dolfin_curl.split()
-    print "dolfin-curlx=", df.assemble(curlx * df.dx)
-    print "dolfin-curly=", df.assemble(curly * df.dx)
-    print "dolfin-curlz=", df.assemble(curlz * df.dx)
-    E2 = df.assemble(E_dolfin)
-    print E1, E2
-    print "Diff is %.18e" % (E1 - E2)
-    return abs(E1 - E2)
-
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def compare_dmi_term2d_with_dolfin(Mexp):
-    """Expects string to feed into df.Expression for M"""
-    print "Working on Mexp=", Mexp
-    Mexp = df.Expression(Mexp, degree=1)
-    V2d = df.VectorFunctionSpace(mesh, "CG", 1)
-    M2d = df.interpolate(Mexp, V2d)
-    M = df.interpolate(Mexp, V1)
-    E = dmi_term2d(M2d, tf, 1)[0] * df.dx
-    E1 = df.assemble(E)
-    E_dolfin = dmi_term3d_dolfin(M, tf, 1)[0] * df.dx
-    dolfin_curl = df.project(df.curl(M), V1)
-    curlx, curly, curlz = dolfin_curl.split()
-    print "dolfin-curlx=", df.assemble(curlx * df.dx)
-    print "dolfin-curly=", df.assemble(curly * df.dx)
-    print "dolfin-curlz=", df.assemble(curlz * df.dx)
-    E2 = df.assemble(E_dolfin)
-    print E1, E2
-    print "Diff is %.18e" % (E1 - E2)
-    return abs(E1 - E2)
-
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def test_dmi_term2d():
+def test_dmi_term3d_matches_analytical_solution():
+    # Reinstate this DMI-term check as a real Python 3 regression rather than dead skipped code. [Codex GPT-5.4]
+    """
+    For m(x, y, z) = (-y/2, x/2, c), curl(m) = (0, 0, 1), so
+    m . curl(m) = c everywhere on the unit cube.
+    """
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 10, 10, 10)
-    mesh2d = df.RectangleMesh(df.Point(0, 0), df.Point(1, 1), 10, 10)
+    V = df.VectorFunctionSpace(mesh, "CG", 1)
 
-    eps = 1e-15
-    assert compare_dmi_term2d_with_dolfin(("x[0]", "0.", "0.")) < eps
-    assert compare_dmi_term2d_with_dolfin(("x[1]", "0.", "0.")) < eps
-    assert compare_dmi_term2d_with_dolfin(("x[2]", "0.", "0.")) < eps
-    assert compare_dmi_term2d_with_dolfin(("0", "x[0]", "0.")) < eps
-    assert compare_dmi_term2d_with_dolfin(("0", "x[1]", "0.")) < eps
-    assert compare_dmi_term2d_with_dolfin(("0", "x[2]", "0.")) < eps
-    #assert compare_dmi_term2d_with_dolfin(("0.","0","x[0]")) <eps
-    #assert compare_dmi_term2d_with_dolfin(("0.","0","x[1]")) <eps
-    #assert compare_dmi_term2d_with_dolfin(("0.","0","x[2]")) <eps
+    m = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1), V)
+    energy_density = times_curl(m, 3)
+    assert np.allclose(df.assemble(energy_density * df.dx), 1.0, atol=1e-13)
 
-    # and some more complicated expressions
-    assert compare_dmi_term2d_with_dolfin(("-0.5*x[1]", "0.5*x[0]", "1")) < eps
-    assert compare_dmi_term2d_with_dolfin(("-0.5*x[1]*x[1]",
-                                           "2*0.5*x[0]",
-                                           "0")) < eps
-    assert compare_dmi_term2d_with_dolfin(("-0.5*x[1]*x[0]",
-                                           "2*0.5*x[0]-x[1]",
-                                           "0")) < eps
-
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def test_dmi_with_analytical_solution():
-    """For a vector field a(x,y,z)=0.5 * (-y, x, c), 
-    the curl is exactly 1.0."""
-
-    eps = 1e-13
-    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1), V1)
-    c = 1.0
-    E1 = df.assemble(dmi_term3d(M, tf, c)[0] * df.dx)
-    Eexp = 1.0
-    print "Expect E=%e, computed E=%e" % (Eexp, E1)
-    diff = abs(E1 - Eexp)
-    print "deviation between analytical result and numerical is %e" % diff
-    assert diff < eps
-
-    """For a vector field a(x,y,z)=0.5 * (-y, x, c), 
-    the curl is exactly 1.0."""
-    eps = 1e-12
-    M = df.interpolate(df.Expression(("-0.5*x[1]*2", "0.5*x[0]*2", "1"), degree=1), V1)
-    c = 3.0
-    E1 = df.assemble(dmi_term3d(M, tf, c)[0] * df.dx)
-    Eexp = 6.0
-    print "Expect E=%e, computed E=%e" % (Eexp, E1)
-    diff = abs(E1 - Eexp)
-    print "deviation between analytical result and numerical is %e" % diff
-    assert diff < eps
-
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def test_dmi_term3d():
-    eps = 1e-15
-    assert compare_dmi_term3d_with_dolfin(("x[0]", "0.", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("x[1]", "0.", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("x[2]", "0.", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0", "x[0]", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0", "x[1]", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0", "x[2]", "0.")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0.", "0", "x[0]")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0.", "0", "x[1]")) < eps
-    assert compare_dmi_term3d_with_dolfin(("0.", "0", "x[2]")) < eps
-
-    # and some more complicated expressions
-    assert compare_dmi_term3d_with_dolfin(("-0.5*x[1]", "0.5*x[0]", "1")) < eps
-    assert compare_dmi_term3d_with_dolfin(("-0.5*x[1]*x[1]",
-                                           "2*0.5*x[0]",
-                                           "x[0]+x[1]+x[2]")) < eps
-    assert compare_dmi_term3d_with_dolfin(("-0.5*x[1]*x[0]",
-                                           "2*0.5*x[0]-x[2]",
-                                           "x[0]+x[1]+x[2]")) < eps
-
-@pytest.mark.skip(reason='Not sure if we even use dmi_term3d anymore')
-def test_can_post_process_form():
-    M = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1), V1)
-    c = 1.0
-    E = dmi_term3d(M, tf, c)[0] * df.dx
-
-    v = df.TestFunction(V1)
-    dE_dM = df.derivative(E, M, v)
-    #vol = df.assemble(df.dot(v, df.Constant([1,1,1]))*df.dx).array()
-    tmp = df.assemble(dE_dM)
-
-    g_form = df.derivative(dE_dM, M)
-
-    g_petsc = df.PETScMatrix()
-
-    df.assemble(g_form, tensor=g_petsc)
-    #H_dmi_petsc = df.PETScVector()
-
-    # if we got to this line, the required assembly to compute fields works.
-    assert True
+    m = df.interpolate(df.Expression(("-x[1]", "x[0]", "1"), degree=1), V)
+    energy_density = times_curl(m, 3)
+    assert np.allclose(df.assemble(3.0 * energy_density * df.dx), 6.0, atol=1e-12)
 
 
-if __name__ == "__main__":
-    # test_dmi_term3d()
-    # test_dmi_term2d()
-    # test_can_post_process_form()
-    test_dmi_with_analytical_solution()
+def test_dmi_term2d_matches_3d_expression_for_in_plane_derivatives():
+    """
+    On a 2D mesh, times_curl should agree with the 3D expression when the
+    field only depends on x and y.
+    """
+    mesh_2d = df.RectangleMesh(df.Point(0, 0), df.Point(1, 1), 10, 10)
+    mesh_3d = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 10, 10, 10)
+    V_2d = df.VectorFunctionSpace(mesh_2d, "CG", 1, dim=3)
+    V_3d = df.VectorFunctionSpace(mesh_3d, "CG", 1)
+
+    expr = df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1)
+    m_2d = df.interpolate(expr, V_2d)
+    m_3d = df.interpolate(expr, V_3d)
+
+    E_2d = df.assemble(times_curl(m_2d, 2) * df.dx)
+    E_3d = df.assemble(times_curl(m_3d, 3) * df.dx)
+
+    assert np.allclose(E_2d, E_3d, atol=1e-13)
+
+
+def test_dmi_term_can_be_differentiated_and_assembled():
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 4, 4, 4)
+    V = df.VectorFunctionSpace(mesh, "CG", 1)
+
+    m = df.interpolate(df.Expression(("-0.5*x[1]", "0.5*x[0]", "1"), degree=1), V)
+    v = df.TestFunction(V)
+
+    E = times_curl(m, 3) * df.dx
+    dE_dm = df.derivative(E, m, v)
+    assert df.assemble(dE_dm).size() > 0
+
+    jacobian = df.PETScMatrix()
+    df.assemble(df.derivative(dE_dm, m), tensor=jacobian)
+    assert jacobian.size(0) > 0

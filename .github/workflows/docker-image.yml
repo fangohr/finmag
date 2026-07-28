@@ -1,9 +1,7 @@
 name: docker-image
 
 on:
-  push:
-  schedule:
-    - cron: '0 0 1 * *'  # run once-a-month
+  workflow_dispatch:
 
 jobs:
   docker-image:

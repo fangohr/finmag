@@ -14,9 +14,10 @@ rectangular grids.
 __all__ = ["first_difference", "parse_lattice_spec",
            "Lattice", "FieldLattice"]
 
-import numpy
-
 import collections
+from functools import reduce
+
+import numpy
 
 
 def first_difference(la, lb, reverse=False):
@@ -236,12 +237,13 @@ class FieldLattice(object):
             self.lattice = lattice
         else:
             self.lattice = Lattice(lattice, order=order, reduction=reduction)
-        if scale != None:
+        if scale is not None:
             self.lattice.scale(scale)
         self.field_dim = dim
         nodes = self.lattice.nodes
         shape = self.lattice._combine_idx(nodes, [dim])
-        if data != None:
+        if data is not None:
+            # Accept NumPy data arrays directly here without relying on their truth value. [Codex GPT-5.4]
             self.field_data = data
         else:
             self.field_data = \

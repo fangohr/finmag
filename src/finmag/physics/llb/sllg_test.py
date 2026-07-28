@@ -16,16 +16,16 @@ def plot_random_number():
     mt = RandomMT19937()
     mt.initial_random(422353390)
 
-    x = np.zeros(10000000, dtype=np.float)
+    x = np.zeros(10000000, dtype=float)
     for i in range(100):
         mt.gaussian_random_np(x)
         if i > 80:
             plt.cla()
-            plt.hist(x, 100, normed=1, facecolor='green', alpha=0.75)
+            plt.hist(x, 100, density=1, facecolor='green', alpha=0.75)
             plt.grid(True)
             plt.savefig(os.path.join(MODULE_DIR, "test_mt19937_%d.png" % i))
 
-        print 'step=', i
+        print('step=', i)
 
 
 def plot_random_number_np():
@@ -36,9 +36,24 @@ def plot_random_number_np():
         x = np.random.randn(10000000)
 
         plt.cla()
-        plt.hist(x, 100, normed=1, facecolor='green', alpha=0.75)
+        plt.hist(x, 100, density=1, facecolor='green', alpha=0.75)
         plt.grid(True)
         plt.savefig(os.path.join(MODULE_DIR, "test_np_%d.png" % i))
+
+
+def test_random_mt19937_gaussian_smoke():
+    # Keep this as a lightweight availability check for the native stochastic kernel on Python 3. [Codex GPT-5.4]
+    from finmag.native.llb import RandomMT19937
+
+    mt = RandomMT19937()
+    mt.initial_random(422353390)
+
+    x = np.zeros(16, dtype=float)
+    mt.gaussian_random_np(x)
+
+    assert x.shape == (16,)
+    assert np.isfinite(x).all()
+    assert not np.allclose(x, 0.0)
 
 
 if __name__ == "__main__":

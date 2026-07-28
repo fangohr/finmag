@@ -10,6 +10,12 @@ from finmag.field import Field
 logger = logging.getLogger('finmag')
 
 
+def _dolfin_vector_array(vector):
+    if hasattr(vector, "get_local"):
+        return vector.get_local()
+    return vector.array()
+
+
 class EnergyBase(object):
 
     """
@@ -167,7 +173,7 @@ class EnergyBase(object):
                 Coefficients of dolfin vector of energy density.
 
         """
-        nodal_E = df.assemble(self.nodal_E).array() * \
+        nodal_E = _dolfin_vector_array(df.assemble(self.nodal_E)) * \
             self.unit_length ** self.dim
         return nodal_E / self.nodal_volume_S1
 
@@ -209,7 +215,7 @@ class EnergyBase(object):
         return helpers.average_field(self.compute_field())
 
     def __compute_field_assemble(self):
-        return df.assemble(self.dE_dm).array() / self.nodal_volume_S3
+        return _dolfin_vector_array(df.assemble(self.dE_dm)) / self.nodal_volume_S3
 
     def __setup_field_petsc(self):
         """
@@ -225,7 +231,7 @@ class EnergyBase(object):
         if not hasattr(self, "g_petsc"):
             self.__setup_field_petsc()
         self.g_petsc.mult(self.m.f.vector(), self.H_petsc)
-        return self.H_petsc.array() / self.nodal_volume_S3
+        return _dolfin_vector_array(self.H_petsc) / self.nodal_volume_S3
 
     def __setup_field_numpy(self):
         """
@@ -240,10 +246,10 @@ class EnergyBase(object):
 
         """
         g_form = df.derivative(self.dE_dm, self.m.f)
-        self.g = df.assemble(g_form).array()
+        self.g = _dolfin_vector_array(df.assemble(g_form))
 
     def __compute_field_numpy(self):
-        Mvec = self.m.f.vector().array()
+        Mvec = _dolfin_vector_array(self.m.f.vector())
         H_ex = np.dot(self.g, Mvec)
         return H_ex / self.nodal_volume_S3
 
@@ -259,4 +265,4 @@ class EnergyBase(object):
 
     def __compute_field_project(self):
         df.solve(self.a == self.L, self.H_project)
-        return self.H_project.vector().array()
+        return _dolfin_vector_array(self.H_project.vector())

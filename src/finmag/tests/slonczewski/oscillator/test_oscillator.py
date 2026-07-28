@@ -1,13 +1,17 @@
 import os
-import run as sim
 import numpy as np
+import pytest
 
 epsilon = 1e-16
 tolerance = 1e-3
-nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
 
 
-def _test_oscillator():
+@pytest.mark.skip(reason="long Slonczewski oscillator validation; not part of the Python 3 core gate yet")
+def test_oscillator():
+    # Keep the transition gate focused on broad regression coverage before long validation runs. [Codex GPT-5.4]
+    import run as sim
+
+    nmag_file = os.path.join(sim.MODULE_DIR, "averages_nmag5.txt")
     if not os.path.exists(sim.initial_m_file):
         sim.create_initial_state()
     sim.run_simulation()

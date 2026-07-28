@@ -9,6 +9,17 @@ from finmag.field import Field
 logger = logging.getLogger(name='finmag')
 
 
+def _vector_as_numpy(vec):
+    """
+    Return a NumPy copy of a DOLFIN vector on both the legacy and PETSc-backed
+    paths used by the Python 3 transition work. [Codex GPT-5.4]
+    """
+    try:
+        return vec.get_local()
+    except AttributeError:
+        return vec.array()
+
+
 class Material(object):
 
     """
@@ -74,8 +85,9 @@ class Material(object):
         else:
             raise NotImplementedError("Only FePt and Nickel available")
 
-        self.volumes = df.assemble(df.dot(df.TestFunction(self.S3),
-                                          df.Constant([1, 1, 1])) * df.dx).array()
+        self.volumes = _vector_as_numpy(
+            df.assemble(df.dot(df.TestFunction(self.S3),
+                               df.Constant([1, 1, 1])) * df.dx))
 
         self.real_vol = self.volumes * self.unit_length ** 3
 
@@ -87,7 +99,7 @@ class Material(object):
         self._m_e_dg = df.Function(dg)
 
         self.T = 0
-        self.Ms = self.Ms0 * self._m_e_dg.vector().array()
+        self.Ms = self.Ms0 * _vector_as_numpy(self._m_e_dg.vector())
 
     @property
     def me(self):
@@ -104,14 +116,14 @@ class Material(object):
 
     @T.setter
     def T(self, value):
-        self._T[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+        self._T[:] = _vector_as_numpy(
+            helpers.scalar_valued_function(value, self.S1).vector())[:]
 
         self._T_dg = helpers.scalar_valued_dg_function(value, self.mesh)
 
-        As = self._A_dg.vector().array()
-        Ts = self._T_dg.vector().array()
-        mes = self._m_e_dg.vector().array()
+        As = _vector_as_numpy(self._A_dg.vector())
+        Ts = _vector_as_numpy(self._T_dg.vector())
+        mes = _vector_as_numpy(self._m_e_dg.vector())
 
         for i in range(len(Ts)):
             As[i] = self.mat.A(Ts[i])
@@ -137,8 +149,9 @@ class Material(object):
     def Ms(self, value):
         self._Ms_dg = helpers.scalar_valued_dg_function(value, self.mesh)
 
-        tmp_Ms = df.assemble(
-            self._Ms_dg * df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx) / self.volumes
+        tmp_Ms = _vector_as_numpy(df.assemble(
+            self._Ms_dg * df.dot(df.TestFunction(self.S3),
+                                 df.Constant([1, 1, 1])) * df.dx)) / self.volumes
 
         self._Ms[:] = tmp_Ms[:]
 
@@ -148,7 +161,7 @@ class Material(object):
         not too good since this will return a copy
         try to solve this later
         """
-        return self._m.vector().array()
+        return _vector_as_numpy(self._m.vector())
 
     def set_m(self, value, **kwargs):
         """
@@ -179,6 +192,6 @@ if __name__ == "__main__":
     mat = Material(mesh, name='Nickel')
     mat.set_m((1, 0, 0))
     mat.T = 3
-    print mat.T
-    print mat.inv_chi_par
-    print mat.compute_field()
+    print(mat.T)
+    print(mat.inv_chi_par)
+    print(mat.compute_field())

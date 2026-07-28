@@ -88,11 +88,11 @@ class SundialsIntegrator(object):
 
         try:
             self.integrator.advance_time(t, self.m)
-        except RuntimeError, msg:
+        except RuntimeError as msg:
             # if we have reached max_num_steps, the error message will read
             # something like "Error in CVODE:CVode (CV_TOO_MUCH_WORK):
             # At t = 0.258733, mxstep steps taken before reaching tout."
-            if "CV_TOO_MUCH_WORK" in msg.message:
+            if "CV_TOO_MUCH_WORK" in str(msg):
                 # we have integrated up to cvode's internal time
                 self.cur_t = self.integrator.get_current_time()
 
@@ -124,15 +124,23 @@ class SundialsIntegrator(object):
 
         """
         old_max_steps = self.max_steps
+        initial_nsteps = self.stats()['nsteps']
         self.max_steps = steps
         try:
             # we can't tell sundials to run a certain number of steps
             # so we try integrating for a very long time but set it to
             # stop after the specified number of steps
             self.integrator.advance_time(self.cur_t + 1, self.m)
-        except RuntimeError, msg:
-            if "CV_TOO_MUCH_WORK" in msg.message:
-                pass  # this is the error we expect
+        except RuntimeError as msg:
+            final_nsteps = self.stats()['nsteps']
+            expected_nsteps = initial_nsteps + steps
+            # Newer SUNDIALS wrappers may surface the "stop after mxstep"
+            # condition as a generic RuntimeError instead of the older
+            # CV_TOO_MUCH_WORK text. If the solver advanced exactly the
+            # requested number of internal steps, treat that as success for
+            # advance_steps(). [Codex GPT-5.4]
+            if "CV_TOO_MUCH_WORK" in str(msg) or final_nsteps == expected_nsteps:
+                pass
             else:
                 raise
         self.cur_t = self.integrator.get_current_time()

@@ -1,4 +1,4 @@
-import DMI_from_helix as dfh
+from finmag.util import DMI_from_helix as dfh
 import numpy as np
 import pytest
 

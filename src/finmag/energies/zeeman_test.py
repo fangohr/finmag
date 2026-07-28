@@ -3,16 +3,17 @@ import numpy as np
 import dolfin as df
 import pytest
 import os
+import shutil
 import finmag
 import logging
 from finmag.field import Field
 from finmag import sim_with
 from finmag.energies import Zeeman, TimeZeeman, DiscreteTimeZeeman, OscillatingZeeman
 from finmag.util.consts import mu0
-from finmag.util.meshes import pair_of_disks
+from finmag.util.meshes import pair_of_disks, netgen_is_usable
 from finmag.example import sphere_inside_airbox
 from math import sqrt, pi, cos, sin
-from zeeman import DipolarField
+from finmag.energies.zeeman import DipolarField
 
 mesh = df.UnitCubeMesh(2, 2, 2)
 S1 = df.FunctionSpace(mesh, "Lagrange", 1)
@@ -31,7 +32,7 @@ def diff(H_ext, expected_field):
     and the expected field.
     """
     H = H_ext.compute_field().reshape((3, -1)).mean(1)
-    print "Got H={}, expecting H_ref={}.".format(H, expected_field)
+    print("Got H={}, expecting H_ref={}.".format(H, expected_field))
     return np.max(np.abs(H - expected_field))
 
 
@@ -125,6 +126,8 @@ def test_energy_density_function():
 
 def test_compute_energy_in_regions(tmpdir):
     os.chdir(str(tmpdir))
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
     d = 30.0
     h1 = 5.0
     h2 = 10.0
@@ -155,7 +158,7 @@ def test_compute_energy_in_regions(tmpdir):
 
     disk1 = Disk1()
     disk2 = Disk2()
-    domains = df.CellFunction("size_t", mesh)
+    domains = df.MeshFunction("size_t", mesh, mesh.topology().dim())
     domains.set_all(0)
     disk1.mark(domains, 1)
     disk2.mark(domains, 2)
@@ -360,7 +363,7 @@ def test_oscillating_zeeman():
 
     # Check that the field has the original value at the end of the
     # first few cycles.
-    for i in xrange(19):
+    for i in range(19):
         check_field_at_time(i * 1.0 / freq, H)
 
     # Check that the field is switched off at the specified time (and
@@ -392,16 +395,15 @@ def test_dipolar_field_class(tmpdir):
 
 def compute_field_diffs(sim):
     vals_demag = sim.get_field_as_dolfin_function(
-        'Demag', region='air').vector().array().reshape(3, -1)
+        'Demag', region='air').vector().get_local().reshape(3, -1)
     vals_dipole = sim.get_field_as_dolfin_function(
-        'DipolarField', region='air').vector().array().reshape(3, -1)
+        'DipolarField', region='air').vector().get_local().reshape(3, -1)
     absdiffs = np.linalg.norm(vals_demag - vals_dipole, axis=0)
     reldiffs = absdiffs / np.linalg.norm(vals_dipole, axis=0)
     return absdiffs, reldiffs
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     """
     Check that the stray field of a sphere in an 'airbox'
@@ -410,6 +412,8 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
 
     """
     os.chdir(str(tmpdir))
+    if not netgen_is_usable():
+        pytest.skip("netgen is not usable in the Python 3 transition container")
 
     # Create a mesh of a sphere enclosed in an "airbox"
     m_init = [7, -4, 3]  # some random magnetisation direction
@@ -417,7 +421,13 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     r_sphere = 3
     r_shell = 30
     l_box = 100
-    maxh_sphere = 2.5
+    # The DOLFIN-2019/Netgen path generates a slightly different air mesh from
+    # the legacy DOLFIN-2017 stack. With maxh_sphere=2.5 the relative dipole
+    # comparison still passes, but the pointwise absolute tail rises just above
+    # the historical 140 A/m guard. Refining only the magnetic sphere keeps the
+    # original tolerance meaningful instead of hiding the drift by relaxing the
+    # assertion. [Codex GPT-5.4]
+    maxh_sphere = 2.0
     maxh_shell = None
     maxh_box = 10.0
     Ms_sphere = 8.6e5
@@ -442,8 +452,10 @@ def test_compare_stray_field_of_sphere_with_dipolar_field(tmpdir, debug=False):
     # stray field of the sphere and the field of the point dipole
     # are below a given tolerance.
     absdiffs, reldiffs = compute_field_diffs(sim)
-    assert np.max(reldiffs) < 0.4
-    assert np.mean(reldiffs) < 0.15
-    assert np.max(absdiffs) < 140.0
-
-    print np.max(reldiffs), np.mean(reldiffs), np.max(absdiffs)
+    max_reldiff = np.max(reldiffs)
+    mean_reldiff = np.mean(reldiffs)
+    max_absdiff = np.max(absdiffs)
+    print(max_reldiff, mean_reldiff, max_absdiff)
+    assert max_reldiff < 0.4
+    assert mean_reldiff < 0.15
+    assert max_absdiff < 140.0

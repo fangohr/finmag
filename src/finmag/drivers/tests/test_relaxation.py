@@ -39,9 +39,9 @@ def plot_averages(sim):
 
     t, mx, my, mz = np.array(zip(* np.loadtxt("test_relaxation.ndt")))
     t = t * 1e9
-    ax1.plot(t, mx, "b-", label="$m_\mathrm{x}$")
-    ax1.plot(t, my, "b--", label="$m_\mathrm{y}$")
-    ax1.plot(t, mz, "b:", label="$m_\mathrm{z}$")
+    ax1.plot(t, mx, "b-", label=r"$m_\mathrm{x}$")
+    ax1.plot(t, my, "b--", label=r"$m_\mathrm{y}$")
+    ax1.plot(t, mz, "b:", label=r"$m_\mathrm{z}$")
     ax1.set_xlabel("time (ns)")
     ax1.set_ylabel("average magnetisation", color="b")
     for tl in ax1.get_yticklabels():

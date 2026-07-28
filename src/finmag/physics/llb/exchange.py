@@ -3,7 +3,7 @@ import dolfin as df
 from aeon import timer
 from finmag.energies.energy_base import EnergyBase
 from finmag.util.consts import mu0
-from finmag.physics.llb.material import Material
+from finmag.physics.llb.material import Material, _vector_as_numpy
 
 logger = logging.getLogger('finmag')
 
@@ -55,7 +55,7 @@ class ExchangeStd(EnergyBase):
             exchange.setup(S3, M)
 
             # Print energy
-            print exchange.compute_energy()
+            print(exchange.compute_energy())
 
             # Exchange field
             H_exch = exchange.compute_field()
@@ -135,8 +135,8 @@ class Exchange(object):
             self.C * df.inner(df.grad(u3), df.grad(v3)) * df.dx, tensor=self.K)
         self.H = df.PETScVector()
 
-        self.vol = df.assemble(
-            df.dot(v3, df.Constant([1, 1, 1])) * df.dx).array()
+        self.vol = _vector_as_numpy(
+            df.assemble(df.dot(v3, df.Constant([1, 1, 1])) * df.dx))
 
         self.coeff = -self.exchange_factor / (self.vol * self.me ** 2)
 
@@ -144,7 +144,7 @@ class Exchange(object):
 
         self.K.mult(self.m.vector(), self.H)
 
-        return self.coeff * self.H.array()
+        return self.coeff * _vector_as_numpy(self.H)
 
 
 if __name__ == "__main__":
@@ -170,6 +170,6 @@ if __name__ == "__main__":
 
     # print max(exch2.compute_field()-exch.compute_field())
 
-    print exch.compute_field()
+    print(exch.compute_field())
 
     # print timings.report()

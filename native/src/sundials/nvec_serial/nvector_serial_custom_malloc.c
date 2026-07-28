@@ -32,6 +32,25 @@
 #define ONE    RCONST(1.0)
 #define ONEPT5 RCONST(1.5)
 
+/*
+ * Older SUNDIALS releases exposed these as macros via sundials_math.h.
+ * With the header set available in the Python 3 transition image they are
+ * no longer provided, which makes the compiler treat them as unresolved
+ * externals. Define the expected helpers locally for this vendored copy.
+ */
+#ifndef MIN
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#endif
+#ifndef MAX
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
+#endif
+#ifndef ABS
+#define ABS(x) RAbs(x)
+#endif
+#ifndef SQR
+#define SQR(x) ((x) * (x))
+#endif
+
 /* Private function prototypes */
 /* z=x */
 static void VCopy_Serial(N_Vector x, N_Vector z);

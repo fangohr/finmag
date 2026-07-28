@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import dolfin as df
 from finmag.field import Field
-from set_function_values import *
+from finmag.util.set_function_values import *
 
 EPSILON = 1e-14
 
@@ -43,7 +43,7 @@ def test_function_from_expression(f):
 
 def test_vector_function_from_expression(vf):
     value = np.array((1, 2, 3))
-    from_expression(vf, df.Expression(map(str, value), degree=1))
+    from_expression(vf, df.Expression(tuple(map(str, value)), degree=1))
     assert np.max(np.abs(vf(0) - value)) < EPSILON
 
 
@@ -54,4 +54,3 @@ def test_function_from_field(f):
     #assert isinstance(f.function_space(), df.FunctionSpace)
     #from_field(f, Field(f.function_space(), value))
     #assert abs(f(0) - value) < EPSILON
-

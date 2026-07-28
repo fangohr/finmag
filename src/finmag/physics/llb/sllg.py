@@ -29,7 +29,7 @@ class SLLG(object):
         self.time_scale = 1e-9
 
         self._m_field = Field(self.S3, name='m')
-        self.nxyz = self._m_field.f.vector().size() / 3
+        self.nxyz = self._m_field.f.vector().size() // 3
 
         self._T = np.zeros(self.nxyz)
         self._alpha = np.zeros(self.nxyz)
@@ -57,7 +57,7 @@ class SLLG(object):
         self.Ms = Field(df.FunctionSpace(self.mesh, 'DG', 0), 8.6e5)  # A/m saturation magnetisation
         self._pins = np.array([], dtype="int")
         self.volumes = df.assemble(
-            df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).array()
+            df.dot(df.TestFunction(self.S3), df.Constant([1, 1, 1])) * df.dx).get_local()
         self.Volume = mesh_volume(self.mesh)
         self.real_volumes = self.volumes * self.unit_length ** 3
 
@@ -75,7 +75,7 @@ class SLLG(object):
 
         self.alpha = 0.1
         self._gamma = consts.gamma
-        self._seed = np.random.random_integers(4294967295)
+        self._seed = int(np.random.randint(0, 4294967296))
         self.dt = 1e-13
         self.T = 0
 
@@ -101,7 +101,7 @@ class SLLG(object):
 
     @seed.setter
     def seed(self, value):
-        self._seed = value
+        self._seed = int(value)
         self.setup_parameters()
 
     @gamma.setter
@@ -117,7 +117,7 @@ class SLLG(object):
     def setup_parameters(self):
         # print 'seed:', self.seed
         self.integrator.set_parameters(
-            self.dt, self.gamma, self.seed, self.checking_length)
+            self.dt, self.gamma, int(self.seed), self.checking_length)
         log.info("seed=%d." % self.seed)
         log.info("dt=%g." % self.dt)
         log.info("gamma=%g." % self.gamma)
@@ -125,7 +125,7 @@ class SLLG(object):
 
     def set_m(self, value, normalise=True):
         m_tmp = helpers.vector_valued_function(
-            value, self.S3, normalise=normalise).vector().array()
+            value, self.S3, normalise=normalise).vector().get_local()
         self._m_field.set_with_numpy_array_debug(m_tmp)
         self.m[:] = self._m_field.get_numpy_array_debug()
 
@@ -145,7 +145,7 @@ class SLLG(object):
 
                 self._t += self._dt
 
-        except Exception, error:
+        except Exception as error:
             log.info(error)
             raise Exception(error)
 
@@ -168,7 +168,7 @@ class SLLG(object):
     @T.setter
     def T(self, value):
         self._T[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+            value, self.S1).vector().get_local()[:]
         log.info('Temperature  : %g', self._T[0])
 
     @property
@@ -178,7 +178,7 @@ class SLLG(object):
     @alpha.setter
     def alpha(self, value):
         self._alpha[:] = helpers.scalar_valued_function(
-            value, self.S1).vector().array()[:]
+            value, self.S1).vector().get_local()[:]
 
     def set_alpha(self, value):
         """ for compability reasons with LLG """
@@ -197,9 +197,9 @@ class SLLG(object):
         self._Ms_dg.name = 'Saturation magnetisation'
         self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
         Ms = df.assemble(
-            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+            self._Ms_dg.f * df.TestFunction(self.S1) * df.dx).get_local() / self.volumes.get_local()
         self._Ms = Ms.copy()
-        self.Ms_av = np.average(self._Ms_dg.vector().array())
+        self.Ms_av = np.average(self._Ms_dg.vector().get_local())
 
 
         #self._Ms_dg = value.f#.vector().set_local(
@@ -211,7 +211,7 @@ class SLLG(object):
         #self._Ms[:] = tmp[:]
 
     def m_average_fun(self, dx=df.dx):
-        """
+        r"""
         Compute and return the average polarisation according to the formula
         :math:`\\langle m \\rangle = \\frac{1}{V} \int m \: \mathrm{d}V`
 
@@ -256,7 +256,7 @@ class SLLG(object):
 
         self.gradM.mult(self._m_field.f.vector(), self.H_gradm)
 
-        return self.H_gradm.array() / self.nodal_volume_S3
+        return self.H_gradm.get_local() / self.nodal_volume_S3
 
     def use_zhangli(self, J_profile=(1e10, 0, 0), P=0.5, beta=0.01, using_u0=False, with_time_update=None):
 
@@ -266,7 +266,7 @@ class SLLG(object):
         self.beta = beta
 
         self._J = helpers.vector_valued_function(J_profile, self.S3)
-        self.J = self._J.vector().array()
+        self.J = self._J.vector().get_local()
         self.compute_gradient_matrix()
         self.H_gradm = df.PETScVector()
 
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     sim.alpha = 0.1
     sim.set_m((1, 0, 0))
     ts = np.linspace(0, 1e-9, 11)
-    print sim.Ms
+    print(sim.Ms)
     sim.T = 2000
     sim.dt = 1e-14
 
@@ -309,8 +309,8 @@ if __name__ == "__main__":
     demag = Demag(solver='FK')
     sim.add(demag)
 
-    print exchange.Ms.vector().array()
+    print(exchange.Ms.vector().array())
 
     for t in ts:
         sim.run_until(t)
-        print sim.m_average
+        print(sim.m_average)

@@ -58,7 +58,7 @@ def test_hysteresis_loop_and_plotting(tmpdir):
 
     # Check that the magnetisation values are as trivial as we expect
     # them to be ;-)
-    assert(np.allclose(m_vals, [1.0 for _ in xrange(2 * N)], atol=1e-4))
+    assert(np.allclose(m_vals, [1.0 for _ in range(2 * N)], atol=1e-4))
 
     # This only tests whether the plotting function works without
     # errors. It currently does *not* check that it produces

@@ -171,7 +171,7 @@ if __name__ == "__main__":
     v1 = df.TestFunction(V)
     K = df.assemble(df.inner(df.grad(u1), df.grad(v1)) * df.dx)
     L = df.assemble(v1 * df.dx)
-    print 'before:', K.array()
+    print('before:', K.array())
     #print 'length:', len(K.array())
 
     pbc = PeriodicBoundary2D(mesh)
@@ -179,5 +179,5 @@ if __name__ == "__main__":
     u1 = df.TrialFunction(V)
     v1 = df.TestFunction(V)
     K = df.assemble(df.inner(df.grad(u1), df.grad(v1)) * df.dx)
-    print 'after', K.array()
+    print('after', K.array())
     #print 'length:', len(K.array())

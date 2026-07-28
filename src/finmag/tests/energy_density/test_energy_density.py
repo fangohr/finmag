@@ -1,7 +1,6 @@
 import os
 import sys
 import pytest
-import commands
 import subprocess
 import numpy as np
 import dolfin as df
@@ -16,7 +15,7 @@ TOL = 1e-14
 
 @pytest.mark.skipif('subprocess.call(["which", "nsim"]) != 0')
 def test_exchange_energy_density():
-    """
+    r"""
     Compare solution with nmag for now. Should derive the
     analytical solution here as well.
 
@@ -32,9 +31,9 @@ def test_exchange_energy_density():
 
     # run nmag
     cmd = "nsim %s --clean" % os.path.join(MODULE_DIR, "run_nmag_Eexch.py")
-    status, output = commands.getstatusoutput(cmd)
+    status, output = subprocess.getstatusoutput(cmd)
     if status != 0:
-        print output
+        print(output)
         sys.exit("Error %d: Running %s failed." % (status, cmd))
     nmag_data = np.loadtxt(
         os.path.join(MODULE_DIR, "nmag_exchange_energy_density.txt"))
@@ -55,9 +54,9 @@ def test_exchange_energy_density():
 
     print ("Nmag data   = %g" % nmag_data[0])
     print ("Finmag data = %g" % finmag_data[0])
-    print "Relative error from nmag data (expect array of 0):"
-    print rel_err
-    print "Max relative error:", np.max(rel_err)
+    print("Relative error from nmag data (expect array of 0):")
+    print(rel_err)
+    print("Max relative error:", np.max(rel_err))
     assert np.max(rel_err) < TOL, \
         "Max relative error is %g, should be zero." % np.max(rel_err)
 
@@ -73,7 +72,7 @@ def test_exchange_energy_density():
     energy2 = exch.compute_energy()
     # comparison with Nmag
     energy3 = np.average(nmag_data) * vol
-    print energy1, energy2, energy3
+    print(energy1, energy2, energy3)
 
     assert abs(energy1 - energy2) < 1e-12  # actual value is 0, but
     # that must be pure luck.
@@ -116,15 +115,16 @@ def test_anisotropy_energy_density():
     density = anis.energy_density()
     deviation = np.abs(density - 0.5)
 
-    print "Anisotropy energy density (expect array of 0.5):"
-    print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("Anisotropy energy density (expect array of 0.5):")
+    print(density)
+    print("Max deviation: %g" % np.max(deviation))
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
 def test_DMI_energy_density_2D():
+    # Keep the DMI energy-density path under active Python 3 coverage instead of the old skip. [Codex GPT-5.4]
     """
     For a vector field (x, y, z) = 0.5 * (-y, x, c),
     the curl is exactly 1.0. (HF)
@@ -140,15 +140,16 @@ def test_DMI_energy_density_2D():
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "2D energy density (expect array of 1):"
-    print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("2D energy density (expect array of 1):")
+    print(density)
+    print("Max deviation: %g" % np.max(deviation))
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
 def test_DMI_energy_density_3D():
+    # Keep the 3D DMI energy-density path paired with the reinstated 2D coverage. [Codex GPT-5.4]
     """Same as above, on a 3D mesh."""
     mesh = df.UnitCubeMesh(4, 4, 4)
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
@@ -160,15 +161,18 @@ def test_DMI_energy_density_3D():
     density = dmi.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "3D energy density (expect array of 1):"
-    print density
-    print "Max deviation: %g" % np.max(deviation)
+    print("3D energy density (expect array of 1):")
+    print(density)
+    print("Max deviation: %g" % np.max(deviation))
 
     assert np.all(deviation < TOL), \
         "Max deviation %g, should be zero." % np.max(deviation)
 
 
+@pytest.mark.skipif('subprocess.call(["which", "netgen"]) != 0')
 def test_demag_energy_density():
+    # The analytical demag check depends on an external netgen executable via
+    # sphere(...), so make that dependency explicit on the pixi/FEniCS-2019 path. [Codex GPT-5.4]
     """
     With a sphere mesh, unit magnetisation in x-direction,
     we expect the demag energy to be
@@ -199,9 +203,9 @@ def test_demag_energy_density():
     density = demag.energy_density()
     deviation = np.abs(density - 1.0)
 
-    print "Demag energy density (expect array of 1s):"
-    print density
-    print "Max deviation:", np.max(deviation)
+    print("Demag energy density (expect array of 1s):")
+    print(density)
+    print("Max deviation:", np.max(deviation))
     assert np.max(deviation) < TOL, \
         "Max deviation is %g, should be zero." % np.max(deviation)
 

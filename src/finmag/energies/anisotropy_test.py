@@ -56,7 +56,7 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
 
     E = anis.compute_energy()
 
-    print "With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E)
+    print("With m = {}, expecting E = {}. Got E = {}.".format(m, expected_E, E))
     #assert abs(E - expected_E) < TOLERANCE
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
@@ -84,7 +84,7 @@ def test_anisotropy_energy_analytical(fixt):
     E = anis.compute_energy()
     expected_E = float(2) / 3
 
-    print "With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E)
+    print("With m = (0, sqrt(1-x^2), x), expecting E = {}. Got E = {}.".format(expected_E, E))
     #assert abs(E - expected_E) < TOLERANCE
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
@@ -102,8 +102,8 @@ def test_anisotropy_field(fixt):
     v = df.TestFunction(fixt["m"].functionspace)
     g_ani = df.Constant(fixt["K1"] / (mu0 * fixt["Ms"].value)) * (
         2 * df.dot(fixt["a"], fixt["m"].f) * df.dot(fixt["a"], v)) * df.dx
-    volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).array()
-    dE_dm = df.assemble(g_ani).array() / volume
+    volume = df.assemble(df.dot(v, df.Constant((1, 1, 1))) * df.dx).get_local()
+    dE_dm = df.assemble(g_ani).get_local() / volume  # DOLFIN 2019 vectors expose assembled coefficients via get_local(). [Codex GPT-5.4]
 
     print(textwrap.dedent("""
               With m = (1, 0, 1)/sqrt(2),

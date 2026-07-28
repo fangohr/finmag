@@ -28,13 +28,13 @@ def test_set_with_dolfin_constant(setup):
     for field in (scalar_field, scalar_field_dg):
         # keep track of dolfin function object to make sure we don't overwrite it
         f = field.f
-        assert f.vector().array().all() == 0
+        assert f.vector().get_local().all() == 0
         field.set(v)
-        assert f.vector().array().all() == 1
+        assert f.vector().get_local().all() == 1
 
     v = df.Constant((1, 2, 3))
     f = vector_field.f
-    assert f.vector().array().all() == 0
+    assert f.vector().get_local().all() == 0
     vector_field.set(v)
     assert np.allclose(f(0), (1, 2, 3))
 
@@ -76,7 +76,7 @@ def test_set_with_another_field():
 
     field2 = Field(V)
     function_of_field2 = field2.f
-    assert function_of_field2.vector().array().all() == 0
+    assert function_of_field2.vector().get_local().all() == 0
     field2.set(field1)
     assert np.allclose(function_of_field2(1), (1, 2, 3))
 
@@ -90,7 +90,7 @@ def test_set_with_another_field_new_but_same_function_space():
     W = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     fieldW = Field(W)
     function_of_fieldW = fieldW.f
-    assert function_of_fieldW.vector().array().all() == 0
+    assert function_of_fieldW.vector().get_local().all() == 0
     fieldW.set(fieldV)
     assert np.allclose(function_of_fieldW(1), (1, 2, 3))
 
@@ -100,17 +100,15 @@ def test_assumption_that_interpolate_better_than_project_same_vectorspace():
 
     V = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     f = df.Function(V)
-    f.vector()[:] = np.random.rand(len(f.vector().array()))
+    f.vector().set_local(np.random.rand(len(f.vector().get_local())))
 
     W = df.VectorFunctionSpace(mesh, "CG", 1, dim=3)
     w1 = df.interpolate(f, W)
     w2 = df.project(f, W)
 
-    diff_w1 = f.vector() - w1.vector()
-    diff_w2 = f.vector() - w2.vector()
-    diff_w1.abs()
-    diff_w2.abs()
-    assert diff_w1.array().max() <= diff_w2.array().max()
+    diff_w1 = np.abs(f.vector().get_local() - w1.vector().get_local())
+    diff_w2 = np.abs(f.vector().get_local() - w2.vector().get_local())
+    assert diff_w1.max() <= diff_w2.max()
 
 
 def test_assumption_that_interpolate_better_than_project_different_vectorspace(do_plot=False):
@@ -132,11 +130,9 @@ def test_assumption_that_interpolate_better_than_project_different_vectorspace(d
         df.plot(w_e, title="from same expression")
         df.interactive()
 
-    diff_w_i = w_e.vector() - w_i.vector()
-    diff_w_p = w_e.vector() - w_p.vector()
-    diff_w_i.abs()
-    diff_w_p.abs()
-    assert diff_w_i.array().max() <= diff_w_p.array().max()
+    diff_w_i = np.abs(w_e.vector().get_local() - w_i.vector().get_local())
+    diff_w_p = np.abs(w_e.vector().get_local() - w_p.vector().get_local())
+    assert diff_w_i.max() <= diff_w_p.max()
 
 
 def test_set_with_dolfin_generic_vector():

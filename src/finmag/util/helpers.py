@@ -3,7 +3,10 @@ from datetime import datetime
 from glob import glob
 from contextlib import contextmanager
 from finmag.util.fileio import Tablereader
-from finmag.util.visualization import render_paraview_scene
+try:
+    from finmag.util.visualization import render_paraview_scene
+except Exception:
+    render_paraview_scene = None
 from finmag.util.versions import get_version_dolfin
 from finmag.util import ansistrm
 from threading import Timer
@@ -21,18 +24,52 @@ import types
 import sys
 import os
 import re
-import sh
+try:
+    import sh
+except ImportError:
+    sh = None
 
 logger = logging.getLogger("finmag")
 
+_DOLFIN_EXPRESSION_TYPES = tuple(
+    t for t in (df.Constant, df.Expression, getattr(df, "UserExpression", None))
+    if t is not None)
+
+try:
+    basestring
+except NameError:
+    basestring = str
+
+try:
+    long
+except NameError:
+    long = int
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
+try:
+    izip = itertools.izip
+except AttributeError:
+    izip = zip
+
 
 def expression_from_python_function(func, function_space):
-    class ExpressionFromPythonFunction(df.Expression):
+    expression_base = getattr(df, "UserExpression", df.Expression)
+
+    class ExpressionFromPythonFunction(expression_base):
         """
         Turn a python function to a dolfin expression over given functionspace.
 
         """
         def __init__(self, python_function, **kwargs):
+            # DOLFIN 2019 expects Python-backed expressions to derive from
+            # UserExpression, but the legacy 2017 gate still only exposes
+            # Expression. [Codex GPT-5.4]
+            if expression_base is not df.Expression:
+                super(ExpressionFromPythonFunction, self).__init__(**kwargs)
             self.func = python_function
 
         def eval(self, eval_result, x):
@@ -83,7 +120,7 @@ def logging_status_str():
 
     # This keeps the loggers (with the exception of root)
     loggers = logging.Logger.manager.loggerDict
-    for loggername, logger in [('root', rootlog)] + loggers.items():
+    for loggername, logger in [('root', rootlog)] + list(loggers.items()):
         # check that we have any handlers at all before we attempt
         # to iterate
         if hasattr(logger, 'handlers'):
@@ -453,7 +490,8 @@ def crossprod(v, w):
     of the same form.
 
     """
-    if df.parameters.reorder_dofs_serial != False:
+    reorder_dofs_serial = getattr(df.parameters, "reorder_dofs_serial", False)
+    if reorder_dofs_serial != False:
         raise RuntimeError(
             "Please ensure that df.parameters.reorder_dofs_serial is set to False.")
     assert(v.ndim == 1 and w.ndim == 1)
@@ -480,10 +518,14 @@ def fnormalise(arr, ignore_zero_vectors=False):
     a = a.reshape((3, -1))
     a_norm = np.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2])
     if ignore_zero_vectors:
-        a_norm[np.where(a_norm == 0)] = 1.0
-    a /= a_norm
-    a = a.ravel()
-    return a
+        # Leave zero vectors untouched instead of dividing them by zero. [Codex GPT-5.4]
+        out = a.copy()
+    else:
+        # Match the historical NaN result for zero vectors, but without a warning. [Codex GPT-5.4]
+        out = np.empty_like(a)
+        out.fill(np.nan)
+    np.divide(a, a_norm, out=out, where=(a_norm != 0))
+    return out.ravel()
 
 
 def angle(v1, v2):
@@ -588,9 +630,9 @@ def verify_function_space_type(function_space, family, degree, dim):
         (family == ufl_element.family() and
          degree == ufl_element.degree())
 
-    print 'Family', family
-    print 'Degree', degree
-    print family_and_degree_are_correct
+    print('Family', family)
+    print('Degree', degree)
+    print(family_and_degree_are_correct)
 
     if dim == None:
         # `function_space` should be a dolfin.FunctionSpace
@@ -670,7 +712,7 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     assert(S3.ufl_element().family() == 'Lagrange')
     assert(S3.ufl_element().degree() == 1)
 
-    if isinstance(value, (df.Constant, df.Expression)):
+    if isinstance(value, _DOLFIN_EXPRESSION_TYPES):
         fun = df.interpolate(value, S3)
     elif isinstance(value, (tuple, list, np.ndarray)) and len(value) == 3:
         # We recognise a sequence of strings as ingredient for a df.Expression.
@@ -697,9 +739,14 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
     # if it's a normal function, we wrapper it into a dolfin expression
     elif hasattr(value, '__call__'):
 
-        class HelperExpression(df.Expression):
+        helper_expression_base = getattr(df, "UserExpression", df.Expression)
+
+        class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
+                # The legacy 2017 Expression base must not receive __init__ kwargs here. [Codex GPT-5.4]
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -716,7 +763,8 @@ def vector_valued_function(value, mesh_or_space, normalise=False, **kwargs):
                         "argument of type '{}'".format(type(value)))
 
     if normalise:
-        fun.vector().set_local(fnormalise(fun.vector().array()))
+        # DOLFIN 2019 exposes vector data via get_local() on PETSc-backed vectors. [Codex GPT-5.4]
+        fun.vector().set_local(fnormalise(fun.vector().get_local()))
 
     return fun
 
@@ -754,7 +802,7 @@ def scalar_valued_function(value, mesh_or_space):
         mesh = mesh_or_space
         S1 = df.FunctionSpace(mesh, "Lagrange", 1)
 
-    if isinstance(value, (df.Constant, df.Expression)):
+    if isinstance(value, _DOLFIN_EXPRESSION_TYPES):
         fun = df.interpolate(value, S1)
     elif isinstance(value, (np.ndarray, list)):
         fun = df.Function(S1)
@@ -766,9 +814,14 @@ def scalar_valued_function(value, mesh_or_space):
     elif hasattr(value, '__call__'):
 
         # if it's a normal function, we wrapper it into a dolfin expression
-        class HelperExpression(df.Expression):
+        helper_expression_base = getattr(df, "UserExpression", df.Expression)
+
+        class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
+                # The legacy 2017 Expression base must not receive __init__ kwargs here. [Codex GPT-5.4]
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -830,9 +883,13 @@ def scalar_valued_dg_function(value, mesh_or_space):
             raise RuntimeError("Meshes are not compatible for given function.")
     elif hasattr(value, '__call__'):
 
-        class HelperExpression(df.Expression):
+        helper_expression_base = getattr(df, "UserExpression", df.Expression)
+
+        class HelperExpression(helper_expression_base):
 
             def __init__(self, value, **kwargs):
+                if helper_expression_base is not df.Expression:
+                    super(HelperExpression, self).__init__(**kwargs)
                 self.fun = value
 
             def eval(self, value, x):
@@ -906,7 +963,6 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
         class HelperExpression(df.Expression):
 
             def __init__(self, value, **kwargs):
-                super(HelperExpression, self).__init__()
                 self.fun = value
 
             def eval(self, value, x):
@@ -923,7 +979,7 @@ def vector_valued_dg_function(value, mesh_or_space, normalise=False):
                         "argument of type '{}'".format(type(value)))
 
     if normalise:
-        fun.vector()[:] = fnormalise(fun.vector().array())
+        fun.vector()[:] = fnormalise(fun.vector().get_local())
 
     return fun
 
@@ -1009,7 +1065,7 @@ def restriction(mesh, submesh):
                     "Array must be 1- or 2-dimensional. Got: dim={}".format(f.ndim))
         else:
             assert(isinstance(f, df.Function))
-            f_arr = f.vector().array()
+            f_arr = f.vector().get_local()
             f_submesh = df.Function(V_submesh)
             f_submesh.vector()[:] = f_arr[parent_vertex_indices]
             return f_submesh
@@ -1105,22 +1161,24 @@ def spherical_to_cartesian(v):
     return np.array((x, y, z))
 
 
-def pointing_upwards((x, y, z)):
+def pointing_upwards(coords):
     """
     Returns a boolean that is true when the vector is pointing upwards.
     Upwards is defined as having a polar angle smaller than 45 degrees.
 
     """
+    x, y, z = coords
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return theta <= (np.pi / 4)
 
 
-def pointing_downwards((x, y, z)):
+def pointing_downwards(coords):
     """
     Returns a boolean that is true when the vector is pointing downwards.
     Downwards is defined as having a polar angle between 135 and 225 degrees.
 
     """
+    x, y, z = coords
     _, theta, _ = cartesian_to_spherical((x, y, z))
     return abs(theta - np.pi) < (np.pi / 4)
 
@@ -1205,10 +1263,10 @@ def vector_field_from_dolfin_function(f, xlims=None, ylims=None, zlims=None,
     (ymin, ymax) = _find_limits(ylims, 1)
     (zmin, zmax) = _find_limits(zlims, 2)
 
-    print "Limits:"
-    print "xmin, xmax: {}, {}".format(xmin, xmax)
-    print "ymin, ymax: {}, {}".format(ymin, ymax)
-    print "zmin, zmax: {}, {}".format(zmin, zmax)
+    print("Limits:")
+    print("xmin, xmax: {}, {}".format(xmin, xmax))
+    print("ymin, ymax: {}, {}".format(ymin, ymax))
+    print("zmin, zmax: {}, {}".format(zmin, zmax))
 
     if nx == None or ny == None or nz == None:
         raise NotImplementedError("Please provide specific values "
@@ -1417,10 +1475,10 @@ def save_dg_fun(fun, name='unnamed.vtk', dataname='m', binary=False):
     grid = pyvtk.UnstructuredGrid(points,
                                   tetra=tetras)
 
-    m = fun.vector().array()
+    m = fun.vector().get_local()
 
     m.shape = (3, -1)
-    print m
+    print(m)
     data = pyvtk.CellData(pyvtk.Vectors(np.transpose(m)))
     m.shape = (-1,)
 
@@ -1450,7 +1508,7 @@ def save_dg_fun_points(fun, name='unnamed.vtk', dataname='m', binary=False):
     grid = pyvtk.UnstructuredGrid(points,
                                   vertex=verts)
 
-    m = fun.vector().array()
+    m = fun.vector().get_local()
 
     m.shape = (3, -1)
     data = pyvtk.PointData(pyvtk.Vectors(np.transpose(m), dataname))
@@ -1508,7 +1566,7 @@ def pairwise(iterable):
     """
     a, b = itertools.tee(iterable)
     next(b, None)
-    return itertools.izip(a, b)
+    return izip(a, b)
 
 
 def apply_vertexwise(f, *args):
@@ -1536,18 +1594,18 @@ def apply_vertexwise(f, *args):
     # (u, v) in pairwise(args)))  # check that all meshes coincide
 
     # Extract the array for each dolfin.Function
-    aa = [u.vector().array() for u in args]
+    aa = [u.vector().get_local() for u in args]
     #V = args[0].function_space()
     # assert(all([V == a.function_space() for a in aa]))  # XXX TODO: how to
     # deal with functions defined on different function spaces?!?
 
     # Reshape each array according to the dimension of the VectorFunctionSpace
-    dims = [u.domain().geometric_dimension() for u in args]
+    dims = [u.function_space().mesh().geometry().dim() for u in args]
     aa_reshaped = [
-        a.reshape(dim, -1).T for (a, dim) in itertools.izip(aa, dims)]
+        a.reshape(dim, -1).T for (a, dim) in izip(aa, dims)]
 
     # Evaluate f on successive rows of the reshaped arrays
-    aa_evaluated = [f(*args) for args in itertools.izip(*aa_reshaped)]
+    aa_evaluated = [f(*args) for args in izip(*aa_reshaped)]
 
     #import ipdb; ipdb.set_trace()
     try:
@@ -1632,6 +1690,10 @@ def run_cmd_with_timeout(cmd, timeout_sec):
     timer.start()
     stdout, stderr = proc.communicate()
     timer.cancel()
+    if isinstance(stdout, bytes):
+        stdout = stdout.decode("utf-8")
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode("utf-8")
     return proc.returncode, stdout, stderr
 
 

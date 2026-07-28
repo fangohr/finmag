@@ -24,7 +24,7 @@ def _get_field_saver(sim, field_name, filename=None, overwrite=False, incrementa
         filename += '.npy'
 
     s = None
-    if sim.field_savers.has_key(filename) and sim.field_savers[filename].incremental == incremental:
+    if filename in sim.field_savers and sim.field_savers[filename].incremental == incremental:
         s = sim.field_savers[filename]
 
     if s is None:
@@ -65,7 +65,7 @@ def save_field(sim, field_name, filename=None, incremental=False, overwrite=Fals
     field_data = sim.get_field_as_dolfin_function(field_name, region=region)
     field_saver = _get_field_saver(
         sim, field_name, filename, incremental=incremental, overwrite=overwrite)
-    field_saver.save(field_data.vector().array())
+    field_saver.save(field_data.vector().get_local())
 
 
 #-------------------------------------------------------------------------

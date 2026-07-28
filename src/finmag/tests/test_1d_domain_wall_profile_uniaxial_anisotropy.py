@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import dolfin as df
 from finmag import Simulation as Sim
 from finmag.energies import Exchange, UniaxialAnisotropy
@@ -42,10 +43,10 @@ def test_domain_wall_profile(do_plot=False):
 
     m0 = df.Function(V)
     coor = mesh.coordinates()
-    n = len(m0.vector().array())
+    n = len(m0.vector().get_local())  # DOLFIN 2019 PETSc vectors use get_local() instead of array(). [Codex GPT-5.4]
 
-    print "Double check that the length of the vectors are equal: %g and %g" \
-        % (n, len(coor) * dim)
+    print("Double check that the length of the vectors are equal: %g and %g"
+          % (n, len(coor) * dim))
     assert n == len(coor) * dim
 
     # Setup LLG
@@ -73,9 +74,9 @@ def test_domain_wall_profile(do_plot=False):
         #Eani = anisotropy.compute_energy()/L
         #Eex = exchange.compute_energy()/L
         #f.write('%g\t%g\t%g\n' % (r.t,Eani,Eex))
-        print "Integrating time: %g" % t
+        print("Integrating time: %g" % t)
     # f.close()
-    print timer
+    print(timer)
 
     mz = []
     x = np.linspace(0, L, simplices + 1)
@@ -98,27 +99,33 @@ def test_domain_wall_profile(do_plot=False):
     except ImportError:
         pass
     else:
-        popt, pcov = scipy.optimize.curve_fit(
-            Mz_exact, x, mz, p0=(x0 * 1.1, A * 1.1, Ms * 1.1))
-        print "popt=", popt
+        # `curve_fit` may probe unphysical intermediate A values while it [Codex GPT-5.4]
+        # searches; ignore the resulting exploratory sqrt warning here. [Codex GPT-5.4]
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", r"invalid value encountered in sqrt",
+                RuntimeWarning)
+            popt, pcov = scipy.optimize.curve_fit(
+                Mz_exact, x, mz, p0=(x0 * 1.1, A * 1.1, Ms * 1.1))
+        print("popt=", popt)
 
         fittedx0, fittedA, fittedMs = popt
-        print "Error in fitted x0: %9.7f%%" % ((fittedx0 - x0) / x0 * 100)
-        print "Error in fitted Ms: %9.7f%%" % ((fittedMs - Ms) / Ms * 100)
-        print "Error in fitted A : %9.7f%%" % ((fittedA - A) / A * 100)
-        print "fitted A  : %9g" % (fittedA)
-        print "correct A : %9g" % (A)
-        print "difference A : %9g" % (fittedA - A)
-        print "rel difference A : %9g" % ((fittedA - A) / A)
-        print "quotient A/fittedA and fittedA/A : %9g %g" % (A / fittedA, fittedA / A)
+        print("Error in fitted x0: %9.7f%%" % ((fittedx0 - x0) / x0 * 100))
+        print("Error in fitted Ms: %9.7f%%" % ((fittedMs - Ms) / Ms * 100))
+        print("Error in fitted A : %9.7f%%" % ((fittedA - A) / A * 100))
+        print("fitted A  : %9g" % (fittedA))
+        print("correct A : %9g" % (A))
+        print("difference A : %9g" % (fittedA - A))
+        print("rel difference A : %9g" % ((fittedA - A) / A))
+        print("quotient A/fittedA and fittedA/A : %9g %g" % (A / fittedA, fittedA / A))
         assert abs(fittedA - A) / A < 0.004, "Fitted A too inaccurate"
 
     # Maximum deviation:
     maxdiff = max(abs(mz - Mz_exact(x)))
-    print "Absolute deviation in Mz", maxdiff
+    print("Absolute deviation in Mz", maxdiff)
     assert maxdiff < 1200
     maxreldiff = maxdiff / max(Mz_exact(x))
-    print "Relative deviation in Mz", maxreldiff
+    print("Relative deviation in Mz", maxreldiff)
     assert maxreldiff < 0.0009
 
 if __name__ == "__main__":

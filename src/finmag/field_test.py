@@ -3,11 +3,11 @@ import numpy as np
 import functools
 import pytest
 import os
-from field import Field, associated_scalar_space
+from finmag.field import Field, associated_scalar_space
 
 
 class TestField(object):
-    def setup(self):
+    def setup_method(self):
         self.create_meshes()
         self.define_tolerances()
 
@@ -201,9 +201,11 @@ class TestField(object):
             assert field.name == name
             assert field.unit == unit
 
-            # Check that both function's name and label are changed.
+            # Newer DOLFIN keeps the function name but no longer exposes the
+            # separate label accessor on Python objects. [Codex GPT-5.4]
             assert field.f.name() == name
-            assert field.f.label() == name
+            if hasattr(field.f, "label"):
+                assert field.f.label() == name
 
             # Check that the created function is a dolfin zero function.
             assert isinstance(field.f, df.Function)
@@ -225,7 +227,7 @@ class TestField(object):
                 field = Field(functionspace, constant)
 
                 # Check vector (numpy array) values (should be exact).
-                assert np.all(field.f.vector().array() == expected_value)
+                assert np.all(field.f.vector().get_local() == expected_value)
 
                 # Check the result of coords_and_values (should be exact).
                 field_values = field.coords_and_values()[1]  # coords ignored
@@ -800,7 +802,8 @@ class TestField(object):
         m_normalised = (1. / m_norm) * m
 
         assert np.allclose(m_normalised, field.get_ordered_numpy_array_xxx().reshape(3, -1))
-        assert np.allclose(field.f.vector().array(), field2.vector().array())
+        assert np.allclose(field.f.vector().get_local(),
+                           field2.vector().get_local())
 
     def test_whether_field_is_scalar_field(self):
         for functionspace in self.scalar_fspaces:
@@ -1304,7 +1307,7 @@ class TestField(object):
 
             field3 = field1 + field2
 
-            assert np.allclose(field3.f.vector().array(), 6.45)
+            assert np.allclose(field3.f.vector().get_local(), 6.45)
 
     def test_add_vector_fields(self):
         for functionspace in self.vector3d_fspaces:
@@ -1370,7 +1373,7 @@ class TestField(object):
         for functionspace in self.scalar_fspaces:
             field1 = Field(functionspace, value=3.1)
             field2 = field1 / 20
-            assert np.allclose(field2.f.vector().array(), 0.155)
+            assert np.allclose(field2.f.vector().get_local(), 0.155)
 
     def test_div_vector_fields(self):
         for functionspace in self.vector3d_fspaces:
@@ -1519,6 +1522,7 @@ class TestField(object):
         to json file.
 
         """
+        pytest.importorskip("dolfinh5tools")
         # -----------------------------------------------------------------
         # Create test data and files
         # -----------------------------------------------------------------

@@ -1,0 +1,135 @@
+[workspace]
+name = "finmag"
+version = "0.1.0"
+description = "First-pass pixi environment for the Finmag Python 3 transition"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = "3.11.*"
+pip = "*"
+setuptools = "*"
+cython = "*"
+cxx-compiler = "*"
+make = "*"
+numpy = "*"
+scipy = "*"
+matplotlib = "*"
+pytest = "*"
+fenics = "2019.1.0.*"
+petsc4py = "*"
+slepc4py = "*"
+sundials = "*"
+boost-cpp = "*"
+libboost-python-devel = "*"
+gmsh = "*"
+netgen = "*"
+# Conda-forge provides OOMMF directly, so M3 can run real OOMMF cross-code
+# comparisons without reviving the old source-build path. [Codex GPT-5.4]
+oommf = "*"
+
+[feature.dolfinx.dependencies]
+# Keep DOLFINx in a separate no-default-feature environment: current
+# fenics-dolfinx builds require CPython 3.12+ and must not perturb the
+# FEniCS-2019/Python-3.11 M2/M3 environment. [Codex gpt-5.5 high]
+python = "3.12.*"
+fenics-dolfinx = "*"
+pytest = "*"
+numpy = "*"
+
+[feature.dolfinx.tasks]
+dolfinx-import = "python -c \"from mpi4py import MPI; import dolfinx; print('dolfinx', dolfinx.__version__, 'rank', MPI.COMM_WORLD.rank)\""
+dolfinx-smoke = "python -c \"from mpi4py import MPI; import numpy as np; from dolfinx import mesh, fem; m = mesh.create_unit_square(MPI.COMM_WORLD, 2, 2); V = fem.functionspace(m, ('Lagrange', 1)); u = fem.Function(V); u.interpolate(lambda x: x[0] + 2*x[1]); print('dofs', V.dofmap.index_map.size_global, 'sum', float(np.sum(u.x.array)))\""
+dolfinx-pytest = "python -m pytest -q dev/dolfinx"
+dolfinx-example = "python -m dev.dolfinx.relaxation_example --output /tmp/finmag-dolfinx-relaxation-summary.json"
+dolfinx-restart-example = "python -m dev.dolfinx.restart_example --output /tmp/finmag-dolfinx-restart-state.json"
+
+[environments]
+dolfinx = { features = ["dolfinx"], no-default-feature = true }
+
+[tasks]
+# This is an M2 packaging probe around conda-forge FEniCS 2019, not an attempt
+# to reproduce the exact Debian-snapshot DOLFIN 2017 stack. [Codex GPT-5.4]
+import-finmag = "PYTHONPATH=src python -c \"import finmag; print(finmag)\""
+barmini-construct = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); print(sim.__class__.__name__)\""
+# The verified pixi smoke path now exercises the default Sundials backend on
+# top of conda-forge FEniCS 2019 and SUNDIALS 7. [Codex GPT-5.4]
+barmini-smoke = "PYTHONPATH=src python -c \"import finmag; sim = finmag.example.barmini(); sim.run_until(1e-12); print(sim.t, sim.integrator_backend)\""
+# Keep restart verification close to the existing Python 3 container witness so
+# M2 covers state persistence as well as plain time integration. [Codex GPT-5.4]
+restart-smoke = '''
+PYTHONPATH=src python -c "import os, numpy as np, finmag; sim = finmag.example.barmini(name='barmini_restart_pixi_smoke'); sim.run_until(1e-11); sim.save_restart_data(); t_saved = sim.t; m_saved = sim.m.copy(); canonical_restart = sim.name + '-restart.npz'; assert os.path.exists(canonical_restart); sim.run_until(2e-11); sim.restart(); assert sim.t == t_saved; assert np.allclose(sim.m, m_saved); sim2 = finmag.example.barmini(name='barmini_restart_pixi_smoke_copy'); sim2.restart(canonical_restart); assert sim2.t == t_saved; assert np.allclose(sim2.m, m_saved); print('saved_time', t_saved); print('restarted_time', sim.t); print('copied_time', sim2.t); print('restart_file', canonical_restart)"
+'''
+# Keep a direct witness for the compiled FK BEM baseline: the larger demag
+# tests depend on this native array entry point, so M3 should fail early if it
+# disappears or stops producing finite matrices. [Codex gpt-5.5 high]
+native-fk-bem-smoke = "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python dev/bin/native-fk-bem-smoke.py"
+# This is the first explicit FEniCS-2019 pytest gate beyond workflow smoke
+# tests, built around the historical barmini-first acceptance subset. [Codex GPT-5.4]
+barmini-suite = '''
+PYTHONPATH=src python -m pytest -q src/finmag/tests/test_effective_field.py src/finmag/tests/test_writing_data.py src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py src/finmag/tests/test_restart_simulation.py src/finmag/tests/test_sim_ode.py src/finmag/tests/test_applied_field.py src/finmag/tests/test_exchange_static.py src/finmag/tests/test_llg.py src/finmag/util/ode/tests/test_sundials_ode.py src/finmag/tests/test_energy_creation_with_variable_Ms.py src/finmag/tests/energy_density/test_energy_density.py src/finmag/tests/test_anis.py src/finmag/tests/test_dmi.py src/finmag/tests/test_dmi_terms.py src/finmag/tests/test_heun.py src/finmag/tests/test_spatially_varying_alpha.py src/finmag/tests/test_spatially_varying_anisotropy.py src/finmag/tests/test_unit_length.py src/finmag/tests/test_interactions_scale_linearly_with_m.py src/finmag/energies/exchange_test.py src/finmag/energies/anisotropy_test.py src/finmag/energies/cubic_anisotropy_test.py src/finmag/energies/demag/fk_demag_test.py src/finmag/energies/demag/fk_demag_2d_test.py src/finmag/energies/test_energies_in_regions.py src/finmag/energies/thin_film_demag_test.py src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py
+src/finmag/energies/dmi_test.py src/finmag/energies/magnetostatic_field_test.py src/finmag/energies/zeeman_test.py
+src/finmag/energies/demag/demag_pbc_test.py
+src/finmag/tests/zhangli/zhang_li_test.py src/finmag/tests/zhangli/stt_nonlocal_test.py src/finmag/tests/test_skyrmions.py src/finmag/tests/test_solid_angle.py src/finmag/tests/test_solid_angle_invariance.py src/finmag/physics/tests/neb/neb_test.py src/finmag/physics/llb/sllg_test.py src/finmag/util/meshes_test.py src/finmag/sim/sim_helpers_test.py
+src/finmag/sim/magnetisation_patterns_test.py
+src/finmag/sim/hysteresis_test.py
+src/finmag/sim/sim_test.py
+src/finmag/physics/llb/llb_test.py
+src/finmag/tests/test_meshes.py
+src/finmag/util/mesh_templates_test.py
+src/finmag/util/helpers_test.py
+src/finmag/util/length_scales_test.py
+src/finmag/util/pbc_test.py
+src/finmag/util/plot_helpers_test.py
+src/finmag/util/vtk_saver_test.py
+src/finmag/util/fileio_test.py
+src/finmag/util/dmi_helper_test.py
+src/finmag/util/test_set_function_values.py
+src/finmag/util/test_dmi_from_helix.py
+src/finmag/drivers/tests/sundials_nsteps_test.py
+src/finmag/drivers/tests/sundials_reinit_test.py
+src/finmag/drivers/tests/test_scipy.py
+src/finmag/drivers/tests/test_integrators.py
+src/finmag/util/ode/tests/test_sundials_stiff_ode.py
+src/finmag/tests/jacobean/test_jacobean_computation.py
+src/finmag/tests/jacobean/test_jacobean_integration.py
+src/finmag/tests/jacobean/test_native_llg.py
+src/finmag/util/oommf/test_mesh.py
+src/finmag/util/visualization_test.py
+src/finmag/util/fft_test.py
+src/finmag/tests/demag/test_bem_computation.py
+src/finmag/tests/demag/test_demag_sphere.py
+src/finmag/drivers/tests/test_relaxation.py
+src/finmag/drivers/tests/test_relax_two_times.py
+src/finmag/tests/test_time.py
+src/finmag/scheduler/scheduler_test.py
+src/finmag/tests/test_cyclic_references_in_sim.py
+src/finmag/tests/bugs/test_bug_ndt_file_writing.py
+src/finmag/tests/cython/test_cython.py
+src/finmag/physics/tests/test_effective_field.py
+src/finmag/physics/tests/test_equation.py
+src/finmag/physics/tests/test_terms.py
+src/finmag/tests/test_jacobian.py
+src/finmag/normal_modes/eigenmodes/helpers_test.py
+src/finmag/normal_modes/eigenmodes/eigenproblems_test.py
+src/finmag/normal_modes/eigenmodes/eigensolvers_test.py
+src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py
+src/finmag/field_setters_test.py
+src/finmag/field_test.py
+src/finmag/tests/oommf/test_anisotropy.py
+src/finmag/tests/oommf/test_exchange.py
+src/finmag/tests/comparison/test_dmdt.py
+src/finmag/tests/comparison/anisotropy/test_anis_oommf.py
+src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py
+src/finmag/tests/comparison/exchange/test_exchange_field.py
+src/finmag/tests/comparison/anisotropy/test_anis_magpar.py
+src/finmag/tests/comparison/demag/test_demag_field.py
+src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py
+src/finmag/tests/test_sim_parallel.py
+src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py
+src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py
+src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py
+src/finmag/tests/nmag/spinwaves/test_spinwaves.py
+src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py
+src/finmag/tests/slonczewski/oscillator/test_oscillator.py
+'''

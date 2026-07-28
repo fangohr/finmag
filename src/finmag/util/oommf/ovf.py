@@ -110,7 +110,7 @@ __all__ = ["OVF10", "OVF20", "OVFFile", "OVFValueUnits", "OVFValueLabels"]
 import struct
 from numpy import array, ndarray
 
-from lattice import FieldLattice
+from .lattice import FieldLattice
 
 # Abbreviations for OVF versions
 OVF10 = (1, 0)
@@ -227,7 +227,7 @@ class OVFSectionNode(OVFNode):
         missing_value = []
         if self.required != None:
             for required_value in self.required:
-                if not self.received.has_key(required_value):
+                if required_value not in self.received:
                     missing_value.append(required_value)
 
         if missing_value:
@@ -541,7 +541,7 @@ class OVFDataSectionNode(OVFSectionNode):
         num_floats = self.num_stored_nodes * self.floats_per_node
         fmt = endianness + float_type * num_floats
         flat_array = self.field.ravel('F')
-        out_data += struct.pack(fmt, *flat_array) + "\n"
+        out_data += struct.pack(fmt, *flat_array) + b"\n"
         stream.write(out_data)
 
     def _write_ascii(self, stream, root=None):
@@ -568,12 +568,12 @@ def version_node(ver_str):
 
 def known_value_node(name, value):
     lname = name_normalise(name)
-    if known_values.has_key(lname):
+    if lname in known_values:
         val_type = known_values[lname][1]
         value = val_type(value)
 
     else:
-        print "Unknown value '%s' while reading OVF file." % name
+        print("Unknown value '%s' while reading OVF file." % name)
 
     return OVFValueNode(data=(name, value))
 
@@ -589,7 +589,7 @@ def known_section_node(action, name):
     elif lname.startswith("data"):
         cls = OVFDataSectionNode
     else:
-        print "Unknown section '%s' while reading OVF file." % name
+        print("Unknown section '%s' while reading OVF file." % name)
         cls = OVFSectionNode
 
     return cls(data=(name, action))
@@ -719,6 +719,8 @@ class OVFStream(object):
     def __init__(self, filename, mode="r"):
         if type(filename) == str:
             self.filename = filename
+            if "b" not in mode:
+                mode += "b"
             self.f = open(filename, mode)
         else:
             self.filename = None
@@ -740,6 +742,9 @@ class OVFStream(object):
                 if len(l) == 0:
                     return None
                 l = l[:-1]
+                if isinstance(l, bytes):
+                    # OVF files mix ASCII headers with binary payloads, so decode linewise only when needed. [Codex GPT-5.4]
+                    l = l.decode("ascii")
                 self.lines.append(l)
 
         self.no_line += 1
@@ -752,13 +757,18 @@ class OVFStream(object):
         return l
 
     def read_lines_ahead(self):
-        self.lines += self.f.readlines()
+        self.lines += [
+            l.decode("ascii") if isinstance(l, bytes) else l
+            for l in self.f.readlines()
+        ]
 
     def write(self, data):
+        if isinstance(data, str):
+            data = data.encode("ascii")
         self.f.write(data)
 
     def write_line(self, line):
-        self.f.write(line + "\n")
+        self.write(line + "\n")
 
 
 class OVFFile:
@@ -775,7 +785,7 @@ class OVFFile:
         available_data_types = {"text": "Data Text",
                                 "binary4": "Data Binary 4",
                                 "binary8": "Data Binary 8"}
-        if available_data_types.has_key(data_type):
+        if data_type in available_data_types:
             data_type = available_data_types[data_type]
 
         else:
@@ -894,17 +904,17 @@ class OVFFile:
 
     def write(self, stream):
         if not isinstance(stream, OVFStream):
-            stream = OVFStream(stream, mode="w")
+            stream = OVFStream(stream, mode="wb")
         self.content.write(stream, root=self.content)
 
 if __name__ == "__main__no":
     import sys
-    print "Reading"
+    print("Reading")
     ovf = OVFFile(sys.argv[1])
-    print "Writing"
+    print("Writing")
     #ovf.content.a_segment.a_databinary8.name = "Data Binary 4"
     ovf.write(sys.argv[2])
-    print "Done"
+    print("Done")
 
 elif __name__ == "__main__":
     # Here is how to create an OVF file from a FieldLattice object

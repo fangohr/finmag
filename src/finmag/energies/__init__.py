@@ -1,1 +1,1 @@
-from init import *
+from .init import *

@@ -1,5 +1,4 @@
 import os
-import pytest
 import dolfin as df
 import numpy as np
 import matplotlib as mpl
@@ -13,7 +12,6 @@ from finmag.physics.llb.material import Material
 
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-@pytest.mark.xfail
 def test_llb_sundials(do_plot=False):
     mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(2, 2, 2), 1, 1, 1)
 
@@ -52,7 +50,7 @@ def test_llb_sundials(do_plot=False):
 
     mz = np.array(mz)
 
-    print np.sum(mxyz ** 2, axis=1) - 1
+    print(np.sum(mxyz ** 2, axis=1) - 1)
 
     if do_plot:
         ts_ns = np.array(real_ts) * 1e9
@@ -77,9 +75,9 @@ def sim_llb_100(do_plot=False):
     mat.T = 100
     mat.alpha = 0.1
 
-    print mat.Ms0
-    print mat.volumes
-    print mat.mat.chi_par(100)
+    print(mat.Ms0)
+    print(mat.volumes)
+    print(mat.mat.chi_par(100))
     sim = LLB(mat)
     sim.set_up_stochastic_solver(using_type_II=True)
 
@@ -102,7 +100,7 @@ def sim_llb_100(do_plot=False):
         mz.append(sim.m_average)
 
     mz = np.array(mz)
-    print mz
+    print(mz)
 
     if do_plot:
         ts_ns = np.array(real_ts) * 1e9
@@ -115,12 +113,12 @@ def sim_llb_100(do_plot=False):
         plt.savefig(os.path.join(MODULE_DIR, "test_llb_100K.png"))
 
 
-@pytest.mark.xfail
 def test_llb_save_data():
-    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 1)
+    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10, 10, 5), 2, 2, 2)
+    # Keep two z layers so both saved regions remain non-empty in the Python 3 path. [Codex GPT-5.4]
 
     def region1(coords):
-        if coords[2] < 0.5:
+        if coords[2] < 2.5:
             return True
         else:
             return False
@@ -162,7 +160,7 @@ def test_llb_save_data():
     sim.schedule('save_ndt', every=1e-12)
 
     for t in ts:
-        print 't===', t
+        print('t===', t)
         sim.run_until(t)
 
 

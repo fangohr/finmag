@@ -26,10 +26,13 @@ namespace finmag {
                 dolfin::UnitCubeMesh,
                 dolfin::UnitIntervalMesh,
                 dolfin::UnitSquareMesh,
-                dolfin::UnitTetrahedronMesh,
-                dolfin::UnitTriangleMesh,
                 dolfin::BoundaryMesh
             >::type derived_classes;
+
+            // DOLFIN 2019 keeps UnitTriangleMesh and UnitTetrahedronMesh as
+            // factory-only helpers returning Mesh, not Mesh subclasses, so
+            // only register the concrete mesh types that still participate in
+            // the SWIG shared_ptr hierarchy. [Codex GPT-5.4]
 
             register_swig_boost_shared_ptr_hierarchy<dolfin::Mesh, derived_classes>();
 

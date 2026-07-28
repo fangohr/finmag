@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#
+# Run the isolated DOLFINx prototype verification lane.
+#
+# This does not port Finmag yet; it verifies that pixi can provide a separate
+# DOLFINx environment and execute the reduced M4/M5 mesh, test, output, and
+# restart examples without disturbing the FEniCS-2019 M2/M3 environment.
+# [Codex gpt-5.5 high]
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi global/cache state out of the checkout and writable on restricted
+# runners. The actual environment prefix remains managed by pixi. [Codex
+# gpt-5.5 high]
+export PIXI_HOME="${PIXI_HOME:-/tmp/pixi-cache}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+echo "==> pixi run -e dolfinx dolfinx-import"
+pixi run -e dolfinx dolfinx-import
+
+echo "==> pixi run -e dolfinx dolfinx-smoke"
+pixi run -e dolfinx dolfinx-smoke
+
+echo "==> pixi run -e dolfinx dolfinx-pytest"
+pixi run -e dolfinx dolfinx-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-example"
+pixi run -e dolfinx dolfinx-example
+
+echo "==> pixi run -e dolfinx dolfinx-restart-example"
+pixi run -e dolfinx dolfinx-restart-example

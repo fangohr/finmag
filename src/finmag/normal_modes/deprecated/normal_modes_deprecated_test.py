@@ -5,6 +5,7 @@ from finmag import example
 from finmag import sim_with, normal_mode_simulation
 from math import pi
 import logging
+import os
 import pytest
 import matplotlib.pyplot as plt
 
@@ -29,8 +30,8 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
 
     sphere = Sphere(r=11)
     mesh = sphere.create_mesh(maxh=2.0)
-    print "[DDD] mesh: {}".format(mesh)
-    print mesh_info(mesh)
+    print("[DDD] mesh: {}".format(mesh))
+    print(mesh_info(mesh))
     if debug:
         plot_mesh_with_paraview(mesh, outfile='mesh_sphere.png')
 
@@ -81,7 +82,7 @@ def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
                        sorted(omega)))
 
     # Export normal mode animations for debugging
-    for i in xrange(n_values_export):
+    for i in range(n_values_export):
         freq = omega_positive[i]
         export_normal_mode_animation(
             sim, freq, w[i], filename='normal_mode_{:02d}__{:.3f}_GHz.pvd'.format(i, freq))
@@ -158,7 +159,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
     omega, eigenvecs, rel_errors = sim.compute_normal_modes(n_values=N)
     logger.debug("[DDD] Computed {} eigenvalues and {} eigenvectors.".format(
         len(omega), len(eigenvecs[0])))
-    for i in xrange(N):
+    for i in range(N):
         #sim.export_normal_mode_animation(i, filename='animations/normal_mode_{:02d}/normal_mode_{:02d}.pvd'.format(i, i))
         w = eigenvecs[i]
 
@@ -171,6 +172,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
                                                   outfilename='normal_mode_profile_{:02d}_v1.png'.format(
                                                       i),
                                                   dpi=300)
+        plt.close(fig)
 
         # Different combination of parameters
         fig = plot_spatially_resolved_normal_mode(mesh, m0, w, slice_z='z_min', components='xz',
@@ -179,6 +181,7 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
                                                   show_colorbars=False, figsize=(
                                                       12, 4),
                                                   outfilename='normal_mode_profile_{:02d}_v2.png'.format(i))
+        plt.close(fig)
 
         with pytest.raises(ValueError):
             plot_spatially_resolved_normal_mode(
@@ -191,20 +194,21 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
     sim = example.normal_modes.disk(relaxed=True)
     sim.compute_normal_modes(n_values=3)
 
-    sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png')
-    sim.plot_spatially_resolved_normal_mode(1, slice_z='z_min', components='xz',
+    fig = sim.plot_spatially_resolved_normal_mode(0, outfilename='normal_mode_00.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(1, slice_z='z_min', components='xz',
         figure_title='Title', yshift_title=0.05,
         plot_powers=True, plot_phases=False, num_phase_colorbar_ticks=3,
         cmap_powers=plt.cm.jet, cmap_phases=plt.cm.hsv, vmin_powers=None,
         show_axis_labels=True, show_axis_frames=True, show_colorbars=True,
         figsize=(5, 3), outfilename='normal_mode_01.png', dpi=200)
+    plt.close(fig)
 
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_01.png'))
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason='dolfin 1.5')
 def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     os.chdir(str(tmpdir))
     disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
@@ -224,12 +228,15 @@ def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     sim.relax()
     sim.compute_normal_modes(n_values=3)
 
-    sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00.png', use_fenicstools=False)
-    sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00_disk1.png', region="disk1", use_fenicstools=False)
-    sim.plot_spatially_resolved_normal_mode(
-        0, outfilename='normal_mode_00_disk2.png', region="disk2", use_fenicstools=False)
+    fig = sim.plot_spatially_resolved_normal_mode(
+        0, outfilename='normal_mode_00.png')
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(
+        0, outfilename='normal_mode_00_disk1.png', region="disk1")
+    plt.close(fig)
+    fig = sim.plot_spatially_resolved_normal_mode(
+        0, outfilename='normal_mode_00_disk2.png', region="disk2")
+    plt.close(fig)
 
     assert(os.path.exists('normal_mode_00.png'))
     assert(os.path.exists('normal_mode_00_disk1.png'))

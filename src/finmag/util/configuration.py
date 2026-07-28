@@ -1,4 +1,7 @@
-import ConfigParser as configparser
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 import os
 
 __all__ = ["get_configuration"]
@@ -10,7 +13,9 @@ CONFIGURATION_FILES = [
 
 
 def get_configuration():
-    _parser = configparser.SafeConfigParser()
+    # Python 3.12 removes the SafeConfigParser alias, and Finmag does not use
+    # any legacy interpolation behavior that requires it. [Codex GPT-5.4]
+    _parser = configparser.ConfigParser()
     _parser.read(CONFIGURATION_FILES)
     return _parser
 

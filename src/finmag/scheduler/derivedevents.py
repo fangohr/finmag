@@ -76,8 +76,9 @@ class RepeatingTimeEvent(SingleTimeEvent):
         super(RepeatingTimeEvent, self).__init__(init_time or 0.,
                                                  trigger_on_stop, callback)
 
-        # Negative intervals make us sad.
-        if interval < 0:
+        # Negative intervals make us sad. Callable intervals are evaluated
+        # later by trigger(), so only validate numeric intervals here.
+        if not hasattr(interval, "__call__") and interval < 0:
             raise ValueError("{}.init: Proposed interval is negative; events "
                              "cannot occur in the past without the use of "
                              "reset.".format(self.__class__.__name__))

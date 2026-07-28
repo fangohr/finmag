@@ -19,6 +19,7 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_three_dimensional_problem():
+    # This remains a live Magpar cross-check because the BoxMesh discretisation is stable across environments. [Codex GPT-5.4]
     results = three_dimensional_problem()
     assert np.nanmax(results["rel_diff"]) < REL_TOLERANCE
 
@@ -52,7 +53,7 @@ def three_dimensional_problem():
     ## rather than using our previously saved results.
     # nodes, magpar_exch = magpar.compute_exch_magpar(m, A=C, Ms=Ms)
 
-    print magpar_exch
+    print(magpar_exch)
 
     # Because magpar have changed the order of the nodes!!!
 
@@ -77,7 +78,7 @@ if __name__ == '__main__':
 
     res = three_dimensional_problem()
 
-    print "finmag:", res["exch"]
-    print "magpar:", res["magpar_exch"]
-    print "rel_diff:", res["rel_diff"]
-    print "max rel_diff", np.max(res["rel_diff"])
+    print("finmag:", res["exch"])
+    print("magpar:", res["magpar_exch"])
+    print("rel_diff:", res["rel_diff"])
+    print("max rel_diff", np.max(res["rel_diff"]))

@@ -99,7 +99,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     ys = np.ndarray([meshN])
     zs = np.ndarray([meshN])
 
-    for zI in xrange(meshN):
+    for zI in range(meshN):
         xs[zI] = sim.m[zI]
         ys[zI] = sim.m[zI + meshN]
         zs[zI] = sim.m[zI + 2 * meshN]
@@ -117,7 +117,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     # Also check to see if all values have the same sign (so that they point in
     # the same direction.
     if ferromagnetic is True:
-        for zI in xrange(len(xs) - 1):
+        for zI in range(len(xs) - 1):
             if xs[zI] * xs[zI + 1] < 0:
                 ferromagnetic = False
                 break
@@ -131,7 +131,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
                 break
 
         if ferromagnetic is True:
-            for zI in xrange(len(ys) - 1):
+            for zI in range(len(ys) - 1):
                 if ys[zI] * ys[zI + 1] < 0:
                     ferromagnetic = False
                     break
@@ -144,7 +144,7 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
                     break
 
             if ferromagnetic is True:
-                for zI in xrange(len(zs) - 1):
+                for zI in range(len(zs) - 1):
                     if zs[zI] * zs[zI + 1] < 0:
                         ferromagnetic = False
                         break
@@ -159,16 +159,16 @@ def Find_Helix_Length(D, A, Ms, H=[0, 0, 0], K1=0, KAxis=[0, 0, 0],
     finmag.logger.info("Calculating the fourier transform " +
                        "of the magnetisation data.")
     ffty = np.fft.fft(ys)
-    ffty = abs(ffty[:len(ffty) / 2])
+    ffty = abs(ffty[:len(ffty) // 2])
 
     fftz = np.fft.fft(zs)
-    fftz = abs(fftz[:len(fftz) / 2])
+    fftz = abs(fftz[:len(fftz) // 2])
 
     # Calculate the discrete wavenumber domain fs of the magnetisation data
     # after it is transformed.
     fPrecision = 1 / (meshX * unitLength)
     fs = np.linspace(0, meshN, meshN) * fPrecision
-    fs = fs[:len(fs) / 2]
+    fs = fs[:len(fs) // 2]
 
     # Find the wavenumber peak that corresponds to the helix length.
     ly = fs[list(ffty).index(max(ffty))]

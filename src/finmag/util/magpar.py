@@ -16,7 +16,7 @@ def gen_magpar_conf(base_name, init_m, Ms=8.6e5, A=13e-12, K1=0,
     """
     Generate magpar configuration files (in the current directory) which
     can be used to run magpar and compute the various micromagnetic fields
-    for a simulation with the given parameters.
+    for a simulation with the given parameters. [Codex GPT-5.4]
 
     If base_name='foo', the following files are created in the current directory:
 
@@ -96,7 +96,7 @@ def read_inp(file_name):
     if os.path.isfile(file_name):
         f = open(file_name, 'r')
     elif os.path.isfile(file_name + '.gz'):
-        f = gzip.open(file_name + '.gz', 'r')
+        f = gzip.open(file_name + '.gz', 'rt')
     else:
         raise OSError("No such file: %s" % file_name)
 
@@ -133,7 +133,7 @@ def save_inp_of_inital_m(m, file_name):
     f.write(head)
     xyz = mesh.coordinates()
     if np.max(xyz) < 0.5:
-        print "Converting unit_length from m to nm."
+        print("Converting unit_length from m to nm.")
         xyz = xyz * 1e9
     for i in range(len(xyz)):
         f.write("%d %0.15e %0.15e %0.15e\n"

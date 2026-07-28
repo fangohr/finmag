@@ -1,16 +1,24 @@
 import pytest
 import numpy as np
 import dolfin as df
+import shutil
 from finmag.field import Field
-from finmag.util.meshes import sphere
+from finmag.util.meshes import sphere, netgen_is_usable
 from finmag.energies import Demag
 
 TOL = 1e-2
 solvers = ['FK']
 
 
+def _require_netgen():
+    if not netgen_is_usable():
+        # Sphere-based demag references depend on Netgen mesh generation in this environment. [Codex GPT-5.4]
+        pytest.skip("netgen is not usable for sphere-based demag tests")
+
+
 @pytest.fixture(scope="module")
 def uniformly_magnetised_sphere():
+    _require_netgen()
     Ms = 1
     mesh = sphere(r=1, maxh=0.25)
     S3 = df.VectorFunctionSpace(mesh, "CG", 1)
@@ -30,8 +38,8 @@ def test_H_demag(uniformly_magnetised_sphere):
     for solution in uniformly_magnetised_sphere:
         H = solution.H.reshape((3, -1)).mean(1)
         H_expected = np.array([-1.0 / 3.0, 0, 0])
-        print "{}: Hx = {}, should be {}.".format(
-            solution.__class__.__name__, H, H_expected)
+        print("{}: Hx = {}, should be {}.".format(
+            solution.__class__.__name__, H, H_expected))
         diff = np.max(np.abs(H - H_expected))
         assert diff < TOL
 

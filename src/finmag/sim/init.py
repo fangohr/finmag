@@ -15,14 +15,20 @@ _FINMAG_LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL
 }
 
+def _dolfin_log_level(name):
+    if hasattr(df, name):
+        return getattr(df, name)
+    # FEniCS 2019 moved these constants under df.LogLevel while the 2017 stack still exposes module-level names. [Codex GPT-5.4]
+    return getattr(df.LogLevel, name)
+
 _DOLFIN_LOG_LEVELS = {
-    "DEBUG": df.DEBUG,
-    "INFO": df.INFO,
-    "WARN": df.WARNING,
-    "WARNING": df.WARNING,
-    "ERROR": df.ERROR,
-    "CRITICAL": df.CRITICAL,
-    "PROGRESS": df.PROGRESS,
+    "DEBUG": _dolfin_log_level("DEBUG"),
+    "INFO": _dolfin_log_level("INFO"),
+    "WARN": _dolfin_log_level("WARNING"),
+    "WARNING": _dolfin_log_level("WARNING"),
+    "ERROR": _dolfin_log_level("ERROR"),
+    "CRITICAL": _dolfin_log_level("CRITICAL"),
+    "PROGRESS": _dolfin_log_level("PROGRESS"),
 }
 
 # If no finmag configuration file exists, create a default one in ~/.finmagrc.
@@ -92,7 +98,7 @@ for f in logfiles:
     # RotatingFileHandler appears to leave it untouched. Thus we
     # should explicitly test for any existing logfiles here which are
     # too large and to a manual rollover if this is the case!
-    maxBytes = configuration.get_config_option("logging", "maxBytes", 51200)
-    backupCount = configuration.get_config_option("logging", "backupCount", 1)
+    maxBytes = int(configuration.get_config_option("logging", "maxBytes", 51200))
+    backupCount = int(configuration.get_config_option("logging", "backupCount", 1))
     start_logging_to_file(f, formatter=formatter, mode='a', level=finmag_level,
                           rotating=True, maxBytes=maxBytes, backupCount=backupCount)

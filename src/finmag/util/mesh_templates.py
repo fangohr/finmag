@@ -41,6 +41,8 @@ class MeshTemplate(object):
 
     def hash(self, maxh=None, **kwargs):
         csg = self.csg_string(maxh=maxh, **kwargs)
+        if isinstance(csg, str):
+            csg = csg.encode("utf-8")
         return hashlib.md5(csg).hexdigest()
 
     def generic_filename(self, maxh, **kwargs):

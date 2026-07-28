@@ -3,7 +3,6 @@ import finmag
 import logging
 import shutil
 import os
-import types
 import dolfin as df
 import numpy as np
 from datetime import datetime, timedelta
@@ -102,12 +101,27 @@ def load_restart_data(filename_or_simulation):
     use canonical name."""
     if isinstance(filename_or_simulation, finmag.Simulation):
         filename = canonical_restart_filename(filename_or_simulation)
-    elif isinstance(filename_or_simulation, types.StringTypes):
+    elif isinstance(filename_or_simulation, str):
         filename = filename_or_simulation
     else:
         ValueError("Can only deal with simulations or filenames, "
                    "but not '%s'" % type(filename_or_simulation))
-    data = np.load(filename)
+    data = np.load(filename, allow_pickle=True, encoding='bytes')
+
+    def _decode_legacy_bytes(value):
+        if isinstance(value, bytes):
+            # Restart metadata may come from Python 2-era archives, so decode it recursively on load. [Codex GPT-5.4]
+            return value.decode("utf-8")
+        if isinstance(value, dict):
+            return {
+                _decode_legacy_bytes(key): _decode_legacy_bytes(val)
+                for key, val in value.items()
+            }
+        if isinstance(value, list):
+            return [_decode_legacy_bytes(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(_decode_legacy_bytes(item) for item in value)
+        return value
 
     # strip of arrays where we do not want them:
     data2 = {}
@@ -115,7 +129,7 @@ def load_restart_data(filename_or_simulation):
         # the 'tolist()' command returns dictionary and datetime objects
         # when wrapped up in numpy array
         if key in ['stats', 'datetime', 'simtime', 'simname', 'driver']:
-            data2[key] = data[key].tolist()
+            data2[key] = _decode_legacy_bytes(data[key].tolist())
         else:
             data2[key] = data[key]
     return data2
@@ -317,7 +331,7 @@ def skyrmion_number_density_function(self):
     # space.
     nodalSkx = df.dot(integrand, df.TestFunction(S1)) * df.dx
     nodalVolumeS1 = nodal_volume(S1, self.unit_length)
-    skDensity = df.assemble(nodalSkx).array() * self.unit_length\
+    skDensity = df.assemble(nodalSkx).get_local() * self.unit_length\
         ** self.S3.mesh().topology().dim() / nodalVolumeS1
 
     # Build the skyrmion number density dolfin function from the skDensity

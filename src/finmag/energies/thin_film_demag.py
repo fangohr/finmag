@@ -35,7 +35,7 @@ class ThinFilmDemag(object):
             self.S1 = df.FunctionSpace(m.mesh(), "Lagrange", 1)
             self.volumes = df.assemble(df.TestFunction(self.S1) * df.dx)
             Ms = df.assemble(
-                Ms.f * df.TestFunction(self.S1) * df.dx).array() / self.volumes.array()
+                Ms.f * df.TestFunction(self.S1) * df.dx).get_local() / self.volumes.get_local()  # DOLFIN 2019 assembled vectors expose coefficients via get_local(). [Codex GPT-5.4]
             self.strength = Ms
 
     def compute_field(self):

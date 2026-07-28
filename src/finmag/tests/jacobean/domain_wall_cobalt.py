@@ -34,7 +34,7 @@ def setup_domain_wall_cobalt(node_count=NODE_COUNT, A=A_Co, Ms=Ms_Co, K1=K1_Co, 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     llg = LLG(S1, S3)
     llg.set_m(np.array([initial_m(xi, node_count)
-                        for xi in xrange(node_count)]).T.reshape((-1,)))
+                        for xi in range(node_count)]).T.reshape((-1,)))
 
     exchange = Exchange(A)
     llg.effective_field.add(exchange)
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     xs, m = compute_domain_wall_cobalt()
-    print "max difference between simulation and reference: ", domain_wall_error(m, NODE_COUNT)
+    print("max difference between simulation and reference: ", domain_wall_error(m, NODE_COUNT))
     xs = np.linspace(0, LENGTH, NODE_COUNT)
     plt.plot(xs, np.transpose([m[2], [reference_mz(x) for x in xs]]), label=[
              'Simulation', 'Reference'])

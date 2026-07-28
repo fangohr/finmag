@@ -1,12 +1,120 @@
-import instant
+import math
+
+import numpy as np
+
+try:
+    import instant
+except ImportError:
+    instant = None
+
+
+D_EPS = 1e-14
+PETSC_PI = math.pi
+
+
+def _point_from_plane(x, v1, v2, v3):
+    """Return the signed plane-distance numerator used by the Magpar formula. [Codex GPT-5.4]"""
+    ab = v1 - v2
+    ac = v1 - v3
+    normal = np.cross(ab, ac)
+    return np.dot(x, normal) - np.dot(v1, normal)
+
+
+def _belement_magpar_numpy(bvert, facv1, facv2, facv3, matele):
+    """Pure-NumPy fallback for Magpar's boundary-element contribution. [Codex GPT-5.4]"""
+    rr = np.asarray(bvert, dtype=float)
+    rho1 = np.asarray(facv1, dtype=float).copy()
+    rho2 = np.asarray(facv2, dtype=float).copy()
+    rho3 = np.asarray(facv3, dtype=float).copy()
+    matele[:] = 0.0
+
+    xi1 = rho2 - rho1
+    xi2 = rho3 - rho2
+    xi3 = rho1 - rho3
+    zeta = np.cross(xi1, xi2)
+    zetal = np.linalg.norm(zeta)
+    if zetal <= D_EPS:
+        return
+    area = 0.5 * zetal
+    zeta /= zetal
+
+    s1 = np.linalg.norm(xi1)
+    s2 = np.linalg.norm(xi2)
+    s3 = np.linalg.norm(xi3)
+    if min(s1, s2, s3) <= D_EPS:
+        return
+    xi1 /= s1
+    xi2 /= s2
+    xi3 /= s3
+
+    eta1 = np.cross(zeta, xi1)
+    eta2 = np.cross(zeta, xi2)
+    eta3 = np.cross(zeta, xi3)
+
+    gamma1 = np.array([np.dot(xi2, xi1), np.dot(xi2, xi2), np.dot(xi2, xi3)])
+    gamma2 = np.array([np.dot(xi3, xi1), np.dot(xi2, xi3), np.dot(xi3, xi3)])
+    gamma3 = np.array([np.dot(xi1, xi1), np.dot(xi2, xi1), np.dot(xi3, xi1)])
+
+    if abs(_point_from_plane(rr, rho1, rho2, rho3)) < D_EPS:
+        return
+
+    rho1 -= rr
+    rho2 -= rr
+    rho3 -= rr
+    zetal = np.dot(zeta, rho1)
+    if abs(zetal) <= D_EPS:
+        return
+
+    rho1l = np.linalg.norm(rho1)
+    rho2l = np.linalg.norm(rho2)
+    rho3l = np.linalg.norm(rho3)
+
+    t_nom = (
+        rho1l * rho2l * rho3l
+        + rho1l * np.dot(rho2, rho3)
+        + rho2l * np.dot(rho3, rho1)
+        + rho3l * np.dot(rho1, rho2)
+    )
+    t_denom = math.sqrt(
+        2.0
+        * (rho2l * rho3l + np.dot(rho2, rho3))
+        * (rho3l * rho1l + np.dot(rho3, rho1))
+        * (rho1l * rho2l + np.dot(rho1, rho2))
+    )
+    if t_denom <= D_EPS:
+        return
+
+    # Keep the old Magpar clipping semantics; this fallback is a replacement
+    # for the removed instant JIT helper, not a new formula. [Codex GPT-5.4]
+    ratio = t_nom / t_denom
+    if ratio < -1.0:
+        omega = (1.0 if zetal >= 0.0 else -1.0) * 2.0 * PETSC_PI
+    elif ratio > 1.0:
+        return
+    else:
+        omega = (1.0 if zetal >= 0.0 else -1.0) * 2.0 * math.acos(ratio)
+
+    p = np.array([
+        math.log((rho1l + rho2l + s1) / (rho1l + rho2l - s1)),
+        math.log((rho2l + rho3l + s2) / (rho2l + rho3l - s2)),
+        math.log((rho3l + rho1l + s3) / (rho3l + rho1l - s3)),
+    ])
+
+    matele[0] = (np.dot(eta2, rho2) * omega - zetal * np.dot(gamma1, p)) * s2 / (8.0 * PETSC_PI * area)
+    matele[1] = (np.dot(eta3, rho3) * omega - zetal * np.dot(gamma2, p)) * s3 / (8.0 * PETSC_PI * area)
+    matele[2] = (np.dot(eta1, rho1) * omega - zetal * np.dot(gamma3, p)) * s1 / (8.0 * PETSC_PI * area)
 
 
 def return_bele_magpar():
+    """Return the instant-backed Magpar helper when available, else NumPy. [Codex GPT-5.4]"""
+    if instant is None:
+        return _belement_magpar_numpy
+
     args = [["n_bvert", "bvert", "in"], ["facv1_n", "facv1", "in"], [
         "facv2_n", "facv2", "in"], ["facv3_n", "facv3", "in"], ["matele_n", "matele"]]
     return instant.inline_with_numpy(C_CODE, arrays=args)
 
-C_CODE = """
+C_CODE = r"""
 int Bele(int n_bvert,double* bvert,int facv1_n, double* facv1, int facv2_n, double* facv2,
       int facv3_n,double* facv3,int matele_n,double* matele);
 

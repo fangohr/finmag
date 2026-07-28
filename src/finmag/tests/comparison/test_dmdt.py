@@ -1,5 +1,7 @@
 import dolfin as df
 import numpy as np
+import shutil
+import pytest
 from finmag.physics.llg import LLG
 from finmag.energies import Zeeman
 from finmag.util.oommf import mesh, oommf_dmdt
@@ -18,12 +20,16 @@ S1 = df.FunctionSpace(msh, "Lagrange", 1)
 S3 = df.VectorFunctionSpace(msh, "Lagrange", 1)
 
 
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_dmdt_computation_with_oommf():
+    # Keep this external regression optional at collection time, not silently dead. [Codex GPT-5.4]
     # set up finmag
     llg = LLG(S1, S3)
     llg.set_m((-3, -2, 1))
 
-    Ms = llg.Ms.vector().array()[0]
+    # DOLFIN 2019 uses PETSc vectors without the legacy array() accessor.
+    # Keep this cross-code comparison active on the pixi path. [Codex GPT-5.4]
+    Ms = llg.Ms.vector().get_local()[0]
     Ms = float(Ms)
     h = Ms / 2
     H_app = (h / np.sqrt(3), h / np.sqrt(3), h / np.sqrt(3))
@@ -58,11 +64,9 @@ def test_dmdt_computation_with_oommf():
     difference = np.abs(dmdt_finmag_like_oommf.flat - dmdt_oommf)
     relative_difference = difference / np.max(np.sqrt(dmdt_oommf[0] ** 2 +
                                                       dmdt_oommf[1] ** 2 + dmdt_oommf[2] ** 2))
-    print "comparison with oommf, dm/dt, relative difference:"
-    print stats(relative_difference)
+    print("comparison with oommf, dm/dt, relative difference:")
+    print(stats(relative_difference))
     assert np.max(relative_difference) < TOLERANCE
-
-    return difference, relative_difference
 
 if __name__ == '__main__':
     test_dmdt_computation_with_oommf()

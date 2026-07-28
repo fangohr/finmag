@@ -15,16 +15,57 @@
 #include "numpy_malloc.h"
 #include "util/python_threading.h"
 
+#include <cvode/cvode.h>
+#include <cvode/cvode_bandpre.h>
+#include <cvode/cvode_diag.h>
+
+#if SUNDIALS_VERSION_MAJOR >= 7
+#include <cvode/cvode_ls.h>
+#include <sunlinsol/sunlinsol_band.h>
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunlinsol/sunlinsol_lapackband.h>
+#include <sunlinsol/sunlinsol_lapackdense.h>
+#include <sunlinsol/sunlinsol_spbcgs.h>
+#include <sunlinsol/sunlinsol_spgmr.h>
+#include <sunlinsol/sunlinsol_sptfqmr.h>
+#include <sunmatrix/sunmatrix_band.h>
+#include <sunmatrix/sunmatrix_dense.h>
+#include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
+#include <sunnonlinsol/sunnonlinsol_newton.h>
+
+// The legacy wrapper API is phrased in pre-SUNDIALS-6 names, so keep local
+// aliases here while we port the active code paths one layer at a time.
+// [Codex GPT-5.4]
+#define realtype sunrealtype
+#define booleantype sunbooleantype
+#ifndef CV_FUNCTIONAL
+#define CV_FUNCTIONAL 1
+#endif
+#ifndef CV_NEWTON
+#define CV_NEWTON 2
+#endif
+#ifndef PREC_NONE
+#define PREC_NONE SUN_PREC_NONE
+#endif
+#ifndef PREC_LEFT
+#define PREC_LEFT SUN_PREC_LEFT
+#endif
+#ifndef PREC_RIGHT
+#define PREC_RIGHT SUN_PREC_RIGHT
+#endif
+#ifndef PREC_BOTH
+#define PREC_BOTH SUN_PREC_BOTH
+#endif
+#else
 #include <cvode/cvode_direct.h>
 #include <cvode/cvode_dense.h>
 #include <cvode/cvode_lapack.h>
 #include <cvode/cvode_band.h>
-#include <cvode/cvode_bandpre.h>
-#include <cvode/cvode_diag.h>
 #include <cvode/cvode_impl.h>
 #include <cvode/cvode_spgmr.h>
 #include <cvode/cvode_spbcgs.h>
 #include <cvode/cvode_sptfqmr.h>
+#endif
 
 #define CHECK_SUNDIALS_RET(fn, args) do { \
         error_handler _eh; \
@@ -53,14 +94,21 @@ constexpr bool const_str_equal(const char (&a)[6], const char (&b)[6]) {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3] && a[4] == b[4] && a[5] == b[5];
 }
 constexpr int get_sundials_version_number(const char (&v)[6]) {
-    return const_str_equal(v, "2.5.0") ? 250 : const_str_equal(v, "2.4.0") ? 240 : -1;
+    return const_str_equal(v, "2.7.0") ? 270 :
+           const_str_equal(v, "2.5.0") ? 250 :
+           const_str_equal(v, "2.4.0") ? 240 : -1;
 }
 
+#if SUNDIALS_VERSION_MAJOR >= 7
+typedef long sundials_long_param_t;
+#else
 // Next, define the parameter type 'sundials_long_param_t' based on the version number
 template<int Version> struct sundials_traits;
 template<> struct sundials_traits<240> { typedef int param_t; };
 template<> struct sundials_traits<250> { typedef long param_t; };
+template<> struct sundials_traits<270> { typedef long param_t; };
 typedef typename sundials_traits<get_sundials_version_number(SUNDIALS_PACKAGE_VERSION)>::param_t sundials_long_param_t;
+#endif
 
 namespace finmag { namespace sundials {
 
@@ -107,7 +155,15 @@ namespace finmag { namespace sundials {
        -- Max, 12.2.2014
      */
     std::string get_sundials_version() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+      char version[128];
+      if (SUNDIALSGetVersion(version, sizeof(version)) == SUN_SUCCESS) {
+          return std::string(version);
+      }
+      return "unknown";
+#else
       return SUNDIALS_PACKAGE_VERSION;
+#endif
     }
 
     class cvode {
@@ -115,10 +171,14 @@ namespace finmag { namespace sundials {
         cvode(int lmm, int iter);
 
         ~cvode() {
+            destroy_linear_solver();
+            destroy_nonlinear_solver();
+            destroy_state_vector_template();
             if (cvode_mem) {
                 CVodeFree(&cvode_mem);
                 cvode_mem = 0;
             }
+            destroy_suncontext();
         }
 
         // initialisation functions
@@ -128,19 +188,35 @@ namespace finmag { namespace sundials {
 
         // linear solver specification functions
         void set_linear_solver_dense(int n) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(SUNDenseMatrix(n, n, sunctx_), SUNLinSol_Dense(require_state_vector(), linear_matrix_, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVDense, (cvode_mem, n));
+#endif
         }
 
         void set_linear_solver_lapack_dense(int n) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(SUNDenseMatrix(n, n, sunctx_), SUNLinSol_LapackDense(require_state_vector(), linear_matrix_, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVLapackDense, (cvode_mem, n));
+#endif
         }
 
         void set_linear_solver_band(int n, int mupper, int mlower) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(SUNBandMatrix(n, mupper, mlower, sunctx_), SUNLinSol_Band(require_state_vector(), linear_matrix_, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVBand, (cvode_mem, n, mupper, mlower));
+#endif
         }
 
         void set_linear_solver_lapack_band(int n, int mupper, int mlower) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(SUNBandMatrix(n, mupper, mlower, sunctx_), SUNLinSol_LapackBand(require_state_vector(), linear_matrix_, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVLapackBand, (cvode_mem, n, mupper, mlower));
+#endif
         }
 
         void set_linear_solver_diag() {
@@ -148,15 +224,27 @@ namespace finmag { namespace sundials {
         }
 
         void set_linear_solver_sp_gmr(int pretype, int maxl) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(NULL, SUNLinSol_SPGMR(require_state_vector(), pretype, maxl, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVSpgmr, (cvode_mem, pretype, maxl));
+#endif
         }
 
         void set_linear_solver_sp_bcg(int pretype, int maxl) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(NULL, SUNLinSol_SPBCGS(require_state_vector(), pretype, maxl, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVSpbcg, (cvode_mem, pretype, maxl));
+#endif
         }
 
         void set_linear_solver_sp_tfqmr(int pretype, int maxl) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            set_linear_solver_matrix_and_solver(NULL, SUNLinSol_SPTFQMR(require_state_vector(), pretype, maxl, sunctx_));
+#else
             CHECK_SUNDIALS_RET(CVSptfqmr, (cvode_mem, pretype, maxl));
+#endif
         }
 
         // solver functions
@@ -212,19 +300,31 @@ namespace finmag { namespace sundials {
         }
 
         void set_iter_type(int iter_type) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            iter_type_ = iter_type;
+#else
             CHECK_SUNDIALS_RET(CVodeSetIterType, (cvode_mem, iter_type));
+#endif
         }
 
         // direct linear solver optional input functions
 
         void set_dls_jac_fn(const bp::object &djac) {
             dls_jac_fn = djac;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeSetJacFn, (cvode_mem, &dls_dense_jac_callback));
+#else
             CHECK_SUNDIALS_RET(CVDlsSetDenseJacFn, (cvode_mem, &dls_dense_jac_callback));
+#endif
         }
 
         void set_dls_band_jac_fn(const bp::object &bjac) {
             dls_band_jac_fn = bjac;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeSetJacFn, (cvode_mem, &dls_band_jac_callback));
+#else
             CHECK_SUNDIALS_RET(CVDlsSetBandJacFn, (cvode_mem, &dls_band_jac_callback));
+#endif
         }
 
         // iterative linear solver optional input functions
@@ -232,28 +332,58 @@ namespace finmag { namespace sundials {
         void set_spils_preconditioner(const bp::object &psetup, const bp::object &psolve) {
             spils_prec_setup_fn = psetup;
             spils_prec_solve_fn = psolve;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeSetPreconditioner, (cvode_mem, &spils_prec_setup_callback, &spils_prec_solve_callback));
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetPreconditioner, (cvode_mem, &spils_prec_setup_callback, &spils_prec_solve_callback));
+#endif
         }
 
         void set_spils_jac_times_vec_fn(const bp::object &jtimes) {
             spils_jac_times_vec_fn = jtimes;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeSetJacTimes, (cvode_mem, NULL, &spils_jac_times_vec_callback));
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetJacTimesVecFn, (cvode_mem, &spils_jac_times_vec_callback));
+#endif
         }
 
         void set_spils_prec_type(int pretype) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (!linear_solver_) throw std::runtime_error("set_spils_prec_type requires an iterative linear solver");
+            int retcode = SUNLinSol_SPGMRSetPrecType(linear_solver_, pretype);
+            error_handler().check_error(retcode, "SUNLinSol_SPGMRSetPrecType");
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetPrecType, (cvode_mem, pretype));
+#endif
         }
 
         void set_spils_gs_type(int gstype) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (!linear_solver_) throw std::runtime_error("set_spils_gs_type requires an iterative linear solver");
+            int retcode = SUNLinSol_SPGMRSetGSType(linear_solver_, gstype);
+            error_handler().check_error(retcode, "SUNLinSol_SPGMRSetGSType");
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetGSType, (cvode_mem, gstype));
+#endif
         }
 
         void set_spils_eps_lin(double eplifac) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeSetEpsLin, (cvode_mem, eplifac));
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetEpsLin, (cvode_mem, eplifac));
+#endif
         }
 
         void set_spils_maxl(int maxl) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (!linear_solver_) throw std::runtime_error("set_spils_maxl requires an iterative linear solver");
+            int retcode = SUNLinSol_SPGMRSetMaxRestarts(linear_solver_, maxl);
+            error_handler().check_error(retcode, "SUNLinSol_SPGMRSetMaxRestarts");
+#else
             CHECK_SUNDIALS_RET(CVSpilsSetMaxl, (cvode_mem, maxl));
+#endif
         }
 
         // TODO: add rootfinding and interpolation methods
@@ -390,25 +520,41 @@ namespace finmag { namespace sundials {
 
         bp::tuple get_dls_work_space() {
             long lenrwLS = 0, leniwLS= 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetLinWorkSpace, (cvode_mem, &lenrwLS, &leniwLS));
+#else
             CHECK_SUNDIALS_RET(CVDlsGetWorkSpace, (cvode_mem, &lenrwLS, &leniwLS));
+#endif
             return bp::make_tuple(lenrwLS, leniwLS);
         }
 
         long get_dls_num_jac_evals() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumJacEvals, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVDlsGetNumJacEvals, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_dls_num_rhs_evals() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumLinRhsEvals, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVDlsGetNumRhsEvals, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         int get_dls_last_flag() {
             sundials_long_param_t retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetLastLinFlag, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVDlsGetLastFlag, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
@@ -440,49 +586,81 @@ namespace finmag { namespace sundials {
 
         bp::tuple get_spils_work_space() {
             long lenrwLS = 0, leniwLS= 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetLinWorkSpace, (cvode_mem, &lenrwLS, &leniwLS));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetWorkSpace, (cvode_mem, &lenrwLS, &leniwLS));
+#endif
             return bp::make_tuple(lenrwLS, leniwLS);
         }
 
         long get_spils_num_lin_iters() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumLinIters, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumLinIters, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_spils_num_conv_fails() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumLinConvFails, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumConvFails, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_spils_num_prec_evals() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumPrecEvals, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumPrecEvals, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_spils_num_prec_solves() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumPrecSolves, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumPrecSolves, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_spils_num_jtimes_evals() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumJtimesEvals, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumJtimesEvals, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         long get_spils_num_rhs_evals() {
             long retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetNumLinRhsEvals, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetNumRhsEvals, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
         int get_spils_last_flag() {
             sundials_long_param_t retval = 0;
+#if SUNDIALS_VERSION_MAJOR >= 7
+            CHECK_SUNDIALS_RET(CVodeGetLastLinFlag, (cvode_mem, &retval));
+#else
             CHECK_SUNDIALS_RET(CVSpilsGetLastFlag, (cvode_mem, &retval));
+#endif
             return retval;
         }
 
@@ -542,8 +720,14 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with dense Jacobian)
-        static int dls_dense_jac_callback(sundials_long_param_t n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
+        static int dls_dense_jac_callback(
+#if SUNDIALS_VERSION_MAJOR >= 7
+                    realtype t, N_Vector y, N_Vector fy, SUNMatrix Jac,
                     void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+#else
+                    sundials_long_param_t n, realtype t, N_Vector y, N_Vector fy, DlsMat Jac,
+                    void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+#endif
 //            cvode *cv = (cvode*) user_data;
 
             // call back into Python code
@@ -555,8 +739,14 @@ namespace finmag { namespace sundials {
         }
 
         // Jacobian information (direct method with banded Jacobian)
-        static int dls_band_jac_callback(sundials_long_param_t n, sundials_long_param_t mupper, sundials_long_param_t mlower, realtype t, N_Vector y, N_Vector fy,
+        static int dls_band_jac_callback(
+#if SUNDIALS_VERSION_MAJOR >= 7
+                    realtype t, N_Vector y, N_Vector fy, SUNMatrix Jac,
+                    void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+#else
+                    sundials_long_param_t n, sundials_long_param_t mupper, sundials_long_param_t mlower, realtype t, N_Vector y, N_Vector fy,
                     DlsMat Jac, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+#endif
             ASSERT(false && "dls_band_jac_callback not implemented");
             abort();
         }
@@ -589,7 +779,11 @@ namespace finmag { namespace sundials {
 
         // Preconditioning (linear system solution)
         static int spils_prec_solve_callback(realtype t, N_Vector y, N_Vector fy, N_Vector r, N_Vector z,
-                    realtype gamma, realtype delta, int lr, void *user_data, N_Vector tmp) {
+                    realtype gamma, realtype delta, int lr, void *user_data
+#if SUNDIALS_VERSION_MAJOR < 7
+                    , N_Vector tmp
+#endif
+                    ) {
             cvode *cv = (cvode*) user_data;
 
             // call back into Python code
@@ -598,21 +792,39 @@ namespace finmag { namespace sundials {
             bp::object fy_arr = nvector_to_array_object(fy);
             bp::object r_arr = nvector_to_array_object(r);
             bp::object z_arr = nvector_to_array_object(z);
+#if SUNDIALS_VERSION_MAJOR >= 7
+            N_Vector tmp = N_VClone(z);
             bp::object tmp_arr = nvector_to_array_object(tmp);
+#else
+            bp::object tmp_arr = nvector_to_array_object(tmp);
+#endif
 
             // TODO: catch exceptions here - see comment in rhs_callback
-            return bp::call<int>(cv->spils_prec_solve_fn.ptr(), t, y_arr, fy_arr, r_arr, z_arr, gamma, delta, lr, tmp_arr);
+            int result = bp::call<int>(cv->spils_prec_solve_fn.ptr(), t, y_arr, fy_arr, r_arr, z_arr, gamma, delta, lr, tmp_arr);
+#if SUNDIALS_VERSION_MAJOR >= 7
+            N_VDestroy(tmp);
+#endif
+            return result;
         }
 
         // Preconditioning (Jacobian data)
         static int spils_prec_setup_callback(realtype t, N_Vector y, N_Vector fy, booleantype jok, booleantype *jcurPtr,
-                    realtype gamma, void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+                    realtype gamma, void *user_data
+#if SUNDIALS_VERSION_MAJOR < 7
+                    , N_Vector tmp1, N_Vector tmp2, N_Vector tmp3
+#endif
+                    ) {
             cvode *cv = (cvode*) user_data;
 
             // call back into Python code
             finmag::util::scoped_gil_ensure gil_ensure;
             bp::object y_arr = nvector_to_array_object(y);
             bp::object fy_arr = nvector_to_array_object(fy);
+#if SUNDIALS_VERSION_MAJOR >= 7
+            N_Vector tmp1 = N_VClone(y);
+            N_Vector tmp2 = N_VClone(y);
+            N_Vector tmp3 = N_VClone(y);
+#endif
             bp::object tmp1_arr = nvector_to_array_object(tmp1);
             bp::object tmp2_arr = nvector_to_array_object(tmp2);
             bp::object tmp3_arr = nvector_to_array_object(tmp3);
@@ -621,10 +833,95 @@ namespace finmag { namespace sundials {
             bp::object res = bp::call<bp::tuple>(cv->spils_prec_setup_fn.ptr(), t, y_arr, fy_arr, jok, gamma, tmp1_arr, tmp2_arr, tmp3_arr);
             int flag = bp::extract<int>(res[0]);
             *jcurPtr = bp::extract<bool>(res[1]);
+#if SUNDIALS_VERSION_MAJOR >= 7
+            N_VDestroy(tmp1);
+            N_VDestroy(tmp2);
+            N_VDestroy(tmp3);
+#endif
             return flag;
         }
 
+        N_Vector require_state_vector() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (!state_vector_template_) throw std::runtime_error("The CVODE state vector template is not initialised");
+            return state_vector_template_;
+#else
+            throw std::runtime_error("require_state_vector is only used on the SUNDIALS 7 path");
+#endif
+        }
+
+        void destroy_linear_solver() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (linear_solver_) {
+                SUNLinSolFree(linear_solver_);
+                linear_solver_ = NULL;
+            }
+            if (linear_matrix_) {
+                SUNMatDestroy(linear_matrix_);
+                linear_matrix_ = NULL;
+            }
+#endif
+        }
+
+        void destroy_nonlinear_solver() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (nonlinear_solver_) {
+                SUNNonlinSolFree(nonlinear_solver_);
+                nonlinear_solver_ = NULL;
+            }
+#endif
+        }
+
+        void destroy_state_vector_template() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (state_vector_template_) {
+                N_VDestroy(state_vector_template_);
+                state_vector_template_ = NULL;
+            }
+#endif
+        }
+
+        void destroy_suncontext() {
+#if SUNDIALS_VERSION_MAJOR >= 7
+            if (sunctx_) {
+                SUNContext_Free(&sunctx_);
+                sunctx_ = NULL;
+            }
+#endif
+        }
+
+#if SUNDIALS_VERSION_MAJOR >= 7
+        void set_linear_solver_matrix_and_solver(SUNMatrix matrix, SUNLinearSolver solver) {
+            destroy_linear_solver();
+            linear_matrix_ = matrix;
+            linear_solver_ = solver;
+            if (!linear_solver_) throw std::runtime_error("Failed to create SUNDIALS linear solver");
+            CHECK_SUNDIALS_RET(CVodeSetLinearSolver, (cvode_mem, linear_solver_, linear_matrix_));
+        }
+
+        void ensure_nonlinear_solver() {
+            destroy_nonlinear_solver();
+            if (iter_type_ == CV_FUNCTIONAL) {
+                nonlinear_solver_ = SUNNonlinSol_FixedPoint(require_state_vector(), 0, sunctx_);
+            } else {
+                nonlinear_solver_ = SUNNonlinSol_Newton(require_state_vector(), sunctx_);
+            }
+            if (!nonlinear_solver_) throw std::runtime_error("Failed to create SUNDIALS nonlinear solver");
+            CHECK_SUNDIALS_RET(CVodeSetNonlinearSolver, (cvode_mem, nonlinear_solver_));
+        }
+#else
+        void set_linear_solver_matrix_and_solver(void*, void*) {}
+#endif
+
         void* cvode_mem;
+#if SUNDIALS_VERSION_MAJOR >= 7
+        SUNContext sunctx_;
+        SUNLinearSolver linear_solver_;
+        SUNMatrix linear_matrix_;
+        SUNNonlinearSolver nonlinear_solver_;
+        N_Vector state_vector_template_;
+        int iter_type_;
+#endif
 
         bp::object rhs_fn, dls_jac_fn, dls_band_jac_fn, spils_prec_setup_fn, spils_prec_solve_fn, spils_jac_times_vec_fn;
     };
@@ -650,14 +947,25 @@ namespace finmag { namespace sundials {
         error_handler::set_error(buf);
     }
 
-    cvode::cvode(int lmm, int iter): cvode_mem(0) {
+    cvode::cvode(int lmm, int iter): cvode_mem(0)
+#if SUNDIALS_VERSION_MAJOR >= 7
+        , sunctx_(NULL), linear_solver_(NULL), linear_matrix_(NULL), nonlinear_solver_(NULL), state_vector_template_(NULL), iter_type_(iter)
+#endif
+    {
         if (lmm != CV_ADAMS && lmm != CV_BDF)
             throw std::invalid_argument("sundials_cvode: lmm parameter must be either CV_ADAMS or CV_BDF");
         if (iter != CV_NEWTON && iter != CV_FUNCTIONAL)
             throw std::invalid_argument("sundials_cvode: iter parameter must be either CV_NEWTON or CV_FUNCTIONAL");
+#if SUNDIALS_VERSION_MAJOR >= 7
+        if (SUNContext_Create(0, &sunctx_) != SUN_SUCCESS || !sunctx_)
+            throw std::runtime_error("SUNContext_Create failed");
+        cvode_mem = CVodeCreate(lmm, sunctx_);
+#else
         cvode_mem = CVodeCreate(lmm, iter);
+#endif
         if (!cvode_mem) throw std::runtime_error("CVodeCreate returned NULL");
 
+#if SUNDIALS_VERSION_MAJOR < 7
         // Fix bug in sundials: CVodeCreate does not set all of the vector fields to NULL
         // So when CVodeFree is called without a previous CVodeInit, a segfault occurs. Fail...
         CVodeMem cm = (CVodeMem) cvode_mem;
@@ -668,6 +976,7 @@ namespace finmag { namespace sundials {
         cm->cv_acor = 0;
         cm->cv_tempv = 0;
         cm->cv_ftemp = 0;
+#endif
 
         // save this object as CVODE user data
         int flag = CVodeSetUserData(cvode_mem, this);
@@ -679,6 +988,7 @@ namespace finmag { namespace sundials {
         }
 
         // set up the error handler
+#if SUNDIALS_VERSION_MAJOR < 7
         flag = CVodeSetErrHandlerFn(cvode_mem, error_callback, this);
         if (flag != CV_SUCCESS) {
             // this shouldn't happen, either...
@@ -686,6 +996,7 @@ namespace finmag { namespace sundials {
             cvode_mem = 0;
             throw std::runtime_error("CVodeSetErrHandlerFn failed");
         }
+#endif
     }
 
     void error_handler::set_error(const char *msg) {
@@ -703,7 +1014,18 @@ namespace finmag { namespace sundials {
     void cvode::init(const bp::object &f, double t0, const np_array<double>& y0) {
         rhs_fn = f;
         array_nvector y0_nvec(y0);
+#if SUNDIALS_VERSION_MAJOR >= 7
+        destroy_nonlinear_solver();
+        destroy_state_vector_template();
+        state_vector_template_ = N_VClone(y0_nvec.ptr());
+        if (!state_vector_template_) throw std::runtime_error("N_VClone failed while initialising the CVODE state template");
+#endif
         CHECK_SUNDIALS_RET(CVodeInit, (cvode_mem, rhs_callback, t0, y0_nvec.ptr()));
+#if SUNDIALS_VERSION_MAJOR >= 7
+        // SUNDIALS 7 no longer takes CV_FUNCTIONAL/CV_NEWTON at CVodeCreate
+        // time, so reattach the matching nonlinear solver explicitly here. [Codex GPT-5.4]
+        ensure_nonlinear_solver();
+#endif
         // TODO: add a flag that cvode has been initialised; raise exceptions if flag unset
     }
 
@@ -754,12 +1076,21 @@ namespace finmag { namespace sundials {
 
     std::string cvode::get_spils_return_flag_name(int flag) {
         switch (flag) {
+#if SUNDIALS_VERSION_MAJOR >= 7
+        case CVLS_SUCCESS: return "CVLS_SUCCESS";
+        case CVLS_MEM_NULL: return "CVLS_MEM_NULL";
+        case CVLS_LMEM_NULL: return "CVLS_LMEM_NULL";
+        case CVLS_ILL_INPUT: return "CVLS_ILL_INPUT";
+        case CVLS_MEM_FAIL: return "CVLS_MEM_FAIL";
+        case CVLS_PMEM_NULL: return "CVLS_PMEM_NULL";
+#else
         case CVSPILS_SUCCESS: return "CVSPILS_SUCCESS";
         case CVSPILS_MEM_NULL: return "CVSPILS_MEM_NULL";
         case CVSPILS_LMEM_NULL: return "CVSPILS_LMEM_NULL";
         case CVSPILS_ILL_INPUT: return "CVSPILS_ILL_INPUT";
         case CVSPILS_MEM_FAIL: return "CVSPILS_MEM_FAIL";
         case CVSPILS_PMEM_NULL: return "CVSPILS_PMEM_NULL";
+#endif
         default: return boost::lexical_cast<std::string>(flag);
         }
     }
@@ -858,8 +1189,8 @@ namespace finmag { namespace sundials {
         scope().attr("CV_ADAMS") = int(CV_ADAMS);
         scope().attr("CV_BDF") = int(CV_BDF);
 
-        scope().attr("CV_FUNCTIONAL") = int(CV_FUNCTIONAL);
-        scope().attr("CV_NEWTON") = int(CV_NEWTON);
+        scope().attr("CV_FUNCTIONAL") = int(1);
+        scope().attr("CV_NEWTON") = int(2);
 
         scope().attr("CV_NORMAL") = int(CV_NORMAL);
         scope().attr("CV_ONE_STEP") = int(CV_ONE_STEP);
@@ -869,8 +1200,18 @@ namespace finmag { namespace sundials {
         scope().attr("PREC_RIGHT") = int(PREC_RIGHT);
         scope().attr("PREC_BOTH") = int(PREC_BOTH);
 
-        scope().attr("MODIFIED_GS") = int(MODIFIED_GS);
-        scope().attr("CLASSICAL_GS") = int(CLASSICAL_GS);
+        scope().attr("MODIFIED_GS") =
+#if SUNDIALS_VERSION_MAJOR >= 7
+            int(SUN_MODIFIED_GS);
+#else
+            int(MODIFIED_GS);
+#endif
+        scope().attr("CLASSICAL_GS") =
+#if SUNDIALS_VERSION_MAJOR >= 7
+            int(SUN_CLASSICAL_GS);
+#else
+            int(CLASSICAL_GS);
+#endif
     }
 }}
 

@@ -1,6 +1,9 @@
 from __future__ import division
-import StringIO
-import sh
+import io
+try:
+    import sh
+except ImportError:
+    sh = None
 import numpy as np
 import textwrap
 import logging
@@ -10,8 +13,11 @@ import sys
 import os
 import re
 import dolfin as df
-import IPython.core.display
-from visualization_impl import _axes, find_unused_X_display
+try:
+    import IPython.core.display
+except ImportError:
+    IPython = None
+from .visualization_impl import _axes, find_unused_X_display
 from math import sin, cos, pi
 
 logger = logging.getLogger("finmag")
@@ -22,7 +28,7 @@ logger = logging.getLogger("finmag")
 # control whether this is done by the user (e.g. implicitly by
 # importing dolfin), the workaround for now is to save a mini-script
 # with the Paraview rendering command to a temporary file and execute
-# that in a separate process.
+# that in a separate process. [Codex GPT-5.4]
 #
 # The actual plotting code is contained in the string 'plotting_code'
 # below. Note that some of the code in there is intentionally
@@ -36,7 +42,7 @@ logger = logging.getLogger("finmag")
 # incompatibilities mentioned above. To avoid code duplication and
 # errors due to not keeping the two in sync, we only define it in
 # visualization_impl.py and import it here.
-from visualization_impl import find_valid_X_display
+from .visualization_impl import find_valid_X_display
 from finmag.util import configuration
 
 
@@ -75,9 +81,9 @@ def flight_path_rotation(start_pos, axis=[0, 0, 1], angle=360):
     # plane.
     r2 = np.cross(axis_normalised, r1)
 
-    print "P0: {}".format(P0)
-    print "r1: {}".format(r1)
-    print "r2: {}".format(r2)
+    print("P0: {}".format(P0))
+    print("r1: {}".format(r1))
+    print("r2: {}".format(r2))
 
     def flight_path(t):
         pos = P0 + cos(t * angle_rad) * r1 + sin(t * angle_rad) * r2
@@ -172,7 +178,7 @@ def render_paraview_scene(
               from visualization_impl import render_paraview_scene, find_valid_X_display
               import os
 
-              if not os.environ.has_key('DISPLAY'):
+              if 'DISPLAY' not in os.environ:
                   display = find_valid_X_display()
                   if display is None:
                       raise RuntimeError("Could not render Paraview scene as no valid X display was found.")
@@ -229,11 +235,13 @@ def render_paraview_scene(
             if use_display == 'None':
                 use_display = None
         if use_display is None and use_xpra.lower() != "false":
+            if sh is None:
+                raise RuntimeError("The optional 'sh' package is required for Paraview rendering.")
             # Try to create a display using 'xpra'
             try:
                 # Check whether 'xpra' is installed
                 sh.xpra('--version')
-                xpra_display = find_unused_X_display(xrange(10, 100))
+                xpra_display = find_unused_X_display(range(10, 100))
                 sh.xpra('start', ':{}'.format(xpra_display))
                 use_display = xpra_display
                 logger.debug(
@@ -249,8 +257,10 @@ def render_paraview_scene(
         if use_display is not None:
             os.environ['DISPLAY'] = ':{}'.format(use_display)
 
-        script_stdout = StringIO.StringIO()
-        script_stderr = StringIO.StringIO()
+        script_stdout = io.StringIO()
+        script_stderr = io.StringIO()
+        if sh is None:
+            raise RuntimeError("The optional 'sh' package is required for Paraview rendering.")
         sh.python('render_scene.py', _out=script_stdout, _err=script_stderr)
     except sh.ErrorReturnCode as ex:
         logger.error("Could not render Paraview scene. Stdout and stderr of the script: "
@@ -277,7 +287,10 @@ def render_paraview_scene(
             os.environ.pop('DISPLAY', None)
 
     try:
-        image = IPython.core.display.Image(filename=outfile)
+        if IPython is None:
+            image = None
+        else:
+            image = IPython.core.display.Image(filename=outfile)
     except IOError:
         # Something went wrong (missing X display?); let's not choke but return
         # None instead.
@@ -322,5 +335,5 @@ def plot_dolfin_function(f, **kwargs):
 # Set the docstring of the wrapped function so that it reflects the
 # actual implementation.
 
-from visualization_impl import render_paraview_scene as render_scene_impl
+from .visualization_impl import render_paraview_scene as render_scene_impl
 render_paraview_scene.__doc__ = render_scene_impl.__doc__

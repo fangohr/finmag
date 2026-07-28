@@ -18,6 +18,7 @@ def extract_magnetisation_dynamics():
 
 
 def test_against_nmag():
+    # Keep this as a cross-code validation anchor inside the Python 3 core gate. [Codex GPT-5.4]
     run_simulation()
 
     if not os.path.isfile(FINMAG_DYNAMICS_FILE):
@@ -44,7 +45,7 @@ def plot_dynamics():
         ax.plot(nmag[:, 0], nmag[:, 2], "bx", label="nmag m_y")
         ax.plot(nmag[:, 0], nmag[:, 3], "gx", label="nmag m_z")
     else:
-        print "Missing nmag file."
+        print("Missing nmag file.")
 
     if os.path.isfile(OOMMF_FILE):
         oommf = np.loadtxt(OOMMF_FILE)
@@ -53,7 +54,7 @@ def plot_dynamics():
         ax.plot(oommf[:, 0], oommf[:, 2], "b+", label="oommf m_y")
         ax.plot(oommf[:, 0], oommf[:, 3], "g+", label="oommf m_z")
     else:
-        print "Missing oommf file."
+        print("Missing oommf file.")
 
     finmag = np.loadtxt(FINMAG_DYNAMICS_FILE)
     finmag[:, 0] *= 1e9

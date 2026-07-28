@@ -4,11 +4,30 @@ import dolfin as df
 import scipy.linalg
 import scipy.sparse.linalg
 import logging
+from time import perf_counter
 from finmag.util.helpers import format_time
-from helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
-from types import NoneType
+from .helpers import sort_eigensolutions, as_petsc_matrix, is_hermitian, compute_relative_error, as_dense_array
 
 logger = logging.getLogger("finmag")
+
+_timer_start = None
+
+
+def _tic():
+    # DOLFIN 2019 dropped df.tic()/df.toc(); keep the solver logging stable
+    # across the legacy and pixi stacks with a tiny local fallback.
+    # [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 class AbstractEigensolver(object):
@@ -80,10 +99,10 @@ class AbstractEigensolver(object):
             raise ValueError("Eigenproblem matrices are non-Hermitian but solver "
                              "assumes Hermitian matrices. Aborting.")
         logger.info("Solving eigenproblem. This may take a while...")
-        df.tic()
+        _tic()
         omegas, ws = self._solve_eigenproblem(A, M=M, num=num, tol=tol)
         logger.info("Computing the eigenvalues and eigenvectors "
-                    "took {}".format(format_time(df.toc())))
+                    "took {}".format(format_time(_toc())))
 
         # XXX TODO: Remove this conversion to numpy.arrays once we
         #           have better support for different kinds of
@@ -95,7 +114,7 @@ class AbstractEigensolver(object):
                 "Converting sparse matrix A to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if A is big!.")
             A = as_dense_array(A)
-        if not isinstance(M, (np.ndarray, NoneType)):
+        if M is not None and not isinstance(M, np.ndarray):
             logger.warning(
                 "Converting sparse matrix M to dense array to check whether it is "
                 "Hermitian. This might consume a lot of memory if M is big!.")
@@ -126,8 +145,8 @@ class ScipyDenseSolver(AbstractEigensolver):
         # Return only the number of requested eigenvalues
         N, _ = A.shape
         num = num or self.num
-        num = min(num, N - 1)
-        if num != None:
+        if num is not None:
+            num = min(num, N - 1)
             omega = omega[:num]
             w = w[:num]
 
@@ -348,7 +367,10 @@ class SLEPcEigensolver(AbstractEigensolver):
 
         E = SLEPc.EPS()
         E.create()
-        E.setOperators(A, M)
+        if M is None:
+            E.setOperators(A)
+        else:
+            E.setOperators(A, M)
         E.setProblemType(getattr(SLEPc.EPS.ProblemType, problem_type))
         E.setType(getattr(SLEPc.EPS.Type, method_type))
         E.setWhichEigenpairs(getattr(SLEPc.EPS.Which, which))
@@ -360,7 +382,7 @@ class SLEPcEigensolver(AbstractEigensolver):
             st.setShift(0.0)
         return E
 
-    def _solve_eigenproblem(self, A, M=None, num=None, problem_type=None, method_type=None, which=None, tol=1e-12, maxit=100, swap_matrices=None, shift_invert=None):
+    def _solve_eigenproblem(self, A, M=None, num=None, problem_type=None, method_type=None, which=None, tol=None, maxit=None, swap_matrices=None, shift_invert=None):
         num = num or self.num
         problem_type = problem_type or self.problem_type
         method_type = method_type or self.method_type
@@ -378,6 +400,15 @@ class SLEPcEigensolver(AbstractEigensolver):
             swap_matrices = self.swap_matrices
         if shift_invert == None:
             shift_invert = self.shift_invert
+
+        # SLEPc's Hermitian solvers are significantly more robust on Hermitian
+        # inputs than the generic non-Hermitian path. Promote the declared
+        # problem type when the matrices prove the stronger structure. [Codex GPT-5.4]
+        if problem_type in ['NHEP', 'GNHEP']:
+            matrices_are_hermitian = is_hermitian(A) and (
+                M is None or is_hermitian(M))
+            if matrices_are_hermitian:
+                problem_type = 'HEP' if M is None else 'GHEP'
 
         A_petsc = as_petsc_matrix(A)
         M_petsc = None if (M == None) else as_petsc_matrix(M)
@@ -424,8 +455,6 @@ class SLEPcEigensolver(AbstractEigensolver):
                 print("----------------- ------------------")
             for i in range(nconv):
                 k = E.getEigenpair(i, vr, vi)
-                print(type(E))
-                print(dir(E))
                 error = E.computeError(i, etype=1)
                 if self.verbose:
                     if k.imag != 0.0:
@@ -437,7 +466,7 @@ class SLEPcEigensolver(AbstractEigensolver):
 
         omegas = []
         ws = []
-        for i in xrange(nconv):
+        for i in range(nconv):
             omega = E.getEigenpair(i, vr, vi)
             vr_arr = vr.getValues(range(size))
             vi_arr = vi.getValues(range(size))

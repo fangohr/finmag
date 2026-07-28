@@ -144,4 +144,4 @@ if __name__ == "__main__":
     c = counter()
     while c.next():
         pass
-    print c
+    print(c)

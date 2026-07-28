@@ -1,4 +1,5 @@
 import os
+import shutil
 import dolfin as df
 import numpy as np
 from finmag.field import Field
@@ -31,8 +32,10 @@ def start_table():
     table += ".. table:: Comparison of the exchange field computed with finmag against nmag and oommf\n\n"
     table += table_delim
     table += table_entries.format(
-        # hack because sphinx light table syntax does not allow an empty header
-        ":math:`\,`",
+        # Hack because sphinx light table syntax does not allow an empty
+        # header; escape the literal backslash so Python does not warn while
+        # the generated reST table stays unchanged. [Codex gpt-5.5 high]
+        ":math:`\\,`",
         ":math:`\\subn{\\Delta}{test}`",
         ":math:`\\subn{\\Delta}{max}`",
         ":math:`\\bar{\\Delta}`",
@@ -43,7 +46,7 @@ def start_table():
 
 def setup_finmag():
     mesh = df.IntervalMesh(xn, x0, x1)
-    coords = np.array(zip(* mesh.coordinates()))
+    coords = np.array(list(zip(* mesh.coordinates())))
 
     S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1, dim=3)
     m = Field(S3)
@@ -62,10 +65,10 @@ def teardown_finmag(finmag):
     with open(os.path.join(MODULE_DIR, "table.rst"), "w") as f:
         f.write(finmag["table"])
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def finmag(request):
-    finmag = request.cached_setup(setup=setup_finmag,
-                                  teardown=teardown_finmag, scope="module")
+    finmag = setup_finmag()
+    request.addfinalizer(lambda: teardown_finmag(finmag))
     return finmag
 
 
@@ -77,7 +80,9 @@ def test_against_nmag(finmag):
     assert m_ref.shape == m_computed.shape
 
     H_ref = np.genfromtxt(os.path.join(MODULE_DIR, "H_exc_nmag.txt"))
-    H_computed = vectors(finmag["H"].vector().array())
+    # DOLFIN 2019 PETSc vectors no longer expose array(); keep this
+    # checked-in Nmag reference-data comparison active without nsim. [Codex GPT-5.4]
+    H_computed = vectors(finmag["H"].vector().get_local())
     assert H_ref.shape == H_computed.shape
 
     assert m_ref.shape == H_ref.shape
@@ -90,12 +95,14 @@ def test_against_nmag(finmag):
     finmag["table"] += table_entries.format(
         "nmag", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with nmag, m x H, relative difference:"
-    print stats(rel_diff)
+    print("comparison with nmag, m x H, relative difference:")
+    print(stats(rel_diff))
     assert np.max(rel_diff) < REL_TOLERANCE
 
 
+@pytest.mark.skipif(shutil.which("oommf") is None, reason="oommf executable is not available")
 def test_against_oommf(finmag):
+    # The Python 3 core gate should run this automatically once the image carries OOMMF. [Codex GPT-5.4]
     REL_TOLERANCE = 8e-2
 
     from finmag.util.oommf import mesh, oommf_uniform_exchange
@@ -114,8 +121,8 @@ def test_against_oommf(finmag):
     finmag["table"] += table_entries.format(
         "oommf", s(REL_TOLERANCE, 0), s(np.max(rel_diff)), s(np.mean(rel_diff)), s(np.std(rel_diff)))
 
-    print "comparison with oommf, H, relative_difference:"
-    print stats(rel_diff)
+    print("comparison with oommf, H, relative_difference:")
+    print(stats(rel_diff))
     assert np.max(rel_diff) < REL_TOLERANCE
 
 if __name__ == '__main__':

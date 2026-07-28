@@ -22,13 +22,19 @@ src/**.so
 *.inp
 *.krn
 *.txt
+*.gch
+*-restart.npz
+#*#
 *.geo
+native/src/treecode_bem/treecode_bem_lib.c
 test-reports
 native/**.bin
+native/.add_version
 _build
 doc/modules/
 doc/ipython_notebooks_dest
 tmp
+.codex
 .pydevproject
 .project
 src/finmag/physics/build
@@ -36,3 +42,4 @@ install/docker/finmag/docker-image.done
 install/docker/finmag/finmag-compiled.done
 install/docker/finmag/finmag-repo-clone.done
 .ipynb_checkpoints/
+/src/finmag/tests/cython/test_cython.c

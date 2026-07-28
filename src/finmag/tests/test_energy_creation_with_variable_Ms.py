@@ -7,10 +7,11 @@ from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman, Demag
 Ms = 8.6e5
 mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(10e-9, 10e-9, 10e-9), 5, 5, 5)
 
-@pytest.fixture
-def fixt(request):
-    fixt = request.cached_setup(setup=setup, scope="module")
-    return fixt
+@pytest.fixture(scope="module")
+def fixt():
+    # request.cached_setup disappeared in modern pytest, so use an explicit
+    # module-scoped fixture for the shared mesh/field setup instead. [Codex GPT-5.4]
+    return setup()
 
 
 def setup():

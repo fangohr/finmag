@@ -1,7 +1,7 @@
 import pytest
-from timeevent import TimeEvent
-from derivedevents import SingleTimeEvent, RepeatingTimeEvent
-from scheduler import Scheduler
+from finmag.scheduler.timeevent import TimeEvent
+from finmag.scheduler.derivedevents import SingleTimeEvent, RepeatingTimeEvent
+from finmag.scheduler.scheduler import Scheduler
 
 
 class Counter(object):

@@ -2,6 +2,7 @@ import os
 import re
 import types
 import logging
+from time import perf_counter
 import numpy as np
 import dolfin as df
 from finmag.sim.sim import Simulation, sim_with
@@ -14,9 +15,26 @@ from finmag.normal_modes.deprecated.normal_modes_deprecated import \
     compute_eigenproblem_matrix, compute_generalised_eigenproblem_matrices, \
     export_normal_mode_animation, plot_spatially_resolved_normal_mode, \
     compute_tangential_space_basis, mf_mult
-from past.builtins import basestring
 
 log = logging.getLogger(name="finmag")
+
+_timer_start = None
+
+
+def _tic():
+    # DOLFIN 2019 no longer exposes df.tic()/df.toc(); keep the old call sites
+    # intact by emulating that tiny timing API locally. [Codex GPT-5.4]
+    global _timer_start
+    if hasattr(df, "tic"):
+        df.tic()
+    else:
+        _timer_start = perf_counter()
+
+
+def _toc():
+    if hasattr(df, "toc"):
+        return df.toc()
+    return perf_counter() - _timer_start
 
 
 class NormalModeSimulation(Simulation):
@@ -153,10 +171,10 @@ class NormalModeSimulation(Simulation):
 
     def _compute_spectrum(self, use_averaged_m=False, mesh_region=None, **kwargs):
         try:
-            if self.psd_freqs[mesh_region, use_averaged_m] != None and \
-                    self.psd_mx[mesh_region, use_averaged_m] != None and \
-                    self.psd_my[mesh_region, use_averaged_m] != None and \
-                    self.psd_mz[mesh_region, use_averaged_m] != None:
+            if self.psd_freqs[mesh_region, use_averaged_m] is not None and \
+                    self.psd_mx[mesh_region, use_averaged_m] is not None and \
+                    self.psd_my[mesh_region, use_averaged_m] is not None and \
+                    self.psd_mz[mesh_region, use_averaged_m] is not None:
                 # We can use the cached results since the spectrum was computed
                 # before.
                 return
@@ -194,7 +212,7 @@ class NormalModeSimulation(Simulation):
             else:
                 # Create a wildcard pattern so that we can read the files using
                 # 'glob'.
-                filename = re.sub('\.npy$', '*.npy', self.m_snapshots_filename)
+                filename = re.sub(r'\.npy$', '*.npy', self.m_snapshots_filename)
         log.debug(
             "Computing normal mode spectrum from file(s) '{}'.".format(filename))
 
@@ -227,16 +245,14 @@ class NormalModeSimulation(Simulation):
             # spectrum to the corresponding mesh vertices.
             submesh = self.get_submesh(mesh_region)
             try:
-                # Legacy syntax (for dolfin <= 1.2 or so).
-                # TODO: This should be removed in the future once dolfin 1.3 is
-                # released!
-                parent_vertex_indices = submesh.data().mesh_function(
-                    'parent_vertex_indices').array()
-            except RuntimeError:
                 # This is the correct syntax now, see:
                 # http://fenicsproject.org/qa/185/entity-mapping-between-a-submesh-and-the-parent-mesh
                 parent_vertex_indices = submesh.data().array(
                     'parent_vertex_indices', 0)
+            except (RuntimeError, AttributeError):
+                # Legacy syntax kept for older DOLFIN variants.
+                parent_vertex_indices = submesh.data().mesh_function(
+                    'parent_vertex_indices').array()
             kwargs['restrict_to_vertices'] = parent_vertex_indices
 
         psd_freqs, psd_mx, psd_my, psd_mz = \
@@ -323,7 +339,7 @@ class NormalModeSimulation(Simulation):
 
         if f_approx is None:
             raise TypeError("Argument 'f_approx' must not be None.")
-        if not isinstance(component, types.StringTypes):
+        if not isinstance(component, str):
             raise TypeError("Argument 'component' must be of type string.")
 
         self._compute_spectrum(
@@ -435,7 +451,7 @@ class NormalModeSimulation(Simulation):
             peak_freq = self.psd_freqs[None, use_averaged_m][peak_idx]
 
         if outfilename is None:
-            if directory is '':
+            if directory == '':
                 raise ValueError(
                     "Please specify at least one of the arguments 'outfilename' or 'directory'")
             outfilename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(
@@ -456,25 +472,25 @@ class NormalModeSimulation(Simulation):
                                        force_recompute_matrices=False, check_hermitian=False,
                                        differentiate_H_numerically=True, use_real_matrix=True):
         if use_generalized:
-            if (self.A == None or self.M == None) or force_recompute_matrices:
-                df.tic()
+            if (self.A is None or self.M is None) or force_recompute_matrices:
+                _tic()
                 self.A, self.M, _, _ = compute_generalised_eigenproblem_matrices(
                     self, frequency_unit=1e9, filename_mat_A=filename_mat_A, filename_mat_M=filename_mat_M,
                     check_hermitian=check_hermitian, differentiate_H_numerically=differentiate_H_numerically)
                 log.debug("Assembling the eigenproblem matrices took {}".format(
-                    helpers.format_time(df.toc())))
+                    helpers.format_time(_toc())))
             else:
                 log.debug(
                     'Re-using previously computed eigenproblem matrices.')
         else:
-            if self.D == None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
-                df.tic()
+            if self.D is None or (self.use_real_matrix != use_real_matrix) or force_recompute_matrices:
+                _tic()
                 self.D = compute_eigenproblem_matrix(
                     self, frequency_unit=1e9, differentiate_H_numerically=differentiate_H_numerically,
                     dtype=(float if use_real_matrix else complex))
                 self.use_real_matrix = use_real_matrix
                 log.debug("Assembling the eigenproblem matrix took {}".format(
-                    helpers.format_time(df.toc())))
+                    helpers.format_time(_toc())))
             else:
                 log.debug('Re-using previously computed eigenproblem matrix.')
 
@@ -612,7 +628,7 @@ class NormalModeSimulation(Simulation):
               of `w`, but this has changed in the interface!
 
         """
-        if isinstance(solver, basestring):
+        if isinstance(solver, str):
             try:
                 solver = self.predefined_eigensolvers[solver]
             except KeyError:
@@ -767,7 +783,7 @@ class NormalModeSimulation(Simulation):
             self.compute_normal_modes(max(k, 10))
 
         if filename is None:
-            if directory is '':
+            if directory == '':
                 raise ValueError(
                     "Please specify at least one of the arguments 'filename' or 'directory'")
             filename = 'normal_mode_{}__{:.3f}_GHz.pvd'.format(
