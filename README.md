@@ -191,7 +191,9 @@ deterministic micromagnetic simulator, **not** yet full parity with original
 demag, varying materials, regions, local spin-transfer torque, SciPy and native
 CVODE integration, scheduling, restart and common output. The aggregate test
 gate being green means this **ported subset** passes; it does not mean every
-original Finmag feature is available.
+original Finmag feature is available — and the full-resolution example lane
+stands at **15 of 17 entries green**, with `std_prob_4` and `magnetic_grain`
+deferred by owner decision to a re-run after the performance work below.
 
 Major work still outstanding includes thermal SLLG/LLB, normal modes and
 FFT/PSD, legacy NEB, general MPI time stepping, `Simulation(pbc=)`, nonlocal

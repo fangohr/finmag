@@ -73,7 +73,7 @@ bit-identity with original `master` where a register row records a deviation.
 | `sim.m` (get/set), `sim.set_m(value, normalise=True)` | flat **component-blocked** `xxx` array in coordinate order — never raw backend dofs |
 | `sim.m_field`, `sim.m_average`, `sim.dmdt`, `sim.dmdt_max` | |
 | `sim.Ms`, `sim.alpha`, `sim.gamma`, `sim.do_precession`, `sim.pins` | scalars, callables, arrays and `Field`s; callable pin masks work (raw mesh units) |
-| `sim.probe_field(name, point)`, `sim.probe_field_along_line(...)` | mesh coordinates; `region=` deferred by name. **Points exactly on an outer mesh face mis-resolve (D22)** — probe interior points |
+| `sim.probe_field(field_type, pts, region=None)`, `sim.probe_field_along_line(field_type, pt_start, pt_end, N=100, region=None)` | `pts` is array-like with last axis of dimension 3, in **mesh coordinates** (`unit_length` is not applied); returns a `numpy.ma.masked_array`. `region=` is deferred by name. **Points exactly on an outer mesh face mis-resolve (D22)** — probe interior points |
 | `sim.skyrmion_number()`, `sim.skyrmion_number_density_function()` | |
 
 `m_init` accepting a **NaN** silently (instead of `ValueError`) is a known
@@ -463,9 +463,13 @@ INVENTORY: passed=754 failed=5 errors=55 skipped=25 xfailed=47
 Every failure/error falls into one of six expected classes (never-ported master
 files; retained bucket-B ancestors; carried `not_ported` tests; the D26
 functionality gap; one order-dependent full-suite-only artefact; and collection
-arithmetic) — classified file-by-file in
-[`superpowers/HANDOVER.md`](superpowers/HANDOVER.md), which also itemises the
-delta against the previous run.
+arithmetic). The six classes, with the retained-ancestor files named inline, are
+in [`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) under "Canonical test
+paths, the legacy oracle lane, and the inventory lane"; that section also
+itemises the delta against the previous run. The exhaustive per-file
+classification lives in the Task-7 verification report under
+`.superpowers/sdd/2026-07-27-canonical-test-paths/` (session-local, not part of
+a clean clone).
 
 ---
 

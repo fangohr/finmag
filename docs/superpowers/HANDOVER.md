@@ -1,6 +1,6 @@
 # Finmag DOLFINx Port — Handover
 
-**Reconciled:** 2026-07-23
+**Reconciled:** 2026-07-28 (SR1 declaration)
 
 **Active branch:** `dolfinx-parity`
 
@@ -749,8 +749,17 @@ into a commit.
 
 ### Next work
 
+> **This is a priority ORDER, not a standing execution order. Nothing below
+> starts without an explicit owner instruction.** The performance plan is
+> **planned, NOT started**: the repository owner issued a stop-order on
+> 2026-07-28, and the untracked `dev/benchmarks/` directory holds the
+> **stopped PERF-T1 partial** from before that stop. Do not resume it, do not
+> treat item 2's "after (1)" as authorisation to begin item 1, and do not
+> commit `dev/benchmarks/`. Work begins only when the owner says so.
+
 1. **[`plans/2026-07-28-post-sr1-performance.md`](plans/2026-07-28-post-sr1-performance.md)
-   — register P1.** Root-caused 2026-07-28: the port re-does `fem.form(...)` +
+   — register P1.** *(Planned; awaiting an explicit owner start.)* Root-caused
+   2026-07-28: the port re-does `fem.form(...)` +
    `assemble_vector(...)` on **every** field evaluation
    (`src/finmag/energies/energy_base.py:183`), where legacy's default
    `box-matrix-petsc` assembled the field operator once at setup and merely
@@ -759,7 +768,9 @@ into a commit.
    it. The plan rebuilds assemble-once as an **internal** optimisation of
    `box-assemble` semantics — it does **not** resurrect the removed legacy
    `method=` names (**D32** stands).
-2. **Complete the FULL lane to 17/17**, immediately after (1): re-run
+2. **Complete the FULL lane to 17/17.** This is *sequenced* after (1) — it is
+   the reason the two entries were deferred — but it inherits (1)'s gate: it
+   starts when the owner starts (1) and (1) lands, not automatically. Re-run
    `std_prob_4/test_std_prob_4.py` and `magnetic_grain/suess_2001.py` at full
    workload, confirm the 8.089 ps muMAG anchor end-to-end on a completed 2 ns
    trajectory, recalibrate the wrapper timeouts **downward** to the new
