@@ -522,13 +522,19 @@ agreed to every recommendation in the
 [SR1 batch-ratification decision sheet](specs/2026-07-27-sr1-ratification-sheet.md)
 (13 ACCEPT, 16 DEFER, 14 DROP, 1 RESTORE, 0 FIX NOW across 44 rows: the 42
 open `acceptance-register.md` rows plus two new rows, **D32** and **P1**).
-`acceptance-register.md` is now **pending-free**: every row
-(D1-D32, M1-M16, P1) carries a finalised `ratified 2026-07-28 (owner, batch):
-...` disposition; see the sheet for full per-row rationale and evidence. The
-M5 witnesses (`src/finmag/tests/zhangli/stt_nonlocal_test.py`,
+`acceptance-register.md` is now **pending-free**: every previously-open row
+in the range D1-D32, M1-M16, P1 bears the 2026-07-28 batch stamp (rows with
+earlier final ratifications -- e.g. D2-D4, D8, D10-D12, D14-D15, D18, D30 --
+are unchanged) -- 44 rows carry a finalised `ratified 2026-07-28 (owner,
+batch): ...` disposition; see the sheet for full per-row rationale and
+evidence. The M5 witnesses (`src/finmag/tests/zhangli/stt_nonlocal_test.py`,
 `zhang_li_test.py`) were restored verbatim from `b5015c5a` per the sheet's
-RESTORE recommendation -- they fail at collection (module-scope `import
-dolfin`) in the non-gating inventory lane, and no pixi gate references them.
+RESTORE recommendation -- they fail at collection (Python-2 source; also
+module-scope `import dolfin`): pytest's AST-rewrite import raises
+`SyntaxError: Missing parentheses in call to 'print'` on the Python-2 `print`
+statements before either file's `import dolfin` is ever reached, so a future
+porter should read this as "needs a real port", not just a missing legacy
+`dolfin` install. No pixi gate references them.
 
 **S6 documentation obligations this ratification creates** (for whoever picks
 up S6/T8):
@@ -551,6 +557,14 @@ up S6/T8):
   deferral tests (`src/finmag/tests/test_energies.py:291`/`:298`,
   `src/finmag/tests/test_dmi.py:167`/`:172`) must be reworded from "deferred"
   to "removed".
+- **capability-status.md disposition sweep** -- `capability-status.md`
+  currently still cites three now-superseded dispositions: line ~92 (`D20`
+  "pending owner decision"), line ~96 (`D21` "pending owner decision"), and
+  line ~129 (`D17` "disposition pending owner decision"). All three rows are
+  now finalised in `acceptance-register.md` (D20 ACCEPT, D21 ACCEPT, D17
+  DEFER past SR1) as of this 2026-07-28 batch ratification; T8 must sweep
+  `capability-status.md` for every disposition reference and update it to
+  match, so the two documents do not contradict each other.
 
 None of these five items are SR1-blocking (all ratified ACCEPT/DROP, not FIX
 NOW), but they are unclosed documentation/wording debt this ratification
