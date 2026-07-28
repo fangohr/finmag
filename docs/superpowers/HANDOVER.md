@@ -305,6 +305,30 @@ Post-move `dev/bin/verify-dolfinx-m5` is **33/33 green with every per-gate
 pass/skip/xfail/deselect count identical to the pre-move measured baselines** —
 the moves regressed nothing.
 
+**2026-07-28 update (CI T5, register D33): classes 1 and 2 no longer surface
+as `errors=`.** The CI-nail-down plan's Task 5 converted the remaining
+never-ported master files (class 1, plus the class-2 retained-ancestor files
+that overlapped it — `energies/anisotropy_test.py`, `energies/dmi_test.py`,
+`util/meshes_test.py` and the rest of the itemised list above) from raw
+collection errors to the same guarded-import + `not_ported`/strict-`xfail`
+mechanism class 3 already used (see register **D33** for the full mechanism
+and commit list `d2dcb332`..`732bc72a`, plus straggler commit `828f45d6`
+for two files whose `import dolfin` only fires inside `setup_module()` at
+test-setup time and so were invisible to a `--collect-only`-derived file
+list). The six-class taxonomy above still
+describes *why* each file is in the tree (retention reason), but the
+*mechanism* column now collapses everywhere to the two described in
+[`SUPPORTED.md` §7](../SUPPORTED.md): by-name `NotImplementedError`, and
+strict `xfail`. `dev/bin/inventory-dolfinx-suite` is expected `errors=0` from
+here on; the CI T6 weekly/dispatch workflow greps the `INVENTORY:` line for
+that shape so a regression fails the job. Nine tests across the converted
+files turned out not to need the guarded import at all and were left
+unmarked as recovered live coverage (listed in register D33), and two
+`sim/sim_helpers_test.py` tests surfaced a genuine functional divergence
+unrelated to the import guard (restart-data round-trip, register D16a/D16b)
+that is now visible as a named `xfail` instead of being masked by the
+collection error.
+
 **Follow-up backlog** (none of it blocking, all of it visible):
 
 - burn down the retained ancestors (class 2) and the carried `not_ported`

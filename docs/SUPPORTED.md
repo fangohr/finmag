@@ -435,42 +435,67 @@ Two known holes in (a), both recorded: the *submodule* spelling
 `from finmag.example.normal_modes import disk` and importing
 `finmag.util.helpers` as a module still reach legacy `dolfin` directly (C02).
 
-**(b) Strict `xfail`, for master tests carried but not ported.** Where a
-master test function had no covering port, it was transcribed **verbatim** into
-the port's file under a `NOT PORTED` banner and marked
-`@pytest.mark.not_ported` plus
+**(b) Strict `xfail`, for master tests carried but not ported, or for whole
+master files never ported at all.** Where a master test function had no
+covering port, it was transcribed **verbatim** into the port's file under a
+`NOT PORTED` banner and marked `@pytest.mark.not_ported` plus
 `@pytest.mark.xfail(reason="not ported: <feature> (register <row>)",
 strict=True)` (register **D30**). Strict means: the day someone ports the
 feature, the test **XPASSes and the gate fails**, forcing the marker off.
-Nothing can quietly stay "carried" once it works. 35 tests carry the strict
-marker; 9 keep master's own pre-existing `xfail`/`skipif` instead.
+Nothing can quietly stay "carried" once it works. **2026-07-28 update (CI T5,
+register D33):** the same mechanism now also covers whole never-ported master
+files. Previously such a file's module-level `import dolfin` (or
+`finmag.util.helpers`, `finmag.native.*`, `finmag.util.oommf`, etc.) failed
+collection outright, so `dev/bin/inventory-dolfinx-suite` reported it under
+`errors=`. Each of the 53 remaining files got that same import wrapped
+`try/except ImportError` and every test that still observably fails afterward
+gained the `not_ported`/strict-`xfail` pair above; a handful of tests that
+turned out not to need the unavailable import at all were left unmarked
+(9 recovered as live coverage — see register **D33** for the list). Master's
+own pre-existing `xfail`/`skipif` markers (including environment-conditional
+runtime `pytest.skip()` calls) are, as before, left untouched and continue to
+govern their own tests' outcome.
 
-**(c) The non-gating inventory lane, for whole unported files.** Master files
-that were never ported stay in the tree and fail visibly:
+**Its failure population (now zero) was the parity backlog, deliberately
+kept — it was never a CI verdict.** The verdict is
+`dev/bin/verify-dolfinx-m5`'s 33 focused gates. Run the sweep:
 
 ```bash
 dev/bin/inventory-dolfinx-suite      # or: pixi run -e dolfinx dolfinx-src-suite-inventory
 ```
 
-**Its failure population is the parity backlog, deliberately kept — it is not
-a CI verdict.** The verdict is `dev/bin/verify-dolfinx-m5`'s 33 focused gates.
-Current tally at declaration:
+Tally at declaration (2026-07-27, pre-CI-nail-down):
 
 ```
 INVENTORY: passed=754 failed=5 errors=55 skipped=25 xfailed=47
 ```
 
-Every failure/error falls into one of six expected classes (never-ported master
-files; retained bucket-B ancestors; carried `not_ported` tests; the D26
-functionality gap; one order-dependent full-suite-only artefact; and collection
-arithmetic). The six classes, with the retained-ancestor files named inline, are
-in [`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) under "Canonical test
-paths, the legacy oracle lane, and the inventory lane"; the delta against the
-previous run lives in that document's "SR1 declared" section. The exhaustive
-per-file classification was in the Task-7 verification report under
+Post-CI-nail-down tally (2026-07-28, CI T1-T5: the 5 real failures fixed,
+`fileio_test.py` ported, `Simulation` teardown ported, the D26
+point-evaluation bug fixed, and the 53-file conversion wave above):
+
+```
+INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271
+```
+
+(First full-tree run after the 53-file wave measured `errors=2` — two
+`setup_module()`-time `import dolfin` failures in
+`tests/nmag/exchange_3d/test_dynamics_3D.py` and
+`tests/nmag/spinwaves/test_spinwaves.py`, invisible to a `--collect-only`
+pass and so absent from the wave's collect-only-derived file list; converted
+the same way, commit `828f45d6`. `xfailed=271` reflects that fix; a
+confirmation re-run is in flight, see the CI T5 task report for the final
+recorded line.)
+
+`errors=0` is now the expected, enforced shape (the weekly/dispatch sweep CI
+job greps for it); every remaining failure/skip is either a master-governed
+skip/xfail or the D22 outer-face caveat. The exhaustive per-file
+classification (superseded post-T5, now two mechanisms only) was in the
+Task-7 verification report under
 `.superpowers/sdd/2026-07-27-canonical-test-paths/`; that session record no
-longer exists — the authoritative in-repo record is HANDOVER's six inventory
-classes (files named inline) plus git history.
+longer exists — the authoritative in-repo record is
+[`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) under "Canonical test
+paths, the legacy oracle lane, and the inventory lane" plus git history.
 
 ---
 
