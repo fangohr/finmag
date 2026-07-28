@@ -1,9 +1,14 @@
 import os
 import pytest
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.vtk_saver import VTKSaver
+    from finmag.util.helpers import assert_number_of_files
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    VTKSaver = None
+    assert_number_of_files = None
 import numpy as np
-from finmag.util.vtk_saver import VTKSaver
-from finmag.util.helpers import assert_number_of_files
 
 
 class TestVTKSaver(object):
@@ -20,6 +25,8 @@ class TestVTKSaver(object):
         # The next line is a hack and not recommended for real work
         self.field_data.vector().set_local(np.zeros(3 * N))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API VTKSaver test, capability covered by dolfinx-src-restart-output-pytest (D33)", strict=True)
     def test_constructor(self, tmpdir):
         """
         Check various methods of creating a VTKSaver object.
@@ -28,6 +35,8 @@ class TestVTKSaver(object):
         v1 = VTKSaver()
         v2 = VTKSaver('myfile.pvd')
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API VTKSaver test, capability covered by dolfinx-src-restart-output-pytest (D33)", strict=True)
     def test_file_extension_is_correct(self, tmpdir):
         """
         Check that only filenames with extension '.pvd' are accepted.
@@ -41,6 +50,8 @@ class TestVTKSaver(object):
         with pytest.raises(ValueError):
             VTKSaver("myfile.txt")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API VTKSaver test, capability covered by dolfinx-src-restart-output-pytest (D33)", strict=True)
     def test_existing_files_are_deleted_if_requested(self, tmpdir):
         """
 
@@ -71,6 +82,8 @@ class TestVTKSaver(object):
         assert_number_of_files("myfile.pvd", 1)
         assert_number_of_files("myfile*.vtu", 1)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API VTKSaver test, capability covered by dolfinx-src-restart-output-pytest (D33)", strict=True)
     def test_save_field(self, tmpdir):
         """
         Check that calling save_field with the field data given in
@@ -93,6 +106,8 @@ class TestVTKSaver(object):
         assert_number_of_files("myfile.pvd", 1)
         assert_number_of_files("myfile*.vtu", 4)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API VTKSaver test, capability covered by dolfinx-src-restart-output-pytest (D33)", strict=True)
     def test_saving_to_file_with_different_name(self, tmpdir):
         os.chdir(str(tmpdir))
 
