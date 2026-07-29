@@ -1,7 +1,7 @@
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
 
 # FinMag: finite-element micromagnetic simulation tool
-Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1,2</sup>, and Hans Fangohr<sup>1,2,4</sup>
+Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1,2</sup>, Sam Holt<sup>4</sup>, and Hans Fangohr<sup>1,2,4</sup>
 
 <sup>1</sup> *Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom*  
 <sup>2</sup> *European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany*  
@@ -18,11 +18,21 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 | DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011) |
 
 
-## About
+
+## About the `main` branch (python3)
+
+We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md).
+
+For production computation, use the Python2 version (see next section).
+
+## About the python2 version
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project.
 
-- The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
+- The code has been developed 2011-2017 by [Hans Fangohr](https://fangohr.github.io)'s group at the University of Southampton (UK), the European XFEL GmbH (Germany) and the Max Planck Institute for the
+  Structure and Dynamics. Former group members have since moved to other places, and continued to contribute.
+  
+- This version of the code is tagged [`python2`](https://github.com/fangohr/finmag/releases/tag/python2). 
 
 - The GitHub page of the project with the most recent version is https://github.com/fangohr/finmag.
 
@@ -42,11 +52,11 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - There has not been dedicated funding to support the software development.
 
-## Installation / Using the tool via Docker
+### Installation / Using the tool via Docker (python2)
 
 There is a dedicated organisation on [DockerHub](https://hub.docker.com/) named [`finmag`](https://hub.docker.com/u/finmag/). We provide pre-built images in the [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
 
-### Getting the image
+#### Getting the image
 
 The easiest way to get the most recent image is by pulling it from the DockerHub [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository
 
@@ -56,7 +66,7 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 
     $ make build
 
-### Testing
+#### Testing
 
 After you pulled/built the `finmag/finmag` image, you can test it with
 
@@ -64,7 +74,7 @@ After you pulled/built the `finmag/finmag` image, you can test it with
 
 or by running `make test` in `install/docker/latest` directory.
 
-### Running the container
+#### Running the container
 
 To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
@@ -74,15 +84,15 @@ If you want to run code interactively inside the container, then you can start w
 
     $ docker run -ti -v $(pwd):/io --rm finmag/finmag
 
-### Finmag dependencies container
+#### Finmag dependencies container
 
 Docker image which contains all of the dependencies necessary to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
 
-### Installing on host
+#### Installing on host
 
 More detailed comments on the installation of finmag on a host machine are in [`install/README.md`](install/README.md).
 
-## Binder
+## Binder (currently using python2 version)
 
 If you want to try using Finmag in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?filepath=binder%2Findex.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
