@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Finmag Project Notes
 
 > **Current direction (2026-07-23):** milestones 1-3 below are completed

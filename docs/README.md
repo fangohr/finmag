@@ -10,15 +10,14 @@ what you need.
    versions, tags, limitations.
 3. [SUPPORTED.md](SUPPORTED.md) — what is supported today, and to what
    tolerance.
-4. `INSTALL.md` — pixi install steps, quickstart (arrives with the
-   restructure).
+4. [INSTALL.md](INSTALL.md) — pixi install steps, quickstart.
 
 ## Contributing code
 
-1. `../CONTRIBUTING.md` — pixi environment, test lanes, how to add a
-   test/feature (arrives with the restructure).
-2. `../AGENTS.md` — repo conventions for agentic/automated work (arrives
-   with the restructure).
+1. [../CONTRIBUTING.md](../CONTRIBUTING.md) — pixi environment, test lanes,
+   how to add a test/feature.
+2. [../AGENTS.md](../AGENTS.md) — repo conventions for agentic/automated
+   work.
 3. `testing.md` — CI tiers, the inventory lane, how to run everything
    locally (arrives with the restructure).
 4. [superpowers/capability-status.md](superpowers/capability-status.md) —
