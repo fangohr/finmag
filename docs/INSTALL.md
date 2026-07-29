@@ -4,7 +4,7 @@ This is the install guide for `src/finmag`, the Python 3.12 / `fenics-dolfinx`
 port on branch `dolfinx-parity`. Linux only.
 
 **Read [`SUPPORTED.md`](SUPPORTED.md) before using this lane.** It states what
-SR1 supports, how each family is validated and to what tolerance, what is
+this version supports, how each feature family is validated and to what tolerance, what is
 still waiting to be ported, what was dropped, and how an unavailable surface
 fails.
 
@@ -86,7 +86,7 @@ finmag.sim_with(mesh, Ms, m_init, A=..., K1=..., K1_axis=..., H_ext=...,
                  D=..., alpha=..., unit_length=...)
 ```
 
-where `mesh` is a `dolfinx.mesh.Mesh`. `examples/` holds seventeen converted
+where `mesh` is a `dolfinx.mesh.Mesh`. `examples/` holds the converted
 examples; `pixi run -e dolfinx dolfinx-src-examples-pytest` runs the fast lane
 of them (see `testing.md` for the heavy `FINMAG_EXAMPLE_FULL=1` lane).
 
