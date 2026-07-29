@@ -180,7 +180,7 @@ The usual runtime path is:
   Main orchestration object. Manages mesh, kernel, integrator, scheduler, output writers, and convenience APIs.
 
 - `src/finmag/field.py`
-  Wrapper around `dolfin.Function`. Central abstraction for scalar/vector fields and NumPy/FEM conversions.
+  Wrapper around `dolfinx.fem.Function` (2026-07-29 update, doc-restructure T1: corrected from a stale `dolfin.Function` description — the DOLFINx port carries no legacy `dolfin`). Central abstraction for scalar/vector fields and NumPy/FEM conversions.
 
 - `src/finmag/physics/llg.py`
   Landau-Lifshitz-Gilbert dynamics and links to effective-field evaluation.

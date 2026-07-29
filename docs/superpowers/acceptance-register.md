@@ -1,6 +1,6 @@
 # Finmag DOLFINx Deviation and Decision Register
 
-**Reconciled:** 2026-07-23
+**Reconciled:** 2026-07-23 (**2026-07-29 update, doc-restructure T1: header date corrected** — this file's body has been continuously maintained through the 2026-07-28 SR1 S5b batch ratification below; "Reconciled" names when the register's structure was first agreed, not the last content update)
 
 **Decision authority:** repository owner
 

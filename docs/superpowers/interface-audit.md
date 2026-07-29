@@ -128,7 +128,7 @@ N = gratuitous (UNNECESSARY).
 | `from_field` | `(field)` | identical | NO-CHANGE | Y | — |
 | `from_function` | `(function)` | identical (interpolation superset added, register #7) | NO-CHANGE | Y | — |
 | `set` / `set_with_numpy_array_debug` / `as_array` / `as_vector` / `is_constant` / `as_constant` / `mesh*` / `value_dim` / `coords_and_values` | (as legacy) | identical for the audited subset | NO-CHANGE | Y | — |
-| `from_generic_vector` / `cross` / `dot` / `coerce_scalar_field` | present | raise `NotImplementedError` by name | deferred gap | N | Port or obtain an owner-approved exception |
+| `from_generic_vector` / `cross` / `dot` / `coerce_scalar_field` | present | ~~raise `NotImplementedError` by name~~ **2026-07-29 update (doc-restructure T1): stale.** `cross`/`dot`/`coerce_scalar_field` (plus `__mul__`/`__rmul__`/`__truediv__`) were implemented in `c59f3438` (SR1 P3.3); `from_generic_vector` in `ef92eb7d` (SR1 P3.4). See `docs/SUPPORTED.md` §2 and capability-status **C04** | ~~deferred gap~~ ported | ~~N~~ — | ~~Port or obtain an owner-approved exception~~ done |
 | `average` | `(dx=df.dx)` | `(dx=dx)` (ufl `dx`) | FORCED | Y | — (dolfin `dx` object removed) |
 | `set_random_values` | `(vrange=[-1, 1])` | `(vrange=(-1.0, 1.0))` | benign | Y | — (mutable-default fix; identical behaviour) |
 | `save_pvd` | `(filename)` | `(filename, t=0.0)` | superset | Y | — (backward-compatible optional arg) |

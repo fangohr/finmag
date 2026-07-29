@@ -3,6 +3,12 @@
 **Source baseline audited:** 2026-07-23 at `dolfinx-parity` commit
 `f1a1344c423e74687ddf820c1fafc056a6271fe1`
 
+**2026-07-29 update (doc-restructure T1): header date corrected.** "Source
+baseline audited" names the original P0 audit commit/date; individual rows
+(e.g. C03/C04/C08/C09/C21) have been continuously updated through SR1 P4 and
+the 2026-07-28 batch ratification — see each row's own evidence for its
+current date. This file is not stale as of the 2026-07-23 header date alone.
+
 **Final target:** the functionality and user-facing interface of original
 `master` (`b5015c5a`), except for deviations explicitly accepted by the
 repository owner.

@@ -210,6 +210,10 @@ module with its tests.
   (`sim_helpers`, `sim_savers`, `hysteresis`, `magnetisation_patterns`, the
   legacy scheduler) are untouched and no longer on the core import graph.
   [Claude Opus 4.8]
+  **2026-07-29 update (doc-restructure T1):** the `integrator_backend`
+  default named above is stale — superseded by `81fab481` (P1.3): native
+  Sundials is now the public `Simulation`/`sim_with` default; register **D8**
+  is discharged and SciPy remains a fully supported explicit opt-in.
   Task 15 update: `relax` and `hysteresis`/`hysteresis_loop` are now ported
   (`Simulation.relax`/`hysteresis`/`hysteresis_loop` bound directly to the
   untouched legacy `sim_relax.py`/`hysteresis.py` modules, whose only edit in
@@ -231,9 +235,9 @@ module with its tests.
   (Task 20)" section and the Task 20 section of
   `docs/superpowers/plans/2026-07-21-dolfinx-full-parity.md`; cross-referenced
   from `test_simulation_dolfinx.py::test_construction_core_state`'s docstring.
-  **Superseded by `81fab481` (P1.3): native Sundials is now the public
-  `Simulation`/`sim_with` default; D8 is discharged and SciPy remains an
-  explicit opt-in.** [Claude Sonnet 5]
+  **2026-07-29 update (doc-restructure T1) -- superseded by `81fab481`
+  (P1.3): native Sundials is now the public `Simulation`/`sim_with` default;
+  D8 is discharged and SciPy remains an explicit opt-in.** [Claude Sonnet 5]
 - Task 9 removed-surfaces addendum: a handful of legacy `Simulation` public
   names were dropped outright rather than deferred by name --
   `initialise_helix_2D`, `initialise_skyrmions`,
@@ -1411,7 +1415,11 @@ Before editing the matching module in `src/finmag`, check that:
   `INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12` in ~27 min
   (pre-move baseline was only a collect-only proxy, 789 collected / 85
   collection errors; the real pre-move pass/fail tally was lost with a crashed
-  session and is recorded as lost, not reconstructed). Every failure/error is
+  session and is recorded as lost, not reconstructed).
+  **2026-07-29 update (doc-restructure T1): this tally is obsolete**,
+  superseded by the CI T7 re-measurement: `INVENTORY: passed=769 failed=0
+  errors=0 skipped=46 xfailed=271` (`HANDOVER.md` "Tallies at declaration").
+  Every failure/error is
   a never-ported master file, a retained ancestor, a carried `not_ported` test,
   the pre-existing D26 `get_field_as_dolfin_function` gap, or the
   order-dependent full-suite-only

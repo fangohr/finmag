@@ -235,6 +235,10 @@ Result on 2026-07-27 at `62aae519`:
 INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12
 ```
 
+**2026-07-29 update (doc-restructure T1): this tally is obsolete**, superseded
+by the CI T7 re-measurement recorded below under "SR1 declared" / "Tallies at
+declaration": `INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271`.
+
 Every failure and error in that population falls into one of six classes, all
 expected, none of them move breakage (classified file-by-file in the Task-7
 verification report).
@@ -621,6 +625,12 @@ up S6/T8):
   DEFER past SR1) as of this 2026-07-28 batch ratification; T8 must sweep
   `capability-status.md` for every disposition reference and update it to
   match, so the two documents do not contradict each other.
+  **2026-07-29 update (doc-restructure T1): DISCHARGED.** Verified at HEAD —
+  `grep -n "pending owner decision\|disposition pending" capability-status.md`
+  returns zero matches; the D20/D21/D17 references named above (and every
+  other disposition reference in that file) already carry finalised
+  `ratified 2026-07-28 (owner, batch): ...` dispositions. No sweep remains
+  outstanding.
 
 None of these five items are SR1-blocking (all ratified ACCEPT/DROP, not FIX
 NOW), but they are unclosed documentation/wording debt this ratification

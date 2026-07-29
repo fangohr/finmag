@@ -151,6 +151,30 @@ remains MISSING. Recorded here as a non-resolution so the orchestrator does not
 mistake it for closed. *(P5.1 has since run that probe and found no required
 geometry; register `M4a`/`M4b` are ratified deferred for SR1.)*
 
+### Post-baseline capability-shipped resolution (doc-restructure T1, 2026-07-29)
+
+The N10/N11/N41/N43/N45/N46/N47/N60/N61 rows above describe the frozen P0
+baseline at `f1a1344c`. A 2026-07-29 documentation audit found all nine still
+read `MISSING` even though the named capability shipped in an SR1 P2-P4 slice
+well before this manifest's last edit; this is a post-baseline shipped-feature
+record, not a rewrite of the frozen rows. This also reconciles the N41
+self-contradiction between this row (frozen `MISSING`) and the Appendix A
+mapping for `test_writing_data.py` (~line 234), which already described the
+HDF5 gate as covered — both were correct for their own scope (frozen baseline
+vs. current appendix), but left the ledger row looking stale.
+
+| Frozen row | Resolution commit | Post-baseline evidence |
+|---|---|---|
+| N10 Field arithmetic (`cross`/`dot`/coercion) | `c59f3438` (SR1 P3.3) | pointwise per-node `cross`/`dot`/`coerce_scalar_field`/`__mul__`/`__rmul__`/`__truediv__` implemented, respecting Task-31 ordering; gate `dolfinx-src-field-pytest` 29 -> 34 passed; register/capability-status **C04**; also documented at `docs/SUPPORTED.md` §2 |
+| N11 `Field.from_generic_vector` | `ef92eb7d` (SR1 P3.4) | accepts `dolfinx.la.Vector`/`PETSc.Vec`, owned-only read/write with `scatter_forward`; gate `dolfinx-src-field-pytest` 34 -> 35 passed; capability-status **C04**; `docs/SUPPORTED.md` §2 |
+| N41 HDF5 field readback | `1a9df5eb` (SR1 P4-hdf5) | `Field.save_hdf5`/`from_hdf5` coordinate-aware round-trip via `h5py`; gate `dolfinx-src-field-pytest` -> 42 passed; capability-status **C04**/**C12**. VTK/XDMF function readback (a distinct, still-missing surface) is unaffected |
+| N43 Callable pin masks | `df5fc1a1` (SR1 P2.3) | `Simulation.__set_pins` resolves a callable per owned-node coordinate, raw mesh units, matching legacy `b5015c5a` semantics; gate `dolfinx-src-simulation-pytest` 44 -> 49 passed; capability-status **C08**; `docs/SUPPORTED.md` §2 (`sim.pins`) |
+| N45 Selected magnetisation initialisers | `8de6927b` (SR1 P4-init) | `magnetisation_patterns.vortex_simple`/`vortex_feldtkeller`/`initialise_vortex` validated to machine precision; capability-status **C21**. The module's helix/skyrmion/target families remain unvalidated and `initialise_skyrmions` still fails at call time (2D/3D coordinate gap, **C21**) — N45's own scope ("selected" initialisers) is satisfied, the wider family is not |
+| N46 `Simulation.probe_field`/`probe_field_along_line` | `584820a0` (SR1 P4-probe) | masked-array point evaluation in mesh coordinates via the ported `evaluate_at_point`; capability-status **C21**; `docs/SUPPORTED.md` §2. Carries a known on-outer-face mis-resolution, register **D22** (ratified DEFER past SR1) — implemented-with-caveat, not missing |
+| N47 `LLG.M`/`LLG.M_average` | `67e5ebe1` (SR1 P4-M) | `M = Ms*m` (A/m, component-blocked `xxx`) and the Ms-weighted volume-average `M_average`; gate `dolfinx-src-llg-pytest` 16 -> 23 passed; register **D20** (ratified 2026-07-28 ACCEPT — corrected physics, no working legacy behaviour existed to reproduce) |
+| N60 `length_scales`/`mesh_info` | `868f664d` (SR1 P4-mesh) | `mesh_info`/`print_mesh_info`/`mesh_size`/`mesh_size_plausible`/`describe_mesh_size`/`length_scales` restored onto DOLFINx-native topology/geometry queries; gate `dolfinx-src-meshes-pytest` 49 -> 53 passed; capability-status **C03** |
+| N61 Logging, instance and shutdown helpers | `4acd9a81` (SR1 P4-helpers, logging) and `f12cf995` (CI T3, register **D24** fixed, instance/shutdown teardown) | `start_logging_to_file`/`logging_status_str`/`logging_handler_str` extracted dolfin-free into `finmag.util.logging_helpers`; `shutdown`/`instances_delete_all_others`/`instances_list_all`/`instances_delete_all`/`instances_alive_count`/`close_logfile` restored onto `sim.py`; capability-status **C21**/**C08** |
+
 ### Post-baseline path relocation (canonical test paths, register D30)
 
 On **2026-07-27** (owner decision, register **D30**; commits
@@ -176,7 +200,13 @@ Two consequences for how this manifest is used:
    (non-gating) collects and runs the whole `src/finmag` tree and enumerates
    exactly the unported/uncovered population; on 2026-07-27 at `62aae519` it
    reported `INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12`
-   (~27 min). Its failures and errors are the parity backlog, never a CI
+   (~27 min). **2026-07-29 update (doc-restructure T1): this tally is
+   obsolete.** CI T1-T5 (2026-07-28) fixed the real inventory-lane failures
+   and converted the remaining never-ported files to guarded strict `xfail`
+   (register **D33**); the current tally is
+   `INVENTORY: passed=769 failed=0 errors=0 skipped=46 xfailed=271`
+   (`HANDOVER.md` "Tallies at declaration", CI T7 re-measurement). `errors=0`/
+   `failed=0` is now the enforced expected shape. Its failures and errors are the parity backlog, never a CI
    verdict — `dev/bin/verify-dolfinx-m5`'s 33 focused gates remain the verdict,
    and post-relocation they are **33/33 green with every per-gate count
    identical to the pre-move measured baselines**. The legacy suite itself no
@@ -265,7 +295,7 @@ and an owner decision, not implicit deletions.
 | `src/finmag/normal_modes/eigenmodes/eigenproblems_test.py` | later | normal modes C17 |
 | `src/finmag/normal_modes/eigenmodes/eigensolvers_test.py` | later | normal modes C17 |
 | `src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py` | later | normal modes C17 |
-| `src/finmag/util/test_set_function_values.py` | needs-translation | Field conversion N11 |
+| `src/finmag/util/test_set_function_values.py` | needs-translation | Field conversion N11 (**2026-07-29 update, doc-restructure T1: N11 shipped in `ef92eb7d`, SR1 P3.4 — see "Post-baseline capability-shipped resolution" above**) |
 | `src/finmag/util/test_dmi_from_helix.py` | mapped-current | `dolfinx-src-dmi-pytest` |
 | `src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py` | needs-translation | drivers are tested, but this exact legacy maxsteps exception contract is not mapped |
 | `src/finmag/scheduler/scheduler_test.py` | mapped-current | `dolfinx-src-restart-output-pytest` |
@@ -320,7 +350,7 @@ and an owner decision, not implicit deletions.
 | `src/finmag/tests/cython/test_cython.py` | obsolete-review | legacy Cython compilation fixture; no user capability |
 | `src/finmag/tests/test_sim_parallel.py` | later | serial SR1; general MPI stepping C19 |
 | `src/finmag/sim/hysteresis_test.py` | needs-translation | Transcribed under P5.2 (`775e6e85`) and, since D30, holding this very path. Per-stage relaxation is NOT defective: corrected under register **D4** (SR1 P2.5) -- `hysteresis()` re-relaxes each stage to its own equilibrium and the on-axis oracle stall is a genuine degenerate Stoner-Wohlfarth saddle, not a skipped relaxation |
-| `src/finmag/sim/magnetisation_patterns_test.py` | needs-translation | Owner-Now initialisers N45 have no positive gate |
+| `src/finmag/sim/magnetisation_patterns_test.py` | needs-translation | Owner-Now initialisers N45 have no positive gate (**2026-07-29 update, doc-restructure T1: N45's selected vortex family shipped in `8de6927b`, SR1 P4-init — see "Post-baseline capability-shipped resolution" above; helix/skyrmion/target remain unvalidated**) |
 | `src/finmag/sim/sim_helpers_test.py` | needs-translation | `dolfinx-src-io-utils-pytest`; simulation probing and region-output helpers remain missing |
 | `src/finmag/sim/sim_test.py` | needs-translation | current simulation gate covers selected core, not bundled legacy surface |
 | `src/finmag/drivers/tests/sundials_nsteps_test.py` | needs-translation | `dolfinx-src-sundials-pytest`; complete Simulation reset/restart lifecycle remains missing |
