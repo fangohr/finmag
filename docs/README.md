@@ -20,9 +20,8 @@ what you need.
    work.
 3. `testing.md` — CI tiers, the inventory lane, how to run everything
    locally (arrives with the restructure).
-4. [superpowers/capability-status.md](superpowers/capability-status.md) —
-   feature-by-feature port status matrix (moves to `capability-status.md`
-   with the restructure).
+4. [capability-status.md](capability-status.md) —
+   feature-by-feature port status matrix.
 
 ## Owner decisions
 
@@ -30,9 +29,8 @@ what you need.
    the restructure).
 2. `performance.md` — what is slow, and the plan for it (arrives with the
    restructure).
-3. [superpowers/acceptance-register.md](superpowers/acceptance-register.md)
-   — disposition of every known master/DOLFINx difference (moves to
-   `acceptance-register.md` with the restructure).
+3. [acceptance-register.md](acceptance-register.md)
+   — disposition of every known master/DOLFINx difference.
 4. [plans/2026-07-28-post-sr1-performance.md](plans/2026-07-28-post-sr1-performance.md)
    — the one live plan.
 

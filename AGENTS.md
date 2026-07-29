@@ -67,7 +67,7 @@ not started; it begins only on an explicit owner instruction.
   not project state — remove them only after confirming no needed probe
   output remains in them.
 - Behavioural deviations from `master` always get an acceptance-register row
-  before merge (`docs/superpowers/acceptance-register.md`); see
+  before merge (`docs/acceptance-register.md`); see
   `CONTRIBUTING.md` for the full rule.
 
 ## Model-usage note

@@ -14,8 +14,8 @@ it are:
 
 | Document | Role |
 |---|---|
-| [`superpowers/capability-status.md`](superpowers/capability-status.md) | canonical per-capability status and evidence (C01–C22) |
-| [`superpowers/acceptance-register.md`](superpowers/acceptance-register.md) | the sole owner-decision ledger (D-rows, M-rows, P1) |
+| [`capability-status.md`](capability-status.md) | canonical per-capability status and evidence (C01–C22) |
+| [`acceptance-register.md`](acceptance-register.md) | the sole owner-decision ledger (D-rows, M-rows, P1) |
 | [`archive/HANDOVER.md`](archive/HANDOVER.md) | retired entry point (historical; see [docs/README.md](README.md)) |
 | [`archive/master-pixi-parity-manifest.md`](archive/master-pixi-parity-manifest.md) | file-by-file master↔port test/example map |
 

@@ -56,14 +56,14 @@ in `docs/testing.md` (arrives with the restructure). The short version:
 
 **Every behavioural deviation from the python2 `master` gets an
 acceptance-register row *before* merge.** The register at
-[`docs/superpowers/acceptance-register.md`](docs/superpowers/acceptance-register.md)
+[`docs/acceptance-register.md`](docs/acceptance-register.md)
 is the sole owner-decision ledger (D-rows for divergences, M-rows for missing
 capabilities, P-rows for performance); only the repository owner finalises a
 row's disposition, and a recommendation without one is not an approval to
 merge. Read `docs/decisions.md` (arrives with the restructure) for the
 deeper "what we chose during the port, and why" narrative behind the
 accepted rows, and
-[`docs/superpowers/capability-status.md`](docs/superpowers/capability-status.md)
+[`docs/capability-status.md`](docs/capability-status.md)
 for the current per-capability status matrix these decisions feed.
 
 ## More documentation

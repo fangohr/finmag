@@ -6,7 +6,7 @@ what we chose, and why. It is written for someone who knows the original
 finmag well but was not involved in this update at all.
 
 Every section below ends with a link into the
-[acceptance register](superpowers/acceptance-register.md), the ledger where
+[acceptance register](acceptance-register.md), the ledger where
 every difference from the original `master` behaviour is recorded with a
 decision code (`D<n>`, `M<n>` or `P1`). Where you see a code like "decision
 D20", that always refers to a row in that register — the codes have no
@@ -70,8 +70,8 @@ roughly 10-20% and confirm the actual node/element count with
 `mesh_info()` rather than assuming `maxh` parity across generator
 versions. No code change was made; this is a calibration note, not a defect.
 
-Register: [`M4a`, `M4b`](superpowers/acceptance-register.md) (Netgen backend
-and `nmesh_to_dolfin`, both dropped), [`D34`](superpowers/acceptance-register.md)
+Register: [`M4a`, `M4b`](acceptance-register.md) (Netgen backend
+and `nmesh_to_dolfin`, both dropped), [`D34`](acceptance-register.md)
 (the `maxh` density drift).
 
 ---
@@ -87,7 +87,7 @@ public default**, exactly as in the original. SciPy remains fully
 supported as an explicit opt-in (`integrator_backend="scipy"`), but
 nobody gets it by accident any more.
 
-Register: [`D8`](superpowers/acceptance-register.md).
+Register: [`D8`](acceptance-register.md).
 
 ---
 
@@ -119,9 +119,9 @@ metadata written into an archive is therefore informational only, not read
 back as state; for spatially varying fields it is a lossy scalar summary
 and cannot reconstruct the original per-node values.
 
-Register: [`D12`](superpowers/acceptance-register.md) (v2 only, v1 rejected),
-[`D14`](superpowers/acceptance-register.md) (coordinate/value `.npy` format),
-[`D16a`, `D16b`](superpowers/acceptance-register.md) (restart does not
+Register: [`D12`](acceptance-register.md) (v2 only, v1 rejected),
+[`D14`](acceptance-register.md) (coordinate/value `.npy` format),
+[`D16a`, `D16b`](acceptance-register.md) (restart does not
 reapply/validate material metadata; varying-field metadata is a lossy summary).
 
 ---
@@ -151,7 +151,7 @@ updated, so `compute_energy()` always reflects the current field. Field
 computation itself was never affected and remains correct in both
 versions.
 
-Register: [`D3`](superpowers/acceptance-register.md).
+Register: [`D3`](acceptance-register.md).
 
 ### 5.2 `LLG.M` and `LLG.M_average` are now correct physics in the right units
 
@@ -170,7 +170,7 @@ The port implements the documented intent instead: `LLG.M = Ms * m` in
 A/m, and `LLG.M_average` is the `Ms`-weighted volume average of `m`,
 genuinely in A/m as documented.
 
-Register: [`D20`](superpowers/acceptance-register.md).
+Register: [`D20`](acceptance-register.md).
 
 ### 5.3 The ~8% anisotropy/Magpar residual is mesh drift, not a field defect
 
@@ -208,7 +208,7 @@ machine-precision tolerances against the oracle and analytic results
 elsewhere. Full derivation: the
 [D29 verdict](archive/specs/2026-07-27-d29-verdict.md).
 
-Register: [`D29`](superpowers/acceptance-register.md).
+Register: [`D29`](acceptance-register.md).
 
 ---
 
@@ -250,8 +250,8 @@ So: **every original test is accounted for at its original path, either
 passing as a live port or failing by name as a documented gap** — no
 third, silent option.
 
-Register: [`D30`](superpowers/acceptance-register.md) (canonical test
-paths), [`D33`](superpowers/acceptance-register.md) (the same mechanism
+Register: [`D30`](acceptance-register.md) (canonical test
+paths), [`D33`](acceptance-register.md) (the same mechanism
 extended to whole never-ported files, so a raw import failure becomes a
 named expected failure instead of an opaque collection error).
 
@@ -273,8 +273,8 @@ error naming the removed option. A script explicitly requesting a removed
 name fails loudly rather than being silently remapped; a script relying on
 the original default simply gets box assembly, with the same numbers.
 
-Register: [`D32`](superpowers/acceptance-register.md) (the interface
-change), [`M12a`, `M12b`, `M12c`](superpowers/acceptance-register.md) (the
+Register: [`D32`](acceptance-register.md) (the interface
+change), [`M12a`, `M12b`, `M12c`](acceptance-register.md) (the
 three removed methods, dropped permanently).
 
 ### The performance consequence
@@ -309,7 +309,7 @@ a physics change. See
 [the performance plan](plans/2026-07-28-post-sr1-performance.md) for the
 full breakdown.
 
-Register: [`P1`](superpowers/acceptance-register.md).
+Register: [`P1`](acceptance-register.md).
 
 ---
 
@@ -353,10 +353,10 @@ is a distinct numerical model from the *local* STT modes (Slonczewski and
 Zhang-Li) the port fully supports, and was not part of the selected
 first-release workflow set; a request for it fails by name.
 
-See rows C16-C19 of the [capability-status matrix](superpowers/capability-status.md)
-for each family's status. Register: [`M16`](superpowers/acceptance-register.md)
-(thermal driver), [`D19`](superpowers/acceptance-register.md) (function-space
-PBC), [`M5`](superpowers/acceptance-register.md) (nonlocal LLG_STT). Full
+See rows C16-C19 of the [capability-status matrix](capability-status.md)
+for each family's status. Register: [`M16`](acceptance-register.md)
+(thermal driver), [`D19`](acceptance-register.md) (function-space
+PBC), [`M5`](acceptance-register.md) (nonlocal LLG_STT). Full
 list: [docs/SUPPORTED.md §5](SUPPORTED.md).
 
 ---
