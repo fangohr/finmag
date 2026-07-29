@@ -1,7 +1,7 @@
 # CI T6 review fix (2026-07-28): GitHub only fires `workflow_dispatch` from
-# the repository's DEFAULT branch (master). This workflow is therefore inert
+# the repository's DEFAULT branch (main). This workflow is therefore inert
 # on `dolfinx-parity` -- manual dispatch will not work until this branch
-# merges to master. Until then, run the equivalent locally:
+# merges to main. Until then, run the equivalent locally:
 #   FINMAG_EXAMPLE_FULL=1 pixi run -e dolfinx dolfinx-src-examples-pytest
 # [Claude Sonnet 5]
 name: test-slow

@@ -1,4 +1,4 @@
-# Finmag (DOLFINx) — what is supported in SR1
+# Finmag (DOLFINx) — what is supported in Support Release 1 (SR1)
 
 **Release:** SR1 — serial deterministic DOLFINx finmag. Declared 2026-07-28 on
 branch `dolfinx-parity` (tag `sr1`).
@@ -419,7 +419,7 @@ owner decision.
 
 ## 7. How an unavailable surface fails
 
-Three distinct, deliberate mechanisms. **A raw `ModuleNotFoundError: No module
+Two distinct, deliberate mechanisms. **A raw `ModuleNotFoundError: No module
 named 'dolfin'` is a tracked port bug, never an instruction to install
 anything.**
 
@@ -501,16 +501,15 @@ CI T7 re-run reproduced this exact tally with zero deltas.)
 
 `errors=0`/`failed=0` is now the expected, enforced shape (the
 `test-python.yml` weekly/on-demand CI job greps the inventory line for it —
-see "Continuous integration" in `README.md` for all three CI tiers:
-`test-fast.yml` (formerly `dolfinx-m5.yml`) push/PR fast gate,
-`test-python.yml` weekly-on-default-branch + on-demand full-suite inventory,
-`test-slow.yml` on-demand-only heavy FULL example lane); every remaining
-failure/skip is either a master-governed
+see [`testing.md`](testing.md) for all six CI workflows, including
+`test-fast.yml` (the push/PR fast gate), `test-python.yml` (the
+weekly-on-default-branch plus on-demand full-suite inventory) and
+`test-slow.yml` (the on-demand-only heavy FULL example lane)); every
+remaining failure/skip is either a master-governed
 skip/xfail or the D22 outer-face caveat. The exhaustive per-file
-classification (superseded post-T5, now two mechanisms only) was in the
-Task-7 verification report under
-`.superpowers/sdd/2026-07-27-canonical-test-paths/`; that session record no
-longer exists — the authoritative in-repo record is
+classification (now two mechanisms only) was in an earlier verification
+report from a since-removed working session; the authoritative in-repo
+record is
 [`archive/HANDOVER.md`](archive/HANDOVER.md) under "Canonical test
 paths, the legacy oracle lane, and the inventory lane" plus git history.
 
