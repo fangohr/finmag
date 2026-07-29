@@ -1,7 +1,7 @@
 <img src="dev/logos/finmag_logo.png" width="300" align="right">
 
 # FinMag: finite-element micromagnetic simulation tool
-Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1,2</sup>, and Hans Fangohr<sup>1,2,4</sup>
+Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</sup>, Maximilian Albert<sup>1</sup>, Dmitri Chernyshenko<sup>1</sup>, David Cortés-Ortuño<sup>1</sup>, Ryan A. Pepper<sup>1</sup>, Mark Vousden<sup>1</sup>, Rebecca Carey<sup>1</sup>, Hagen Fuchs<sup>3</sup>, Anders Johansen<sup>1</sup>, Gabriel Balaban<sup>1</sup>, Leoni Breth<sup>1</sup>, Thomas Kluyver<sup>1,2</sup>, Sam Holt<sup>4</sup>, and Hans Fangohr<sup>1,2,4</sup>
 
 <sup>1</sup> *Faculty of Engineering and the Environment, University of Southampton, Southampton SO17 1BJ, United Kingdom*  
 <sup>2</sup> *European XFEL GmbH, Holzkoppel 4, 22869 Schenefeld, Germany*  
@@ -10,7 +10,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 | Description | Badge |
 | --- | --- |
-| Tests | [![workflow](https://github.com/fangohr/finmag/workflows/workflow/badge.svg)](https://github.com/fangohr/finmag/actions) |
+| Tests | [![test-fast](https://github.com/fangohr/finmag/workflows/test-fast/badge.svg)](https://github.com/fangohr/finmag/actions) |
 |       | [![docker-image](https://github.com/fangohr/finmag/workflows/docker-image/badge.svg)](https://github.com/fangohr/finmag/actions) |
 | Binder | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?filepath=binder%2Findex.ipynb) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
@@ -18,11 +18,21 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 | DOI | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1216011.svg)](https://doi.org/10.5281/zenodo.1216011) |
 
 
-## About
+
+## About the `main` branch (python3)
+
+We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md). What is already supported is documented in [docs/SUPPORTED.md](docs/SUPPORTED.md).
+
+For production computation, use the Python2 version (see next section).
+
+## About the python2 version
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project.
 
-- The code has been developed from 2011 to 2018 by [Hans Fangohr](http://fangohr.github.io)'s group at the University of Southampton (UK) and European XFEL GmbH (Germany).
+- The code has been developed 2011-2017 by [Hans Fangohr](https://fangohr.github.io)'s group at the University of Southampton (UK), the European XFEL GmbH (Germany) and the Max Planck Institute for the
+  Structure and Dynamics. Former group members have since moved to other places, and continued to contribute.
+  
+- This version of the code is tagged [`python2`](https://github.com/fangohr/finmag/releases/tag/python2). 
 
 - The GitHub page of the project with the most recent version is https://github.com/fangohr/finmag.
 
@@ -42,11 +52,11 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 - There has not been dedicated funding to support the software development.
 
-## Installation / Using the tool via Docker
+### Installation / Using the tool via Docker (python2)
 
 There is a dedicated organisation on [DockerHub](https://hub.docker.com/) named [`finmag`](https://hub.docker.com/u/finmag/). We provide pre-built images in the [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository. More information about Docker, as well as on how to install it on your system, can be found [here](https://www.docker.com/).
 
-### Getting the image
+#### Getting the image
 
 The easiest way to get the most recent image is by pulling it from the DockerHub [`finmag/finmag`](https://hub.docker.com/r/finmag/finmag/) repository
 
@@ -56,7 +66,7 @@ Alternatively, you can navigate to `install/docker/latest` and run `make pull`. 
 
     $ make build
 
-### Testing
+#### Testing
 
 After you pulled/built the `finmag/finmag` image, you can test it with
 
@@ -64,7 +74,7 @@ After you pulled/built the `finmag/finmag` image, you can test it with
 
 or by running `make test` in `install/docker/latest` directory.
 
-### Running the container
+#### Running the container
 
 To run your Finmag code inside Docker, please navigate to the directory where your `my-finmag-script.py` file is (`cd path/to/your/file`) and run
 
@@ -74,175 +84,15 @@ If you want to run code interactively inside the container, then you can start w
 
     $ docker run -ti -v $(pwd):/io --rm finmag/finmag
 
-### Finmag dependencies container
+#### Finmag dependencies container
 
 Docker image which contains all of the dependencies necessary to run finmag is hosted on DockerHub as `finmag/finmag:dependencies`. Similar to previous sections, if you navigate to `install/docker/dependencies`, you can run `make pull`, `make run`, etc.
 
-### Installing on host
+#### Installing on host
 
 More detailed comments on the installation of finmag on a host machine are in [`install/README.md`](install/README.md).
 
-### Installing the DOLFINx port (pixi)
-
-The DOLFINx port (`src/finmag` on Python 3.12 + `fenics-dolfinx`) is installed
-as a regular editable Python package via [pixi](https://pixi.sh) and a
-`pyproject.toml` (setuptools, src-layout). This is currently the only supported
-install path for this lane: there is no published wheel, and `PYTHONPATH=src`
-(the earlier transitional workaround, see `transition-notes.org`) is kept only
-as a single fallback task.
-
-**Read [`docs/SUPPORTED.md`](docs/SUPPORTED.md) before using this lane.** It is
-the user-facing statement of exactly what SR1 supports, how each family is
-validated and to what tolerance, what is still waiting to be ported, what was
-dropped, and how an unavailable surface fails.
-
-```bash
-# 1. Create/sync the dolfinx pixi environment (conda-forge fenics-dolfinx,
-#    mpi4py, petsc4py, sundials, the native build toolchain, ...).
-pixi install -e dolfinx
-
-# 2. Install finmag itself into that environment as an editable package.
-#    --no-deps: numpy/scipy/the FEM stack/SUNDIALS come from the conda/pixi
-#    environment above, not from PyPI (see pyproject.toml's dependency
-#    comment for why: dolfinx/mpi4py/petsc4py/sundials are not reliable pip
-#    installs for this project and must stay tied to the conda build they are
-#    linked against).
-pixi run -e dolfinx dolfinx-install-editable
-
-# 3. Build the native extensions (bem_arrays.so, sundials.so and
-#    treecode_bem) via the
-#    existing native/Makefile. Optional up front -- `finmag.native` triggers
-#    the same `make` as an import side effect -- but recommended so a broken
-#    native toolchain fails fast and visibly instead of inside the first test
-#    that imports finmag.native.
-pixi run -e dolfinx dolfinx-native-build
-
-# 4. Confirm `import finmag` resolves to this checkout (not some other
-#    installed copy).
-pixi run -e dolfinx dolfinx-provenance-check
-```
-
-#### Verify the install
-
-One command runs the whole supported verification (it performs the editable
-install, native build and provenance check itself, then the 33 focused gates —
-so do not run steps 1-4 above redundantly unless you are diagnosing an
-install/build failure):
-
-```bash
-dev/bin/verify-dolfinx-m5      # expect: 33/33 green
-```
-
-For the non-gating parity backlog (the whole `src/finmag` tree, ~30 min, **not**
-a verdict — see `docs/SUPPORTED.md` §7):
-
-```bash
-dev/bin/inventory-dolfinx-suite
-```
-
-#### Quickstart
-
-```python
-import finmag
-
-sim = finmag.example.barmini()      # 3x3x10 nm Py bar, m0 = (1, 0, 1)
-sim.run_until(1e-10)                # deterministic time integration
-print(sim.m_average)                # volume-averaged magnetisation
-print(sim.total_energy())           # total energy, J
-sim.relax()                         # relax to equilibrium
-```
-
-Build your own simulation with `finmag.sim_with(mesh, Ms, m_init, A=...,
-K1=..., K1_axis=..., H_ext=..., D=..., alpha=..., unit_length=...)`, where
-`mesh` is a `dolfinx.mesh.Mesh`. See
-[`docs/SUPPORTED.md`](docs/SUPPORTED.md) for the full supported API,
-[`examples/`](examples) for seventeen converted examples, and
-`pixi run -e dolfinx dolfinx-src-examples-pytest` to run the fast lane of them.
-
-`pyproject.toml`'s static `version = "0.1.0"` is packaging metadata only; it
-has no runtime meaning. Runtime provenance remains `finmag.__version__` (a
-git revision SHA written into `src/finmag/__version__.py` by
-`native/Makefile`'s `add_version` target, gated by `WRITE_FINMAG_VERSION`).
-The two are intentionally decoupled: a git SHA is not a valid PEP 440
-version string, so `pyproject.toml` cannot derive its `version` from
-`finmag.__version__` directly.
-
-There is deliberately no build-backend hook that invokes `native/Makefile`
-during `pip install`: the native modules are C++/Boost.Python extensions
-linked directly against this pixi environment's conda-provided compiler,
-Boost, and SUNDIALS libraries, and are rebuilt in place under
-`src/finmag/native/`, which an editable install picks up automatically with
-no reinstall step. A non-editable (built) wheel is explicitly a non-goal for
-this lane: the compiled `.so` files are linked against this specific conda
-environment's libraries (Boost.Python ABI tag, SUNDIALS 7 sonames, etc.) and
-are not portable/redistributable the way a wheel implies.
-
-Every focused DOLFINx port gate (`pixi run -e dolfinx dolfinx-src-*`) and the
-aggregated `dev/bin/verify-dolfinx-m5` witness run against this installed
-package. The immutable legacy-oracle comparison lane
-(`dev/bin/run-legacy-oracle`) is unaffected: its reference checkouts predate
-`pyproject.toml` and do not need it.
-
-### Continuous integration
-
-- `.github/workflows/test-fast.yml` (formerly `dolfinx-m5.yml`) — runs on
-  every push/PR: the fast, focused port-gate witness (~33 gates).
-- `.github/workflows/test-python.yml` — weekly (Mondays) + on-demand: the
-  full `src/finmag` suite inventory, gated on `failed=0 errors=0`.
-- `.github/workflows/test-slow.yml` — on-demand only (no schedule): the
-  heavy `FINMAG_EXAMPLE_FULL=1` example lane; long-running by design.
-
-GitHub only fires `schedule`/`workflow_dispatch` from the repo's default
-branch, so `test-python.yml`/`test-slow.yml` are inert on non-default
-branches until merged; run their equivalents locally meanwhile:
-`dev/bin/inventory-dolfinx-suite` and `FINMAG_EXAMPLE_FULL=1 pixi run -e
-dolfinx dolfinx-src-examples-pytest`. Also note GitHub-hosted runners cap
-jobs at 360 minutes, below the FULL lane's current ~10-13h runtime (register
-P1); `test-slow.yml`'s `timeout-minutes: 360` documents the tier rather than
-guaranteeing completion until the post-SR1 performance work lands.
-
-### Current DOLFINx status and limitations
-
-The DOLFINx branch is at **SR1** (tag `sr1`, declared 2026-07-28): a serial
-deterministic micromagnetic simulator, **not** yet full parity with original
-`master`. It provides the common energy terms, FK and treecode/MacroGeometry
-demag, varying materials, regions, local spin-transfer torque, SciPy and native
-CVODE integration, scheduling, restart and common output. The aggregate test
-gate being green means this **ported subset** passes; it does not mean every
-original Finmag feature is available — and the full-resolution example lane
-stands at **15 of 17 entries green**, with `std_prob_4` and `magnetic_grain`
-deferred by owner decision to a re-run after the performance work below.
-
-Major work still outstanding includes thermal SLLG/LLB, normal modes and
-FFT/PSD, legacy NEB, general MPI time stepping, `Simulation(pbc=)`, nonlocal
-STT, live external comparison harnesses, VTK/XDMF function readback, and
-specialist plotting/utilities. Some top-level compatibility names still expose
-legacy `dolfin` imports. Native Sundials is the public `Simulation`/`sim_with`
-default; SciPy remains a fully supported explicit opt-in
-(`integrator_backend="scipy"`).
-
-**Performance caveat:** the port is currently ~17.6x slower than legacy-era
-expectations on the heaviest examples (register `P1`); the root cause is
-per-evaluation form re-assembly and a fix is planned in
-[`docs/superpowers/plans/2026-07-28-post-sr1-performance.md`](docs/superpowers/plans/2026-07-28-post-sr1-performance.md).
-Budget accordingly.
-
-**Start here:** [`docs/SUPPORTED.md`](docs/SUPPORTED.md) — supported API,
-validation classes and tolerances, the "waiting to be ported" list, the
-permanently-dropped list, and how deferred surfaces fail.
-
-For the exact tested boundary and known failures, see
-[`docs/superpowers/capability-status.md`](docs/superpowers/capability-status.md).
-For every recorded behavior deviation and its owner disposition, see
-[`docs/superpowers/acceptance-register.md`](docs/superpowers/acceptance-register.md).
-For the file-by-file master/pixi test and example mapping, see
-[`docs/superpowers/master-pixi-parity-manifest.md`](docs/superpowers/master-pixi-parity-manifest.md).
-For a printable functionality-by-functionality owner discussion, use
-[`docs/superpowers/owner-porting-checklist.md`](docs/superpowers/owner-porting-checklist.md).
-Unavailable public surfaces should raise a feature-specific error; a raw
-`dolfin` import failure is a tracked port bug, not an installation instruction.
-
-## Binder
+## Binder (currently using python2 version)
 
 If you want to try using Finmag in the cloud you can do it on [Binder](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?filepath=binder%2Findex.ipynb). This does not require you to have anything installed and no files will be created on your machine. You only need a web browser.
 
