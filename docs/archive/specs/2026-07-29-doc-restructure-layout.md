@@ -1,3 +1,7 @@
+> **ARCHIVED (2026-07-29).** This restructure is complete; the spec is kept
+> as a historical record and archived by itself as its own final step.
+> Current truth: docs/README.md.
+
 # Finmag DOLFINx port — FINAL documentation layout (second-opinion architect)
 
 **Repo:** `/home/sam/repos/finmag` · **Branch:** `dolfinx-parity` · **HEAD:** `f4ff725d` · **Date:** 2026-07-29

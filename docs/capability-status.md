@@ -1,5 +1,13 @@
 # Finmag DOLFINx Capability Status
 
+**Terminology used throughout this file:** "SR1" (Support Release 1) is the
+port's first supported subset, declared 2026-07-28 — see
+[`SUPPORTED.md`](SUPPORTED.md). Parenthetical citations like `(SR1 P2.4)`
+reference this project's internal phase/task tracking during the port; the
+plans that defined those labels are preserved under `docs/archive/plans/`
+and `docs/archive/specs/`. They are historical provenance alongside the
+authoritative commit hashes and dates.
+
 **Source baseline audited:** 2026-07-23 at `dolfinx-parity` commit
 `f1a1344c423e74687ddf820c1fafc056a6271fe1`
 

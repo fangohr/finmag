@@ -1,5 +1,9 @@
 # Post-SR1 Performance Implementation Plan
 
+(SR1 = Support Release 1, the first supported subset of the DOLFINx port;
+see [`../SUPPORTED.md`](../SUPPORTED.md). This plan starts after its
+declaration.)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the DOLFINx port usable in wall-clock terms — close the

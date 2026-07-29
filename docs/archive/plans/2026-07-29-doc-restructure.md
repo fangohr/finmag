@@ -1,3 +1,7 @@
+> **ARCHIVED (2026-07-29).** This restructure is complete; the plan is kept
+> as a historical record and archived by itself as its own final step.
+> Current truth: docs/README.md.
+
 # Documentation Restructure Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

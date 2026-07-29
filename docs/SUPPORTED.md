@@ -407,7 +407,7 @@ owner decision.
 | Live OOMMF reference generation | **M14** | external-harness project, not a finmag capability; checked-in data retained |
 | Live Magpar reference generation | **M15** | same; coordinate/invariant comparisons retained |
 | GCR demag solver | **M2** | correctness never established; mapping it to FK would be misleading |
-| Netgen **binary** backend | **M4a** | the P5.1 necessity probe found no selected geometry needing it |
+| Netgen **binary** backend | **M4a** | a 2026-07-25 investigation found no selected geometry needing it |
 | `nmesh_to_dolfin` conversion | **M4b** | its dolfin-XML output cannot be loaded by DOLFINx |
 | `FixedEnergyDW` | **M6** | no master tests, a legacy note calls it broken |
 | Paraview/mencoder movie export | **M9** | rendering belongs outside the simulator; data export retained |
