@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Public Interface Audit — Finmag DOLFINx Port
 
 > **Historical focused audit, not an exhaustive API inventory.** This document

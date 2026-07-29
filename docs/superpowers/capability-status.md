@@ -13,10 +13,11 @@ current date. This file is not stale as of the 2026-07-23 header date alone.
 `master` (`b5015c5a`), except for deviations explicitly accepted by the
 repository owner.
 
-This is the canonical current capability inventory. `HANDOVER.md` is the short
-entry point; `acceptance-register.md` is the sole owner-decision ledger. The
-plans, `transition-notes.org`, and `dev/dolfinx/porting_map.md` preserve history
-and evidence but do not override this status table.
+This is the canonical current capability inventory. `docs/archive/HANDOVER.md`
+was the short entry point (now retired; see `docs/README.md`);
+`acceptance-register.md` is the sole owner-decision ledger. The plans,
+`docs/archive/transition-notes.org`, and `docs/archive/porting_map.md`
+preserve history and evidence but do not override this status table.
 
 Maintenance rule: every implementation slice updates the affected row(s) in
 this file in the same commit, naming the focused gate and baseline SHA/date in

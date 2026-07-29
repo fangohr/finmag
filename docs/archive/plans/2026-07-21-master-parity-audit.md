@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Finmag Master-Parity Audit & Phase-3 Plan
 
 **Date:** 2026-07-21   **Branch audited:** `dolfinx-parity` @ `2ecd5041` (read-only)

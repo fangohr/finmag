@@ -16,8 +16,8 @@ it are:
 |---|---|
 | [`superpowers/capability-status.md`](superpowers/capability-status.md) | canonical per-capability status and evidence (C01–C22) |
 | [`superpowers/acceptance-register.md`](superpowers/acceptance-register.md) | the sole owner-decision ledger (D-rows, M-rows, P1) |
-| [`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) | entry point for anyone resuming the port |
-| [`superpowers/master-pixi-parity-manifest.md`](superpowers/master-pixi-parity-manifest.md) | file-by-file master↔port test/example map |
+| [`archive/HANDOVER.md`](archive/HANDOVER.md) | retired entry point (historical; see [docs/README.md](README.md)) |
+| [`archive/master-pixi-parity-manifest.md`](archive/master-pixi-parity-manifest.md) | file-by-file master↔port test/example map |
 
 Register rows are cited inline below as **D<n>** / **M<n>** / **P1**; each is a
 recorded owner decision, not an informal note.
@@ -234,14 +234,14 @@ The remaining **two** entries — `std_prob_4/test_std_prob_4.py` (the full 2 ns
 trace) and `magnetic_grain/suess_2001.py` (full three-field physics) — are
 **deferred by owner decision (2026-07-28)** to a re-run scheduled *after* the
 post-SR1 performance work
-([`superpowers/plans/2026-07-28-post-sr1-performance.md`](superpowers/plans/2026-07-28-post-sr1-performance.md)),
+([`plans/2026-07-28-post-sr1-performance.md`](plans/2026-07-28-post-sr1-performance.md)),
 because those two entries are the primary beneficiaries of the planned
 speedups (their budgeted timeouts are 38400 s and 21600 s respectively).
 
 This is a **sequencing decision, not an evidence downgrade**: the deferral is
 recorded here, in `capability-status.md` (C15 stays *partial
-(declaration-qualified)*, not PASS), and in `HANDOVER.md`. Completing those two
-entries is named, scheduled follow-up work.
+(declaration-qualified)*, not PASS), and in `archive/HANDOVER.md`. Completing
+those two entries is named, scheduled follow-up work.
 
 Supporting evidence chain for the FULL lane (all wrapper timeouts were rescaled
 to *measured* rates, never to make a run pass):
@@ -276,7 +276,7 @@ difference, largest where the anisotropy field varies fastest. Because the
 maximum happened to land on an exactly-coincident node, this was **not** taken
 on trust: an adversarial physics review was run specifically to rule out a
 masked anisotropy-field defect. Verdict **DRIFT, UPHELD** — see
-[`superpowers/specs/2026-07-27-d29-verdict.md`](superpowers/specs/2026-07-27-d29-verdict.md).
+[`archive/specs/2026-07-27-d29-verdict.md`](archive/specs/2026-07-27-d29-verdict.md).
 Owner disposition: ACCEPT as quantified mesh-regeneration drift; no fix slice
 required.
 
@@ -300,7 +300,7 @@ Root cause identified 2026-07-28: the port re-does `fem.form(...)` +
 the compiled `Equation` backend (**M3**) compounds it.
 
 The fix is planned, not done:
-[`superpowers/plans/2026-07-28-post-sr1-performance.md`](superpowers/plans/2026-07-28-post-sr1-performance.md)
+[`plans/2026-07-28-post-sr1-performance.md`](plans/2026-07-28-post-sr1-performance.md)
 rebuilds the precompute as an *internal* optimisation of `box-assemble`
 semantics — it does **not** resurrect the removed legacy method names (D32
 stands).
@@ -511,7 +511,7 @@ classification (superseded post-T5, now two mechanisms only) was in the
 Task-7 verification report under
 `.superpowers/sdd/2026-07-27-canonical-test-paths/`; that session record no
 longer exists — the authoritative in-repo record is
-[`superpowers/HANDOVER.md`](superpowers/HANDOVER.md) under "Canonical test
+[`archive/HANDOVER.md`](archive/HANDOVER.md) under "Canonical test
 paths, the legacy oracle lane, and the inventory lane" plus git history.
 
 ---

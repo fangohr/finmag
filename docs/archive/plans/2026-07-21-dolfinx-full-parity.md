@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Finmag DOLFINx Full-Parity Plan (Phase 2)
 
 ## Goal

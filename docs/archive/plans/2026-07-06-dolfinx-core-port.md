@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Finmag DOLFINx Direct-Port Implementation Plan
 
 > **Completed Phase-1 plan.** Tasks 1-12 are closed. Its “Migration Complete”

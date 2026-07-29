@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Canonical Test Paths (retire the `*_dolfinx.py` sibling convention) Implementation Plan
 
 **STATUS: COMPLETE (2026-07-27).** All 8 tasks done; every step box below is

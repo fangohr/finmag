@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # SR1 batch-ratification decision sheet
 
 **Date:** 2026-07-27 (SR1 S5a). **Branch:** `dolfinx-parity`.

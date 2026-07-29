@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Finmag Porting Decisions — Owner Meeting Checklist
 
 **Meeting date:** 2026-07-23

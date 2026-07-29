@@ -1,3 +1,5 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
 # Master/Pixi parity manifest (P0.1 — complete; P0.2 — baseline evidence complete)
 
 **Frozen source references:** original `master` `b5015c5a47c244eea1476d8e718286137dca0c83`; Python-3/FEniCS-2019 oracle `pixi` `ba9280934e188d7f3800e7b9865e70a9422f7687`; DOLFINx worktree `dolfinx-parity` `f1a1344c423e74687ddf820c1fafc056a6271fe1` (commit authored 2026-07-22; baseline reviewed 2026-07-23).

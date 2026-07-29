@@ -78,7 +78,7 @@ def main():
 
     out.append(
         "\nCapability matrix / what's ported vs. not yet: "
-        "`docs/superpowers/HANDOVER.md` (section 2).\n"
+        "`docs/archive/HANDOVER.md` (section 2).\n"
     )
 
     sys.stdout.writelines(out)
