@@ -1,0 +1,45 @@
+# master's test-fast tier: the per-push 33-gate aggregate (runs
+# dev/bin/verify-dolfinx-m5; keeps the M5 milestone script name). Formerly
+# dolfinx-m5.yml. [Claude Sonnet 5]
+name: test-fast
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-fast:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    - name: Run direct-source DOLFINx gate (verify-dolfinx-m5)
+      run: |
+        # Task 10: aggregates the Task 3-9 dolfinx-src-* focused gates plus
+        # the deferred-surfaces sweep and core smoke into one witness. [Claude Sonnet 5]
+        #
+        # Task 32 (2026-07-22): tee to a log file purely so the summary step
+        # below can render a human-readable pass/fail breakdown; the verifier
+        # itself is untouched and its exit code is what fails/passes this job
+        # (pipefail keeps that true even though output is piped through tee).
+        # [Claude Sonnet 5]
+        set -o pipefail
+        dev/bin/verify-dolfinx-m5 2>&1 | tee dolfinx-m5.log
+
+    - name: Summarize gate results
+      if: always()
+      run: |
+        # Task 32 (2026-07-22): renders which of the ~30 named gates in
+        # dev/bin/verify-dolfinx-m5 ran and passed as a Job Summary, so a
+        # human doesn't have to read the raw log to see what works. Read-only:
+        # does not change what ran or the job's conclusion. [Claude Sonnet 5]
+        dev/bin/ci-summarize-dolfinx-m5 "${{ job.status }}" dolfinx-m5.log >> "$GITHUB_STEP_SUMMARY"

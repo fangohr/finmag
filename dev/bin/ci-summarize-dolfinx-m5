@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Render a human-legible pass/fail summary for the dolfinx-m5 CI job.
+
+This is purely a CI-output/legibility helper (Task 32, 2026-07-22). It does
+not run or alter dev/bin/verify-dolfinx-m5 in any way: it reads the verifier
+script (to know the full expected list of named gates) and a tee'd copy of
+its stdout/stderr from the job's own run step, and turns the verifier's own
+"==> ..." progress lines into a Markdown checklist plus a pass/fail headline.
+
+Usage:
+    dev/bin/ci-summarize-dolfinx-m5 <job-status> <log-file> >> "$GITHUB_STEP_SUMMARY"
+
+<job-status> is the GitHub Actions `job.status` value ("success", "failure",
+or "cancelled") for the job so far, passed in by the calling workflow step.
+"""
+
+import sys
+
+VERIFY_SCRIPT = "dev/bin/verify-dolfinx-m5"
+MARKER = 'echo "==>'
+PREFIX = "==> "
+
+
+def main():
+    if len(sys.argv) != 3:
+        print("usage: ci-summarize-dolfinx-m5 <job-status> <log-file>", file=sys.stderr)
+        return 2
+    job_status, log_path = sys.argv[1], sys.argv[2]
+
+    with open(VERIFY_SCRIPT) as f:
+        expected = [
+            line.strip().split('"')[1][len(PREFIX):]
+            for line in f
+            if line.strip().startswith(MARKER)
+        ]
+
+    try:
+        with open(log_path) as f:
+            log_lines = f.readlines()
+    except FileNotFoundError:
+        log_lines = []
+
+    ran = [
+        line.rstrip("\n")[len(PREFIX):]
+        for line in log_lines
+        if line.startswith(PREFIX)
+    ]
+
+    out = []
+    out.append("## dolfinx-m5: first direct-source DOLFINx gate\n\n")
+    if job_status == "success":
+        out.append(
+            f"**Result: PASS** -- all {len(ran)}/{len(expected)} named gates in "
+            f"`{VERIFY_SCRIPT}` ran and passed.\n"
+        )
+    else:
+        out.append(
+            f"**Result: {job_status.upper()}** -- {len(ran)}/{len(expected)} named "
+            "gates started before the run stopped (see log excerpt below).\n"
+        )
+
+    out.append("\n### Gates\n\n")
+    for i, name in enumerate(expected):
+        if i < len(ran):
+            is_last_and_failed = (job_status != "success" and i == len(ran) - 1)
+            box = "[ ]" if is_last_and_failed else "[x]"
+            note = "FAILED / did not complete" if is_last_and_failed else "passed"
+        else:
+            box, note = "[ ]", "not reached"
+        out.append(f"- {box} `{name}` -- {note}\n")
+
+    if job_status != "success":
+        out.append("\n<details><summary>Last 80 log lines</summary>\n\n```\n")
+        out.extend(log_lines[-80:])
+        if out[-1] and not out[-1].endswith("\n"):
+            out.append("\n")
+        out.append("```\n</details>\n")
+
+    out.append(
+        "\nCapability matrix / what's ported vs. not yet: "
+        "`docs/archive/HANDOVER.md` (section 2).\n"
+    )
+
+    sys.stdout.writelines(out)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

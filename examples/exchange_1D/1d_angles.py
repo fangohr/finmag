@@ -1,3 +1,6 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Visualisation/analysis of 1d_run.py output (pylab). Requires Task 26.
+# [Claude Opus 4.8]
 import numpy
 import pylab
 from finmag.util.helpers import vectors, norm, angle

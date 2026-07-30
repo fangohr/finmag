@@ -2,10 +2,20 @@ import functools
 import logging
 
 from finmag.util.consts import ONE_DEGREE_PER_NS
-from finmag.util.helpers import compute_dmdt
+from finmag.sim.sim_helpers import compute_dmdt
 
 log = logging.getLogger(name="finmag")
 
+# Task 15 DOLFINx port note [Claude Sonnet 5]: ``compute_dmdt`` is now
+# imported from ``finmag.sim.sim_helpers`` (a local, dolfin-free
+# reimplementation identical to the legacy ``finmag.util.helpers`` one --
+# see that module's docstring) instead of the legacy ``dolfin``-backed
+# ``finmag.util.helpers``, so this module stays import-clean in the DOLFINx
+# environment. This is the *only* change to this file; every relaxation
+# algorithm/parameter below (including the local ``ONE_DEGREE_PER_NS``
+# shadowing the slightly different ``finmag.util.consts`` value -- a
+# preserved legacy quirk, not a typo fixed here) is transcribed verbatim from
+# the frozen legacy oracle.
 ONE_DEGREE_PER_NS = 17453292.5  # in rad/s
 
 

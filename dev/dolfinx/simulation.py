@@ -17,7 +17,10 @@ import numpy as np
 
 from dev.dolfinx.prototype import average_nodal_vector
 from dev.dolfinx.prototype import constant_vector_function
+from dev.dolfinx.prototype import cubic_anisotropy_energy
+from dev.dolfinx.prototype import dmi_energy
 from dev.dolfinx.prototype import exchange_energy
+from dev.dolfinx.prototype import effective_field_llg_step
 from dev.dolfinx.prototype import explicit_llg_step
 from dev.dolfinx.prototype import nodal_vector_values
 from dev.dolfinx.prototype import uniaxial_anisotropy_energy
@@ -62,7 +65,14 @@ class PrototypeSimulation:
         )
 
     def energy_terms(self):
-        """Return the currently supported M5 prototype energy terms."""
+        """Return the currently supported M5 prototype energy terms.
+
+        ``dmi`` uses ``dmi_constant`` from ``self.parameters``, which defaults
+        to ``0.0``. ``dmi_energy`` only supports 3D meshes, so a non-zero
+        ``dmi_constant`` on a 2D mesh (such as ``unit_square``) raises
+        explicitly rather than silently doing the wrong thing. [GitHub
+        Copilot / Claude Sonnet 5]
+        """
         exchange = exchange_energy(
             self.magnetisation,
             exchange_constant=self.parameters.exchange_constant,
@@ -80,10 +90,28 @@ class PrototypeSimulation:
             anisotropy_constant=self.parameters.anisotropy_constant,
             unit_length=self.parameters.unit_length,
         )
+        dmi = dmi_energy(
+            self.magnetisation,
+            dmi_constant=self.parameters.dmi_constant,
+            unit_length=self.parameters.unit_length,
+        )
+        cubic_anisotropy = cubic_anisotropy_energy(
+            self.magnetisation,
+            u1=self.parameters.cubic_anisotropy_u1,
+            u2=self.parameters.cubic_anisotropy_u2,
+            K1=self.parameters.cubic_anisotropy_K1,
+            K2=self.parameters.cubic_anisotropy_K2,
+            K3=self.parameters.cubic_anisotropy_K3,
+            unit_length=self.parameters.unit_length,
+        )
         return {
             "anisotropy": float(anisotropy),
+            "cubic_anisotropy": float(cubic_anisotropy),
+            "dmi": float(dmi),
             "exchange": float(exchange),
-            "total": float(exchange + zeeman + anisotropy),
+            "total": float(
+                exchange + zeeman + anisotropy + dmi + cubic_anisotropy
+            ),
             "zeeman": float(zeeman),
         }
 
@@ -165,21 +193,38 @@ class PrototypeSimulation:
             "time": state["time"],
         }
 
-    def step(self, dt, gamma=1.0, alpha=1.0):
-        """Advance the reduced simulation by one explicit LLG step."""
+    def step(self, dt, gamma=1.0, alpha=1.0, use_effective_field=False):
+        """Advance the reduced simulation by one explicit LLG step.
+
+        By default this precesses/damps toward the fixed
+        ``self.parameters.field`` only (matching the original prototype
+        stepper). Pass ``use_effective_field=True`` to instead drive the
+        step with the full energy-derived effective field (exchange,
+        Zeeman, anisotropy, DMI, cubic anisotropy), via
+        ``effective_field_llg_step``. [GitHub Copilot / Claude Sonnet 5]
+        """
         if dt <= 0:
             raise ValueError("dt must be positive")
-        explicit_llg_step(
-            self.magnetisation,
-            effective_field=self.parameters.field,
-            dt=dt,
-            gamma=gamma,
-            alpha=alpha,
-        )
+        if use_effective_field:
+            effective_field_llg_step(
+                self.magnetisation,
+                self.parameters,
+                dt=dt,
+                gamma=gamma,
+                alpha=alpha,
+            )
+        else:
+            explicit_llg_step(
+                self.magnetisation,
+                effective_field=self.parameters.field,
+                dt=dt,
+                gamma=gamma,
+                alpha=alpha,
+            )
         self.time += float(dt)
         return self
 
-    def run_until(self, target_time, dt, gamma=1.0, alpha=1.0):
+    def run_until(self, target_time, dt, gamma=1.0, alpha=1.0, use_effective_field=False):
         """Advance to ``target_time`` with bounded explicit prototype steps.
 
         This is a deliberately narrow compatibility-shaped probe for the legacy
@@ -198,20 +243,21 @@ class PrototypeSimulation:
                 dt=min(float(dt), target_time - self.time),
                 gamma=gamma,
                 alpha=alpha,
+                use_effective_field=use_effective_field,
             )
         return self
 
-    def relax(self, steps, dt, gamma=1.0, alpha=1.0):
+    def relax(self, steps, dt, gamma=1.0, alpha=1.0, use_effective_field=False):
         """Run a short deterministic relaxation and return total energy history."""
         if steps < 1:
             raise ValueError("steps must be positive")
         energy_history = [self.energy_terms()["total"]]
         for _ in range(steps):
-            self.step(dt=dt, gamma=gamma, alpha=alpha)
+            self.step(dt=dt, gamma=gamma, alpha=alpha, use_effective_field=use_effective_field)
             energy_history.append(self.energy_terms()["total"])
         return energy_history
 
-    def relaxation_trace(self, steps, dt, gamma=1.0, alpha=1.0):
+    def relaxation_trace(self, steps, dt, gamma=1.0, alpha=1.0, use_effective_field=False):
         """Run relaxation and return JSON-compatible per-step state records.
 
         The trace is a prototype data-I/O contract for M5. It captures enough
@@ -226,7 +272,7 @@ class PrototypeSimulation:
         start_time = float(self.time)
         records = [self.trace_record(step=0)]
         for step in range(1, steps + 1):
-            self.step(dt=dt, gamma=gamma, alpha=alpha)
+            self.step(dt=dt, gamma=gamma, alpha=alpha, use_effective_field=use_effective_field)
             records.append(self.trace_record(step=step))
 
         return {
@@ -241,9 +287,17 @@ class PrototypeSimulation:
             "time": float(self.time),
         }
 
-    def write_relaxation_trace(self, output_path, steps, dt, gamma=1.0, alpha=1.0):
+    def write_relaxation_trace(
+        self, output_path, steps, dt, gamma=1.0, alpha=1.0, use_effective_field=False
+    ):
         """Run relaxation and write the reduced per-step trace to JSON."""
-        trace = self.relaxation_trace(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+        trace = self.relaxation_trace(
+            steps=steps,
+            dt=dt,
+            gamma=gamma,
+            alpha=alpha,
+            use_effective_field=use_effective_field,
+        )
         output_path = Path(output_path)
         if self.domain.comm.rank == 0:
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -251,9 +305,15 @@ class PrototypeSimulation:
         self.domain.comm.Barrier()
         return trace
 
-    def relaxation_summary(self, steps, dt, gamma=1.0, alpha=1.0):
+    def relaxation_summary(self, steps, dt, gamma=1.0, alpha=1.0, use_effective_field=False):
         """Run relaxation and return a JSON-compatible reduced summary."""
-        energy_history = self.relax(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+        energy_history = self.relax(
+            steps=steps,
+            dt=dt,
+            gamma=gamma,
+            alpha=alpha,
+            use_effective_field=use_effective_field,
+        )
         return {
             "dolfinx_version": dolfinx.__version__,
             "dt": float(dt),
@@ -268,10 +328,18 @@ class PrototypeSimulation:
             "steps": int(steps),
         }
 
-    def write_relaxation_summary(self, output_path, steps, dt, gamma=1.0, alpha=1.0):
+    def write_relaxation_summary(
+        self, output_path, steps, dt, gamma=1.0, alpha=1.0, use_effective_field=False
+    ):
         """Run relaxation, validate the reduced summary, and write JSON output."""
         summary = validate_summary(
-            self.relaxation_summary(steps=steps, dt=dt, gamma=gamma, alpha=alpha)
+            self.relaxation_summary(
+                steps=steps,
+                dt=dt,
+                gamma=gamma,
+                alpha=alpha,
+                use_effective_field=use_effective_field,
+            )
         )
         output_path = Path(output_path)
         if self.domain.comm.rank == 0:

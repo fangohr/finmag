@@ -1,0 +1,245 @@
+{
+  "coordinates": {
+    "ordering": "lexicographic_xyz",
+    "unit": "mesh_coordinate",
+    "values": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        2.0,
+        0.0,
+        0.0
+      ],
+      [
+        3.0,
+        0.0,
+        0.0
+      ],
+      [
+        4.0,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  "description": "Deterministic LLG dm/dt with the Slonczewski/Xiao spin-transfer torque on a 1D interval mesh: spatially uniform m at an angle to the polarisation p, plus Zeeman. 1D connectivity is identical in dolfin and dolfinx, isolating the STT physics from tetrahedralisation.",
+  "mesh": {
+    "parameters": {
+      "cells": 4,
+      "x0": 0.0,
+      "x1": 4.0
+    },
+    "recipe": "dolfin.IntervalMesh(4, 0.0, 4.0)"
+  },
+  "oracle": {
+    "command": [
+      "dev/bin/run-legacy-oracle",
+      "--",
+      "pixi",
+      "run",
+      "--locked",
+      "env",
+      "PYTHONPATH=src",
+      "python",
+      "<abs-path-to>/gen_slonczewski_rhs.py"
+    ],
+    "commit": "ba9280934e188d7f3800e7b9865e70a9422f7687",
+    "generator": "src/finmag/tests/fixtures/gen_slonczewski_rhs.py",
+    "generator_note": "Committed driver run at the oracle by absolute path via dev/bin/run-legacy-oracle (the script does not exist inside the detached oracle checkout, so it is supplied by absolute path). The RHS itself is computed by the frozen finmag LLG.solve with do_slonczewski active (native calc_llg_slonczewski_dmdt / slonczewski_xiao_i); the driver only sorts and serialises coordinate-paired nodal values."
+  },
+  "physical_parameters": {
+    "H_zeeman": {
+      "unit": "A/m",
+      "value": [
+        10000.0,
+        20000.0,
+        -5000.0
+      ]
+    },
+    "J": {
+      "unit": "A/m^2",
+      "value": 1000000000000.0
+    },
+    "Lambda": {
+      "unit": "1",
+      "value": 2.0
+    },
+    "Ms": {
+      "unit": "A/m",
+      "value": 860000.0
+    },
+    "P": {
+      "unit": "1",
+      "value": 0.4
+    },
+    "alpha": {
+      "unit": "1",
+      "value": 0.1
+    },
+    "c": {
+      "unit": "1/s",
+      "value": 100000000000.0
+    },
+    "d": {
+      "unit": "m",
+      "value": 2e-09
+    },
+    "do_precession": {
+      "unit": "1",
+      "value": true
+    },
+    "epsilonprime": {
+      "unit": "1",
+      "value": 0.1
+    },
+    "gamma": {
+      "unit": "m/(A*s)",
+      "value": 221017.3
+    },
+    "m_uniform": {
+      "unit": "1",
+      "value": [
+        0.6,
+        0.0,
+        0.8
+      ]
+    },
+    "p": {
+      "unit": "1",
+      "value": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "unit_length": {
+      "unit": "m",
+      "value": 1e-09
+    }
+  },
+  "quantities": [
+    {
+      "name": "m",
+      "tolerances": {
+        "absolute": 1e-12,
+        "relative": 1e-12
+      },
+      "unit": "1",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          0.6,
+          0.0,
+          0.8
+        ],
+        [
+          0.6,
+          0.0,
+          0.8
+        ],
+        [
+          0.6,
+          0.0,
+          0.8
+        ],
+        [
+          0.6,
+          0.0,
+          0.8
+        ],
+        [
+          0.6,
+          0.0,
+          0.8
+        ]
+      ]
+    },
+    {
+      "name": "effective_field",
+      "tolerances": {
+        "absolute": 0.001,
+        "relative": 1e-09
+      },
+      "unit": "A/m",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          10000.0,
+          20000.0,
+          -5000.0
+        ],
+        [
+          10000.0,
+          20000.0,
+          -5000.0
+        ],
+        [
+          10000.0,
+          20000.0,
+          -5000.0
+        ],
+        [
+          10000.0,
+          20000.0,
+          -5000.0
+        ],
+        [
+          10000.0,
+          20000.0,
+          -5000.0
+        ]
+      ]
+    },
+    {
+      "name": "dmdt",
+      "tolerances": {
+        "absolute": 1.0,
+        "relative": 1e-09
+      },
+      "unit": "1/s",
+      "value_shape": [
+        3
+      ],
+      "values": [
+        [
+          -2902405329.0591383,
+          1164400828.8047142,
+          2176803996.794353
+        ],
+        [
+          -2902405329.0591383,
+          1164400828.8047142,
+          2176803996.794353
+        ],
+        [
+          -2902405329.0591383,
+          1164400828.8047142,
+          2176803996.794353
+        ],
+        [
+          -2902405329.0591383,
+          1164400828.8047142,
+          2176803996.794353
+        ],
+        [
+          -2902405329.0591383,
+          1164400828.8047142,
+          2176803996.794353
+        ]
+      ]
+    }
+  ],
+  "schema_version": 1
+}

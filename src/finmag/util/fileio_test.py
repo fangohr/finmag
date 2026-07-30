@@ -1,3 +1,11 @@
+"""Canonical path for the master ``fileio_test.py``; this file never had a
+DOLFINx port. Its Tablewriter/Tablereader ndt round-trip surface IS ported
+(see ``finmag.util.fileio``); the only change needed here is the dolfin ->
+dolfinx mesh-construction swap (``df.BoxMesh`` -> ``dolfinx.mesh.create_box``)
+plus the same Python-2->3 print/import fixups already applied elsewhere on
+this branch. Closes a sweep failure (CI T2). [Claude Sonnet 5]
+"""
+
 import numpy as np
 import pytest
 import os
@@ -10,12 +18,15 @@ MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 def test_Table_writer_and_reader(tmpdir):
     os.chdir(str(tmpdir))
     import finmag
-    import dolfin as df
+    from dolfinx import mesh as dmesh
+    from mpi4py import MPI
 
     xmin, ymin, zmin = 0, 0, 0    # one corner of cuboid
     xmax, ymax, zmax = 6, 6, 11   # other corner of cuboid
     nx, ny, nz = 3, 3, 6         # number of subdivisions (use ~2nm edgelength)
-    mesh = df.BoxMesh(df.Point(xmin, ymin, zmin), df.Point(xmax, ymax, zmax), nx, ny, nz)
+    mesh = dmesh.create_box(
+        MPI.COMM_WORLD, [(xmin, ymin, zmin), (xmax, ymax, zmax)], [nx, ny, nz],
+        dmesh.CellType.tetrahedron)
     # standard Py parameters
     sim = finmag.sim_with(mesh, Ms=0.86e6, alpha=0.5, unit_length=1e-9,
                           A=13e-12, m_init=(1, 0, 1))
@@ -47,6 +58,10 @@ def test_Table_writer_and_reader(tmpdir):
     assert np.allclose(dm, np.array(data['m_x', 'm_y', 'm_z']).T)
 
     # Reading an incomplete dataset should raise a runtime error
+    # Note (CI T7): 'test-incomplete-data.ndt' has never existed in git
+    # history at any commit (carried over unchanged from master); this still
+    # passes because Tablereader also raises RuntimeError for a missing
+    # file, just not for the "incomplete data" reason the test name implies.
     with pytest.raises(RuntimeError):
         Tablereader(os.path.join(MODULE_DIR, 'test-incomplete-data.ndt'))
 

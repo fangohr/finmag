@@ -1,29 +1,26 @@
 """
-Demonstrating spatially varying anisotropy. Example with anisotropy vectors as follows:
+Demonstrating spatially varying anisotropy. Anisotropy easy axis is (0, 0, 1)
+in the lower half of the film and (1, 0, 0) in the upper half -- a toy model of
+an exchange-spring system.
 
------------------------------------
-
---> --> --> --> --> --> --> --> -->
---> --> --> --> --> --> --> --> -->
---> --> --> --> --> --> --> --> -->
-
------------------------------------
-
-^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^
-|  |  |  |  |  |  |  |  |  |  |  |
-|  |  |  |  |  |  |  |  |  |  |  |
-
------------------------------------
+DOLFINx port (Task 30): converted from the legacy dolfin example.
+Changes vs legacy (all mechanically necessary for the ported package):
+  - `import dolfin` / pylab removed; VectorFunctionSpace -> dolfinx.fem.
+  - the legacy df.Expression easy-axis field became a vectorized Python
+    callable (the port drops string Expressions in favour of callables --
+    see INTERFACE-DRIFT: Expression-strings). UniaxialAnisotropy(K1, a) with a
+    spatially varying Field axis is unchanged (Task 16).
+  - the legacy pointwise probing `sim.m_field((x,y,z))` / `a((x,y,z))` is not
+    ported (Field.__call__ raises NotImplementedError -- see INTERFACE-DRIFT:
+    point-probing); the profile is read from Field.coords_and_values() instead.
+  - matplotlib profile plot / save_pvd removed (deferred, Task 26); replaced by
+    physical sanity assertions so the example self-validates.
+[Claude Opus 4.8]
 """
 import os
 import numpy as np
-import matplotlib as mpl
-mpl.use('Agg')
-
-import pylab
-import dolfin as df
-
-import matplotlib.pyplot as plt
+from mpi4py import MPI
+from dolfinx import mesh as dmesh, fem
 
 from finmag import Simulation
 from finmag.field import Field
@@ -32,31 +29,34 @@ from finmag.energies import UniaxialAnisotropy, Exchange
 MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_simulation(plot=False):
-    mu0 = 4.0 * np.pi * 10**-7  # vacuum permeability N/A^2
-    Ms = 1.0e6  # saturation magnetisation A/m
-    A = 13.0e-12  # exchange coupling strength J/m
-    Km = 0.5 * mu0 * Ms**2  # magnetostatic energy density scale kg/ms^2
-    lexch = (A/Km)**0.5  # exchange length m
+def run_simulation():
+    mu0 = 4.0 * np.pi * 10**-7
+    Ms = 1.0e6
+    A = 13.0e-12
+    Km = 0.5 * mu0 * Ms**2
+    lexch = (A / Km)**0.5
     unit_length = 1e-9
     K1 = Km
 
     L = lexch / unit_length
-    nx = 10
-    Lx = nx * L
-    ny = 1
-    Ly = ny * L
-    nz = 30
-    Lz = nz * L
-    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(Lx, Ly, Lz), nx, ny, nz)
+    nx, ny, nz = 10, 1, 30
+    Lx, Ly, Lz = nx * L, ny * L, nz * L
+    mesh = dmesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (Lx, Ly, Lz)],
+        [nx, ny, nz], dmesh.CellType.tetrahedron)
 
-    # Anisotropy easy axis is (0, 0, 1) in the lower half of the film and
-    # (1, 0, 0) in the upper half. This is a toy model of the exchange spring
-    # systems that Bob Stamps is working on.
     boundary = Lz / 2.0
-    expr_a = df.Expression(("x[2] <= b ? 0 : 1", "0", "x[2] <= b ? 1 : 0"), b=boundary, degree=1)
-    V = df.VectorFunctionSpace(mesh, "DG", 0, dim=3)
-    a = Field(V, expr_a)
+
+    # Easy axis: (0,0,1) for z<=boundary, (1,0,0) above. Vectorized callable
+    # replacing the legacy df.Expression("x[2] <= b ? 0 : 1", "0", ...).
+    def easy_axis(x):
+        lower = x[2] <= boundary
+        ax = np.where(lower, 0.0, 1.0)
+        az = np.where(lower, 1.0, 0.0)
+        return np.array([ax, np.zeros_like(ax), az])
+
+    V = fem.functionspace(mesh, ("DG", 0, (3,)))
+    a = Field(V, easy_axis)
 
     sim = Simulation(mesh, Ms, unit_length)
     sim.set_m((1, 0, 1))
@@ -64,26 +64,27 @@ def run_simulation(plot=False):
     sim.add(Exchange(A))
     sim.relax()
 
-    if plot:
-        points = 200
-        zs = np.linspace(0, Lz, points)
-        axis_zs = np.zeros((points, 3))  # easy axis probed along z-axis
-        m_zs = np.zeros((points, 3))  # magnetisation probed along z-axis
+    # Read the relaxed magnetisation at the CG1 mesh nodes (the easy-axis field
+    # is DG0 / per-cell so it is not vertex-probed here; its effect is validated
+    # through the magnetisation response below).
+    coords, m_vals = sim.m_field.coords_and_values()
+    zs = coords[:, 2]
+    return zs, m_vals, boundary
 
-        for i, z in enumerate(zs):
-            axis_zs[i] = a((Lx/2.0, Ly/2.0, z))
-            m_zs[i] = sim.m_field((Lx/2.0, Ly/2.0, z))
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(zs, axis_zs[:, 0], "-o", label="a_x")
-        ax.plot(zs, axis_zs[:, 2], "-x", label="a_z")
-        ax.plot(zs, m_zs[:, 0], "-", label="m_x")
-        ax.plot(zs, m_zs[:, 2], "-", label="m_z")
-        ax.set_xlabel("z (nm)")
-        ax.legend(loc="upper left")
-        plt.savefig(os.path.join(MODULE_DIR, "profile.png"))
-        sim.m_field.save_pvd(os.path.join(MODULE_DIR, 'exchangespring.pvd'))
 
 if __name__ == "__main__":
-    run_simulation(plot=True)
+    zs, m_vals, boundary = run_simulation()
+
+    # |m| = 1 at every node.
+    norms = np.linalg.norm(m_vals, axis=1)
+    assert np.allclose(norms, 1.0, atol=1e-3), "magnetisation is not unit-length"
+
+    below = zs < boundary - 2.0
+    above = zs > boundary + 2.0
+    # Exchange spring: m follows the anisotropy -- more m_z in the lower half,
+    # more m_x in the upper half.
+    assert np.mean(m_vals[below, 2]) > np.mean(m_vals[above, 2]), \
+        "lower half should be more z-aligned"
+    assert np.mean(m_vals[above, 0]) > np.mean(m_vals[below, 0]), \
+        "upper half should be more x-aligned"
+    print("spatially-varying-anisotropy: exchange-spring profile relaxed, |m|=1.")

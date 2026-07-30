@@ -1,3 +1,4 @@
+# cython: language_level=3
 from cpython cimport bool
 import numpy as np
 cimport numpy as np
@@ -119,15 +120,7 @@ def compute_boundary_element(np.ndarray[double, ndim=1, mode="c"] xp,
                         np.ndarray[double, ndim=1, mode="c"] res,
 			np.ndarray[double, ndim=1, mode="c"] T):
     boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0], &T[0])
-    
-def compute_boundary_element(np.ndarray[double, ndim=1, mode="c"] xp,
-                        np.ndarray[double, ndim=1, mode="c"] x1,
-                        np.ndarray[double, ndim=1, mode="c"] x2,
-                        np.ndarray[double, ndim=1, mode="c"] x3,
-                        np.ndarray[double, ndim=1, mode="c"] res,
-            np.ndarray[double, ndim=1, mode="c"] T):
-    boundary_element(&xp[0], &x1[0], &x2[0], &x3[0], &res[0], &T[0])
-    
+
 def build_boundary_matrix(np.ndarray[double, ndim=2, mode="c"] x_t,
                         np.ndarray[int, ndim=2, mode="c"] face_nodes,
                         np.ndarray[double, ndim=2, mode="c"] bm,

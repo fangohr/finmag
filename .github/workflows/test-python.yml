@@ -1,0 +1,70 @@
+# CI T6 review fix (2026-07-28): GitHub only fires `schedule` and
+# `workflow_dispatch` from the repository's DEFAULT branch (main). This
+# workflow is therefore inert on `dolfinx-parity` -- it will not run, either
+# on the weekly cron or via manual dispatch, until this branch merges to
+# main. Until then, run the equivalent locally:
+#   dev/bin/inventory-dolfinx-suite
+# [Claude Sonnet 5]
+name: test-python
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  test-python:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    # Task 21's documented explicit two-step native story (mirrors
+    # test-fast.yml's (formerly dolfinx-m5.yml) verify-dolfinx-m5, which runs
+    # these same pixi tasks internally before its focused gates) --
+    # test-python invokes the inventory script directly rather than through
+    # verify-dolfinx-m5, so the env build has to happen here instead.
+    # [Claude Sonnet 5]
+    - name: Install editable package
+      run: pixi run -e dolfinx dolfinx-install-editable
+
+    - name: Build native extensions
+      run: pixi run -e dolfinx dolfinx-native-build
+
+    - name: Provenance check
+      run: pixi run -e dolfinx dolfinx-provenance-check
+
+    - name: Run full-suite inventory (non-gating parity sweep, gated on failed=0 errors=0)
+      run: |
+        # dev/bin/inventory-dolfinx-suite runs every test under src/finmag
+        # (including unported master tests) and exits 0 as long as pytest
+        # itself ran cleanly -- it does NOT fail on individual test
+        # failures/errors by design (that's the parity backlog, tracked
+        # separately). This job's gate is the grep assertion below on the
+        # INVENTORY line: a regression away from the green baseline
+        # (passed=769 failed=0 errors=0 skipped=46 xfailed=271) fails the
+        # job even though the script itself exited 0. [Claude Sonnet 5]
+        set -o pipefail
+        dev/bin/inventory-dolfinx-suite 2>&1 | tee inventory.log
+        inventory_line="$(grep -aE '^INVENTORY:' inventory.log | tail -1)"
+        echo "${inventory_line}"
+        echo "${inventory_line}" | grep -qE 'failed=0 errors=0' || {
+          echo "::error::inventory regression: expected failed=0 errors=0 (${inventory_line})"
+          exit 1
+        }
+
+    - name: Publish inventory tally
+      if: always()
+      run: |
+        {
+          echo "### test-python inventory tally"
+          echo
+          grep -aE '^INVENTORY:' inventory.log | tail -1
+        } >> "$GITHUB_STEP_SUMMARY"

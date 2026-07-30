@@ -10,7 +10,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 | Description | Badge |
 | --- | --- |
-| Tests | [![workflow](https://github.com/fangohr/finmag/workflows/workflow/badge.svg)](https://github.com/fangohr/finmag/actions) |
+| Tests | [![test-fast](https://github.com/fangohr/finmag/workflows/test-fast/badge.svg)](https://github.com/fangohr/finmag/actions) |
 |       | [![docker-image](https://github.com/fangohr/finmag/workflows/docker-image/badge.svg)](https://github.com/fangohr/finmag/actions) |
 | Binder | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fangohr/finmag/HEAD?filepath=binder%2Findex.ipynb) |
 | License | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
@@ -21,7 +21,7 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 ## About the `main` branch (python3)
 
-We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md).
+We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md). What is already supported is documented in [docs/SUPPORTED.md](docs/SUPPORTED.md).
 
 For production computation, use the Python2 version (see next section).
 

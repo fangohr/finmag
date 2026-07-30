@@ -1,4 +1,7 @@
-from finmag.util import DMI_from_helix as dfh
+try:  # master: from finmag.util import DMI_from_helix as dfh
+    from finmag.util import DMI_from_helix as dfh
+except ImportError:
+    dfh = None  # not ported (D33): tests below xfail
 import numpy as np
 import pytest
 
@@ -10,6 +13,8 @@ hDirection = np.array([1., 0., 0.])
 h = hDirection * 0.
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-from-helix test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_dmi_from_helix_solution():
 
     # Test the helix length solution with an example that is known to produce a
@@ -21,6 +26,8 @@ def test_dmi_from_helix_solution():
     assert abs(l - expectedSolution) < 1.5e-9
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-from-helix test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_helix_strong_field():
 
     # Test whether a helix is found (it shouldn't be) in a very strong magnetic
@@ -40,6 +47,8 @@ def test_helix_strong_field():
         dfh.Find_Helix_Length(d0, a, ms, H=h)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-from-helix test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_zero_helix():
 
     # Test whether a DMI value can be found for a helix of length zero (in the

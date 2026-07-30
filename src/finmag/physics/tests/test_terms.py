@@ -1,7 +1,10 @@
 import pytest
 import json
 from os import path
-import finmag.physics.equation as eqn
+try:  # master: import finmag.physics.equation as eqn
+    import finmag.physics.equation as eqn
+except ImportError:
+    eqn = None  # not ported (D33): tests below xfail
 
 
 @pytest.fixture
@@ -40,6 +43,8 @@ def native_and_python_terms_modules():
     return eqn.get_native_terms_module(), eqn.get_python_terms_module()
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled terms backend (register M3)", strict=True)
 def test_damping(terms_module):
     alpha, gamma = 1, 1
     mx, my, mz = 1, 0, 0
@@ -48,6 +53,8 @@ def test_damping(terms_module):
     assert (dmx, dmy, dmz) == (0, 0.5, 0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled terms backend (register M3)", strict=True)
 def test_precession(terms_module):
     alpha, gamma = 1, 1
     mx, my, mz = 1, 0, 0
@@ -56,6 +63,8 @@ def test_precession(terms_module):
     assert (dmx, dmy, dmz) == (0, 0, -0.5)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled terms backend (register M3)", strict=True)
 def test_relaxation(terms_module):
     c = 1.0
     mx, my, mz = 2, 0, 0
@@ -63,6 +72,8 @@ def test_relaxation(terms_module):
     assert (dmx, dmy, dmz) == (-6, 0, 0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled terms backend (register M3)", strict=True)
 def test_python_terms_match_native_terms(native_and_python_terms_modules):
     """
     Compare live native and Python terms outputs directly.
@@ -84,6 +95,8 @@ def test_python_terms_match_native_terms(native_and_python_terms_modules):
         python_terms.relaxation(*relaxation_args))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: compiled terms backend (register M3)", strict=True)
 def test_python_terms_match_checked_in_native_reference():
     """
     Compare Python terms outputs against stored native reference data.

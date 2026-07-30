@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finmag"
+description = "Finite-element micromagnetic simulation tool (DOLFINx lane)"
+readme = "README.md"
+# SPDX string form (not the deprecated `{text = ...}`/`{file = ...}` table
+# form): matches the BSD 3-Clause license this project's README and LICENSE
+# file already claim. [Claude Sonnet 5]
+license = "BSD-3-Clause"
+requires-python = ">=3.12"
+# Static, not dynamic: `src/finmag/__version__.py` holds a git revision SHA
+# (e.g. "907fe38636882b6026981a1b246cd9e77fba2495"), written by
+# `native/Makefile`'s `add_version` target for runtime provenance/debugging
+# (`finmag.__version__`) -- it is not, and was never intended to be, a PEP 440
+# version. Feeding it to setuptools as `dynamic = ["version"]` (via
+# `attr:`) fails hard: `pip install -e .` raises
+# `packaging.version.InvalidVersion` because `egg_info` normalizes/validates
+# whatever `attr:` returns as a PEP 440 version (confirmed empirically while
+# implementing this file). Rather than reformat the git-SHA convention (a
+# behavior change to `src/finmag`, out of scope here) or add
+# setuptools-scm (explicitly out of scope), `project.version` is a small
+# independent packaging-metadata constant pinned to match the `pixi.toml`
+# workspace `version`. It has no runtime meaning; `finmag.__version__`
+# remains the sole source of truth for the running package's provenance.
+# [Claude Sonnet 5]
+version = "0.1.0"
+# Runtime pip dependencies are deliberately minimal. The finite-element stack
+# (fenics-dolfinx, ufl, mpi4py, petsc4py) and SUNDIALS are conda/pixi
+# dependencies (see `pixi.toml`'s `dolfinx` feature), not pip ones: they are
+# not installable/buildable reliably from PyPI for this project's supported
+# environment, and pixi/conda already provides and pins them together with
+# their native (MPI, PETSc, SUNDIALS C) libraries. Declaring them here as pip
+# dependencies would invite pip to try to resolve/build a second, conflicting
+# copy of that stack instead of using the conda-provided one. `numpy`/`scipy`
+# are the only two third-party libraries actually imported at module scope
+# anywhere on the reachable-in-the-DOLFINx-lane import paths (verified by
+# grepping `src/finmag` and cross-checked against the green
+# `dolfinx-src-import-pytest`/`dolfinx-src-deferred-pytest` gates, which
+# already run in a `dolfinx` pixi environment that does not list `matplotlib`,
+# `aeon`, or `sh`), so they are the only ones declared as installable runtime
+# dependencies. [Claude Sonnet 5]
+dependencies = [
+    "numpy",
+    "scipy",
+]
+
+[project.urls]
+Homepage = "https://github.com/fangohr/finmag"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["finmag*"]

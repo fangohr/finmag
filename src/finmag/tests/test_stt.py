@@ -1,0 +1,721 @@
+"""Production tests for the direct DOLFINx spin-transfer-torque port (Task 22).
+
+Formerly ``src/finmag/tests/test_stt_dolfinx.py``; renamed onto the
+sibling-free canonical name (canonical-test-paths move, 2026-07-27).
+Ancestors REMOVED (every test function accounted for by a named port
+function in the mapping header below): ``tests/zhangli/zhang_li_test.py``,
+``tests/zhangli/stt_nonlocal_test.py``,
+``tests/slonczewski/validation/finmag/test_finmag_validation.py``.
+Ancestor RETAINED: ``tests/slonczewski/oscillator/test_oscillator.py`` -- its
+only function is ``_test_oscillator`` (leading underscore: never collected by
+pytest, on master either), which the header explicitly does NOT restore, so
+there is no named covering port function and the file stays in the tree.
+
+Covers the Slonczewski/Xiao and Zhang-Li torques transcribed into the ported
+``LLG`` NumPy right-hand side: coordinate-ordered legacy oracle fixtures (dm/dt
+and, for Zhang-Li, the discrete gradient field), analytic direction/scaling
+pins, ``Simulation`` pass-throughs, dynamics witnesses, and a scipy-vs-sundials
+cross-backend check.
+
+MASTER->PORT MAPPING-HEADER (SR1 P5.2, BUCKET-B; ``b5015c5a``). Four STT
+master ancestors, every function accounted for:
+
+======================================================================================================================
+Master file                                                    | Master fn              | Port coverage
+======================================================================================================================
+zhangli/zhang_li_test.py                                       | test_zhangli           | COVERED:
+                                                                |                        | test_zhangli_domain_wall_displacement_witness
+                                                                |                        | (identical setup/asserts, no numeric tol change)
+----------------------------------------------------------------------------------------------------------------------
+zhangli/zhang_li_test.py                                       | test_zhangli_sllg      | DEFERRED: kernel='sllg'
+                                                                |                        | (stochastic LLG+Zhang-Li native kernel never
+                                                                |                        | rebuilt for DOLFINx). Guard COVERED-ELSEWHERE:
+                                                                |                        | sim/sim_test.py::
+                                                                |                        | test_nonstandard_kernels_are_deferred[sllg]
+                                                                |                        | asserts NotImplementedError by name.
+----------------------------------------------------------------------------------------------------------------------
+zhangli/zhang_li_test.py                                       | compare_gradient_field1| N/A: not a pytest test in master either --
+                                                                | compare_gradient_field2| no ``test_`` prefix, calls df.interactive(), manual
+                                                                | (+ sech/init_m/field_at| visualisation scripts. The underlying discrete
+                                                                | /init_J/init_J_x/      | gradient-field computation these exercise IS
+                                                                | init_J_xy/init_m2/     | covered-elsewhere by
+                                                                | field_at2 helpers)     | test_zhangli_rhs_and_gradient_match_legacy_oracle_fixture
+----------------------------------------------------------------------------------------------------------------------
+zhangli/stt_nonlocal_test.py                                   | test_zhangli           | DEFERRED: kernel='llg_stt' -> the separate
+                                                                | (nonlocal STT)         | nonlocal-STT physics class ``finmag.physics.
+                                                                |                        | llg_stt.LLG_STT`` (native spin-diffusion
+                                                                |                        | ``delta_m`` state, ``set_parameters``/``speedup``)
+                                                                |                        | has NO DOLFINx port anywhere in the tree -- a
+                                                                |                        | distinct compiled kernel from the local
+                                                                |                        | Slonczewski/Zhang-Li torques this file covers.
+                                                                |                        | Guard COVERED-ELSEWHERE: sim/sim_test.py
+                                                                |                        | ::test_nonstandard_kernels_are_deferred[llg_stt].
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/validation/finmag/                                 | test_against_nmag      | RESTORED (was genuinely dropped): see
+test_finmag_validation.py                                      |                        | test_slonczewski_validation_matches_nmag_reference_
+                                                                |                        | trajectory below. Master's TOLERANCE=1e-4 /
+                                                                |                        | EPSILON=1e-16 kept VERBATIM against the SAME
+                                                                |                        | ``slonczewski/validation/nmag/averages_nmag5.txt``
+                                                                |                        | reference. Divergence (disclosed, not a tolerance
+                                                                |                        | loosening): master ran the full 10 ns / 2000 steps;
+                                                                |                        | a dev timing probe of the DOLFINx sundials stepper on
+                                                                |                        | this problem measured ~2 s/step past JIT/setup
+                                                                |                        | overhead (~70-90 min for the full run) -- far too
+                                                                |                        | slow for the suite, so the restored test runs only
+                                                                |                        | the first 1e-10 s (20 steps) against the matching
+                                                                |                        | prefix of the same reference file. Measured max
+                                                                |                        | |diff| over that window in development: 4.8e-6
+                                                                |                        | (well inside 1e-4).
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/validation/finmag/                                 | plot_dynamics /        | N/A: not pytest tests (no ``test_`` prefix),
+test_finmag_validation.py                                      | extract_magnetisation_ | plotting/ndt-extraction helpers.
+                                                                | dynamics               |
+----------------------------------------------------------------------------------------------------------------------
+slonczewski/oscillator/test_oscillator.py                      | _test_oscillator       | NOT A REAL MASTER TEST: the leading underscore
+                                                                |                        | means pytest's default ``test_*`` collection
+                                                                |                        | pattern never picks this up -- master itself
+                                                                |                        | (``b5015c5a``) never runs it, so there is no
+                                                                |                        | genuine coverage being dropped by the port. Not
+                                                                |                        | restored. (Had it been collected, restoring it would
+                                                                |                        | additionally require ``Demag()``, a ``from_geofile``
+                                                                |                        | vortex-oscillator mesh, and a ``relax()``-generated
+                                                                |                        | initial state -- well beyond a one-line port.)
+======================================================================================================================
+
+(``zhangli/standard.py`` was checked too: no ``test_*`` functions at all --
+a manual relax/plot script, not a test-file ancestor.)
+[Claude Opus 4.8]
+"""
+
+import json
+import os
+import sys
+
+import numpy as np
+import pytest
+from dolfinx import fem, mesh
+from mpi4py import MPI
+
+from finmag import Simulation
+from finmag.energies import Exchange, UniaxialAnisotropy, Zeeman
+from finmag.field import Field
+from finmag.physics.llg import LLG
+from finmag.util.consts import mu0
+from finmag.util.fileio import Tablereader
+
+FIX_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
+SLON_FIXTURE = os.path.join(FIX_DIR, "slonczewski_rhs.json")
+ZL_FIXTURE = os.path.join(FIX_DIR, "zhangli_rhs.json")
+
+
+# --------------------------------------------------------------------------
+# helpers
+# --------------------------------------------------------------------------
+
+def _spaces(domain):
+    S1 = fem.functionspace(domain, ("Lagrange", 1))
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    return S1, S3
+
+
+def _macrospin_llg(m, alpha=0.1, Ms=8.6e5, Hz=0.0, do_precession=True):
+    """Uniform-state LLG on a single-cell cube (every node identical)."""
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, do_precession=do_precession, unit_length=1e-9)
+    llg.Ms = Ms
+    llg.set_alpha(alpha)
+    llg.set_m(tuple(m), normalise=True)
+    if Hz != 0.0:
+        llg.effective_field.add(Zeeman((0.0, 0.0, Hz), name="Zeeman"))
+    return llg
+
+
+def _lexsort_rows(coords, *arrays):
+    padded = np.zeros((coords.shape[0], 3))
+    padded[:, : coords.shape[1]] = coords
+    order = np.lexsort((padded[:, 2], padded[:, 1], padded[:, 0]))
+    return (padded[order],) + tuple(a[order] for a in arrays)
+
+
+def _nodal(dmdt_flat):
+    return dmdt_flat.reshape((3, -1))
+
+
+# --------------------------------------------------------------------------
+# import boundary
+# --------------------------------------------------------------------------
+
+def test_stt_does_not_load_legacy_dolfin():
+    # The ported LLG (STT included) is a pure NumPy transcription: the compiled
+    # STT kernels are not rebuilt, and legacy FEniCS must never be imported.
+    # (This file *does* opt into ``finmag.native.sundials`` for the cross-backend
+    # check below, so it deliberately does not assert ``finmag.native`` absence;
+    # ``test_llg.py`` pins that for the core RHS module.)
+    assert LLG.__module__ == "finmag.physics.llg"
+    assert "dolfin" not in sys.modules
+
+
+# --------------------------------------------------------------------------
+# Slonczewski: analytic direction / scaling pins
+# --------------------------------------------------------------------------
+
+def _slon_torque(m, J, alpha=0.1, Ms=8.6e5, P=0.4, d=2e-9, p=(0.0, 0.0, 1.0),
+                 Lambda=2.0, epsilonprime=0.1):
+    """Pure Slonczewski torque (no external field -> H_eff = 0)."""
+    llg = _macrospin_llg(m, alpha=alpha, Ms=Ms)
+    llg.use_slonczewski(J, P, d, p, Lambda=Lambda, epsilonprime=epsilonprime)
+    return _nodal(llg.solve(0.0))[:, 0]
+
+
+def test_slonczewski_torque_is_linear_in_current_density():
+    m = (0.6, 0.0, 0.8)
+    t1 = _slon_torque(m, 1.0e12)
+    t2 = _slon_torque(m, 2.0e12)
+    assert np.linalg.norm(t1) > 0.0
+    assert np.allclose(t2, 2.0 * t1, rtol=1e-10, atol=0.0)
+
+
+def test_slonczewski_torque_flips_sign_with_current():
+    m = (0.6, 0.0, 0.8)
+    tpos = _slon_torque(m, 1.0e12)
+    tneg = _slon_torque(m, -1.0e12)
+    assert np.allclose(tneg, -tpos, rtol=1e-10, atol=0.0)
+
+
+def test_slonczewski_torque_vanishes_when_m_parallel_to_p():
+    # m == p: both m x p and m x (m x p) vanish, so the whole torque is zero
+    # (llg.cc:225-227), even with epsilonprime != 0. With H_eff = 0 and |m| = 1
+    # the total dm/dt is therefore zero.
+    t = _slon_torque((0.0, 0.0, 1.0), 1.0e12)
+    assert np.allclose(t, 0.0, atol=1e-6)
+
+
+# --------------------------------------------------------------------------
+# Zhang-Li: analytic direction / scaling pins
+# --------------------------------------------------------------------------
+
+def _zhangli_interval(cells=8, x1=8.0, J=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02,
+                      alpha=0.1, Ms=8.6e5, add_field=False):
+    domain = mesh.create_interval(MPI.COMM_WORLD, cells, [0.0, x1])
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    llg.Ms = Ms
+    llg.set_alpha(alpha)
+    llg.set_m(
+        lambda x: np.vstack(
+            (np.cos(0.4 * x[0]), np.sin(0.4 * x[0]), 0.5 * np.ones(x.shape[1]))
+        ),
+        normalise=True,
+    )
+    if add_field:
+        llg.effective_field.add(Zeeman((0.0, 0.0, 1e4), name="Zeeman"))
+    llg.use_zhangli(J_profile=J, P=P, beta=beta)
+    return llg
+
+
+def test_zhangli_stt_vanishes_for_uniform_m():
+    # Uniform m -> (J.grad)m = 0 -> the adiabatic + non-adiabatic term is zero.
+    # With no external field and |m| = 1 the total dm/dt is zero.
+    domain = mesh.create_interval(MPI.COMM_WORLD, 8, [0.0, 8.0])
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, unit_length=1e-9)
+    llg.Ms = 8.6e5
+    llg.set_alpha(0.1)
+    llg.set_m((0.0, 0.0, 1.0), normalise=True)
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert np.allclose(llg.solve(0.0), 0.0, atol=1e-3)
+
+
+def test_zhangli_stt_is_linear_in_current_density():
+    # No external field: dm/dt is purely the STT term, which is linear in J.
+    t1 = _nodal(_zhangli_interval(J=(1.0e12, 0.0, 0.0)).solve(0.0))
+    t2 = _nodal(_zhangli_interval(J=(2.0e12, 0.0, 0.0)).solve(0.0))
+    assert np.linalg.norm(t1) > 0.0
+    assert np.allclose(t2, 2.0 * t1, rtol=1e-9, atol=0.0)
+
+
+def test_zhangli_stt_flips_sign_with_current():
+    tpos = _nodal(_zhangli_interval(J=(1.0e12, 0.0, 0.0)).solve(0.0))
+    tneg = _nodal(_zhangli_interval(J=(-1.0e12, 0.0, 0.0)).solve(0.0))
+    assert np.allclose(tneg, -tpos, rtol=1e-9, atol=0.0)
+
+
+# --------------------------------------------------------------------------
+# oracle fixtures
+# --------------------------------------------------------------------------
+
+def test_slonczewski_rhs_matches_legacy_oracle_fixture():
+    fixture = json.load(open(SLON_FIXTURE))
+    params = fixture["physical_parameters"]
+    cells = fixture["mesh"]["parameters"]["cells"]
+    x1 = fixture["mesh"]["parameters"]["x1"]
+
+    domain = mesh.create_interval(MPI.COMM_WORLD, cells, [0.0, x1])
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, do_precession=params["do_precession"]["value"],
+              unit_length=params["unit_length"]["value"])
+    llg.Ms = params["Ms"]["value"]
+    llg.set_alpha(params["alpha"]["value"])
+    llg.set_m(tuple(params["m_uniform"]["value"]), normalise=True)
+    llg.effective_field.add(Zeeman(tuple(params["H_zeeman"]["value"]),
+                                   name="Zeeman"))
+    llg.use_slonczewski(
+        params["J"]["value"], params["P"]["value"], params["d"]["value"],
+        tuple(params["p"]["value"]), Lambda=params["Lambda"]["value"],
+        epsilonprime=params["epsilonprime"]["value"])
+
+    dmdt = llg.solve(0.0)
+
+    cm, m_vals = llg.m_field.coords_and_values()
+    Hf = Field(S3)
+    # H_eff is component-blocked (``xxx``, Task 31); invert that ordering to
+    # rebuild the Function (raw from_array would scramble the components).
+    Hf.set_with_ordered_numpy_array_xxx(llg.effective_field.H_eff)
+    _, H_vals = Hf.coords_and_values()
+    _, dmdt_vals = llg._dmdt.coords_and_values()
+
+    _, m_s, H_s, dmdt_s = _lexsort_rows(cm, m_vals, H_vals, dmdt_vals)
+
+    by_name = {q["name"]: q for q in fixture["quantities"]}
+    for name, got in (("m", m_s), ("effective_field", H_s), ("dmdt", dmdt_s)):
+        q = by_name[name]
+        ref = np.array(q["values"])
+        tol = q["tolerances"]
+        assert np.allclose(got, ref, atol=tol["absolute"], rtol=tol["relative"]), (
+            "quantity {} mismatch:\n got {}\n ref {}".format(name, got, ref)
+        )
+
+
+def test_zhangli_rhs_and_gradient_match_legacy_oracle_fixture():
+    fixture = json.load(open(ZL_FIXTURE))
+    params = fixture["physical_parameters"]
+    cells = fixture["mesh"]["parameters"]["cells"]
+    x1 = fixture["mesh"]["parameters"]["x1"]
+
+    domain = mesh.create_interval(MPI.COMM_WORLD, cells, [0.0, x1])
+    S1, S3 = _spaces(domain)
+    llg = LLG(S1, S3, do_precession=params["do_precession"]["value"],
+              unit_length=params["unit_length"]["value"])
+    llg.Ms = params["Ms"]["value"]
+    llg.set_alpha(params["alpha"]["value"])
+    llg.set_m(
+        lambda x: np.vstack(
+            (np.cos(0.4 * x[0]), np.sin(0.4 * x[0]), 0.5 * np.ones(x.shape[1]))
+        ),
+        normalise=True,
+    )
+    llg.effective_field.add(Exchange(params["A"]["value"], name="Exchange"))
+    llg.effective_field.add(Zeeman(tuple(params["H_zeeman"]["value"]),
+                                   name="Zeeman"))
+    llg.use_zhangli(J_profile=tuple(params["J_profile"]["value"]),
+                    P=params["P"]["value"], beta=params["beta"]["value"],
+                    using_u0=params["using_u0"]["value"])
+
+    dmdt = llg.solve(0.0)
+
+    # u0 conversion pin (P mu_B / e / (1 + beta**2))
+    assert llg.u0 == pytest.approx(params["u0"]["value"], rel=1e-12)
+
+    # the discrete gradient operator, pinned directly against the frozen
+    # LLG.compute_gradient_field output
+    llg._Ms_node = llg._ms_nodal()
+    H_gradm = llg._compute_zhangli_gradient()
+    hg_field = Field(S3)
+    hg_field.set_with_ordered_numpy_array_xxx(H_gradm.reshape(-1))
+
+    cm, m_vals = llg.m_field.coords_and_values()
+    Hf = Field(S3)
+    # H_eff is component-blocked (``xxx``, Task 31); invert that ordering.
+    Hf.set_with_ordered_numpy_array_xxx(llg.effective_field.H_eff)
+    _, H_vals = Hf.coords_and_values()
+    _, hg_vals = hg_field.coords_and_values()
+    _, dmdt_vals = llg._dmdt.coords_and_values()
+
+    _, m_s, H_s, hg_s, dmdt_s = _lexsort_rows(
+        cm, m_vals, H_vals, hg_vals, dmdt_vals)
+
+    by_name = {q["name"]: q for q in fixture["quantities"]}
+    for name, got in (("m", m_s), ("effective_field", H_s),
+                      ("H_gradm", hg_s), ("dmdt", dmdt_s)):
+        q = by_name[name]
+        ref = np.array(q["values"])
+        tol = q["tolerances"]
+        assert np.allclose(got, ref, atol=tol["absolute"], rtol=tol["relative"]), (
+            "quantity {} mismatch:\n got {}\n ref {}".format(name, got, ref)
+        )
+
+
+# --------------------------------------------------------------------------
+# Simulation pass-throughs
+# --------------------------------------------------------------------------
+
+def _box_sim(name="stt", backend=None):
+    box = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (5.0, 5.0, 5.0)], [1, 1, 1],
+        mesh.CellType.tetrahedron)
+    kwargs = dict(unit_length=1e-9, name=name)
+    if backend is not None:
+        kwargs["integrator_backend"] = backend
+    sim = Simulation(box, 8.6e5, **kwargs)
+    return sim
+
+
+def test_simulation_set_stt_activates_slonczewski():
+    sim = _box_sim("slon_passthrough")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0), Lambda=2.0, epsilonprime=0.1)
+    assert sim.llg.do_slonczewski is True
+    assert sim.llg.do_zhangli is False
+    # toggle_stt flips the flag off and on again
+    sim.toggle_stt()
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt(True)
+    assert sim.llg.do_slonczewski is True
+
+
+def test_simulation_set_zhangli_activates_zhangli():
+    sim = _box_sim("zl_passthrough")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+
+
+# --------------------------------------------------------------------------
+# D18 (SR1): Simulation.toggle_stt honours explicit False and is guarded
+#
+# toggle_stt must (a) FLIP do_slonczewski when called with no argument
+# (legacy no-arg toggle), (b) force the flag to bool(new_state) when given an
+# explicit argument -- so toggle_stt(False) reliably DISABLES rather than
+# flipping -- and (c) mirror the D11 guard: any operation that would ENABLE
+# Slonczewski while Zhang-Li is already active raises a by-name ValueError
+# BEFORE mutating the flag. Disabling never conflicts and is always allowed.
+# --------------------------------------------------------------------------
+
+def test_toggle_stt_false_forces_off_and_does_not_flip():
+    sim = _box_sim("d18_false_off")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    # explicit False disables an active Slonczewski torque
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+    # and starting from OFF, an explicit False must LEAVE it off (not flip on)
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_true_while_zhangli_active_raises():
+    sim = _box_sim("d18_conflict_true")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+    with pytest.raises(ValueError) as exc:
+        sim.toggle_stt(True)
+    # the message must name both modes so it is specific and actionable
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    # the guard runs before any mutation: neither flag changed
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_no_arg_flip_preserved_without_conflict():
+    sim = _box_sim("d18_flip")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    sim.toggle_stt()  # ON -> OFF (disable, always allowed)
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt()  # OFF -> ON (enable; no Zhang-Li active so allowed)
+    assert sim.llg.do_slonczewski is True
+
+
+def test_toggle_stt_no_arg_enable_flip_while_zhangli_active_raises():
+    sim = _box_sim("d18_flip_conflict")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+    # a no-arg flip of a False flag is an ENABLE -> must raise, state intact
+    with pytest.raises(ValueError) as exc:
+        sim.toggle_stt()
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    assert sim.llg.do_zhangli is True
+    assert sim.llg.do_slonczewski is False
+
+
+def test_toggle_stt_disable_always_allowed_even_with_zhangli_active():
+    sim = _box_sim("d18_disable_ok")
+    sim.set_m((0.0, 0.0, 1.0))
+    sim.set_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    # disabling Slonczewski (already off) never conflicts, regardless of Zhang-Li
+    sim.toggle_stt(False)
+    assert sim.llg.do_slonczewski is False
+    assert sim.llg.do_zhangli is True
+
+
+def test_toggle_stt_non_bool_args_are_coerced_not_flip_branched():
+    # Regression pin for D18: the fix forces the flag via ``bool(new_state)``,
+    # NOT a truthiness ``if new_state:`` branch (the original bug). A falsy
+    # non-None argument (0) must force OFF, and a truthy non-bool (1) must
+    # force ON -- a reversion to ``if new_state:`` would send 0 into the flip
+    # branch and mishandle these. [Claude Opus 4.8]
+    sim = _box_sim("d18_coerce")
+    sim.set_m((0.6, 0.0, 0.8))
+    sim.set_stt(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert sim.llg.do_slonczewski is True
+    sim.toggle_stt(0)  # explicit falsy int -> force OFF (must not flip)
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt(0)  # still OFF, not flipped back on
+    assert sim.llg.do_slonczewski is False
+    sim.toggle_stt(1)  # truthy int -> force ON (no Zhang-Li, so allowed)
+    assert sim.llg.do_slonczewski is True
+
+
+# --------------------------------------------------------------------------
+# D11 (SR1 P2.6): the two local STT modes are mutually exclusive
+#
+# Configuring both Slonczewski and Zhang-Li on one object must raise a clear
+# by-name ``ValueError`` (not silently let the last call win). Re-configuring
+# the SAME mode, using either mode alone, and disable-then-switch must all
+# still work.
+# --------------------------------------------------------------------------
+
+def test_slonczewski_then_zhangli_raises_valueerror():
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    with pytest.raises(ValueError) as exc:
+        llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    # the message must name both modes so it is specific and actionable,
+    # not an incidental/unrelated ValueError
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    # the guard runs before any mutation: the first mode is left untouched
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+
+
+def test_zhangli_then_slonczewski_raises_valueerror():
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    with pytest.raises(ValueError) as exc:
+        llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    msg = str(exc.value).lower()
+    assert "slonczewski" in msg and "zhang" in msg
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+
+
+def test_slonczewski_alone_still_activates_and_contributes():
+    # regression guard: the single-mode path must stay intact and produce a
+    # nonzero STT dm/dt contribution.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+    assert np.linalg.norm(llg.solve(0.0)) > 0.0
+
+
+def test_zhangli_alone_still_activates_and_contributes():
+    llg = _zhangli_interval(J=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+    assert np.linalg.norm(llg.solve(0.0)) > 0.0
+
+
+def test_slonczewski_same_mode_reconfigure_is_allowed():
+    # re-tuning the SAME mode (change J and P) must NOT be rejected: the guard
+    # keys only on the OTHER mode's flag.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    llg.use_slonczewski(2.0e12, 0.5, 2e-9, (0.0, 0.0, 1.0))
+    assert llg.do_slonczewski is True
+    assert llg.do_zhangli is False
+    assert llg.J[0] == pytest.approx(2.0e12)
+    assert llg.P == pytest.approx(0.5)
+
+
+def test_zhangli_same_mode_reconfigure_is_allowed():
+    llg = _zhangli_interval(J=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    llg.use_zhangli(J_profile=(2.0e12, 0.0, 0.0), P=0.6, beta=0.03)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+    assert llg.P == pytest.approx(0.6)
+    assert llg.beta == pytest.approx(0.03)
+
+
+def test_disable_then_switch_mode_is_allowed():
+    # disable the active mode via its dispatch flag (the flag the guard reads),
+    # then the other mode may be configured -- the guard permits it.
+    llg = _macrospin_llg((0.6, 0.0, 0.8))
+    llg.use_slonczewski(1.0e12, 0.4, 2e-9, (0.0, 0.0, 1.0))
+    llg.do_slonczewski = False
+    llg.use_zhangli(J_profile=(1.0e12, 0.0, 0.0), P=0.5, beta=0.02)
+    assert llg.do_zhangli is True
+    assert llg.do_slonczewski is False
+
+
+# --------------------------------------------------------------------------
+# dynamics witnesses
+# --------------------------------------------------------------------------
+
+def _domain_wall_m(x):
+    delta = np.sqrt(13e-12 / 520e3) * 1e9
+    xx = (x[0] - 50.0) / delta
+    return np.vstack((-np.tanh(xx), 1.0 / np.cosh(xx), np.zeros_like(xx)))
+
+
+def test_zhangli_domain_wall_displacement_witness():
+    """Port of the legacy ``zhang_li_test.test_zhangli`` invariant: a positive
+    current density displaces the domain wall so ``m_average[0]`` decreases from
+    ~0 to a resolvably negative value (the wall moves along +u)."""
+    domain = mesh.create_interval(MPI.COMM_WORLD, 50, [0.0, 100.0])
+    sim = Simulation(domain, Ms=8.6e5, unit_length=1e-9, name="zl_dw")
+    sim.set_m(_domain_wall_m)
+    sim.add(UniaxialAnisotropy(K1=520e3, axis=[1, 0, 0]))
+    sim.add(Exchange(A=13e-12))
+    sim.alpha = 0.01
+    sim.set_zhangli((1.0e12, 0.0, 0.0), 0.5, 0.02)
+
+    p0 = sim.m_average
+    sim.run_until(2e-12)
+    p1 = sim.m_average
+
+    assert abs(p0[0]) < 1e-15
+    assert p1[0] < p0[0]
+    assert abs(p1[0]) > 1e-3
+
+
+def test_slonczewski_tilt_direction_flips_with_current():
+    """A short Slonczewski run tilts m toward or away from p depending on the
+    sign of J: for m near +z (== p) the anti-damping/damping character of the
+    torque flips with J, so the change in m_z has opposite sign for +J and -J."""
+    def _run(J):
+        domain = mesh.create_unit_cube(MPI.COMM_WORLD, 1, 1, 1)
+        sim = Simulation(domain, Ms=8.6e5, unit_length=1e-9, name="slon_dw")
+        # m tilted 20 degrees from p = +z, in the x-z plane
+        theta = np.deg2rad(20.0)
+        sim.set_m((np.sin(theta), 0.0, np.cos(theta)))
+        sim.add(Zeeman((0.0, 0.0, 1e5)))
+        sim.alpha = 0.02
+        sim.set_stt(J, 0.4, 2e-9, (0.0, 0.0, 1.0))
+        mz0 = sim.m_average[2]
+        sim.run_until(5e-11)
+        return sim.m_average[2] - mz0
+
+    d_pos = _run(5.0e12)
+    d_neg = _run(-5.0e12)
+    assert d_pos * d_neg < 0.0
+    assert abs(d_pos) > 1e-4 and abs(d_neg) > 1e-4
+
+
+# --------------------------------------------------------------------------
+# restored: Nmag full-dynamics validation (was genuinely dropped)
+#
+# Port of ``slonczewski/validation/finmag/test_finmag_validation.py::
+# test_against_nmag``, itself running ``run_validation.py``: a BoxMesh
+# Slonczewski-STT problem (Zeeman + Exchange + UniaxialAnisotropy + local
+# ``set_stt``) integrated step by step and compared against Nmag's reference
+# trajectory (``slonczewski/validation/nmag/averages_nmag5.txt``, still
+# present in the tree).
+#
+# DISCLOSED DIVERGENCE (duration only, tolerance untouched): master integrates
+# the full 10 ns (2000 steps @ 5 ps). A dev timing probe of this problem on
+# the DOLFINx sundials stepper measured ~2 s/step past one-time JIT/assembly
+# setup -- roughly 70-90 minutes for the full run, far too slow for the test
+# suite. This restoration therefore runs only the first 1e-10 s (20 steps)
+# and compares against the matching prefix of the SAME reference file.
+# Master's TOLERANCE=1e-4 / EPSILON=1e-16 are kept VERBATIM (not loosened).
+# Measured in development over this window: time-column diff exactly 0.0,
+# max |m diff| 4.8e-6, mean 9.5e-7 -- both comfortably inside tolerance.
+# [Claude Opus 4.8]
+# --------------------------------------------------------------------------
+
+NMAG_VALIDATION_FILE = os.path.join(
+    os.path.dirname(__file__), "slonczewski", "validation", "nmag",
+    "averages_nmag5.txt")
+NMAG_VALIDATION_EPSILON = 1e-16  # master's EPSILON, verbatim
+NMAG_VALIDATION_TOLERANCE = 1e-4  # master's TOLERANCE, verbatim
+NMAG_VALIDATION_T_MAX = 1e-10  # truncated from master's 10e-9, see above
+NMAG_VALIDATION_DT = 5e-12  # matches master's schedule step exactly
+
+
+def test_slonczewski_validation_matches_nmag_reference_trajectory():
+    L = W = 12.5e-9
+    H = 5e-9
+    domain = mesh.create_box(
+        MPI.COMM_WORLD, [(0.0, 0.0, 0.0), (L, W, H)], [5, 5, 2],
+        mesh.CellType.tetrahedron)
+    sim = Simulation(domain, Ms=860e3, unit_length=1.0,
+                     name="stt_validation_nmag")
+    sim.set_m((1, 0.01, 0.01))
+    sim.alpha = 0.014
+    sim.gamma = 221017
+
+    H_app_mT = np.array([0.2, 0.2, 10.0])
+    H_app_SI = H_app_mT / (1000 * mu0)
+    sim.add(Zeeman(tuple(H_app_SI)))
+    sim.add(Exchange(1.3e-11))
+    sim.add(UniaxialAnisotropy(-1e5, (0, 0, 1)))
+
+    I = 5e-5  # current in A
+    J = I / (L * W)  # current density in A/m^2
+    theta = 40.0 * np.pi / 180  # polarisation direction
+    phi = np.pi / 2
+    p = (np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi),
+         np.cos(theta))
+    sim.set_stt(current_density=J, polarisation=0.4, thickness=H,
+               direction=p)
+
+    sim.schedule("save_averages", every=NMAG_VALIDATION_DT)
+    sim.run_until(NMAG_VALIDATION_T_MAX)
+
+    reader = Tablereader(sim.ndtfilename)
+    finmag_dynamics = np.array(reader["time", "m_x", "m_y", "m_z"]).T
+
+    nmag_dynamics = np.loadtxt(NMAG_VALIDATION_FILE)[:finmag_dynamics.shape[0]]
+
+    diff = np.abs(finmag_dynamics - nmag_dynamics)
+    assert np.max(diff[:, 0]) < NMAG_VALIDATION_EPSILON  # compare timesteps
+    assert np.max(diff[:, 1:]) < NMAG_VALIDATION_TOLERANCE
+
+
+# --------------------------------------------------------------------------
+# cross-backend agreement (scipy vs native sundials)
+# --------------------------------------------------------------------------
+
+try:
+    from finmag.drivers.llg_integrator import SundialsIntegrator
+    import finmag.native.sundials as _native_sundials
+except Exception:  # pragma: no cover - build absent
+    SundialsIntegrator = None
+    _native_sundials = None
+
+requires_sundials = pytest.mark.skipif(
+    SundialsIntegrator is None or _native_sundials is None,
+    reason="native sundials extension is not available in this environment",
+)
+
+
+@requires_sundials
+def test_zhangli_scipy_vs_sundials_agree():
+    def _run(backend):
+        domain = mesh.create_interval(MPI.COMM_WORLD, 50, [0.0, 100.0])
+        sim = Simulation(domain, Ms=8.6e5, unit_length=1e-9,
+                         name="zl_" + backend, integrator_backend=backend)
+        sim.set_m(_domain_wall_m)
+        sim.add(UniaxialAnisotropy(K1=520e3, axis=[1, 0, 0]))
+        sim.add(Exchange(A=13e-12))
+        sim.alpha = 0.01
+        sim.set_zhangli((1.0e12, 0.0, 0.0), 0.5, 0.02)
+        sim.set_tol(reltol=1e-9, abstol=1e-11)
+        sim.run_until(2e-12)
+        return sim.m_average
+
+    scipy_avg = _run("scipy")
+    sundials_avg = _run("sundials")
+    assert np.allclose(scipy_avg, sundials_avg, rtol=1e-4, atol=1e-6)

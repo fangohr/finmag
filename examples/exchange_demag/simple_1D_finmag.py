@@ -1,3 +1,8 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Requires Task 27: this example shells out to nsim to produce nmag_hansconf
+# reference data and compares against it. The finmag exchange-energy path it
+# uses is covered by the converted exchange_demag / energies gates.
+# [Claude Opus 4.8]
 import dolfin as df
 from finmag.field import Field
 from finmag.energies import Exchange

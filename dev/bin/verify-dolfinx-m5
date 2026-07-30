@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+#
+# Run the aggregated first direct-source DOLFINx gate (Task 10 / "M5").
+#
+# This is the aggregation/verification slice over the direct-source DOLFINx
+# port completed across Tasks 3-9 (sliceable imports, Field, the common
+# energies, EffectiveField, the deterministic LLG core, the SciPy driver, and
+# the core Simulation/sim_with). It does not port anything new; it runs every
+# focused `dolfinx-src-*` pytest gate and MPI probe plus two new Task 10
+# witnesses (the aggregated deferred-surfaces sweep and the core physical-time
+# smoke) as one reproducible command, mirroring the frozen
+# `dev/bin/verify-dolfinx-m4` prototype-gate structure and the
+# `dev/bin/validation-common.sh` tracked-diff cleanliness guard used by every
+# other verifier in this repository. [Claude Sonnet 5]
+#
+# Task 11b folds in the array-only FK BEM native gate
+# (`dolfinx-src-native-bem-pytest`) and the direct DOLFINx FK demag port gate
+# (`dolfinx-src-demag-pytest`). [Claude Opus 4.8]
+#
+# Task 12 folds in the direct DOLFINx restart + required output (NDT/VTK/XDMF) +
+# scheduler port gate (`dolfinx-src-restart-output-pytest`). [Claude Opus 4.8]
+#
+# Task 13 folds in the direct DOLFINx DMI port gate
+# (`dolfinx-src-dmi-pytest`). [Claude Sonnet 5]
+#
+# Task 14 folds in the direct DOLFINx cubic-anisotropy port gate
+# (`dolfinx-src-cubicanis-pytest`). [Claude Sonnet 5]
+#
+# Task 15 folds in the direct DOLFINx time-Zeeman + relax/hysteresis port
+# gate (`dolfinx-src-timezeeman-pytest`). [Claude Sonnet 5]
+#
+# Task 16 folds in the direct DOLFINx field-valued material parameters,
+# spatially varying alpha, and region-accounting port gate
+# (`dolfinx-src-varparams-pytest`). [Claude Opus 4.8]
+#
+# Task 18 folds in the DOLFINx mesh-tooling bridge gate
+# (`dolfinx-src-meshes-pytest`): Gmsh Python-API generators + CSG template
+# classes converted to dolfinx.mesh via dolfinx.io.gmsh, the preserved
+# Netgen-CSG hashing/naming and XDMF caching contracts, and an
+# FK-demag-on-a-generated-sphere physics smoke. [Claude Opus 4.8]
+#
+# Task 20 folds in the dolfin-free native Sundials/CVODE backend gate
+# (`dolfinx-src-sundials-pytest`): the SUNDIALS-7 wrapper rebuilt for the
+# DOLFINx env (bem_arrays precedent, no libdolfin), the SundialsIntegrator
+# driver wired against the ported LLG (analytic jtimes + identity
+# preconditioner default path), ported legacy ODE/reinit/nsteps invariants, and
+# scipy-vs-sundials cross-backend agreement. scipy remains the DOLFINx default
+# backend; sundials is a fully validated opt-in. [Claude Opus 4.8]
+#
+# Task 22 folds in the spin-transfer-torque port gate
+# (`dolfinx-src-stt-pytest`): the Slonczewski/Xiao and Zhang-Li torques
+# transcribed into the ported LLG NumPy RHS (compiled STT kernels NOT rebuilt),
+# coordinate-ordered legacy oracle fixtures (dm/dt + Zhang-Li discrete gradient),
+# analytic direction/scaling pins, Simulation pass-throughs, dynamics witnesses
+# and a scipy-vs-sundials cross-backend STT check. [Claude Opus 4.8]
+#
+# Task 23 folds in the treecode/PBC demag port gate
+# (`dolfinx-src-treecode-pytest`): the native `treecode_bem` Cython BEM kernels
+# rebuilt for the DOLFINx env (Cython/NumPy-2, dolfin-free), the
+# treecode-accelerated FK solver (`Demag(solver='Treecode')`) and the periodic
+# MacroGeometry demag (`Demag(macrogeometry=...)`), validated by cross-method
+# comparison against the dense FK demag (no treecode oracle fixtures exist) plus
+# periodic image-sum convergence and the analytic thin-film limit. [Claude
+# Opus 4.8]
+#
+# Task 21 makes this gate run against an INSTALLED editable package instead of
+# `PYTHONPATH=src` (`pyproject.toml`, src-layout, setuptools). It adds three
+# steps right after `dolfinx-versions`: `dolfinx-install-editable` (`pip
+# install -e . --no-deps`), `dolfinx-native-build` (the documented explicit
+# second step of the native-extension story -- compiles `bem_arrays.so` and
+# `sundials.so` via `native/Makefile`; not strictly required since
+# `finmag.native.init` also triggers `make` as an import side effect, but
+# gives a fast, visible failure if the native toolchain breaks), and
+# `dolfinx-provenance-check` (`import finmag` must resolve under this
+# checkout's `src/`). Every `dolfinx-src-*` task migrated off `PYTHONPATH=src`;
+# exactly one fallback step (`dolfinx-src-import-pythonpath-fallback`) keeps
+# that mechanism exercised during the transition. [Claude Sonnet 5]
+#
+# Task 30 folds in the converted-examples gate (`dolfinx-src-examples-pytest`):
+# the legacy examples/ scripts converted to the ported package and run as
+# subprocesses, each embedding its own validation (checked-in reference data,
+# analytic solutions, published muMAG values, or physical-sanity invariants) --
+# the practical-parity witness. The heavy muMAG / long-dynamics examples run
+# only under FINMAG_EXAMPLE_FULL=1. This task also partially lifts the Task 18
+# `from_geofile` deferral (Netgen-CSG '.geo' loader for the examples subset),
+# covered by new cases in `dolfinx-src-meshes-pytest`. [Claude Opus 4.8]
+#
+# Task 26a folds in the decision-free I/O/utility parity gate
+# (`dolfinx-src-io-utils-pytest`): `Field.probe`/`Field.__call__` point-in-cell
+# evaluation (promoted from the Task 30 exchange_demag density workaround --
+# now reverted -- into the shared `finmag.field.evaluate_at_point` helper),
+# `Field.get_spherical` (analytic Cartesian<->spherical conversion), and
+# `Simulation.skyrmion_number`/`skyrmion_number_density_function` (analytic
+# topological-charge formula, restored after being dropped outright in
+# Task 9). All three are decision-free: faithful mechanical ports or pure
+# analytic transcriptions of the legacy formulas, validated against analytic
+# references (no owner sign-off required). [Claude Sonnet 5]
+#
+# Usage:
+#   dev/bin/verify-dolfinx-m5
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Keep pixi global/cache state out of the checkout and writable on restricted
+# runners, matching the other verifiers. [Codex gpt-5.5 high]
+export PIXI_HOME="${PIXI_HOME:-/tmp/pixi-cache}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-/tmp/pixi-cache}"
+export PIXI_CACHE_DIR="${PIXI_CACHE_DIR:-/tmp/pixi-cache}"
+
+cd "${repo_root}"
+
+source "${repo_root}/dev/bin/validation-common.sh"
+install_tracked_files_guard "${repo_root}" \
+    "first direct-source DOLFINx gate validation"
+
+echo "==> pixi run -e dolfinx dolfinx-versions"
+pixi run -e dolfinx dolfinx-versions
+
+echo "==> pixi run -e dolfinx dolfinx-install-editable"
+pixi run -e dolfinx dolfinx-install-editable
+
+echo "==> pixi run -e dolfinx dolfinx-native-build"
+pixi run -e dolfinx dolfinx-native-build
+
+echo "==> pixi run -e dolfinx dolfinx-provenance-check"
+pixi run -e dolfinx dolfinx-provenance-check
+
+echo "==> pixi run -e dolfinx dolfinx-src-import"
+pixi run -e dolfinx dolfinx-src-import
+
+echo "==> pixi run -e dolfinx dolfinx-src-import-pythonpath-fallback"
+pixi run -e dolfinx dolfinx-src-import-pythonpath-fallback
+
+echo "==> pixi run -e dolfinx dolfinx-src-import-pytest"
+pixi run -e dolfinx dolfinx-src-import-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-field-pytest"
+pixi run -e dolfinx dolfinx-src-field-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-field-mpi"
+pixi run -e dolfinx dolfinx-src-field-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-energies-pytest"
+pixi run -e dolfinx dolfinx-src-energies-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-energies-mpi"
+pixi run -e dolfinx dolfinx-src-energies-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-effectivefield-pytest"
+pixi run -e dolfinx dolfinx-src-effectivefield-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-effectivefield-mpi"
+pixi run -e dolfinx dolfinx-src-effectivefield-mpi
+
+echo "==> pixi run -e dolfinx dolfinx-src-llg-pytest"
+pixi run -e dolfinx dolfinx-src-llg-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-ordering-pytest"
+pixi run -e dolfinx dolfinx-src-ordering-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-scipy-pytest"
+pixi run -e dolfinx dolfinx-src-scipy-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-simulation-pytest"
+pixi run -e dolfinx dolfinx-src-simulation-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-deferred-pytest"
+pixi run -e dolfinx dolfinx-src-deferred-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-native-bem-pytest"
+pixi run -e dolfinx dolfinx-src-native-bem-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-demag-pytest"
+pixi run -e dolfinx dolfinx-src-demag-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-treecode-pytest"
+pixi run -e dolfinx dolfinx-src-treecode-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-restart-output-pytest"
+pixi run -e dolfinx dolfinx-src-restart-output-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-dmi-pytest"
+pixi run -e dolfinx dolfinx-src-dmi-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-cubicanis-pytest"
+pixi run -e dolfinx dolfinx-src-cubicanis-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-timezeeman-pytest"
+pixi run -e dolfinx dolfinx-src-timezeeman-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-varparams-pytest"
+pixi run -e dolfinx dolfinx-src-varparams-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-meshes-pytest"
+pixi run -e dolfinx dolfinx-src-meshes-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-sundials-pytest"
+pixi run -e dolfinx dolfinx-src-sundials-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-stt-pytest"
+pixi run -e dolfinx dolfinx-src-stt-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-core-smoke"
+pixi run -e dolfinx dolfinx-src-core-smoke
+
+echo "==> pixi run -e dolfinx dolfinx-src-examples-pytest"
+pixi run -e dolfinx dolfinx-src-examples-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-io-utils-pytest"
+pixi run -e dolfinx dolfinx-src-io-utils-pytest
+
+echo "==> pixi run -e dolfinx dolfinx-src-comparison-pytest"
+pixi run -e dolfinx dolfinx-src-comparison-pytest

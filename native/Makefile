@@ -12,8 +12,8 @@
 # Adjustable options are below.
 #
 all : parallel
-# Read the automatically generated dependency files
--include $(shell find . -name \*.d)
+# Read the automatically generated dependency files (per-env object tree)
+-include $(shell find obj -name \*.d 2>/dev/null)
 #######################################
 #  Configurable options
 #
@@ -23,6 +23,14 @@ PYTHON_CONFIG ?= $(PYTHON)-config
 PYTHON_BOOST_TAG := py$(shell $(PYTHON) -c 'import sys; print("{}{}".format(sys.version_info[0], sys.version_info[1]))')
 PYTHON_CONFIG_EXISTS := $(shell command -v $(PYTHON_CONFIG) >/dev/null 2>&1 && echo 1 || echo 0)
 PYTHON_PREFIX := $(shell $(PYTHON) -c 'import sys; print(sys.prefix)')
+# Per-environment build tag keyed on the active Python prefix. The legacy
+# (libdolfin, NumPy-1 ABI) and DOLFINx (NumPy-2, -DFINMAG_NO_DOLFIN) builds
+# compile shared units such as np_array.cc with incompatible ABIs; keying the
+# object tree and the precompiled header on this tag guarantees they can never
+# share an output path and be silently cross-linked into the wrong env. [Claude
+# Opus 4.8]
+PYTHON_PREFIX_TAG := $(subst /,_,$(patsubst /%,%,$(PYTHON_PREFIX)))
+OBJ_DIR := obj/$(PYTHON_PREFIX_TAG)
 NUMPY_INCLUDE_DIR := $(shell $(PYTHON) -c 'import numpy; print(numpy.get_include())')
 DETECTED_BOOST_PYTHON_LIB := $(shell find "$(PYTHON_PREFIX)/lib" -maxdepth 1 -type f -name 'libboost_python*.so*' | sed -n '1s|.*/lib||;1s|\.so.*||p')
 # Managed environments often ship a different Boost.Python soname from the
@@ -38,18 +46,31 @@ endif
 UFC_INC=$(shell if [ -f /usr/include/ufc.h ]; then echo -I/usr/include; else echo -I/usr/lib/python2.7/dist-packages/ffc/backends/ufc/; fi)
 # The directory where to place the extension modules
 MODULE_DIR = ../src/finmag/native
+# Detect the DOLFINx pixi environment (Python 3.12, no legacy DOLFIN/SUNDIALS).
+# Its prefix also contains "/.pixi/", so this must be checked before the general
+# pixi branch below. [Claude Opus 4.8]
+IS_DOLFINX_ENV := $(findstring /envs/dolfinx,$(PYTHON_PREFIX))
 # The first pixi probe targets import/construction and SciPy-backed stepping,
 # so build only the native paths needed for the current pixi milestone and
 # fold Sundials back in as that port becomes viable. [Codex GPT-5.4]
 # [Codex GPT-5.4]
-ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
+ifneq ($(IS_DOLFINX_ENV),)
+# DOLFINx env: the array-only FK BEM surface (Task 11a) plus the dolfin-free
+# native Sundials/CVODE wrapper (Task 20). Neither carries libdolfin or
+# SWIG-DOLFIN; the sundials module is the array/callback CVODE wrapper compiled
+# with -DFINMAG_NO_DOLFIN, linking only conda-forge SUNDIALS-7 (no -ldolfin).
+# Task 23 adds the Cython treecode/PBC BEM module (treecode_bem.so): pure-C
+# kernels + NumPy-facing Cython, built by its own setup.py rule below (no
+# libdolfin, no Boost.Python, no PCH/object-tree participation). [Claude Opus 4.8]
+MODULES = bem_arrays.so sundials.so treecode_bem.so
+else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 MODULES = sundials.so llg.so llb.so
 else
 # The list of extension modules to build
 MODULES = sundials.so llg.so llb.so fast_sum_lib.so neb.so #cvode_petsc.so
 endif
-# The directory to store the precompiled header file.
-PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(abspath .)
+# The directory to store the precompiled header file (per-env; see OBJ_DIR).
+PRECOMPILED_HEADER_DIR ?= /tmp/$(USER)/finmag-pch/$(PYTHON_PREFIX_TAG)/$(abspath .)
 # Name of the binary that runs all unit tests
 UNIT_TEST_BINARY=$(MODULE_DIR)/run_ci_tests.bin
 # Directory for CI unit test results
@@ -58,7 +79,7 @@ UNIT_TEST_RESULTS_FILE=$(UNIT_TEST_RESULTS_DIR)/run_ci_tests_output.xml
 # Explicit dependencies to tell how the module files are linked
 SUNDIALS_NVECTOR_SO=-lsundials_nvecserial
 
-$(MODULE_DIR)/sundials.so : src/sundials/py_sundials_module.o src/util/np_array.o src/sundials/numpy_malloc.o
+$(MODULE_DIR)/sundials.so : $(OBJ_DIR)/src/sundials/py_sundials_module.o $(OBJ_DIR)/src/util/np_array.o $(OBJ_DIR)/src/sundials/numpy_malloc.o
 ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
 # Modern SUNDIALS splits CVODE, linear solvers, and matrix backends into
 # separate shared libraries, so link the wrapper against the actively used
@@ -72,27 +93,42 @@ endif
 #$(MODULE_DIR)/sundials_p.so : src/sundials_p/py_cvode_module.o src/util/np_array.o src/util/swig_dolfin.o
 #sundials_p_LDFLAGS = $(SUNDIALS_CUSTOM) -lsundials_cvode -lsundials_nvecserial -lsundials_nvecparallel -llapack -ldolfin -lboost_thread
 
-$(MODULE_DIR)/llg.so : src/llg/py_llg_module.o src/util/np_array.o src/util/swig_dolfin.o src/llg/bem.o src/llg/llg.o src/llg/heun.o src/llg/energy.o
+$(MODULE_DIR)/llg.so : $(OBJ_DIR)/src/llg/py_llg_module.o $(OBJ_DIR)/src/util/np_array.o $(OBJ_DIR)/src/util/swig_dolfin.o $(OBJ_DIR)/src/llg/bem.o $(OBJ_DIR)/src/llg/llg.o $(OBJ_DIR)/src/llg/heun.o $(OBJ_DIR)/src/llg/energy.o
 llg_LDFLAGS = -L$(INSTALL_PATH)/lib -ldolfin
 
-$(MODULE_DIR)/llb.so : src/llb/py_llb_module.o src/util/np_array.o src/llb/material.o src/llb/llb.o src/llb/sllg.o src/llb/sllg_stt.o src/llb/mt19937.o 
+# Array-only FK/GCR BEM module for the DOLFINx env: links no libdolfin and no
+# SWIG-DOLFIN converters, only the plain NumPy array helper. [Claude Opus 4.8]
+$(MODULE_DIR)/bem_arrays.so : $(OBJ_DIR)/src/llg/bem_arrays.o $(OBJ_DIR)/src/util/np_array.o
+bem_arrays_LDFLAGS =
 
-$(MODULE_DIR)/neb.so : src/neb/py_neb_module.o src/util/np_array.o src/neb/helper.o
+$(MODULE_DIR)/llb.so : $(OBJ_DIR)/src/llb/py_llb_module.o $(OBJ_DIR)/src/util/np_array.o $(OBJ_DIR)/src/llb/material.o $(OBJ_DIR)/src/llb/llb.o $(OBJ_DIR)/src/llb/sllg.o $(OBJ_DIR)/src/llb/sllg_stt.o $(OBJ_DIR)/src/llb/mt19937.o
+
+$(MODULE_DIR)/neb.so : $(OBJ_DIR)/src/neb/py_neb_module.o $(OBJ_DIR)/src/util/np_array.o $(OBJ_DIR)/src/neb/helper.o
 
 #$(MODULE_DIR)/fast_sum_lib.so:
 #	cd src/fast_sum_lib && $(PYTHON) setup.py build_ext --inplace
 #	install src/fast_sum_lib/fast_sum_lib.so ../src/finmag/native
 
-$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx 
-	cd src/treecode_bem && $(PYTHON) setup.py build_ext --inplace
+# Treecode/PBC BEM Cython extension (Task 23). Built via its own setuptools +
+# cythonize setup.py, using the same $(PYTHON) as the rest of the native build.
+# The compiled object files go into a per-env build-temp under the per-prefix
+# OBJ_DIR (Task 11b hygiene: legacy and DOLFINx builds never share ABI output
+# paths); the ABI-tagged .so (e.g. treecode_bem.cpython-312-*.so) is produced
+# in-place and installed into the module dir. Any stale untagged .so is removed
+# first so the glob install can never pick up a wrong-ABI artifact. [Claude
+# Opus 4.8]
+$(MODULE_DIR)/treecode_bem.so: src/treecode_bem/treecode_bem_I.c  src/treecode_bem/treecode_bem_II.c src/treecode_bem/common.c src/treecode_bem/bem_pbc.c src/treecode_bem/treecode_bem_lib.pyx
+	rm -f src/treecode_bem/treecode_bem*.so $(MODULE_DIR)/treecode_bem*.so
+	cd src/treecode_bem && CFLAGS= $(PYTHON) setup.py build_ext --inplace --build-temp $(abspath $(OBJ_DIR))/treecode_bem
 	install src/treecode_bem/treecode_bem*.so ../src/finmag/native
+	cp src/treecode_bem/treecode_bem*.so $@
 
 #$(MODULE_DIR)/cvode_petsc.so: src/cvode/cvode_petsc.pxd  src/cvode/cvode_petsc.pyx src/cvode/llg.c src/cvode/llg.h src/cvode/llg_petsc.pyx
 #	cd src/cvode && $(PYTHON) setup.py build_ext --inplace
 #	install src/cvode/cvode_petsc.so ../src/finmag/native
 #	install src/cvode/llg_petsc.so ../src/finmag/native
 
-$(UNIT_TEST_BINARY): tests/run_ci_tests.o src/util/np_array.o src/sundials/tests/sundials_tests.o src/sundials/numpy_malloc.o 
+$(UNIT_TEST_BINARY): $(OBJ_DIR)/tests/run_ci_tests.o $(OBJ_DIR)/src/util/np_array.o $(OBJ_DIR)/src/sundials/tests/sundials_tests.o $(OBJ_DIR)/src/sundials/numpy_malloc.o
 run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_framework $(SUNDIALS_NVECTOR_SO) -L$(INSTALL_PATH)/lib -ldolfin
 
 #######################################
@@ -101,13 +137,27 @@ run_ci_tests_LDFLAGS=-lboost_prg_exec_monitor -lboost_system -lboost_unit_test_f
 # The list of output binary files to link
 BUILD_TARGETS = $(addprefix $(MODULE_DIR)/,$(MODULES))
 # The list of source files to be compiled
-ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
-SOURCES = $(shell find src/llg src/util src/sundials -name \*.cc)
+ifneq ($(IS_DOLFINX_ENV),)
+# DOLFINx env: the array-only BEM kernel, the NumPy array helper, and the
+# dolfin-free native Sundials/CVODE wrapper (Task 20). None of these units pull
+# dolfin.h (they are compiled with -DFINMAG_NO_DOLFIN); the sundials wrapper and
+# numpy_malloc do pull the conda-forge SUNDIALS-7 headers, so -DFINMAG_NO_SUNDIALS
+# is NOT set here. The SWIG-DOLFIN, LLG, LLB, and NEB units remain excluded so
+# nothing pulls dolfin.h. The Boost.Test `sundials_tests.cc` unit is excluded --
+# it belongs to the legacy run_ci_tests.bin target, not the module set. [Claude
+# Opus 4.8]
+SOURCES = src/llg/bem_arrays.cc src/util/np_array.cc \
+          src/sundials/py_sundials_module.cc src/sundials/numpy_malloc.cc
+else ifneq ($(findstring /.pixi/,$(PYTHON_PREFIX)),)
+# bem_arrays.cc is the DOLFINx-only array surface; it is compiled but never
+# linked into any legacy module, so exclude it here to avoid ABI noise. [Claude
+# Opus 4.8]
+SOURCES = $(filter-out src/llg/bem_arrays.cc,$(shell find src/llg src/util src/sundials -name \*.cc))
 else
-SOURCES = $(shell find src tests -name \*.cc)
+SOURCES = $(filter-out %/bem_arrays.cc,$(shell find src tests -name \*.cc))
 endif
-# The list of object files to be compiled
-OBJECT_FILES = $(patsubst %.cc,%.o,$(SOURCES))
+# The list of object files to be compiled (in the per-env object tree)
+OBJECT_FILES = $(addprefix $(OBJ_DIR)/,$(patsubst %.cc,%.o,$(SOURCES)))
 
 # The name of the precompiled header file.
 PRECOMPILED_HEADER_FILE=$(PRECOMPILED_HEADER_DIR)/finmag_includes.h.gch
@@ -151,13 +201,27 @@ endif
 # Managed environments such as pixi place third-party headers under the
 # environment prefix instead of /usr/include, so add that include root too. [Codex GPT-5.4]
 CFLAGS_INCLUDE=-I$(abspath src) -I$(PYTHON_PREFIX)/include -I$(NUMPY_INCLUDE_DIR)
-CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE)
+# In the DOLFINx env libdolfin is unavailable, so compile with -DFINMAG_NO_DOLFIN
+# to keep the umbrella header (finmag_includes.h) from pulling dolfin.h. SUNDIALS
+# *is* available in this env (Task 20 added conda-forge sundials to the dolfinx
+# feature), so -DFINMAG_NO_SUNDIALS is deliberately NOT set: the native CVODE
+# wrapper (sundials.so) needs cvode.h, and the array-only bem_arrays unit is
+# unaffected by cvode.h merely being included. This is part of CFLAGS_NOPCH so it
+# also applies to the precompiled header build. [Claude Opus 4.8]
+ifneq ($(IS_DOLFINX_ENV),)
+CFLAGS_NODOLFIN = -DFINMAG_NO_DOLFIN
+endif
+CFLAGS_NOPCH=$(CFLAGS_OPT) $(CFLAGS_PYTHON) $(CFLAGS_OTHER) $(CFLAGS_WARN) $(CFLAGS_INCLUDE) $(CFLAGS_NODOLFIN)
 CFLAGS=$(CFLAGS_NOPCH) $(CFLAGS_USE_PCH)
 
 # The number of make jobs to run in parallel
 N_SIMULTANEOUS_JOBS:=$(shell grep -ci processor /proc/cpuinfo)
 
 FINMAGDIST_REVISION ?= HEAD
+# Read-only validation builds need native extensions without rewriting the
+# tracked Python version module. Normal developer builds retain the historical
+# behaviour unless this variable is set to 0. [Codex GPT-5]
+WRITE_FINMAG_VERSION ?= 1
 
 #REVISION_NR = $(shell hg id -n -r ${FINMAGDIST_REVISION})
 REVISION_ID = $(shell git rev-parse ${FINMAGDIST_REVISION})
@@ -168,7 +232,11 @@ REVISION_ID = $(shell git rev-parse ${FINMAGDIST_REVISION})
 add_version: .add_version
 .add_version: $(BUILD_TARGETS)
 	@echo "FINMAG_VERSION: ${REVISION_ID}"
-	@echo '__version__ = "${REVISION_ID}"' > ../src/finmag/__version__.py
+	@if [ "$(WRITE_FINMAG_VERSION)" = "1" ]; then \
+		echo '__version__ = "${REVISION_ID}"' > ../src/finmag/__version__.py; \
+	else \
+		echo "Skipping tracked version-file update (WRITE_FINMAG_VERSION=0)"; \
+	fi
 	touch .add_version
 
 # Builds the whole project
@@ -195,9 +263,10 @@ subprojects :
 nvec_serial :
 	@$(MAKE) -C src/sundials/nvec_serial
 
-# Builds an object file from a .cc file
-%.o : %.cc $(PRECOMPILED_HEADER_FILE) Makefile
+# Builds an object file from a .cc file into the per-env object tree
+$(OBJ_DIR)/%.o : %.cc $(PRECOMPILED_HEADER_FILE) Makefile
 	@echo Building object file: $@
+	@mkdir -p $(dir $@)
 	@$(CXX) -c $< $(CFLAGS) $(MODULE_FLAGS) -o $@ ${UFC_INC}
 
 # Creates the precompiled header file
@@ -216,6 +285,7 @@ run-ci-tests:
 # Removes all temporary files
 clean:
 	rm -f $(BUILD_TARGETS) $(PRECOMPILED_HEADER_FILE)
+	rm -rf obj
 	find . \( -name \*.o -o -name \*.d -o -name \*.o.nm -o -name \*.gen.cc -o -name \*.gen.h -o -name \*.so \) -exec rm {} +
 	rm -f ./src/sundials/nvec_serial/.nvector_serial_custom_malloc_compiled
 	rm -f .add_version

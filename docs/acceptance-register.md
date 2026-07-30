@@ -1,0 +1,711 @@
+# Finmag DOLFINx Deviation and Decision Register
+
+**Terminology used throughout this ledger:** "SR1" (Support Release 1) is
+the port's first supported subset, declared 2026-07-28 — see
+[`SUPPORTED.md`](SUPPORTED.md). Parenthetical citations like `(SR1 P2.4)` or
+`(SR1 S5b)` reference this project's internal phase/task tracking during the
+port; the plans that defined those labels are preserved (with correction
+banners where needed) under `docs/archive/plans/` and `docs/archive/specs/`.
+They are kept here as historical provenance alongside the authoritative
+commit hashes and dates — the commit/date is the citation that matters if a
+plan label's own meaning is not obvious from context.
+
+**Reconciled:** 2026-07-23 (**2026-07-29 update, doc-restructure T1: header date corrected** — this file's body has been continuously maintained through the 2026-07-28 SR1 S5b batch ratification below; "Reconciled" names when the register's structure was first agreed, not the last content update)
+
+**Decision authority:** repository owner
+
+**Default until decided:** no permanent exception is accepted
+
+This is the sole disposition ledger. `capability-status.md` says what works;
+this file records where the DOLFINx behavior differs from original `master` or
+where an original capability might be omitted. Plans and chronological notes
+may supply evidence, but they must link back here rather than invent a second
+decision list.
+
+“Recommendation” is technical advice, not approval. Only the repository owner
+may finalise a row's **Disposition**. A row may be handled after SR1 without
+being dropped from the final parity target.
+
+**2026-07-28 (SR1 S5b):** the repository owner ratified every recommendation
+in the [SR1 batch-ratification decision sheet](archive/specs/2026-07-27-sr1-ratification-sheet.md)
+(13 ACCEPT, 16 DEFER, 14 DROP, 1 RESTORE, 0 FIX NOW) and every open row below
+(D1-D32, M1-M16, P1) now carries a finalised `ratified 2026-07-28 (owner,
+batch): ...` disposition. No row remains open awaiting a decision; see the
+sheet for full rationale per row.
+
+For the owner-meeting triage sheet, see
+[`owner-porting-checklist.md`](archive/owner-porting-checklist.md). Approved exceptions
+from that meeting must then be copied into atomic rows here.
+
+The checklist's **Not now** column means deferred beyond SR1, not permanently
+dropped. Those capabilities remain in the parity backlog unless a later owner
+decision explicitly accepts an exception here.
+
+Every row below is intended to describe one independently selectable decision.
+If later evidence reveals another bundled row, split it before recording an
+owner disposition; never use one decision to approve unrelated capabilities.
+
+Test paths quoted below are the **canonical** (post-`62aae519`) ones: since the
+2026-07-27 owner decision recorded in **D30**, every ported DOLFINx test lives
+at its original `master` (`b5015c5a`) path and the `*_dolfinx.py` sibling-file
+convention is retired. Older documents and commit messages still name the
+sibling filenames; that is history, not a live pointer.
+
+## Index
+
+- D1 — DEFER — `DMI(dmi_type='D2D')` raises by name
+- D2 — APPROVED — The legacy spatially varying K2 native-field indexing bug…
+- D3 — IMPLEMENTED — `DiscreteTimeZeeman.compute_energy()` remains stale after an interval update
+- D4 — INVESTIGATED — `hysteresis()`/`hysteresis_loop()` were believed not to independently re-relax after…
+- D5 — DEFER — `TimeZeemanPython` rejects vector-valued `time_fun` by name
+- D6a — ACCEPT — A constant `UniaxialAnisotropy` axis is normalised
+- D6b — ACCEPT — A spatially varying uniaxial-anisotropy axis is used as…
+- D7 — ACCEPT — `Field.from_function` interpolates across compatible space mismatches
+- D8 — IMPLEMENTED — `Simulation` and `sim_with` defaulted to SciPy rather than…
+- D9 — ACCEPT — Spatially varying STT inputs use coordinate ordering consistently
+- D10 — APPROVED — Out-of-range pin indices raise `ValueError`
+- D11 — IMPLEMENTED — Current port silently uses last-call-wins when Slonczewski and…
+- D12 — APPROVED — Restart v2 is coordinate-aware and rejects legacy raw-dof…
+- D13 — ACCEPT — Reading `Simulation.t` no longer creates an integrator
+- D14 — APPROVED — `.npy` field snapshots store coordinate/value tables rather than…
+- D15 — APPROVED — Legacy string `Expression`/`UserExpression` inputs are replaced by Python…
+- D16a — ACCEPT — Restart reconstructs magnetisation/time but does not reapply or…
+- D16b — ACCEPT — Restart metadata represents varying material fields only as…
+- D17 — DEFER — Legacy `sim_with(nx=...)` with no `spacing_*` (and any…
+- D18 — IMPLEMENTED — `Simulation.toggle_stt(new_state)` (`src/finmag/sim/sim.py:888`) writes `self.llg.do_slonczewski` DIRECTLY, bypassing the D11-guarded…
+- D19 — DEFER — Serial function-space periodic boundaries (`Simulation(pbc='1d'/'2d')`) are deferred past…
+- D20 — ACCEPT — `LLG.M`/`LLG.M_average` are implemented as correct physics (…
+- D21 — ACCEPT — `Simulation.save_m_in_region` restores the documented INTENT of the legacy…
+- D22 — DEFER — `finmag.field.evaluate_at_point` / `Field.probe` (and `Field.__call__`) mis-resolve a point…
+- D23 — DEFER — `Simulation.set_m()` / `LLG.set_m()` silently accept a NaN `m_init`…
+- D24 — PORTED — `Simulation.shutdown()`, `Simulation.instances_delete_all_others()` and `close_logfile()` are absent by design;…
+- D25 — ACCEPT — The ported `EffectiveField` allows RE-ADDING a previously-removed interaction,…
+- D26 — FIXED — `Simulation.get_field_as_dolfin_function` raises…
+- D27 — DEFER — The ported `Simulation.add()` does not register per-interaction `E_<name>`…
+- D28 — DEFER — The ported `ScipyIntegrator.reinit()` rebuilds/reseeds the integrator but does…
+- D29 — ACCEPT — The anisotropy/Magpar coordinate-probe comparison retains an ~8% residual…
+- D30 — ADOPTED — Ported DOLFINx tests live at their original `master`…
+- D31 — DEFER — `Simulation.save_field` / `Simulation.save_m` (the `.npy` snapshot surface, implemented…
+- D32 — ACCEPT — Legacy `method=` names rejected by name; default changed…
+- D33 — ADOPTED — All unported master tests fail via guarded strict…
+- D34 — NOTED — Same maxh produces coarser meshes than legacy netgen…
+- M1 — DROP — `nsim`/Nmag live reference generation
+- M2 — DROP — GCR demag solver
+- M3 — DEFER — Compiled `Equation`/`terms` backend
+- M4a — DROP — Netgen binary backend
+- M4b — DROP — `nmesh_to_dolfin` conversion
+- M5 — RESTORE — Nonlocal `LLG_STT` spin-accumulation model
+- M6 — DROP — `FixedEnergyDW`
+- M7 — DEFER — `Demag2D`
+- M8 — ACCEPT — Magpar mesh-drift comparison xfails
+- M9 — DROP — Paraview/mencoder movie export
+- M10 — DROP — Mercurial `get_hg_revision_info`
+- M11a — DROP — Historical transposed-Robertson SciPy xfail (`src/finmag/util/ode/tests/test_sundials_stiff_ode.py`)
+- M11b — DEFER — Historical weak-Krylov-demag tolerance xfail (`src/finmag/tests/test_interactions_scale_linearly_with_m.py`)
+- M12a — DROP — Legacy matrix energy assembly (`src/finmag/energies/energy_base.py`)
+- M12b — DROP — Legacy project energy method (`src/finmag/energies/energy_base.py`)
+- M12c — DROP — Legacy direct energy method (`src/finmag/energies/energy_base.py`)
+- M13 — DROP — `batch_task` sweep tooling
+- M14 — DROP — OOMMF live reference generation
+- M15 — DROP — Magpar live reference generation
+- M16 — DEFER — Legacy Heun driver
+- P1 — DEFER — std_prob_3 FULL-mode runs ~17.6x slower than its own…
+
+## A. Behavioral deviations
+
+### D1 `DMI(dmi_type='D2D')` raises by name
+
+**Issue:** `DMI(dmi_type='D2D')` raises by name
+
+**Detail:** The variant exists in legacy source but was absent from its documented option list
+
+**Recommendation:** Defer until after SR1, then port or explicitly accept omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1 — the by-name refusal stands; port the variant under full parity, since 'D2D' was absent from its own documented option list on master
+
+### D2 The legacy spatially varying K2 native-field indexing bug is not reproduced
+
+**Issue:** The legacy spatially varying K2 native-field indexing bug is not reproduced
+
+**Detail:** Legacy `energy.cc` used a fixed index; constant K2 hid the defect. Port follows the correct energy derivative and has a divergence pin
+
+**Recommendation:** Keep the corrected physics
+
+**Disposition:** **approved 2026-07-23 (owner meeting)**
+
+### D3 `DiscreteTimeZeeman.compute_energy()` remains stale after an interval update
+
+**Issue:** `DiscreteTimeZeeman.compute_energy()` remains stale after an interval update
+
+**Detail:** The legacy defect is confirmed at the source level (the frozen legacy `update()` rebinds `self.H` without rebuilding the cached `self.E`, read directly); the committed oracle fixture (`fixtures/timezeeman_oracle.json`) does NOT numerically discriminate it (its correct energies are ~1e-37 J against `atol=1e-18`). The numerical record of the legacy value is the D3 divergence pin (`_D3_LEGACY_STALE_ENERGY = -8.042477193189932e-23`). Field computation remains current throughout
+
+**Recommendation:** Fix and clearly document the legacy behavior
+
+**Disposition:** **approved fix 2026-07-23 (owner meeting); IMPLEMENTED in `ff906f11` (SR1 P2.4)**
+
+### D4 `hysteresis()`/`hysteresis_loop()` were believed not to independently re-relax after the…
+
+**Issue:** `hysteresis()`/`hysteresis_loop()` were believed not to independently re-relax after the first stage
+
+**Detail:** The approved-fix investigation (SR1 P2.5) found the re-relax defect is **NOT reproducible**: `relax()` resets `sim.relaxation = {}` at the start of every call and its scheduler trigger is removed at the end of each stage, so no relaxation state leaks; each stage rebuilds its stopping condition and integrates to its own equilibrium. In non-degenerate geometry the shared `hysteresis()` path re-relaxes every stage and switches m, bit-for-bit identical to a fresh `Simulation`/`relax()` per stage. The on-axis oracle stall is a genuine **degenerate Stoner-Wohlfarth saddle** (field antiparallel to the easy axis -> torque ~0; a fresh `relax()` also does not switch), correct physics rather than a skipped relaxation; the corrected-vs-legacy divergence there is exactly zero. `hysteresis.py`/`sim_relax.py` are byte-for-byte legacy (only the `finmag.util.helpers` import was localised)
+
+**Recommendation:** Owner approved a fix; investigation showed no source fix is warranted -- correct the diagnosis and add switching-physics coverage
+
+**Disposition:** **investigated under D4 (SR1 P2.5, `0ad5a0e3`); no re-relax defect found, correct switching physics witnessed in non-degenerate geometry (`test_hysteresis_switches_each_stage_tilted_axis`, `test_stoner_wohlfarth_loop_shared_hysteresis_path`); on-axis stall reclassified as a degeneracy pin. No source change (owner decision 2026-07-23: diagnosis correction, not mechanism rewrite)**
+
+### D5 `TimeZeemanPython` rejects vector-valued `time_fun` by name
+
+**Issue:** `TimeZeemanPython` rejects vector-valued `time_fun` by name
+
+**Detail:** Narrow legacy branch lacked useful tests during the port. P5.2 now exercises the by-name deferral: `energies/zeeman_test.py::test_time_zeeman_python_vector_time_fun_is_deferred_by_name`
+
+**Recommendation:** Defer until after SR1, then port unless owner accepts omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1 — port under full parity; the tested legacy scalar `time_fun` path works today
+
+### D6a A constant `UniaxialAnisotropy` axis is normalised
+
+**Issue:** A constant `UniaxialAnisotropy` axis is normalised
+
+**Detail:** Normalisation restores the cosine contract for a constant axis
+
+**Recommendation:** Accept and explain in user documentation
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT — the corrected reading of the documented contract, since a non-unit axis silently rescaled K1 on master; document in `docs/SUPPORTED.md` (S6 obligation)
+
+### D6b A spatially varying uniaxial-anisotropy axis is used as supplied
+
+**Issue:** A spatially varying uniaxial-anisotropy axis is used as supplied
+
+**Detail:** This follows legacy behavior; it does not describe cubic-anisotropy axes
+
+**Recommendation:** Decide whether to require pointwise normalisation or document the supplied-axis contract
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT the supplied-axis contract, documented — minimum-change option, matches master bit-for-bit; document in `docs/SUPPORTED.md` (S6 obligation)
+
+### D7 `Field.from_function` interpolates across compatible space mismatches
+
+**Issue:** `Field.from_function` interpolates across compatible space mismatches
+
+**Detail:** Backward-compatible superset; avoids raw-copy failure
+
+**Recommendation:** Accept
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT — strict superset, every input master accepted still behaves identically
+
+### D8 `Simulation` and `sim_with` defaulted to SciPy rather than legacy Sundials
+
+**Issue:** `Simulation` and `sim_with` defaulted to SciPy rather than legacy Sundials
+
+**Detail:** `81fab481` restores the public defaults to native Sundials after P1.1/P1.2 validated reset/reinitialisation, scheduling, save and restart on both backends. It has signature/default, native construct-and-advance and explicit-SciPy regressions; the core smoke records `integrator_backend: sundials` at `t=1e-12`
+
+**Recommendation:** Keep native Sundials as the public default; retain SciPy as a fully supported explicit opt-in
+
+**Disposition:** **approved condition discharged and implemented 2026-07-23 (`81fab481`)**
+
+### D9 Spatially varying STT inputs use coordinate ordering consistently
+
+**Issue:** Spatially varying STT inputs use coordinate ordering consistently
+
+**Detail:** Legacy mixed raw-dof J/Ms/p with coordinate-ordered m/H/alpha; the port removes a latent physics inconsistency
+
+**Recommendation:** Accept corrected ordering
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT the corrected ordering — reproducing the legacy mixture would mean shipping a known wrong answer for varying STT inputs
+
+### D10 Out-of-range pin indices raise `ValueError`
+
+**Issue:** Out-of-range pin indices raise `ValueError`
+
+**Detail:** Legacy logged an error and silently retained the previous pins, risking stale constraints
+
+**Recommendation:** Keep fail-fast `ValueError`
+
+**Disposition:** **approved 2026-07-23 (owner meeting)**
+
+### D11 Current port silently uses last-call-wins when Slonczewski and Zhang-Li are both…
+
+**Issue:** Current port silently uses last-call-wins when Slonczewski and Zhang-Li are both configured; legacy silently preferred Slonczewski
+
+**Detail:** Neither silent precedence rule is an acceptable public contract
+
+**Recommendation:** Approved target: reject the second conflicting configuration with a clear error
+
+**Disposition:** **approved 2026-07-23 (owner meeting); IMPLEMENTED in `de518888` (SR1 P2.6)** -- `LLG.use_slonczewski` raises `ValueError` if `do_zhangli` is set, and `use_zhangli` raises `ValueError` if `do_slonczewski` is set, each naming both modes; `Simulation.set_stt`/`set_zhangli` inherit the guard by routing through these setters. See D18 for the separate `toggle_stt` back-door this guard does not close
+
+### D12 Restart v2 is coordinate-aware and rejects legacy raw-dof v1
+
+**Issue:** Restart v2 is coordinate-aware and rejects legacy raw-dof v1
+
+**Detail:** Raw legacy arrays cannot be mapped safely without coordinates; the owner has no v1 archives requiring support
+
+**Recommendation:** Support v2 only and reject v1 clearly
+
+**Disposition:** **approved 2026-07-23 (owner meeting)**
+
+### D13 Reading `Simulation.t` no longer creates an integrator
+
+**Issue:** Reading `Simulation.t` no longer creates an integrator
+
+**Detail:** Avoids a surprising getter side effect; backend lifecycle correctness is tracked as implementation work, not a decision
+
+**Recommendation:** Accept side-effect-free `t`
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT — a getter with a construction side effect is not a contract worth preserving; lazy creation is retained where it belongs
+
+### D14 `.npy` field snapshots store coordinate/value tables rather than legacy raw backend dofs
+
+**Issue:** `.npy` field snapshots store coordinate/value tables rather than legacy raw backend dofs
+
+**Detail:** Coordinate-aware output is stable across FEM ordering changes
+
+**Recommendation:** Keep coordinate/value format; do not add raw-format compatibility
+
+**Disposition:** **approved 2026-07-23 (owner meeting)**
+
+### D15 Legacy string `Expression`/`UserExpression` inputs are replaced by Python callables or…
+
+**Issue:** Legacy string `Expression`/`UserExpression` inputs are replaced by Python callables or rejected
+
+**Detail:** DOLFINx has no drop-in equivalent of the old runtime string/UserExpression contract
+
+**Recommendation:** Use documented vectorised Python callables; reject strings clearly
+
+**Disposition:** **approved 2026-07-23 (owner meeting)**
+
+### D16a Restart reconstructs magnetisation/time but does not reapply or validate material and…
+
+**Issue:** Restart reconstructs magnetisation/time but does not reapply or validate material and interaction metadata
+
+**Detail:** This matches the practical legacy reconstruction pattern, but may not satisfy every selected restart workflow
+
+**Recommendation:** Inventory whether any selected workflow needs full-state reconstruction
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT as the SR1 restart contract, documented — no selected restart workflow requires full-state reconstruction; document in `docs/SUPPORTED.md` (S6 obligation)
+
+### D16b Restart metadata represents varying material fields only as scalar summaries
+
+**Issue:** Restart metadata represents varying material fields only as scalar summaries
+
+**Detail:** A scalar summary is lossy and cannot reconstruct spatially varying `Ms`, alpha or interaction coefficients
+
+**Recommendation:** Define a lossless representation if full-state reconstruction is selected; otherwise label metadata informational
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT, relabelled informational — follows directly from accepting D16a; document in `docs/SUPPORTED.md` (S6 obligation)
+
+### D17 Legacy `sim_with(nx=...)` with no `spacing_*` (and any `pitch <= extent`) computed a…
+
+**Issue:** Legacy `sim_with(nx=...)` with no `spacing_*` (and any `pitch <= extent`) computed a macro-geometry demag with touching/overlapping tiles; the DOLFINx port refuses `pitch <= extent` by name and requires a strictly larger pitch
+
+**Detail:** The ported periodic BEM double-counts solid angles at coincident/interpenetrating tile boundary nodes (row sums -2/-3, ~158% field error on a cube, non-finite + failed phi_2 solve giving H=-M on a flat slab). Whether legacy master computed this correctly is UNVERIFIED (nobody ran legacy master); legacy's own `demag_pbc_test.py` asserted 1.2% accuracy using the touching default, so this may be a port regression OR a latent legacy defect. P5.2 note: `energies/demag/demag_pbc_test.py::test_field_1d`/`test_field_2d` now transcribe master's assertions and tolerances verbatim and are marked `xfail(strict)` against this D17 coincident-node defect (measured ~50x / ~22x field error against master's 0.012 / 0.02 bounds)
+
+**Recommendation:** Keep the by-name refusal for SR1 (a strictly-larger pitch e.g. `extent*(1+1e-6)` reproduces the legacy reference to 0.08%); fixing the coincident-node BEM kernel is a separate later slice
+
+**Disposition:** **approved 2026-07-23 (owner decision): keep the by-name refusal as the SR1 contract; the coincident-node BEM kernel fix is deferred to a separate later slice, not required for SR1**; ratified 2026-07-28 (owner, batch): DEFER past SR1 (not a permanent exception) — the refusal stands as the SR1 contract; the coincident-node BEM kernel fix stays a named full-parity backlog item since whether master computed this correctly is unverified
+
+### D18 `Simulation.toggle_stt(new_state)` (`src/finmag/sim/sim.py:888`) writes…
+
+**Issue:** `Simulation.toggle_stt(new_state)` (`src/finmag/sim/sim.py:888`) writes `self.llg.do_slonczewski` DIRECTLY, bypassing the D11-guarded `use_*` setters, so it reopens the conflicting-mode state D11 set out to close: `set_zhangli(...)` then `toggle_stt(True)` leaves BOTH `do_slonczewski` and `do_zhangli` True, and the dispatch (`llg.py:293-310`, `if do_slonczewski ... elif do_zhangli`) then silently prefers Slonczewski -- the exact silent precedence D11 killed on the `use_*` path, still reachable via `toggle_stt`. Separately, `toggle_stt(False)` uses `if new_state:` / `else:`, so a falsy explicit `False` argument falls into the `else` branch and FLIPS the flag rather than forcing it off, so `toggle_stt(False)` does not reliably disable. No test/example/doc exercises either path today
+
+**Detail:** D11's approved scope (`de518888`, SR1 P2.6) is the `use_*` configuration path only; both defects were found by the reviewer and implementer while confirming D11's guard runs before any mutation, and are out of scope for that slice
+
+**Recommendation:** Harden `toggle_stt` in a follow-up slice: refuse enabling Slonczewski via `toggle_stt(True)` while Zhang-Li is active (and the mirror case), and make `toggle_stt(False)` force the flag off rather than flip it
+
+**Disposition:** **approved and IMPLEMENTED in `a7b0fb87` (SR1 D18), owner decision 2026-07-23 (relayed): harden it** -- `toggle_stt` now honours explicit `False` (forces `do_slonczewski` off via `bool(new_state)` rather than falling into the flip branch) and raises `ValueError` naming both "Slonczewski" and "Zhang-Li" BEFORE mutating the flag whenever a `toggle_stt` enable of Slonczewski (explicit `True` or a no-arg flip from OFF) would collide with an active Zhang-Li, closing the back-door this row recorded; disabling never conflicts. Focused gate `dolfinx-src-stt-pytest` went from 21 passed to 27 passed (+6: 5 behaviour tests + 1 non-bool-coercion regression pin). Review: APPROVE WITH FOLLOW-UPS, nothing blocking
+
+### D19 Serial function-space periodic boundaries (`Simulation(pbc='1d'/'2d')`) are deferred past…
+
+**Issue:** Serial function-space periodic boundaries (`Simulation(pbc='1d'/'2d')`) are deferred past SR1 rather than ported for it
+
+**Detail:** The P3.1 probe found this BLOCKED in the supported environment, not merely unwired: `dolfinx_mpc` is absent and DOLFINx 0.10.0 `fem.functionspace` has no `constrained_domain`, so legacy's periodic-constrained function space cannot be expressed. A probe through the actual `Exchange` proved periodicity cannot be recovered by post-hoc value copying (the min-x seam face collapses to `|H_ex|=0`, a free-surface artifact) -- it must live in the assembled exchange/DMI operator via a real multipoint constraint. The demag image-lattice PBC (MacroGeometry, P2.2) is a SEPARATE, working feature and is unaffected. No completed capability depends on function-space PBC; the existing `_deferred('pbc')` guard and `test_pbc_is_deferred` already fail it cleanly by name. P5.2 note: `tests/test_energies.py::test_exchange_periodic_boundary_conditions` is restored but degenerate under D19 -- the `_pbc` space is of necessity identical to the normal space (`S3_pbc == S3_normal`), so it runs the same uniform-`m` case twice and no longer exercises real periodicity
+
+**Recommendation:** Defer past SR1: keep the by-name refusal. Revisit under full parity by either adding `dolfinx_mpc` to the environment (moderate, well-scoped) or hand-rolling a reduced-dofmap constraint (substantial, invasive)
+
+**Disposition:** **approved 2026-07-23 (owner decision): deferred past SR1; function-space PBC is not an SR1 requirement. The by-name `_deferred('pbc')` guard stands; no new dependency added**; ratified 2026-07-28 (owner, batch): DEFER past SR1 (not a permanent exception) — keep the by-name `_deferred('pbc')` guard; revisit under full parity via `dolfinx_mpc` or a hand-rolled reduced dofmap
+
+### D20 `LLG.M`/`LLG.M_average` are implemented as correct physics (`M = Ms*m` in A/m,…
+
+**Issue:** `LLG.M`/`LLG.M_average` are implemented as correct physics (`M = Ms*m` in A/m, component-blocked `xxx`; `M_average` = the Ms-weighted volume average `(integral Ms*m dV)/(integral dV)`), diverging from the frozen legacy oracle which was demonstrably broken
+
+**Detail:** Frozen `b5015c5a:src/finmag/physics/llg.py`: `LLG.M` read `self.m`, which itself did `raise RuntimeError("DON'T USE llg.m UNTIL FURTHER NOTICE!!!!")`, so `LLG.M` raised on every access; and `M_average` computed `self.m_average * volume_Ms / volume` where `volume_Ms = df.assemble(self._Ms_dg * df.dx)` and `volume = df.assemble(self._Ms_dg * df.dx)` are the *identical* integral, collapsing `M_average` to the dimensionless `m_average` (a copy-paste unit bug; the docstring promised A/m). There are **zero** consumers of `M`/`M_average` even in frozen master (`git grep M_average b5015c5a -- 'src/*test*'` is empty), so no oracle or workflow regresses. The port reuses the already-ported per-node `Ms` (`_ms_nodal`, lumped-mass DG0->CG1 projection, handling constant and spatially varying `Ms`) and `m` in the Task-31 `xxx` ordering; divergence pinned by `test_M_average_diverges_from_legacy_dimensionless_m_average`
+
+**Recommendation:** Keep the corrected physics (`M = Ms*m` in A/m; `M_average` the Ms-weighted volume average); do not reproduce the legacy `RuntimeError`/`volume_Ms == volume` unit bug
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT the corrected physics — there is no working legacy behaviour to preserve and zero consumers exist even in frozen master
+
+### D21 `Simulation.save_m_in_region` restores the documented INTENT of the legacy method with a…
+
+**Issue:** `Simulation.save_m_in_region` (SR1 P4-region, `123df146`) restores the documented INTENT of the legacy method with a changed calling convention, because the frozen legacy method was itself non-functional
+
+**Detail:** Legacy `b5015c5a:src/finmag/sim/sim.py:372` `save_m_in_region(region, name)` assigned `self.tablewriter.entities[name]`, but `Tablewriter` exposes `_entities` (public `entities` lives on the unrelated `Tablereader`), so it raised `AttributeError: 'Tablewriter' object has no attribute 'entities'` -- the exact error recorded in the shipped `doc/ipython_notebooks_src/ref-saving-averages-regions.ipynb`. There is thus no working legacy behavior to reproduce. Two divergences: (a) the port restores the documented intent (register a per-region `<name>_m_{x,y,z}` average-magnetisation `.ndt` column, value `m_average_in_region(region)`) via the ported `Tablewriter.add_entity`; (b) the calling convention takes a region **id** (requiring a prior `mark_regions(...)`) rather than legacy's subdomain-marking **function**, because the port re-architected all region handling onto `mark_regions`. Region-restricted *field*/submesh output stays deferred (those legacy paths were gated behind `mark_regions`, which raised on dolfin>=1.5). Gate `dolfinx-src-varparams-pytest` 33 -> 35 passed
+
+**Recommendation:** Keep the restored per-region `.ndt` column with the region-id calling convention; region-restricted submesh field output remains a separate later item
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT — no working legacy behaviour existed to reproduce, and the id convention follows the port's region architecture
+
+### D22 `finmag.field.evaluate_at_point` / `Field.probe` (and `Field.__call__`) mis-resolve a…
+
+**Issue:** `finmag.field.evaluate_at_point` / `Field.probe` (and `Field.__call__`) mis-resolve a point lying exactly on an OUTER mesh face to the wrong boundary vertex (~0.5 relative error); strictly interior points are unaffected. `Simulation.probe_field` inherits the same defect
+
+**Detail:** The interpolating point-in-cell probe resolves an on-outer-face coordinate to the wrong cell/vertex -- a probe-location artifact, not a real field difference; confirmed by multiple agents. The P5.2 comparison tests defend structurally by probing interior-only and using coordinate-keyed exact nodal lookup on the boundary. Evidence/workaround: `tests/comparison/exchange/test_exchange_compare_magpar.py` (interior-only probe check + boundary nodal lookup) and `energies/demag/fk_demag_test.py` (centre-only `evaluate_at_point`)
+
+**Recommendation:** Fix the outer-face point location in a later slice; interior probing is correct meanwhile
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — a probe-location artifact, not a field-physics difference; every affected comparison test works around it structurally today
+
+### D23 `Simulation.set_m()` / `LLG.set_m()` silently accept a NaN `m_init` (leaving `sim.m`…
+
+**Issue:** `Simulation.set_m()` / `LLG.set_m()` silently accept a NaN `m_init` (leaving `sim.m` containing NaN) instead of raising `ValueError` as master did
+
+**Detail:** The port does not reproduce the legacy NaN-guard. Pinned `xfail(strict)` in `sim/sim_test.py::test_set_m`
+
+**Recommendation:** Restore the fail-fast NaN guard in a later slice
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — restoring the guard is small and clearly right; kept on the backlog rather than fixed now
+
+### D24 `Simulation.shutdown()`, `Simulation.instances_delete_all_others()` and `close_logfile()`…
+
+**Issue:** `Simulation.shutdown()`, `Simulation.instances_delete_all_others()` and `close_logfile()` are absent by design; the port dropped the legacy cyclic-reference teardown machinery and keeps a plain `instances` dict, so master's `test_clean_up` surface is not ported
+
+**Detail:** Deliberate simplification during the port. Documented in the `MASTER LEDGER` comment in `sim/sim_test.py` (master `test_clean_up` mapping); master's `test_clean_up` itself is now carried verbatim there under the `NOT PORTED` banner
+
+**Recommendation:** Port the teardown surface (or accept the omission) in a later sim.py slice
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — a long-running many-`Simulation` script is a legitimate workflow, kept on the backlog rather than declared permanent. **2026-07-28 update (CI T3, commit `f12cf995`, owner reversed DEFER):** the teardown surface is ported — `shutdown`/`instances_delete_all_others`/`instances_list_all`/`instances_delete_all`/`instances_alive_count`/`close_logfile` all now live in `src/finmag/sim/sim.py` (ported from `git show b5015c5a:src/finmag/sim/sim.py`, matching master's public semantics; the only mechanism change is a lazily-created `Tablewriter`, since the port already creates it lazily rather than in `__init__`). RED evidence: `src/finmag/tests/test_cyclic_references_in_sim.py`'s two tests, pre-fix failures recorded in the SR1 inventory log `/home/sam/.claude/jobs/6b8f36a7/tmp/sr1-final-inventory.log`; both now pass and the file is added to the `dolfinx-src-simulation-pytest` gate. `sim/sim_test.py::test_clean_up` is PROMOTED (both `not_ported`/strict-`xfail` markers removed, runs live). Its sibling `test_removing_logger_handlers_allows_to_create_many_simulation_objects` stays strict-`xfail` under `not_ported`, but for a DIFFERENT, unrelated reason (same class as D31's `df.BoxMesh` blocker): its own body calls `df.UnitIntervalMesh(1)` with legacy `dolfin` absent (`_DolfinAbsent` stub), raising `AttributeError` before the logfile-teardown logic it exercises is ever reached — verified empirically that promoting it does not make it pass. Gate `dolfinx-src-simulation-pytest`: 78 passed/5 skipped/30 xfailed -> 81 passed/5 skipped/29 xfailed (+3 passed = the 2 newly-gated cyclic-ref tests + `test_clean_up` promoted; -1 xfailed = `test_clean_up`'s marker removal; `test_removing_logger_handlers...` stays xfailed, so it does not change the xfailed count)
+
+### D25 The ported `EffectiveField` allows RE-ADDING a previously-removed interaction, whereas…
+
+**Issue:** The ported `EffectiveField` allows RE-ADDING a previously-removed interaction, whereas master asserted `AssertionError`
+
+**Detail:** Behavioural change relaxing the legacy restriction. Pinned in `sim/sim_test.py::test_remove_interaction2` (asserts the ported behaviour with a `BEHAVIOURAL CHANGE` comment)
+
+**Recommendation:** Decide whether to restore the legacy assertion in a later slice
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): ACCEPT the relaxation — strictly more permissive, no workflow depends on the assertion firing
+
+### D26 `Simulation.get_field_as_dolfin_function` raises…
+
+**Issue:** ~~`Simulation.get_field_as_dolfin_function` raises `ValueError: UFL conditions cannot be evaluated as bool` under DOLFINx~~ **FIXED 2026-07-28 (CI T4)**
+
+**Detail:** Real port bug, surfaced by `tests/bugs/test_bug_ndt_file_writing.py::test_ndt_writing_pretest`
+
+**Recommendation:** ~~Fix the port bug in a later slice~~ done
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — no selected SR1 workflow calls it; if `get_field_as_dolfin_function` is regarded as part of the supported public API this should be revisited as a fix-now candidate. **2026-07-28 update (CI T4, commit `a86fb294`, owner reversed DEFER — the method IS treated as supported public API):** FIXED in commit `a86fb294` ("Fix get_field_as_dolfin_function point evaluation (CI T4, D26 fixed)"). Root cause: the method returned the bare `dolfinx.fem.Function` (`llg._m_field.f`, or `effective_field.get_dolfin_function(...)`), and DOLFINx Functions inherit `__call__` from `ufl.Coefficient`, so `m(point)` performed *symbolic* evaluation — it returned a UFL object with the warning "Couldn't map 'm' to a float", and the first Python comparison on that object raised `ValueError: UFL conditions cannot be evaluated as bool in a Python context` (RED traceback captured at `ufl/conditional.py:37`). Fix: `finmag.field.PointEvaluableFunction` (a real `fem.Function` **subclass** whose `__call__` routes through the port's shared `finmag.field.evaluate_at_point`) plus the `finmag.field.as_point_evaluable(function)` adapter, which rebuilds the field via DOLFINx' documented `Function(V, x=...)` constructor so the returned object SHARES dof storage with the live field (a view, as master's return-the-same-object contract implied) and stays `isinstance`-compatible with `fem.Function` (no proxy object, so `.x`/`.eval`/`.interpolate`/form use are unaffected). `Simulation.get_field_as_dolfin_function` now wraps BOTH branches (`'m'` and named interactions) in `as_point_evaluable`; `region=` remains deferred, unchanged. **Caveat inherited, not fixed here: D22** — point calls on the returned object use `evaluate_at_point`, so a point lying exactly on an OUTER mesh face may resolve to the wrong boundary vertex (interior points are correct), and points outside this rank's local partition raise `RuntimeError` (legacy dolfin's "not inside domain" behaviour). Both caveats are documented on `PointEvaluableFunction` and on the method's docstring. Gate `dolfinx-src-simulation-pytest`: 81 passed/5 skipped/29 xfailed -> 86 passed/5 skipped/29 xfailed (+5 = all five tests of `tests/bugs/test_bug_ndt_file_writing.py`, which had NO gate home before and is added to this gate by the same commit; the other four of its tests already passed pre-fix, so the fix itself accounts for `test_ndt_writing_pretest`). `dolfinx-src-io-utils-pytest` 18 passed and `dolfinx-src-field-pytest` 83 passed, both unchanged; `dolfinx-src-timezeeman-pytest` (37 passed/1 xfailed) and `dolfinx-src-deferred-pytest` (1 passed/4 skipped) re-run unchanged as consumer sanity checks
+
+### D27 The ported `Simulation.add()` does not register per-interaction `E_<name>` /…
+
+**Issue:** The ported `Simulation.add()` does not register per-interaction `E_<name>` / `H_<name>_x/y/z` `.ndt` columns like legacy `sim.py add()`, so `plot_ndt_columns(columns=['E_Demag', 'H_Exchange_x', ...])` raises `KeyError` from `Tablereader.__getitem__`
+
+**Detail:** Ported `add()` only forwards to `effective_field.add(...)` and never registers the per-interaction table columns. Pinned `xfail(strict)` in `util/plot_helpers_test.py::test_plot_ndt_columns_and_plot_dynamics`
+
+**Recommendation:** Restore per-interaction column registration in a later slice
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — a genuine functional gap in a real legacy workflow (per-interaction energy traces); belongs on the backlog, not ratified away
+
+### D28 The ported `ScipyIntegrator.reinit()` rebuilds/reseeds the integrator but does NOT reset…
+
+**Issue:** The ported `ScipyIntegrator.reinit()` rebuilds/reseeds the integrator but does NOT reset the rhs-eval counter (`_n_rhs_evals`), whereas the Sundials backend does reset it
+
+**Detail:** Master never tested scipy `reinit` (legacy `ScipyIntegrator.reinit()` was a complete no-op). Pinned `xfail(strict)` in `drivers/tests/test_scipy.py` (paired with a regression pinning the actual counter-survives-reinit behaviour)
+
+**Recommendation:** Reset the counter on scipy `reinit` in a later slice
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): DEFER past SR1 — a diagnostic inconsistency between backends, not a physics difference; small and worth fixing, nothing selected depends on it
+
+### D29 The anisotropy/Magpar coordinate-probe comparison retains an ~8% residual (tolerance…
+
+**Issue:** The anisotropy/Magpar coordinate-probe comparison retains an ~8% residual (tolerance loosened from master `5e-7` to `8e-2`) even at coincident-coordinate nodes, whereas the sibling exchange/Magpar comparison holds `9e-8` at exact node coincidence
+
+**Detail:** The test (`tests/comparison/anisotropy/test_anis_magpar.py`, `71bade8c`; D30-relocated from `test_anis_magpar_dolfinx.py`) attributes the residual to Netgen mesh-regeneration drift, but because the max arises at an exact-nodal coincident node -- where the sibling exchange comparison stays at `9e-8` -- it is not yet established that the 8% is mesh-drift rather than a masked anisotropy-field defect. **2026-07-28 update:** the density aspect of this same drift (same `maxh` yielding fewer nodes than the archived netgen-5.3 run) is now split out into its own row, D34; this row's verdict text (below) is unchanged
+
+**Recommendation:** **Physics investigation required before accepting**: a physics reviewer must confirm the ~8% is Netgen mesh-drift and NOT a masked anisotropy-field defect
+
+**Disposition:** documented as known divergence 2026-07-25 (owner: document + defer); ratified 2026-07-28 (owner, batch): ACCEPT as quantified mesh-regeneration drift, see [`2026-07-27-d29-verdict.md`](archive/specs/2026-07-27-d29-verdict.md) — DRIFT verdict UPHELD on adversarial review; no masked defect, no fix slice required
+
+### D30 Ported DOLFINx tests live at their original `master` (`b5015c5a`) file paths rather than…
+
+**Issue:** Ported DOLFINx tests live at their original `master` (`b5015c5a`) file paths rather than beside them as `*_dolfinx.py` siblings; the in-tree legacy (FEniCS-2019) test lane is retired to the frozen oracle commit; a non-gating full-suite lane replaces it as the parity-backlog signal
+
+**Detail:** A port that sits BESIDE its ancestor cannot be reviewed against it -- "is this port faithful to master?" needs a diff, and a sibling file yields none. With the port AT the master path the review diff is exactly `git diff b5015c5a..HEAD -- <path>`. Implemented in the nine commits `e10c5893` (plan) .. `62aae519`: `98e381ae`+`7d5c4177` (inventory lane + `not_ported` marker), `608bf67b`+`0f9c2298` (comparison/nmag), `9dd89514` (energies/demag), `e7041dc9`+`b97f89c8` (core simulation/driver/util), `8b96563a` (drop the `_dolfinx` suffix from genuinely-new test files with no master ancestor), `62aae519` (legacy-lane retirement). The moves changed **paths, not content**: test bodies are unchanged apart from carried master functions, `__file__`-relative fixture-path fixups and import renames. A master ancestor was DELETED when every one of its test functions had a named covering port function -- WITH TWO DISCLOSED EXCEPTIONS in `e7041dc9`: `tests/zhangli/zhang_li_test.py::test_zhangli_sllg` and `tests/zhangli/stt_nonlocal_test.py::test_zhangli` are each "covered" only by a deferral-guard witness (`test_nonstandard_kernels_are_deferred[sllg]` / `[llg_stt]` in `test_stt.py`) that asserts `NotImplementedError` by name rather than a covering port function reproducing the physics; both exceptions and the rationale are disclosed in `test_stt.py`'s own mapping-header (see M5 for the resulting nonlocal-LLG_STT coverage gap). **2026-07-28 update (SR1 S5b, owner batch ratification, M5 RESTORE):** both files were restored verbatim from `b5015c5a` (`git checkout b5015c5a -- src/finmag/tests/zhangli/stt_nonlocal_test.py src/finmag/tests/zhangli/zhang_li_test.py`) as retained never-ported backlog; both failed at collection at that time (Python-2 source; also `import dolfin` at module scope) -- pytest's AST-rewrite import raised `SyntaxError: Missing parentheses in call to 'print'` on the Python-2 `print` statements (`stt_nonlocal_test.py:51`, `zhang_li_test.py:118`) before either file's `import dolfin` was ever reached (confirmed via targeted `--collect-only`: 2 collection errors, 0 collected), so `dev/bin/inventory-dolfinx-suite` then surfaced the nonlocal-`LLG_STT` gap in the non-gating lane, restoring the criterion-4 artifact (superseded by the CI T5/D33 conversion to strict xfail, described below). No pixi gate references `zhangli`. 10+ partially-covered ancestors are RETAINED and now fail visibly in the inventory lane instead of being silently dropped. Master functions with no cover are CARRIED VERBATIM under `NOT PORTED` banners and marked `@pytest.mark.not_ported` (34 in `sim/sim_test.py`, 8 in `util/helpers_test.py`, 1 `test_against_oommf` in `tests/comparison/exchange/test_exchange_field.py`, 1 dipolar-stray-field xfail in `energies/zeeman_test.py`). SR1 S0 (owner decision 2026-07-27) standardised their handling on standard **strict `xfail`** rather than gate filtering: each carried test additionally bears `@pytest.mark.xfail(reason="not ported: <feature> (register <row>)", strict=True)` above the `not_ported` label (master's own pre-existing `xfail`/`skipif` markers, where present, are left untouched and govern the outcome instead), and the four affected gates (`dolfinx-src-simulation-pytest`, `dolfinx-src-import-pytest`, `dolfinx-src-timezeeman-pytest`, `dolfinx-src-comparison-pytest`) dropped their `-m "not not_ported"` filter and now run unfiltered. They are reported as xfailed with register-row reasons; strict, so porting the feature forces marker removal (an unexpected pass fails the gate). Four carried tests (`sim/sim_test.py::TestSimulation::test_mark_regions`, `sim/sim_test.py::test_setting_different_material_parameters_in_different_regions`, `sim/sim_test.py::test_profile`, `energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field`) already carried master's own non-strict `xfail` and were left as master wrote them rather than gaining a second marker, so the strict-flip guarantee applies to the other 35 newly SR1-S0-marked carried tests, not these 4. The in-tree `barmini-suite` pixi task and four `dev/bin/verify-python3-*` scripts are deleted; the legacy suite now runs ONLY at the frozen oracle commit `ba928093` via `dev/bin/run-legacy-oracle -- pixi run --locked barmini-suite`. `dev/bin/inventory-dolfinx-suite` (non-gating) collects and runs the entire `src/finmag` tree: 2026-07-27 `INVENTORY: passed=752 failed=34 errors=59 skipped=25 xfailed=12` in ~27 min. Post-move `dev/bin/verify-dolfinx-m5` is **33/33 green with every per-gate count identical to the pre-move measured baselines**. **2026-07-28 update (CI T5, D33, commits `d2dcb332`..`732bc72a`):** the 53 files still surfacing `errors=` (never-ported whole master files, including the zhangli pair) were converted from raw collection errors to the same guarded-import + strict-`xfail` mechanism this row already established for individual carried functions — see D33 for the full mechanism and the 9 tests recovered as live coverage in the process. The inventory lane's failure population now collapses to two classes only (by-name `NotImplementedError`; strict `xfail`) and the sweep is expected `errors=0` going forward
+
+**Recommendation:** Keep canonical paths. Review every port as `git diff b5015c5a..HEAD -- <path>`. Treat the inventory lane's failures/errors as the parity backlog to burn down, never as a CI verdict; the 33 focused gates remain the only verdict
+
+**Disposition:** **owner decision 2026-07-27: adopted. Supersedes the 2026-07-25 `*_dolfinx.py` sibling-file convention, which is retired**
+
+### D31 `Simulation.save_field` / `Simulation.save_m` (the `.npy` snapshot surface, implemented…
+
+**Issue:** `Simulation.save_field` / `Simulation.save_m` (the `.npy` snapshot surface, implemented in `src/finmag/sim/sim.py:639-665`) and the `schedule('save_field', ...)` shortcut have **partial test coverage** under DOLFINx (was: no coverage)
+
+**Detail:** Found during the Task-4 fix round of the D30 restructure (`b97f89c8`), when a claimed cover was REFUTED: the sim ledger routed master's three save tests to `tests/test_restart_output.py`, but that file's only save-related function is `test_save_field_to_vtk_xdmf`, which exercises `Simulation.save_field_to_vtk` (XDMF/VTK) -- a DIFFERENT method from the `.npy` `save_field`/`save_m` surface master exercises. A tree-wide grep found no named port function covering the `.npy` path. The surface itself IS implemented and reachable (only `region=` is deferred), so this is a missing witness, not a known-broken feature. Master's `test_save_field`, `test_save_m` and `test_save_field_scheduled` are consequently carried verbatim under the `NOT PORTED` banner in `src/finmag/sim/sim_test.py`, marked `@pytest.mark.not_ported` plus a strict `@pytest.mark.xfail(reason="not ported: ... (register D31)", strict=True)` (SR1 S0, owner decision 2026-07-27), so `dolfinx-src-simulation-pytest` runs them unfiltered and reports them as xfailed, and they also fail visibly in the inventory lane, rather than being left claimed-but-uncovered. The `.npy` FORMAT divergence is a separate, already-approved decision (D14). **SR1 S1a update (commit `f7517688`):** fixing the FULL-lane `cubic_anisotropy/sim.py` defect (`schedule('save_m', ...)` raised `KeyError`, 'save_m' was never registered as a scheduler shortcut) added `src/finmag/tests/test_restart_output.py::test_schedule_save_m_every`, which IS a live, passing witness for the `schedule('save_m', every=...)` -> `Simulation.save_m` -> `FieldSaver` path (asserts 6 incrementally-numbered `.npy` files are written and the saved magnetisation is unit-norm). This is a **partial** discharge only: it covers the *scheduled* save_m path, not direct (non-scheduled) `save_field`/`save_m` calls (`incremental=`/`overwrite=`/named-interaction-field saves, e.g. `'Demag'`), which remain uncovered. The three carried master tests (`test_save_field`, `test_save_m`, `test_save_field_scheduled`) still xfail, unaffected by this fix -- their `setup_class` fails on `df.BoxMesh` (legacy dolfin absent, stubbed under DOLFINx) before any test body runs, a blocker unrelated to the scheduler-routing gap this fix closed
+
+**Recommendation:** Port the three master tests (or write coordinate-aware equivalents honouring D14) in a later slice, so the direct `save_field`/`save_m` call surface (and the three carried tests' `df.BoxMesh` setup blocker) acquire a witness
+
+**Disposition:** partially discharged by `f7517688` (scheduled `save_m` only); ratified 2026-07-28 (owner, batch): DEFER (partially discharged) — keep "write coordinate-aware direct-call witnesses honouring D14, and unblock the three carried tests' `df.BoxMesh` setup" as a named backlog item; note the register's `sim_savers.py` pointer was stale and is now corrected to live implementation `sim.py:639-665` (`sim_savers.py` is dead legacy code, not imported by `sim.py`)
+
+### D32 Legacy `method=` names rejected by name
+
+**Issue:** Legacy `method=` names rejected by name; default changed to `box-assemble`
+
+**Detail:** Undocumented public-interface change, split out from M12a so it is separately answerable. Master's `EnergyBase.__init__` defaulted to `method="box-matrix-petsc"` and accepted five interchangeable names; the port defaults to `"box-assemble"` and raises `NotImplementedError` for the other four. A script passing an explicit legacy `method=` raises; a script relying on the old default silently gets box assembly (numerically harmless, all five methods agreed to `1e-13` on master). Evidence: `src/finmag/energies/energy_base.py:32-44` (supported vs deferred lists) vs `git show b5015c5a:src/finmag/energies/energy_base.py:52-55` (five methods, default `box-matrix-petsc`); gated deferral tests `src/finmag/tests/test_energies.py:291` and `src/finmag/tests/test_dmi.py:167`
+
+**Recommendation:** Option (a): keep the raise-by-name (explicit failure surfaces a removed option; changed default is safe since the values are equal). Defensible alternative (b): map the four legacy names onto `box-assemble` with a `DeprecationWarning`
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT option (a) — keep the raise-by-name; an explicit failure is the criterion-2-consistent way to surface a removed option, and the changed default is safe because the values are equal; S6 documentation obligation
+
+### D33 All unported master tests fail via guarded strict xfail, not collection error
+
+**Issue:** All unported master tests fail via guarded strict xfail, not collection error; supersedes the collection-error convention recorded in D30/M5
+
+**Detail:** CI T5 (2026-07-28) converted the remaining 53 never-ported master files that `dev/bin/inventory-dolfinx-suite` was still surfacing as `errors=` (collection failures) into the same carried/`not_ported`/strict-`xfail` mechanism D30/SR1-S0 already established for individual carried functions: each file's failing module-level import (`import dolfin`, `finmag.util.helpers`, `finmag.native.*`, `finmag.util.oommf`, etc., and in two files a package `__init__.py` — see `src/finmag/util/oommf/__init__.py`) is wrapped `try/except ImportError` (`df = None  # not ported (D33): tests below xfail`), and every test that observably fails post-guard gets `@pytest.mark.not_ported` + `@pytest.mark.xfail(reason="not ported: <family> (register <row>)", strict=True)`. The zhangli pair (`tests/zhangli/stt_nonlocal_test.py`, `tests/zhangli/zhang_li_test.py`, D30/M5) converts identically, plus its two remaining Python-2 `print` statements (`# py3 syntax fix (D33)`). Per-file observed-outcome rule (mandatory, not blanket-stamped): a test that still fails after the guard gets the marker; a test that turns out to require no dolfin at all is left **unmarked** — 9 such tests recovered as live coverage across the wave (`energies/dmi_test.py::test_interaction_accepts_name`; `tests/test_solid_angle_invariance.py::SolidAngleInvarianceTests::test_rotation_matrix`; `tests/test_jacobian.py::test_this_needs_fixing`; `util/oommf/test_mesh.py`'s 3 tests, restored byte-identical to master once `util/oommf/__init__.py`'s guard let the package import; `sim/sim_helpers_test.py::test_create_backup_if_file_exists`, `test_create_non_existing_parent_directories`, `test_save_restart_data_creates_non_existing_directories`); two further `sim_helpers_test.py` tests (`test_can_read_restart_file`, `test_try_to_restart_a_simulation`) fail for reasons unrelated to the import guard (a `KeyError` on the restart-data dict's `'stats'` key, and a restart-continuity numerical mismatch) and are marked xfail citing the restart contract (D16a/D16b) pending a dedicated follow-up review rather than a T5 mechanical fix. Environment-conditional tests that already carried their own `skipif`/runtime `pytest.skip()` (netgen/oommf/gmsh/MPI-rank unavailable) continue to skip and were left unmarked, matching the "master's own skip/xfail governs" rule. Implemented across six per-directory-bucket commits `d2dcb332`..`732bc72a` (energies+physics; normal_modes; tests/ demag+jacobean+energy_density+top-level; comparison+oommf+zhangli; util/; drivers+sim+examples/nmag_example_2), plus one straggler commit `828f45d6`: the collect-only-derived 53-file list missed two files whose `import dolfin` only fires inside `setup_module()` at test-setup time rather than at module collection (`tests/nmag/exchange_3d/test_dynamics_3D.py`, `tests/nmag/spinwaves/test_spinwaves.py`), so a first full (non-collect-only) sweep still measured `errors=2`; both converted identically (confirmed `xfail(strict=True)` catches `setup_module` failures the same way it catches fixture/`setup_class` failures)
+
+**Recommendation:** Treat the inventory lane's failure population purely as errors→0 going forward; any future never-ported file gets converted the same way at discovery time rather than left as a raw collection error
+
+**Disposition:** **owner decision 2026-07-28: adopted. Supersedes the collection-errors-as-backlog convention recorded in D30/M5.**
+
+### D34 Same maxh produces coarser meshes than legacy netgen 5.3 (~22% fewer nodes measured:…
+
+**Issue:** Same maxh produces coarser meshes than legacy netgen 5.3 (~22% fewer nodes measured: 1202/4960 vs 1537/6886 on the same .geo; independently reported for netgen 6.2 on the pixi branch, GitHub issue #56)
+
+**Detail:** The D29 verdict's measurements table ([`2026-07-27-d29-verdict.md`](archive/specs/2026-07-27-d29-verdict.md) §4, "Meshes (proof of drift, up front)") shows the same `bar.geo` at the same `maxh` producing 1202 nodes/4960 tets in this environment versus 1537 nodes/6886 tets in the archived 2017 netgen-5.3-era run (~22% fewer nodes: 1 - 1202/1537 = 21.8%). `src/finmag/util/meshes.py`'s `_make_build` (~lines 108-142) maps `maxh` straight onto Gmsh's `Mesh.MeshSizeMax`/`Mesh.MeshSizeMin=0.0` with no netgen-5.3-density calibration. GitHub issue `fangohr/finmag#56` (David Cortes) independently reports the same symptom for netgen 6.2 on the pixi branch, confirming this is mesh-generator-version density drift generally, not a Gmsh-specific artifact; cross-ref M8 (mesh-regeneration node drift) and D29 (the resulting field-comparison residual)
+
+**Recommendation:** Document and give guidance: to approximate netgen-5.3-era density, reduce `maxh` by roughly 10-20% and verify the actual node/element count with `mesh_info()` rather than assuming `maxh` parity across generator versions. A calibration shim mapping a requested netgen-5.3-equivalent density onto the Gmsh `MeshSizeMax` parameter is possible future work if a user needs exact density parity
+
+**Disposition:** documented as known divergence 2026-07-28 (owner); guidance published in SUPPORTED.md; no code change
+
+## B. Possible full-parity exceptions
+
+These are candidates, not approved drops. “Later” means they do not block SR1
+but still belong to the master-parity backlog.
+
+### M1 `nsim`/Nmag live reference generation
+
+**Issue:** `nsim`/Nmag live reference generation
+
+**Detail:** Obsolete external stack; checked-in reference data can validate selected SR1 cases
+
+**Recommendation:** Defer live generation for SR1 and retain useful checked-in comparisons; decide permanent omission later
+
+**Disposition:** **SR1 deferment approved 2026-07-23**; ratified 2026-07-28 (owner, batch): DROP live generation permanently, retain the checked-in data — the nsim stack is obsolete and no longer installable
+
+### M2 GCR demag solver
+
+**Issue:** GCR demag solver
+
+**Detail:** The surviving legacy Python path appears incomplete and its scientific correctness is unclear; silently mapping it to FK would be misleading
+
+**Recommendation:** Inventory intended formulation and usage, then port or accept omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP — silently mapping GCR to FK would be misleading, and porting an implementation whose correctness was never established is not justified; reopenable if a concrete use appears
+
+### M3 Compiled `Equation`/`terms` backend
+
+**Issue:** Compiled `Equation`/`terms` backend
+
+**Detail:** Python fallback is much slower; DOLFINx LLG uses its own RHS
+
+**Recommendation:** Defer performance work; drop only if no supported workflow depends on it
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1 as a performance backlog item, linked to P1 — do not drop a performance path while the ~17.6x std_prob_3 slowdown is unexplained
+
+### M4a Netgen binary backend
+
+**Issue:** Netgen binary backend
+
+**Detail:** Common geometries now use Gmsh and a text-subset loader; no selected workflow has yet proved the binary backend necessary. The SR1 P5.1 necessity probe (2026-07-25) ran and found **no** selected test or geometry that Gmsh plus the `from_geofile` text-subset loader cannot represent or validate; no source change was made
+
+**Recommendation:** Probe complete; leave deferred for SR1 and revisit only if a required geometry appears
+
+**Disposition:** **ratified 2026-07-25 (owner decision, SR1 P5.1): deferred for SR1**; ratified 2026-07-28 (owner, batch): DROP permanently — the P5.1 probe is the inventory the register asked for, and it came back empty; reopen only if a required geometry appears
+
+### M4b `nmesh_to_dolfin` conversion
+
+**Issue:** `nmesh_to_dolfin` conversion
+
+**Detail:** Its legacy dolfin-XML output cannot be loaded by DOLFINx and the owner does not require live Nmag generation for SR1; the same P5.1 probe (2026-07-25) identified no selected workflow needing it
+
+**Recommendation:** Defer; reconsider only with a concrete data-conversion workflow
+
+**Disposition:** **ratified 2026-07-25 (owner decision, SR1 P5.1): deferred for SR1**; ratified 2026-07-28 (owner, batch): DROP permanently — the output format is unusable by the supported stack and the same P5.1 probe identified no workflow needing it
+
+### M5 Nonlocal `LLG_STT` spin-accumulation model
+
+**Issue:** Nonlocal `LLG_STT` spin-accumulation model
+
+**Detail:** Distinct native capability, not covered by the ported local STT terms
+
+**Recommendation:** **Not now**; retain for later full parity unless owner accepts omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): RESTORE — `src/finmag/tests/zhangli/stt_nonlocal_test.py` and `src/finmag/tests/zhangli/zhang_li_test.py` restored verbatim from `b5015c5a` (`git checkout b5015c5a --`) as retained never-ported backlog; both failed at collection at that time (Python-2 source; also `import dolfin` at module scope) -- pytest's AST-rewrite import raised `SyntaxError: Missing parentheses in call to 'print'` on the Python-2 `print` statements before either file's `import dolfin` was ever reached (confirmed via `--collect-only`, 2 collection errors, 0 collected) in the non-gating inventory lane, exactly as criterion 4 prescribed for never-ported whole master files at that point; no pixi gate references `zhangli`. The capability itself stays **DEFER**: port under full parity, or explicitly accept omission then. Cross-ref D30, updated to match. **2026-07-28 update (CI T5, D33, commit `c0de5349`):** both files converted like the rest of the T5 wave — Python-2 `print` statements fixed (`# py3 syntax fix (D33)`), `import dolfin` guarded `try/except ImportError`, both `test_zhangli`/`test_zhangli_sllg` (and `stt_nonlocal_test.py::test_zhangli`) marked `@pytest.mark.not_ported` + strict `xfail(reason="not ported: nonlocal LLG_STT spin-accumulation model, local STT terms covered by dolfinx-src-stt-pytest (register M5/D30)")`. The witnesses now surface as `xfailed` in `dev/bin/inventory-dolfinx-suite`, not `errors=`; the M5 coverage gap itself is unchanged (still DEFER) — only the failure mechanism moved from collection error to strict xfail
+
+### M6 `FixedEnergyDW`
+
+**Issue:** `FixedEnergyDW`
+
+**Detail:** No master tests; a legacy note calls it broken. Its old dolfin-XML/treecode workflow is obsolete even though treecode itself is now ported
+
+**Recommendation:** Drop unless a real scientific use case is identified
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP — no working reference behaviour exists to port to
+
+### M7 `Demag2D`
+
+**Issue:** `Demag2D`
+
+**Detail:** Specialist low-usage solver path is unported
+
+**Recommendation:** Later; decide after a physics/user inventory
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1 — real physics, not dead tooling; `ThinFilmDemag`/FK cover selected workflows so it is not an SR1 item, but low usage alone is weaker evidence than the M4a/M6 probes
+
+### M8 Magpar mesh-drift comparison xfails
+
+**Issue:** Magpar mesh-drift comparison xfails
+
+**Detail:** Saved nodes no longer match regenerated meshes; field physics should be compared by coordinates/invariants instead
+
+**Recommendation:** Replace useful tests; drop obsolete node-order xfails -- **factually DONE (SR1 P5.2)**: coordinate-probe / probe-at-saved-coordinates replacements landed (`tests/comparison/anisotropy/test_anis_magpar.py`, `tests/comparison/demag/test_demag_field.py`, `tests/comparison/exchange/test_exchange_compare_magpar.py`) and the obsolete node-order xfails are retired. The residual ~8% anisotropy discrepancy that remains after coordinate matching is recorded separately as D29
+
+**Disposition:** ratified 2026-07-28 (owner, batch): ACCEPT (close as done) — no exception needed, the row describes completed work
+
+### M9 Paraview/mencoder movie export
+
+**Issue:** Paraview/mencoder movie export
+
+**Detail:** External historical renderer; VTK/XDMF write is available
+
+**Recommendation:** Drop the movie wrapper, retain data export
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP the movie wrapper permanently, retain data export — rendering belongs outside the simulator
+
+### M10 Mercurial `get_hg_revision_info`
+
+**Issue:** Mercurial `get_hg_revision_info`
+
+**Detail:** Dead pre-Git tooling
+
+**Recommendation:** **Needs decision:** do not drop until the owner confirms the permanent omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP permanently — no possible consumer, the repository is git
+
+### M11a Historical transposed-Robertson SciPy xfail…
+
+**Issue:** Historical transposed-Robertson SciPy xfail (`src/finmag/util/ode/tests/test_sundials_stiff_ode.py`)
+
+**Detail:** The failure was attributed to an upstream SciPy/VODE regression rather than Finmag physics
+
+**Recommendation:** **Needs decision:** re-run only if the corresponding solver contract is selected; do not copy the xfail mechanically
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP — close with no tree change; the port already carries strict `xfail` pins for both backends (`:78`, `:126`), so this is not an open "should we copy it?" question, and no attempt is made to re-derive an upstream-attributed failure as a finmag expectation
+
+### M11b Historical weak-Krylov-demag tolerance xfail…
+
+**Issue:** Historical weak-Krylov-demag tolerance xfail (`src/finmag/tests/test_interactions_scale_linearly_with_m.py`)
+
+**Detail:** This is a separate numerical-tolerance artifact whose relevance under DOLFINx has not been established
+
+**Recommendation:** Re-derive the expectation before deciding whether any test remains useful
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1 — concerns a ported, supported feature (Krylov demag scaling); keep on the backlog, re-derive the expectation before deciding whether any test remains useful; no tolerance may be copied unexamined
+
+### M12a Legacy matrix energy assembly (`src/finmag/energies/energy_base.py`)
+
+**Issue:** Legacy matrix energy assembly (`src/finmag/energies/energy_base.py`)
+
+**Detail:** Box assembly is the supported implementation and the owner marked the old algorithm Not now
+
+**Recommendation:** Defer; inventory callers before any permanent omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP permanently — box assembly is the validated implementation, the matrix-assembly variants are performance/implementation variants producing the same values to `1e-13`; S6 follow-up required (reword the `NotImplementedError` "not yet ported" runtime message and the gated deferral tests from "deferred" to "removed")
+
+### M12b Legacy project energy method (`src/finmag/energies/energy_base.py`)
+
+**Issue:** Legacy project energy method (`src/finmag/energies/energy_base.py`)
+
+**Detail:** Box assembly is the supported implementation and the owner marked the old algorithm Not now
+
+**Recommendation:** Defer; inventory callers before any permanent omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP permanently — box assembly is the validated implementation, `project` is an L2-projection variant producing the same values to `1e-13`; same S6 follow-up as M12a
+
+### M12c Legacy direct energy method (`src/finmag/energies/energy_base.py`)
+
+**Issue:** Legacy direct energy method (`src/finmag/energies/energy_base.py`)
+
+**Detail:** Box assembly is the supported implementation and the owner marked the old algorithm Not now
+
+**Recommendation:** Defer; inventory callers before any permanent omission
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP permanently — box assembly is the validated implementation, `direct` is a pointwise-route variant producing the same values to `1e-13`; same S6 follow-up as M12a
+
+### M13 `batch_task` sweep tooling
+
+**Issue:** `batch_task` sweep tooling
+
+**Detail:** Untested even on master
+
+**Recommendation:** Drop unless a current workflow needs it
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DROP permanently — no reference behaviour exists to validate a port against
+
+### M14 OOMMF live reference generation
+
+**Issue:** OOMMF live reference generation
+
+**Detail:** The owner accepted checked-in OOMMF data as sufficient for selected SR1 comparisons
+
+**Recommendation:** Defer live execution for SR1; decide later whether reproducible regeneration remains valuable
+
+**Disposition:** **SR1 deferment approved 2026-07-23**; ratified 2026-07-28 (owner, batch): DROP live generation permanently, retain the checked-in data — reproducible regeneration is an external-harness project, not a finmag capability
+
+### M15 Magpar live reference generation
+
+**Issue:** Magpar live reference generation
+
+**Detail:** The owner accepted checked-in Magpar data as sufficient for selected SR1 comparisons
+
+**Recommendation:** Defer live execution for SR1; retain coordinate/invariant comparisons and decide permanent omission later
+
+**Disposition:** **SR1 deferment approved 2026-07-23**; ratified 2026-07-28 (owner, batch): DROP live generation permanently, retain the coordinate/invariant comparisons — D29 established exactly what the checked-in data can and cannot resolve (mesh drift is inherent to comparing against a saved foreign mesh)
+
+### M16 Legacy Heun driver
+
+**Issue:** Legacy Heun driver
+
+**Detail:** It is outside the current SciPy/Sundials implementation surface, but no owner decision has selected it for omission
+
+**Recommendation:** Keep as a needs-decision parity item; do not label it Not now or obsolete without owner direction
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER past SR1, tied to thermal SLLG — it is `StochasticHeunIntegrator`, the driver thermal SLLG needs; thermal SLLG/LLB remains in the full-parity target (section C), so dropping its integrator now would silently pre-decide that row
+
+## P. Performance backlog
+
+### P1 std_prob_3 FULL-mode runs ~17.6x slower than its own legacy-era header claims
+
+**Issue:** std_prob_3 FULL-mode runs ~17.6x slower than its own legacy-era header claims
+
+**Detail:** The FULL-mode bisection measures ~3161s per relax simulation (mesh build + relax + energy + write, `lfactor=8.0`, `divisions=16`); the workload is iteration-bounded at exactly 10 simulations, so the full bisection is ~31610s (~8.8h) against the script's own header comment of "~30 min" for the whole bisection (~17.6x gap). Genuinely ambiguous whether this is a port performance regression or a stale/aspirational legacy comment — nobody has run legacy master, and the timeout was sized to measured reality, not to the comment. Evidence: SR1 task-3 report (`.superpowers/sdd/2026-07-27-sr1-completion/task-3-report.md`, "Third round: std_prob_3 timeout from measured rate"); commit `c02809bf`; cross-ref M3 (the compiled-RHS backend, leading suspect). **ROOT CAUSE IDENTIFIED 2026-07-28 (SR1 S6):** the port re-does `fem.form(...)` + `assemble_vector(...)` on EVERY field evaluation (`src/finmag/energies/energy_base.py:183`, `_compute_field_raw` -> `_assemble_vector_owned(self.dE_dm, ...)`), whereas legacy's default `method="box-matrix-petsc"` assembled the field operator ONCE at setup and merely applied it per evaluation (`git show b5015c5a:src/finmag/energies/energy_base.py`, lines 214-222). The numpy LLG RHS versus master's compiled `Equation` backend (M3) compounds it. FIX PLAN: `docs/plans/2026-07-28-post-sr1-performance.md`, which rebuilds assemble-once as an INTERNAL optimisation of `box-assemble` semantics -- it does not resurrect the removed legacy `method=` names (D32 stands)
+
+**Recommendation:** Open as a register row and investigate post-SR1 (profile one `relax()` at these settings and attribute the cost; cross-ref M3). SR1 is a correctness declaration and the example passes, but a ~9-hour example that legacy claimed took 30 minutes is a real handoff hazard and should not be declared silently
+
+**Disposition:** ratified 2026-07-28 (owner, batch): DEFER — open as a register row and investigate post-SR1 with the recommended profiling probe (profile one `relax()` at FULL-mode settings, attribute the cost, cross-ref M3); the 17.6x gap is real measured evidence, not yet attributed to a cause
+
+## C. Required later work, not drop candidates
+
+The following remain part of full master parity unless the owner later adds a
+specific decision row: thermal SLLG/LLB; normal-mode linearisation and
+eigensolvers; ringdown and FFT/PSD analysis; legacy NEB; general MPI stepping;
+`Simulation(pbc=)` function-space periodicity; HDF5 readback; plotting and
+region/submesh field output; initialisers and mesh/utilities used by supported
+legacy workflows; and the useful portions of the OOMMF/Nmag/Magpar comparison
+suite.
+
+No public GNEB API/workflow was found on original master, so it is not currently
+an interface-parity item. Legacy spherical/modified NEB code may have
+algorithmic overlap; classify that only during the NEB inventory.
+
+[Codex GPT-5]
+
+[D30/D31 rows and M4a/M4b ratification: Claude Opus 4.8]
+
+[SR1 S5b batch ratification (all rows, D32/P1 new rows, M5 restore): Claude Sonnet 5]

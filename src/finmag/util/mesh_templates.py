@@ -1,9 +1,39 @@
 #!/usr/bin/env python
+"""CSG mesh-template classes.
+
+DOLFINx port (Task 18): the templates keep their public names, parameters, and
+``csg()``/``hash()``/``generic_filename()`` semantics *unchanged* -- the Netgen
+CSG text is preserved byte-for-byte and used purely as the cache key, so the
+frozen md5 digests (``mesh_templates_test.py::test_hash``) still hold. The
+geometry itself is now built through the Gmsh OpenCASCADE kernel and converted
+to ``dolfinx.mesh`` in-memory (see ``finmag.util.meshes``); there are no
+dolfin-XML intermediates. Per-primitive ``maxh_NAME`` discretisation for
+combined meshes is reproduced via a spatially varying Gmsh mesh-size callback.
+
+[Claude Opus 4.8]
+"""
 
 import textwrap
 import hashlib
-from finmag.util.meshes import from_csg
-from finmag.util.helpers import vec2str
+from finmag.util.meshes import _mesh_from_geometry
+
+
+def vec2str(a, fmt='{}', delims='()', sep=', '):
+    """Convert a 3-sequence to a string (inlined from ``finmag.util.helpers``
+    to keep this module import-safe in the DOLFINx env, where ``helpers``
+    imports dolfin at module scope). ``a`` may be ``None`` -> ``'None'``."""
+    if a is None:
+        return 'None'
+    try:
+        ldelim = delims[0]
+    except IndexError:
+        ldelim = ""
+    try:
+        rdelim = delims[1]
+    except IndexError:
+        rdelim = ldelim
+    return ("{ldelim}{fmt}{sep}{fmt}{sep}{fmt}{rdelim}".format(
+        fmt=fmt, ldelim=ldelim, rdelim=rdelim, sep=sep)).format(a[0], a[1], a[2])
 
 
 netgen_primitives = ['plane', 'cylinder', 'sphere',
@@ -57,12 +87,37 @@ class MeshTemplate(object):
             """).format(csg_stub=self.csg_stub(maxh, **kwargs), name=self.name)
         return csg_string
 
+    def _occ_solids(self, occ):
+        """Create the OpenCASCADE solids for this template and return their
+        top-dimensional volume tags. Overridden by concrete templates."""
+        raise NotImplementedError(
+            "Generic mesh prototype does not provide geometry. Please build a "
+            "mesh by combining mesh primitives.")
+
+    def _leaf_primitives(self):
+        """Flat list of the leaf ``MeshPrimitive`` instances of this template."""
+        return [self]
+
+    def _size_regions(self, maxh, **kwargs):
+        """List of ``(contains_fn, size)`` pairs driving the Gmsh mesh size,
+        reproducing the legacy per-solid ``maxh_NAME`` discretisation."""
+        return [(leaf._contains, leaf._get_maxh(maxh, **kwargs))
+                for leaf in self._leaf_primitives()]
+
     def create_mesh(self, maxh=None, save_result=True, filename='', directory='', **kwargs):
         if save_result == True and filename == '':
             filename = self.generic_filename(maxh, **kwargs)
 
+        # The CSG text is preserved purely as the (md5) cache key; geometry is
+        # built through the Gmsh OCC kernel.
         csg_string = self.csg_string(maxh, **kwargs)
-        return from_csg(csg_string, save_result=save_result, filename=filename, directory=directory)
+        size_regions = self._size_regions(maxh, **kwargs)
+
+        def add(occ):
+            return self._occ_solids(occ)
+
+        return _mesh_from_geometry(csg_string, add, maxh, save_result,
+                                   filename, directory, size_regions=size_regions)
 
 
 class MeshSum(MeshTemplate):
@@ -97,6 +152,15 @@ class MeshSum(MeshTemplate):
         filename = "mesh_sum__{}".format(self.hash(maxh, **kwargs))
         return filename
 
+    def _leaf_primitives(self):
+        return self.mesh1._leaf_primitives() + self.mesh2._leaf_primitives()
+
+    def _occ_solids(self, occ):
+        a = self.mesh1._occ_solids(occ)
+        b = self.mesh2._occ_solids(occ)
+        out, _ = occ.fuse([(3, t) for t in a], [(3, t) for t in b])
+        return [t for (_d, t) in out]
+
 
 class MeshDifference(MeshTemplate):
 
@@ -128,6 +192,15 @@ class MeshDifference(MeshTemplate):
         filename = "mesh_difference__{}".format(
             self.mesh1.hash(maxh, **kwargs))
         return filename
+
+    def _leaf_primitives(self):
+        return self.mesh1._leaf_primitives() + self.mesh2._leaf_primitives()
+
+    def _occ_solids(self, occ):
+        a = self.mesh1._occ_solids(occ)
+        b = self.mesh2._occ_solids(occ)
+        out, _ = occ.cut([(3, t) for t in a], [(3, t) for t in b])
+        return [t for (_d, t) in out]
 
 
 class MeshPrimitive(MeshTemplate):
@@ -170,6 +243,14 @@ class Sphere(MeshPrimitive):
         return "sphere__center_{}__r_{:.1f}__maxh_{:.1f}".format(
             vec2str(self.center, fmt='{:.1f}', delims='', sep='_'), self.r, maxh).replace(".", "_")
 
+    def _occ_solids(self, occ):
+        cx, cy, cz = self.center
+        return [occ.addSphere(cx, cy, cz, self.r)]
+
+    def _contains(self, x, y, z):
+        cx, cy, cz = self.center
+        return (x - cx) ** 2 + (y - cy) ** 2 + (z - cz) ** 2 <= (self.r * 1.02) ** 2
+
 
 class Box(MeshPrimitive):
 
@@ -189,6 +270,20 @@ class Box(MeshPrimitive):
         maxh = self._get_maxh(maxh, **kwargs)
         return "box__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__{:.1f}__maxh_{:.1f}".format(
             self.x0, self.y0, self.z0, self.x1, self.y1, self.z1, maxh).replace(".", "_")
+
+    def _occ_solids(self, occ):
+        x0, x1 = sorted([self.x0, self.x1])
+        y0, y1 = sorted([self.y0, self.y1])
+        z0, z1 = sorted([self.z0, self.z1])
+        return [occ.addBox(x0, y0, z0, x1 - x0, y1 - y0, z1 - z0)]
+
+    def _contains(self, x, y, z):
+        x0, x1 = sorted([self.x0, self.x1])
+        y0, y1 = sorted([self.y0, self.y1])
+        z0, z1 = sorted([self.z0, self.z1])
+        eps = 1e-9
+        return (x0 - eps <= x <= x1 + eps and y0 - eps <= y <= y1 + eps
+                and z0 - eps <= z <= z1 + eps)
 
 
 class EllipticalNanodisk(MeshPrimitive):
@@ -213,11 +308,29 @@ class EllipticalNanodisk(MeshPrimitive):
                 "Argument 'valign' must be one of 'center', 'top', 'bottom'. Got: '{}'".format(valign))
         h_top = h_bottom + h
 
+        self.r1 = r1
+        self.r2 = r2
+        self.h_bottom = h_bottom
+        self.h_top = h_top
+
         self._csg_stub = textwrap.dedent("""\
             solid {name} = ellipticcylinder ({center}; {r1}, 0, 0; 0, {r2}, 0 )
               and plane (0, 0, {h_bottom}; 0, 0, -1)
               and plane (0, 0, {h_top}; 0, 0, 1) -maxh = {{maxh_{name}}};
             """.format(name=name, center=vec2str(self.center, delims=''), r1=r1, r2=r2, h_bottom=h_bottom, h_top=h_top))
+
+    def _occ_solids(self, occ):
+        cx, cy, _cz = self.center
+        h = self.h_top - self.h_bottom
+        t = occ.addCylinder(cx, cy, self.h_bottom, 0, 0, h, 1.0)
+        occ.dilate([(3, t)], cx, cy, self.h_bottom, self.r1, self.r2, 1.0)
+        return [t]
+
+    def _contains(self, x, y, z):
+        cx, cy, _cz = self.center
+        if not (self.h_bottom - 1e-9 <= z <= self.h_top + 1e-9):
+            return False
+        return ((x - cx) / self.r1) ** 2 + ((y - cy) / self.r2) ** 2 <= 1.05
 
     def generic_filename(self, maxh, **kwargs):
         maxh = self._get_maxh(maxh, **kwargs)

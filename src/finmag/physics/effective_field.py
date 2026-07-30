@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 from finmag.field import Field
-from finmag.util.helpers import vector_valued_function
 from finmag.energies import TimeZeeman
 from finmag.physics.errors import UnknownInteraction
 
@@ -16,7 +15,7 @@ class EffectiveField(object):
 
         m:  Field
 
-        Ms:  number (?)
+        Ms:  Field
 
         unit_length:  float
         """
@@ -26,7 +25,13 @@ class EffectiveField(object):
         self.Ms = Ms
         self.unit_length = unit_length
 
-        self.output_size = self.m_field.f.vector().local_size()
+        # Sized to m's flat rank-local owned DOLFINx dofs. Every ported
+        # interaction's compute_field() now returns the same size in legacy
+        # component-blocked (``xxx``) order (Task 31); the elementwise
+        # accumulation below stays shape- and ordering-consistent because
+        # every term shares that one ordering, so H_eff is itself blocked.
+        # [Claude Sonnet 5]
+        self.output_size = self.m_field.as_array().size
         self.H_eff = np.zeros(self.output_size)
 
         self.interactions = {}
@@ -164,6 +169,25 @@ class EffectiveField(object):
         del self.interactions[interaction_name]
 
     def get_dolfin_function(self, interaction_name, region=None):
+        """Return a fresh DOLFINx Function on m's space holding an
+        interaction's current field.
+
+        The result reconstructs a Function on ``self.m_field.functionspace``
+        from the interaction's ``compute_field()`` array, matching the legacy
+        contract of returning a bare Function (as ``Simulation.llg._m_field.f``
+        does for ``m`` itself). Since ``compute_field()`` now returns the legacy
+        component-blocked (``xxx``) ordering (Task 31), the reconstruction must
+        invert it with ``set_with_ordered_numpy_array_xxx`` -- not the raw
+        ``from_array`` constructor path, which would scramble the components.
+        Region-restricted extraction is not yet ported and fails explicitly
+        rather than being silently ignored.
+        """
+        if region is not None:
+            raise NotImplementedError(
+                "region-restricted get_dolfin_function is deferred from this "
+                "DOLFINx EffectiveField slice"
+            )
         interaction = self.get(interaction_name)
-        return vector_valued_function(interaction.compute_field(),
-                                      self.m_field.functionspace)
+        field = Field(self.m_field.functionspace)
+        field.set_with_ordered_numpy_array_xxx(interaction.compute_field())
+        return field.f

@@ -1,3 +1,7 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Landau-Lifshitz-Bloch macrospin. Requires Task 24 (LLB/SLLG, NOT ported):
+# imports finmag.physics.llb.* which is a by-name deferral.
+# [Claude Opus 4.8]
 import dolfin as df
 import numpy as np
 import matplotlib.pyplot as plt

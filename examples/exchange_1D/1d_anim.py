@@ -1,3 +1,6 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Mayavi animation of 1d_run.py output. Requires Task 26.
+# [Claude Opus 4.8]
 import numpy
 import finmag.util.helpers as helpers
 from mayavi import mlab

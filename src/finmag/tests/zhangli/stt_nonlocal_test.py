@@ -1,5 +1,9 @@
 import os
-import dolfin as df
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
@@ -30,6 +34,8 @@ def init_J(pos):
     return (1e12, 0, 0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: nonlocal LLG_STT spin-accumulation model (register M5)", strict=True)
 def test_zhangli():
 
     #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
@@ -48,12 +54,12 @@ def test_zhangli():
 
     sim.run_until(5e-12)
     p1 = sim.m_average
-    print(sim.integrator.stats())
-    print(p0, p1)
+    print(sim.integrator.stats())  # py3 syntax fix (D33)
+    print(p0, p1)  # py3 syntax fix (D33)
     sim.run_until(1e-11)
     p1 = sim.m_average
-    print(sim.integrator.stats())
-    print(p0, p1)
+    print(sim.integrator.stats())  # py3 syntax fix (D33)
+    print(p0, p1)  # py3 syntax fix (D33)
 
     assert p1[0] < p0[0]
     assert abs(p0[0]) < 1e-15

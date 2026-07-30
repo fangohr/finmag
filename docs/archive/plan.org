@@ -1,0 +1,1476 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
+* Finmag Resurrection Plan
+
+#+begin_quote
+Historical M1-M5 roadmap/evidence. The legacy milestones are complete; the active DOLFINx
+roadmap is =docs/superpowers/plans/2026-07-23-sr1-prioritised-plan.md=, with
+=docs/superpowers/capability-status.md= as current capability truth and
+=docs/superpowers/acceptance-register.md= as owner-decision authority. The
+historical =2026-07-21-dolfinx-full-parity.md= plan supplies background only.
+The next milestone is the serial deterministic simulator release candidate
+(SR1), while final master parity remains the end goal. Later entries and the
+tracked capability/decision documents supersede stale "immediate next step"
+text below.
+#+end_quote
+
+** Goal
+
+Make Finmag usable again in a controlled sequence:
+
+1. preserve a known-good reference environment,
+2. port the Python layer from Python 2 to Python 3 while keeping the old FEniCS/dolfin stack,
+3. only then evaluate migration away from =dolfin= 2017.1.0.
+
+This sequencing is deliberate. Changing Python and the FEM stack at the same time would make failures hard to attribute.
+
+** Strategic Roadmap
+
+The transition is now split into four separate milestones rather than one
+continuous migration:
+
+1. make Finmag usable under Python 3 on the current legacy =dolfin 2017.1.0=
+   transition stack;
+2. provide a user-facing installation path outside the specialist Docker
+   workflow, preferably with =pixi=;
+3. migrate from legacy =dolfin 2017.1.0= to legacy FEniCS/=dolfin 2019.1.0=;
+4. prototype and then expand a separate =dolfinx= port.
+
+This is deliberate. The last legacy FEniCS release is =2019.1.0=, while
+=dolfinx= is a different actively developed stack. They should not be treated
+as the same migration.
+
+*** Guiding Rule
+
+Do not revive historical features just because they exist.
+
+Work is in scope only if it materially advances at least one of:
+
+- Python 3 usability;
+- a non-container installation story;
+- the legacy =dolfin 2019.1.0= migration;
+- the later =dolfinx= port.
+
+Historical cleanups, broad xfail removal, and reviving niche comparison paths
+are secondary unless they directly support one of those outcomes.
+
+*** Acceptance Matrix
+
+Use the same small workflow matrix across milestones wherever practical:
+
+- =import finmag=
+- run =finmag.example.barmini(...)= as the primary smoke workflow
+- run one demag-containing simulation
+- run one restart/save-load workflow, with =barmini= remaining the preferred
+  practical witness where possible
+- run one normal-modes workflow
+- run the curated Python 3 core gate
+
+For the =dolfinx= prototype, use a reduced version of this matrix appropriate
+to the smaller initial scope.
+
+*** Milestone M1: Python 3 Usable On Current Legacy Stack
+
+Goal:
+
+- Finmag is usable under Python 3 while keeping the current legacy DOLFIN 2017
+  transition container.
+
+Done when:
+
+- =import finmag= works;
+- =barmini= runs and advances in time;
+- the curated Python 3 core suite stays green in CI;
+- the smoke and verification scripts are documented and reproducible;
+- remaining skips and xfails are explicit, scoped, and not silently hiding core
+  regressions.
+
+In scope:
+
+- Python 3 runtime compatibility;
+- native module compatibility required for core workflows;
+- curated CI gating;
+- representative scientific workflows.
+
+Out of scope:
+
+- broad historical cleanup for its own sake;
+- making every old comparison/GUI/visualization path pass;
+- deprecating every unused subsystem.
+
+*** Milestone M2: User-Facing Install Path
+
+Goal:
+
+- provide a non-specialist installation path, preferably via =pixi=.
+
+Done when:
+
+- a committed =pixi= configuration exists, or there is a documented proof that
+  only a partial =pixi= environment is currently feasible;
+- a user can run at least a minimal Finmag workflow from that environment;
+- any limitations and external dependencies are explicit.
+
+In scope:
+
+- environment capture;
+- dependency inventory;
+- partial fallback designs if full packaging is not yet practical.
+
+Out of scope:
+
+- requiring full parity with the container before anything can be published;
+- solving every optional external dependency immediately.
+
+Immediate packaging note:
+
+- the repository currently has no modern top-level packaging file such as
+  =pyproject.toml=, =setup.py=, =setup.cfg=, or =pixi.toml=;
+- M2 therefore needs both dependency capture and a real packaging decision for
+  Finmag itself.
+
+First practical M2 target:
+
+- create a minimal =pixi= environment around legacy conda-forge
+  =fenics 2019.1.0= rather than trying to replicate the exact
+  Debian-snapshot =dolfin 2017.1.0= stack;
+- there is now a first draft =pixi.toml= in the repo to make that probe
+  concrete;
+- keep the first acceptance checks small:
+  - import =finmag=
+  - construct =finmag.example.barmini()=
+  - advance =barmini= with time integration
+  - save and reload a =barmini= restart state
+  - the currently verified first pass uses the full default =barmini= setup,
+    including FK demag, and now reaches =t = 1e-12= on the native Sundials
+    backend under conda-forge =fenics 2019.1.0=
+- the currently verified aggregate M2 witness is:
+  - =pixi run import-finmag=
+  - =pixi run barmini-construct=
+  - =pixi run barmini-smoke=
+  - =pixi run restart-smoke=
+  - =dev/bin/verify-python3-m2= wraps those checks into one user-facing
+    command, and =.github/workflows/python3-m2.yml= runs that witness in CI
+    via =prefix-dev/setup-pixi=. [Codex GPT-5.4]
+- treat OOMMF, Paraview, Netgen reliability, =nsim=, Mercurial, and other
+  optional tools as explicit follow-up layers rather than first-pass blockers.
+
+*** Milestone M3: Legacy DOLFIN 2019.1.0 Migration
+
+Goal:
+
+- move from legacy =dolfin 2017.1.0= to legacy FEniCS/=dolfin 2019.1.0= while
+  keeping the same representative workflow matrix.
+
+Done when:
+
+- the M1 acceptance matrix runs on a =2019.1.0= stack;
+- CI has a separate gate for the =2019.1.0= environment;
+- core scientific workflows pass, even if long-tail historical features are
+  still deferred.
+
+Current verified first M3 gate:
+
+- =pixi run barmini-suite=
+- =dev/bin/verify-python3-m3=
+- =.github/workflows/python3-m3.yml=
+
+The initial M3 gate is intentionally small and reuses the historical
+=barmini=-first pytest subset under conda-forge =fenics 2019.1.0=:
+
+- =src/finmag/tests/test_effective_field.py=
+- =src/finmag/tests/test_writing_data.py=
+- =src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py=
+- =src/finmag/tests/test_restart_simulation.py=
+- the gate has now been widened with additional passing FEniCS-2019 checks:
+  - =src/finmag/tests/test_sim_ode.py=
+  - =src/finmag/tests/test_applied_field.py=
+  - =src/finmag/tests/test_exchange_static.py=
+  - =src/finmag/tests/test_llg.py=
+  - =src/finmag/util/ode/tests/test_sundials_ode.py=
+  - =src/finmag/tests/test_energy_creation_with_variable_Ms.py=
+  - =src/finmag/tests/energy_density/test_energy_density.py=
+  - =src/finmag/tests/test_anis.py=
+  - =src/finmag/tests/test_dmi.py=
+  - =src/finmag/tests/test_dmi_terms.py=
+  - =src/finmag/tests/test_heun.py=
+  - =src/finmag/tests/test_spatially_varying_alpha.py=
+  - =src/finmag/tests/test_spatially_varying_anisotropy.py=
+  - =src/finmag/tests/test_unit_length.py=
+  - =src/finmag/tests/test_interactions_scale_linearly_with_m.py=
+  - =src/finmag/energies/exchange_test.py=
+  - =src/finmag/energies/anisotropy_test.py=
+  - =src/finmag/energies/cubic_anisotropy_test.py=
+  - =src/finmag/energies/demag/fk_demag_test.py=
+  - =src/finmag/energies/demag/fk_demag_2d_test.py=
+  - =src/finmag/energies/test_energies_in_regions.py=
+  - =src/finmag/energies/thin_film_demag_test.py=
+  - =src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py=
+- the earlier SUNDIALS-7 regression in
+  =src/finmag/util/ode/tests/test_sundials_ode.py::OdeSundialsTests::test_simple_1d=
+  is now fixed by explicitly attaching the correct nonlinear solver on the
+  SUNDIALS-7 path. [Codex GPT-5.4]
+- the historical weak-tolerance demag case in
+  =src/finmag/tests/test_interactions_scale_linearly_with_m.py=
+  remains an intentional =xfail= / negative-regression pair, and is part of
+  the current M3 gate as documented historical behaviour. [Codex GPT-5.4]
+- demag-heavy tests in the M3 gate now include explicit environment skips
+  where the pixi/FEniCS-2019 stack still lacks optional tooling such as
+  =netgen= usability or =treecode_bem=. [Codex GPT-5.4]
+
+In scope:
+
+- API and packaging changes needed between the two legacy DOLFIN generations;
+- targeted fixes for representative workflows;
+- a separate compatibility branch or track if needed.
+
+Out of scope:
+
+- full historical parity before declaring progress;
+- mixing this migration with the larger =dolfinx= redesign.
+
+*** Milestone M4: DOLFINx Prototype
+
+Goal:
+
+- demonstrate a reduced but real Finmag-on-=dolfinx= capability.
+
+Done when:
+
+- one meaningful end-to-end example runs on =dolfinx=;
+- the supported scope is explicitly documented;
+- unsupported subsystems are listed rather than left ambiguous.
+
+Minimal intended scope:
+
+- mesh creation;
+- magnetisation/material field setup;
+- a small set of common energies, likely =Exchange=, =Zeeman=, and one
+  anisotropy path;
+- one time-integration workflow;
+- basic output.
+
+Important note:
+
+- this is a port/redesign milestone, not a drop-in package upgrade.
+
+Current first probe:
+
+- =pixi.toml= now defines a separate =dolfinx= feature/environment with
+  =no-default-feature = true= so the DOLFINx/CPython-3.12 dependency stack does
+  not disturb the default FEniCS-2019/Python-3.11 M2/M3 environment. [Codex
+  gpt-5.5 high]
+- =dev/bin/verify-dolfinx-m4= wraps two minimal tasks:
+  - =pixi run -e dolfinx dolfinx-import=
+  - =pixi run -e dolfinx dolfinx-smoke=
+  - =pixi run -e dolfinx dolfinx-pytest=
+- =.github/workflows/dolfinx-m4.yml= runs the same isolated probe in CI
+- local verification succeeded with =dolfinx 0.10.0=, =dofs 9=, and
+  interpolated function-array =sum 13.5=; the pytest probe passes as
+  =2 passed=. [Codex gpt-5.5 high]
+- this is only a dependency and tiny mesh/function smoke probe; it is not yet a
+  Finmag-on-DOLFINx port. [Codex gpt-5.5 high]
+
+Current second probe:
+
+- =dev/dolfinx/prototype.py= adds DOLFINx-only helper functions for
+  vector-valued magnetisation fields and the smallest useful micromagnetic
+  energy forms: exchange energy, constant-field Zeeman energy, and
+  constant-axis uniaxial anisotropy energy. The file intentionally lives under
+  =dev/dolfinx= rather than =src/finmag= so M4 can develop without perturbing
+  the green legacy FEniCS-2019 path. [Codex gpt-5.5 high]
+- =dev/dolfinx/test_prototype.py= checks constant-vector interpolation,
+  component-count validation, analytical Zeeman energy on a unit square, and
+  =unit_length= scaling. It also checks analytical uniaxial anisotropy cases:
+  parallel axis, perpendicular axis, axis normalisation, and zero-axis
+  validation. Exchange checks cover constant zero energy, a linear unit-square
+  field, 3D gradient =unit_length= scaling, and invalid length validation.
+  [Codex gpt-5.5 high]
+- the same prototype now includes a deliberately small explicit normalized LLG
+  step for a constant effective field. Tests check the LLG sign convention, norm
+  preservation, Zeeman energy decrease, and invalid input handling. This is a
+  first time-integration workflow, not a production solver. [Codex gpt-5.5
+  high]
+- =dev/dolfinx/relaxation_example.py= is the first end-to-end M4 example: it
+  creates a DOLFINx mesh, sets a uniform magnetisation, evaluates exchange,
+  Zeeman, and anisotropy energies, takes explicit LLG steps, and writes a JSON
+  summary with energy history and final average magnetisation. [Codex gpt-5.5
+  high]
+- =pixi run -e dolfinx dolfinx-example= runs that example and writes
+  =/tmp/finmag-dolfinx-relaxation-summary.json= by default in the verification
+  wrapper. This provides the first basic M4 output artefact. [Codex gpt-5.5
+  high]
+- the JSON summary has a small hand-written schema validator and schema version
+  so the first M4 output contract remains explicit without adding another
+  dependency to the isolated =dolfinx= environment. [Codex gpt-5.5 high]
+- =dev/dolfinx/README.md= documents the currently supported M4 prototype scope
+  and explicit non-scope, including the absence of demag, restart/I/O,
+  production time integration, and legacy Finmag API compatibility. [Codex
+  gpt-5.5 high]
+- =dev/dolfinx/relaxation_example.py= now uses small dataclasses for prototype
+  parameters and JSON-compatible results. These make the reduced API shape
+  clearer without promising legacy =finmag.Simulation= compatibility. [Codex
+  gpt-5.5 high]
+- the prototype parameter dataclass validates the reduced example inputs early,
+  before DOLFINx form assembly, so invalid constants or vector sizes fail with
+  explicit messages. [Codex gpt-5.5 high]
+- the relaxation example command-line path is covered by pytest, including
+  JSON printed to stdout and written to the requested output path. [Codex
+  gpt-5.5 high]
+- invalid command-line controls are also covered, so the wrapper-facing entry
+  point uses the same explicit validation as the function API. [Codex
+  gpt-5.5 high]
+- summary validation now checks the nested =parameters= block as well as the
+  top-level output fields, keeping the JSON contract explicit. [Codex
+  gpt-5.5 high]
+- repeated relaxation-example runs with identical controls are tested for
+  deterministic JSON summaries. [Codex gpt-5.5 high]
+- the reduced vector-parameter validation now rejects wrong sizes and
+  non-numeric values before DOLFINx form assembly. [Codex gpt-5.5 high]
+- local verification now gives =25 passed= for =pixi run -e dolfinx
+  dolfinx-pytest=. [Codex gpt-5.5 high]
+
+M4 reduced-prototype status:
+
+- the stated M4 completion criteria are now represented: an end-to-end DOLFINx
+  example runs, supported scope is documented, and unsupported subsystems are
+  explicit in =dev/dolfinx/README.md=. [Codex gpt-5.5 high]
+- this should be treated as a stable starting point for M5 expansion, not as a
+  production DOLFINx port or legacy API replacement. [Codex gpt-5.5 high]
+- the prototype gate is now explicitly frozen as
+  =dolfinx-prototype-pytest=. Its isolated environment pins
+  =fenics-dolfinx = "0.10.*"= and includes SciPy; direct source slices use
+  separate =dolfinx-src-*= task names. The verifier records all relevant
+  runtime versions and rejects tracked-file mutations. [Codex GPT-5]
+
+*** Milestone M5: DOLFINx Expansion By Scientific Value
+
+Goal:
+
+- expand the =dolfinx= port only in areas with real scientific value.
+
+Porting strategy:
+
+- keep =dev/dolfinx= as an exploration lane for bounded DOLFINx mechanics,
+  reference generation, and small executable witnesses; do not create a second
+  =finmag= package there or let the prototype become a clean-room replacement
+  for Finmag.
+- when the actual FEniCS-2019.1 code base is ported, preserve the existing
+  Finmag software design, public API, data structures, and tests as far as
+  practical. Changes should be driven by DOLFINx, Python, MPI, packaging, or
+  other software-stack differences, not by preference for a new architecture.
+  [Codex gpt-5.5 high]
+- treat the green FEniCS-2019/Python-3 transition tests as the behavioural
+  contract for the DOLFINx port. If DOLFINx requires changed behaviour, update
+  tests deliberately and document the reason rather than silently drifting.
+  [Codex gpt-5.5 high]
+- before editing a production capability, validate any unresolved DOLFINx
+  mechanics in =dev/dolfinx= and identify the legacy tests or reference values
+  that define its behaviour;
+- once that evidence is ready, edit the corresponding existing module under
+  =src/finmag= directly. Re-express the result in the production abstraction;
+  do not copy prototype modules into =src= and do not stage a duplicate package
+  for a later move;
+- after the first DOLFINx-only source edit, use the pinned FEniCS-2019 =pixi=
+  commit as an external oracle rather than adding temporary dual-backend logic
+  to the production source;
+- keep each source slice to one coherent capability and its focused in-place
+  tests so that the commit history, not a final package relocation, provides
+  the review structure.
+- =dev/dolfinx/porting_map.md= records the compatibility surfaces to preserve,
+  the current prototype evidence, and the readiness criteria for a direct
+  source edit.
+- FK demag is a native-code compatibility item: the M3/pixi path computes the
+  Fredkin-Koehler BEM matrix through compiled =finmag.native.llg=
+  (=compute_bem_fk= or =compute_bem_fk_from_arrays=). The DOLFINx port should
+  treat that as the production baseline unless a tested replacement is chosen.
+  [Codex gpt-5.5 high]
+- =pixi run native-fk-bem-smoke= and =dev/bin/verify-python3-m3= now check the
+  compiled array-based FK BEM entry point directly before the larger demag
+  regressions. This keeps native BEM availability distinct from the Python
+  Magpar comparison helpers and makes the M3 failure mode easier to diagnose.
+  [Codex gpt-5.5 high]
+
+Current first M5 slice:
+
+- =dev/dolfinx/field_adapter.py= adds a narrow DOLFINx-backed compatibility
+  probe for the first legacy =finmag.field.Field= behaviours: scalar/vector
+  inspection, constants, callables, nodal values, normalisation, and volume
+  averages. [Codex gpt-5.5 high]
+- =dev/dolfinx/simulation.py= adds a reduced =PrototypeSimulation= wrapper
+  that composes the checked M4 mesh, magnetisation, exchange, Zeeman,
+  anisotropy, and explicit relaxation helpers. This is an API sketch for the
+  core path, not compatibility with legacy =finmag.Simulation=. [Codex
+  gpt-5.5 high]
+- =dev/dolfinx/test_simulation.py= checks supported energy reporting, short
+  relaxation, custom parameters, and invalid wrapper controls. [Codex
+  gpt-5.5 high]
+- the reduced simulation wrapper exposes a JSON-compatible state summary so
+  callers can inspect mesh label, average magnetisation, parameters, and
+  energy terms without advancing the simulation. [Codex gpt-5.5 high]
+- the reduced simulation wrapper now exposes a JSON-compatible relaxation
+  summary so the M5 core-path sketch has a basic output path. [Codex
+  gpt-5.5 high]
+- the wrapper summary conforms to the existing relaxation summary validator,
+  including =dolfinx_version= and schema version. [Codex gpt-5.5 high]
+- the reduced simulation wrapper can write the validated summary to JSON,
+  giving the M5 core-path sketch a direct file-output path. [Codex gpt-5.5
+  high]
+- the reduced simulation wrapper can emit a JSON-compatible per-step
+  relaxation trace with absolute prototype time, average magnetisation, and
+  energy terms. This is a small data-I/O contract, not legacy NDT, VTK/XDMF,
+  or scheduler support. [Codex gpt-5.5 high]
+- the reduced simulation wrapper now tracks prototype time and exposes a
+  narrow =run_until(...)= method. This is a compatibility-shaped probe for the
+  legacy =Simulation.run_until= concept, but it still uses the explicit M5
+  stepper and is not a production DOLFINx driver. [Codex gpt-5.5 high]
+- the reduced JSON restart state now preserves prototype time as well as
+  parameters and nodal magnetisation values. [Codex gpt-5.5 high]
+- the reduced simulation wrapper can write and read a narrow JSON restart state
+  for the =PrototypeSimulation= unit-square path. This records prototype time,
+  nodal magnetisation values, and parameters, but is not a general Finmag
+  restart format. [Codex gpt-5.5 high]
+- =dev/dolfinx/restart_example.py= provides a runnable restart-state
+  round-trip witness, and =dev/bin/verify-dolfinx-m4= now runs it through the
+  =dolfinx-restart-example= pixi task. [Codex gpt-5.5 high]
+- zero exchange and anisotropy constants now short-circuit before UFL assembly,
+  avoiding degenerate zero-form domain errors. [Codex gpt-5.5 high]
+- local verification now gives =51 passed= for =pixi run -e dolfinx
+  dolfinx-pytest=. [Codex gpt-5.5 high]
+
+Suggested order:
+
+1. core =sim= path and common energies;
+2. demag;
+3. restart and data IO;
+4. normal modes;
+5. LLB/SLLG;
+6. external comparisons and legacy validation tooling.
+
+Rule:
+
+- port what is used, not everything that exists.
+
+*** Work Streams
+
+Run three tracks in parallel where practical:
+
+- Track A: productization
+  - docs
+  - verification scripts
+  - CI
+  - =pixi=
+  - user workflows
+- Track B: legacy upgrade
+  - =2017.1.0 -> 2019.1.0=
+- Track C: =dolfinx= prototype
+  - intentionally reduced-scope exploratory port
+
+Track C should not block A or B.
+
+*** Recommended Immediate Order
+
+1. close M1 cleanly and keep its gate green;
+2. probe M2 feasibility with =pixi=;
+3. start M3 on a separate compatibility track;
+4. begin M4 only after M1 is stable, and keep it intentionally small.
+
+*** Explicit Deferrals
+
+For now, defer:
+
+- broad cleanup unrelated to the milestones above;
+- reviving rarely used historical features just because tests exist;
+- removing every skip/xfail;
+- making all old comparison workflows live again;
+- visualization-heavy tooling unless it directly serves one of the milestones.
+
+** Reference Environment
+
+The current ground truth is the Docker image:
+
+- =finmag/finmag:latest=
+
+Running the agreed minimal acceptance suite inside the image's own =/finmag= tree succeeds:
+
+- =21 passed, 6 warnings in 66.25s=
+
+Important caveat:
+
+- Running the same suite against a bind-mounted host checkout failed because the container tried to rebuild native modules into the mounted tree and hit write-permission issues.
+- For now, the image contents should be treated as the reliable oracle, not a bind-mounted checkout.
+
+** Acceptance Suites
+
+*** Barmini-First Suite
+
+Use this as the smallest practical gate:
+
+#+begin_src bash
+pytest -v \
+  src/finmag/tests/test_effective_field.py \
+  src/finmag/tests/test_writing_data.py \
+  src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+  src/finmag/tests/test_restart_simulation.py
+#+end_src
+
+*** Minimal Acceptance Suite
+
+Use this as the main resurrection gate:
+
+#+begin_src bash
+pytest -v \
+  src/finmag/tests/test_effective_field.py \
+  src/finmag/tests/test_writing_data.py \
+  src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+  src/finmag/tests/test_restart_simulation.py \
+  src/finmag/tests/test_sim_ode.py \
+  src/finmag/tests/test_applied_field.py \
+  src/finmag/tests/test_exchange_static.py \
+  src/finmag/tests/test_llg.py \
+  src/finmag/util/ode/tests/test_sundials_ode.py
+#+end_src
+
+This suite currently collects 21 tests.
+
+** Phases
+
+*** Phase 1: Stabilize the Test Harness
+
+Tasks:
+
+- record the exact passing Docker invocation in a script or =Makefile= target;
+- add a second command that copies the checkout into a writable directory inside the container before running tests;
+- avoid bind-mounted in-place test runs until native module write behavior is under control.
+
+Deliverable:
+
+- a repeatable baseline command for the oracle image;
+- a repeatable command for testing local edits inside a writable in-container copy.
+
+*** Phase 2: Python 3 Port While Keeping Old FEniCS
+
+Do this before any =dolfin= migration work.
+
+**** Batch 1: Import and Package Layer
+
+Files to port first:
+
+- =src/finmag/__init__.py=
+- =src/finmag/init.py=
+- =src/finmag/sim/__init__.py=
+- =src/finmag/energies/__init__.py=
+- =src/finmag/energies/init.py=
+- =src/finmag/native/__init__.py=
+- =src/finmag/util/ode/__init__.py=
+- =src/finmag/util/oommf/__init__.py=
+
+Primary goal:
+
+- make =import finmag= work under Python 3 without Python 2 implicit relative imports.
+
+**** Batch 2: Core Utility Types
+
+Files:
+
+- =src/finmag/field.py=
+- =src/finmag/util/helpers.py=
+- =src/finmag/util/fileio.py=
+
+Primary goal:
+
+- remove common Python 2 constructs that affect nearly all runtime paths:
+  =basestring=, =xrange=, old dict iterator methods, old exception syntax.
+
+**** Batch 3: Runtime Core
+
+Files:
+
+- =src/finmag/physics/effective_field.py=
+- =src/finmag/physics/llg.py=
+- =src/finmag/drivers/llg_integrator.py=
+- =src/finmag/drivers/sundials_integrator.py=
+- =src/finmag/scheduler/scheduler.py=
+- =src/finmag/sim/sim.py=
+
+Primary goal:
+
+- restore the execution path used by the acceptance suite:
+  =Simulation -> LLG -> EffectiveField -> energies -> integrator=.
+
+**** Batch 4: Common Energies
+
+Files:
+
+- =src/finmag/energies/energy_base.py=
+- =src/finmag/energies/exchange.py=
+- =src/finmag/energies/zeeman.py=
+- then anisotropy, DMI, and demag modules as required by failures
+
+Primary goal:
+
+- keep the acceptance suite green while broadening Python 3 compatibility.
+
+**** Batch 5: Native Build and Import Glue
+
+Files:
+
+- =src/finmag/native/init.py=
+- =src/finmag/util/native_compiler.py=
+
+Primary goal:
+
+- ensure native modules can still be found or rebuilt safely under the test harness.
+
+*** Phase 3: Packaging and Build Cleanup
+
+After the Python 3 runtime is stable:
+
+- modernize package metadata and entry points;
+- reduce reliance on ad hoc import behavior;
+- make native build paths explicit and reproducible.
+
+*** Phase 4: =dolfin= Migration
+
+Only start once Python 3 plus the old FEniCS stack is working.
+
+Decision required:
+
+- target a newer legacy FEniCS release, or
+- migrate to FEniCSx / =dolfinx=.
+
+This is a major project boundary. It should not be mixed into the Python 3 port.
+
+** Initial Exclusions
+
+Do not use these as first-pass acceptance gates:
+
+- =comparison/*=
+- =oommf/*=
+- =nmag/*=
+- broad mesh-generation tests that depend heavily on Netgen or external tooling
+- larger historical areas such as NEB, normal modes, skyrmion workflows, and specialized Jacobian paths
+
+They are useful later as validation suites, but they are not efficient first gates.
+
+** Risks and Notes
+
+- The codebase is Python 2 era and relies on implicit relative imports in several packages.
+- Native modules are tightly integrated with runtime behavior.
+- The demag path and compiled extensions are likely to be the most environment-sensitive areas.
+- The container already emits a Python 2 deprecation warning from =msg.message= in =src/finmag/drivers/sundials_integrator.py=; this is harmless in the reference image but should be fixed during the Python 3 port.
+- The Mercurial revision helper =get_hg_revision_info()= is historical
+  pre-Git compatibility code. It is not a Python 3 transition dependency and
+  should be removed in a later cleanup phase after the main transition is
+  stable.
+
+** Success Criteria
+
+First meaningful milestone:
+
+- =import finmag= works under Python 3;
+- the minimal acceptance suite passes under Python 3 while keeping the old FEniCS stack;
+- native modules still load correctly in that environment.
+
+Next milestone after that:
+
+- expand from the minimal acceptance suite to a broader Python 3 core suite
+  covering relaxation, restart helpers, time handling, and stiff/scipy ODE
+  paths;
+- promote that broader suite into CI as the active transition gate.
+
+Second meaningful milestone:
+
+- construct a minimal =Simulation= under Python 3;
+- run the smallest =barmini=-based smoke path under Python 3;
+- then make the =barmini=-first acceptance subset pass under Python 3.
+
+** Current Status
+
+*** Completed Since The Initial Plan
+
+- a Python 3 DOLFIN 2017 image now exists and builds successfully:
+  =finmag-py3-dolfin2017=
+- that image imports =dolfin= under Python 3 and reports:
+  - =python3 = 3.5.4=
+  - =dolfin.__version__ = 2017.1.0=
+- =import finmag= now succeeds under Python 3 in that image
+- the =barmini=-first Python 3 acceptance subset now passes:
+  - =test_effective_field.py=
+  - =test_writing_data.py=
+  - =test_integrator_raises_exception_on_exceed_maxsteps.py=
+  - =test_restart_simulation.py=
+  - total: =7 passed=
+- the full agreed Python 3 minimal acceptance suite now passes:
+  - =21 passed=
+  - =python3-scipy= is installed in the transition image, so the old SciPy
+    comparison test no longer skips
+  - =test_sim_ode.py= keeps a lazy =matplotlib= import so plotting remains
+    optional during normal test collection
+- the broader Python 3 core transition suite now also passes:
+  - =356 passed, 16 skipped, 6 xfailed, 13 warnings=
+  - this adds:
+    - =field_test.py=
+    - =field_setters_test.py=
+    - =scheduler/scheduler_test.py=
+    - =energies/exchange_test.py=
+    - =energies/anisotropy_test.py=
+    - =energies/zeeman_test.py=
+    - =energies/dmi_test.py=
+    - =util/fileio_test.py=
+    - =util/helpers_test.py=
+    - =util/length_scales_test.py=
+    - =util/meshes_test.py=
+    - =util/mesh_templates_test.py=
+    - =tests/test_meshes.py=
+    - =util/pbc_test.py=
+    - =util/plot_helpers_test.py=
+    - =util/vtk_saver_test.py=
+    - =util/dmi_helper_test.py=
+    - =util/test_set_function_values.py=
+    - =util/test_dmi_from_helix.py=
+    - =physics/tests/test_effective_field.py=
+    - =physics/tests/test_equation.py=
+    - =physics/tests/test_terms.py=
+    - =energies/cubic_anisotropy_test.py=
+    - =energies/test_energies_in_regions.py=
+    - =energies/magnetostatic_field_test.py=
+    - =energies/thin_film_demag_test.py=
+    - =tests/test_energy_creation_with_variable_Ms.py=
+    - =tests/test_interactions_scale_linearly_with_m.py=
+    - =tests/test_heun.py=
+    - =tests/test_spatially_varying_alpha.py=
+    - =tests/test_spatially_varying_anisotropy.py=
+    - =tests/test_unit_length.py=
+    - =tests/test_anis.py=
+    - =tests/test_dmi.py=
+    - =tests/test_dmi_terms.py=
+    - =util/fft_test.py=
+    - =energies/demag/demag_pbc_test.py=
+    - =energies/demag/fk_demag_test.py=
+    - =energies/demag/fk_demag_2d_test.py=
+    - =tests/demag/test_bem_computation.py=
+    - =tests/demag/test_demag_sphere.py=
+- additional targeted Python 3 progress since that last full verifier run:
+  - =energies/demag/fk_demag_2d_test.py= now contains a real passing demag
+    regression test instead of a stale =xfail=
+  - =energies/zeeman_test.py::test_compare_stray_field_of_sphere_with_dipolar_field=
+    now passes once regional interpolation enables extrapolation on the source
+    field
+  - =tests/test_jacobian.py= now collects and passes under Python 3
+  - =sim/sim_test.py::test_compute_and_plot_power_spectral_density_in_mesh_region=
+    now passes after updating the region-to-submesh vertex mapping path in
+    =normal_mode_sim.py= and fixing NumPy truth-value handling in =util/fft.py=
+  - =sim/sim_test.py::test_profile= now passes after =Simulation.profile()=
+    switched from =cProfile.run(...)= to =Profile.runctx(...)= with an explicit
+    =sim= binding
+  - =sim/sim_test.py::test_setting_different_material_parameters_in_different_regions=
+    now checks the initialized region-dependent fields directly at
+    representative points instead of relying on Paraview output and an
+    unfinished =NotImplementedError= placeholder
+  - =sim/sim_test.py::test_regression_schedule_switch_off_field= now passes;
+    the underlying bug was a typo in =Simulation.remove_interaction()= which
+    deleted =E_<interaction>= twice and left the =H_<interaction>= tablewriter
+    callback behind
+  - =energies/test_energies_in_regions.py::test_energies_in_separated_subdomains=
+    now passes; the previous self-skip in the energy-consistency check was
+    removed after verifying the subdomain-energy sum matches the total energy
+    on the current Python 3 stack
+  - =util/helpers_test.py::test_apply_vertexwise= now passes after fixing
+    =helpers.apply_vertexwise()= to use the function-space mesh geometry
+    dimension instead of the removed =Function.domain()= API
+  - these targeted tests have been added to the active core-suite CI inputs
+    where needed, but the full suite has not yet been rerun after this batch
+    - relaxation tests
+    - cyclic-reference regression tests
+    - bug/regression tests for =.ndt= writing
+    - time-handling tests
+    - =sim/hysteresis_test.py=
+    - =sim/magnetisation_patterns_test.py=
+    - the full =sim_helpers_test.py= file
+    - the full =sim/sim_test.py= file
+    - Sundials n-steps, reinit, and stiff ODE tests
+    - SciPy integrator smoke coverage
+    - =tests/jacobean/test_jacobean_computation.py=
+    - =drivers/tests/test_integrators.py=
+    - =tests/jacobean/test_jacobean_integration.py=
+    - =tests/jacobean/test_native_llg.py=
+  - current non-passing statuses inside that file are expected:
+    - remaining =xfail= cases inside =sim_test.py= are now the intentionally
+      unresolved non-core paths only
+    - the remaining skips are for optional/external features such as selected
+      animation/export paths and a few remaining mesh/helper tool gaps
+- the import path now tolerates missing optional dependencies and unfinished
+  subsystems where necessary
+- the transition image now includes =netgen=, =tix=, =xauth=, and =xvfb= plus
+  Tcl/Tix compatibility symlinks for the 8.5-era paths expected by
+  =netgen 4.9.13=
+- =netgen= now starts headlessly under =xvfb=, but it still aborts after some
+  successful mesh-generation runs; mesh-dependent tests therefore use a
+  =netgen_is_usable()= probe instead of checking only whether the binary exists
+- despite that historical shutdown bug, the mesh-generation path is now usable
+  again in the transition image by accepting post-export =netgen= aborts when
+  the mesh file was already written and by falling back to the Python module
+  form of =dolfin-convert=
+- the external =dolfinh5tools= package is now installed in the transition
+  image, patched for Python 3 package imports, and the HDF5 field-save path is
+  green in the existing CI gate
+- the transition image now also includes =gmsh=, and the legacy polygon mesh
+  helpers no longer hard-require the =dolfin-convert= script because they use
+  the existing Python meshconvert fallback
+- the transition image now builds and installs the Southampton/Fangohr OOMMF
+  fork from =https://github.com/fangohr/oommf=
+- because OOMMF refuses to run as root, the image builds OOMMF as
+  =oommfbuild=, verifies =oommf +version= as that user, and uses =oommfbuild=
+  as the default runtime user
+- the OOMMF OVF reader path is now Python 3 compatible for binary OVF output:
+  =OVFStream= opens files in binary mode and decodes only ASCII header lines
+- the OOMMF lattice wrapper now avoids NumPy truth-value checks on arrays
+- the OOMMF-dependent regression subset now passes under Python 3:
+  - =src/finmag/tests/comparison/test_dmdt.py=
+  - =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+  - =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+  - =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+  - =src/finmag/tests/oommf/test_anisotropy.py=
+  - =src/finmag/tests/oommf/test_exchange.py=
+- the active GitHub Actions core-suite gate already lists those OOMMF files;
+  with OOMMF installed they now run as real tests instead of external-tool
+  skips
+- =sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
+  now also uses =gmsh= plus the Python meshconvert fallback directly, rather
+  than the Python-2-era =sh= package and a standalone =dolfin-convert= script
+- targeted verification succeeded for:
+  - =src/finmag/util/meshes_test.py::test_regular_polygon=
+  - =src/finmag/util/meshes_test.py::test_regular_polygon_extruded=
+  - =src/finmag/sim/sim_test.py::test_m_average_is_robust_with_respect_to_mesh_discretization=
+- =src/finmag/util/meshes_test.py::test_build_mesh= no longer requires
+  =mshr=; it now uses Dolfin-native meshes and passes in the transition image
+- the normal-modes eigenmode helper/problem/solver tests now collect and pass
+  under Python 3 after print/range cleanup, relative package import fixes, and
+  a dense-solver =num=None= compatibility fix
+- the deprecated normal-modes test file now also collects and passes under
+  Python 3 after print/range cleanup and Python 3 iterator fixes in
+  =compute_normal_modes_generalised=
+- the historical =GCR= demag solver remains intentionally unported on the
+  Python 3 path
+- the old solver name is kept only as a historical placeholder in the source
+  tree; it is not exposed through =KNOWN_SOLVERS=
+- =src/finmag/tests/demag/test_bem_computation.py::BemComputationTests::test_compute_scalar_potential_gcr=
+  is therefore an explicit skip again
+- the core-suite workflow and local verifier now include:
+  - =src/finmag/normal_modes/eigenmodes/helpers_test.py=
+  - =src/finmag/normal_modes/eigenmodes/eigenproblems_test.py=
+  - =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
+  - =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
+- latest full local verification of =dev/bin/verify-python3-core-suite=:
+  =502 passed, 14 skipped, 3 xfailed= in the Python 3 transition
+  container
+- targeted follow-up after that full run added a positive regression test for
+  weak-Krylov-demag non-linearity, but the original weak-tolerance =xfail=
+  case is intentionally kept as historical evidence and should be reviewed by
+  a human later
+  where applicable
+- targeted follow-up removed a stale deprecated normal-modes =xfail=:
+  =test_plot_spatially_resolved_normal_mode_in_region= now passes under
+  Python 3 after dropping the obsolete =use_fenicstools= keyword
+- targeted follow-up in =eigensolvers_test.py= also removed a stale
+  SciPy-sparse/Nanostrip =xfail=; a later SLEPc wrapper fix reduced the
+  remaining normal-mode expected failures to zero in the active Python 3 core
+  gate
+- =SLEPcEigensolver= now correctly forwards configured =tol= and =maxit=
+  values into the solve call; this was the real bug behind one of the former
+  SLEPc expected failures
+- =SLEPcEigensolver= now also promotes Hermitian inputs from the generic
+  non-Hermitian SLEPc problem types to =HEP=/=GHEP= automatically; this fixes
+  the former RingGraph =N=200 SLEPc failure without changing the non-Hermitian
+  normal-mode path
+- =fk_demag_test.py::test_thin_film_argument_saves_time_on_thin_film= no
+  longer asserts strict wall-clock ordering; it now allows a small regression
+  margin to avoid CI/container timing noise while still catching real
+  slowdowns
+- plotting-heavy tests now close returned matplotlib figures explicitly; this
+  removes the repeated "More than 20 figures have been opened" warnings from
+  the Python 3 core gate
+- =plot_spatially_resolved_normal_mode()= no longer forces matplotlib
+  =figure.autolayout=True= for figures with appended colorbar axes; this
+  removes the old =tight_layout= compatibility warnings from the remaining
+  normal-mode profile plotting tests
+- follow-up warning cleanup also:
+  - guards zero-denominator handling in
+    =normal_modes/eigenmodes/helpers.compute_relative_error()= so the
+    zero-eigenvalue case no longer emits divide-by-zero warnings
+  - treats =freq ~= 0= as a zero-length animation in
+    =export_normal_mode_animation()= so the non-movie eigenmode animation
+    smoke path no longer emits divide-by-zero warnings
+  - uses =np.divide(..., where=...)= in the noisy relative-difference checks
+    in =exchange_test.py= and =tests/nmag/exchange_1d/test_exchange_1d.py=
+    so exact-zero reference values no longer create spurious warnings
+- latest full rerun is now warning-clean at the pytest level:
+  - the SciPy sparse/Nanostrip singular-matrix warning is now suppressed
+    locally in =eigensolvers_test.py= because SciPy's shift-invert path still
+    returns valid eigenpairs for that testcase
+  - the transposed Robertson SciPy/VODE test now asserts the expected
+    "Excess work done" warning explicitly instead of leaking it into the suite
+    summary
+  - the legacy DVODE text block still prints to stderr at process shutdown, but
+    it is no longer reported as a pytest warning
+- the remaining Magpar comparison =xfail= cases are confirmed to fail because
+  regenerated Netgen node arrays do not match the saved Magpar reference-node
+  shapes, so these are reference-data/mesh-drift issues rather than Python 3
+  regressions
+
+*** Notable Work Completed
+
+- explicit relative imports for the package layer
+- Python 3 compatibility fixes in the core runtime path
+- Python-3-aware native builds via =PYTHON=$(sys.executable)=
+- Sundials wrapper support for =libsundials-dev 2.7.0+dfsg-2=
+- local fixes in the vendored custom =nvector_serial= library so the native
+  shared library loads correctly
+- startup logging hardened so missing optional packages do not crash import
+- optional/lazy handling for features not yet required for the current
+  milestone:
+  - =SLLG=
+  - SciPy integrator backend
+  - normal-mode support
+
+*** Current Verified Python 3 Commands
+
+The current Python 3 import milestone is verified with:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -c "import finmag; print(finmag)"'
+#+end_src
+
+The current =barmini=-first subset is verified with:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 -m pytest -v \
+              src/finmag/tests/test_effective_field.py \
+              src/finmag/tests/test_writing_data.py \
+              src/finmag/drivers/tests/test_integrator_raises_exception_on_exceed_maxsteps.py \
+              src/finmag/tests/test_restart_simulation.py'
+#+end_src
+
+For local verification there is now also:
+
+- =dev/bin/verify-python3-m1=
+- =dev/bin/verify-python3-barmini-suite=
+- =dev/bin/verify-python3-minimal-suite=
+- =dev/bin/verify-python3-restart-smoke=
+- =dev/bin/verify-python3-normal-modes-smoke=
+- =dev/bin/verify-python3-core-suite=
+
+Expected result:
+
+- =<module 'finmag' from '/tmp/finmag/src/finmag/__init__.py'>=
+
+*** Current Verified Barmini Smoke Command
+
+This remains the primary practical M1 smoke witness because it exercises the
+time-integration path directly:
+
+#+begin_src bash
+docker run --rm \
+  -e OMPI_MCA_plm=isolated \
+  -v /tank/fangohr/git/finmag:/repo:ro \
+  finmag-py3-dolfin2017 \
+  bash -lc 'rm -rf /tmp/finmag && cp -a /repo /tmp/finmag && cd /tmp/finmag && \
+            PYTHONPATH=/tmp/finmag/src python3 - <<\"PY\"
+import finmag
+sim = finmag.example.barmini(name=\"barmini_py3_smoke\")
+print(\"constructed\", sim.__class__.__name__)
+sim.run_until(1e-12)
+print(\"advanced\", sim.t)
+PY'
+#+end_src
+
+Expected result:
+
+- =constructed Simulation=
+- =advanced 1e-12=
+
+*** Current Verified Restart Smoke Command
+
+The restart/save-load path now also has an explicit practical witness built on
+top of =barmini=:
+
+#+begin_src bash
+dev/bin/verify-python3-restart-smoke
+#+end_src
+
+Expected result:
+
+- =saved_time 1e-11=
+- =restarted_time 1e-11=
+- =copied_time 1e-11=
+
+This verifies the canonical restart-file save path, in-place restart on the
+same simulation, and restart into a fresh =barmini= simulation object.
+
+*** Aggregate M1 Verification Command
+
+The practical M1 witness can now also be run as a single command:
+
+#+begin_src bash
+dev/bin/verify-python3-m1
+#+end_src
+
+This wrapper runs, in order:
+
+- =dev/bin/verify-python3-import=
+- =dev/bin/verify-python3-barmini-smoke=
+- =dev/bin/verify-python3-restart-smoke=
+- =dev/bin/verify-python3-normal-modes-smoke=
+
+It is intended as the one-command answer to the question "is the Python 3
+legacy-stack M1 workflow usable right now?"
+
+The wrapper now runs the entire M1 workflow in a single container session and
+single writable checkout copy, so it only pays one native rebuild and is
+efficient enough to back a dedicated CI job. The individual smoke helpers
+remain available for targeted manual checks.
+
+*** Current Verified Normal-Modes Smoke Command
+
+The normal-modes path is kept as supplementary M1 coverage, not as the primary
+smoke witness:
+
+#+begin_src bash
+dev/bin/verify-python3-normal-modes-smoke
+#+end_src
+
+Expected result:
+
+- =constructed NormalModeSimulation=
+- =modes 2=
+- a finite =first_freq= and small =first_rel_error=
+
+This smoke path uses the checked-in nanodisk mesh plus relaxed restart file, so
+it verifies the Python 3 normal-modes runtime without adding a fresh meshing or
+relaxation step.
+
+*** Current Limitations
+
+The Python 3 container path is usable for the base import milestone, but some
+features are still intentionally not part of the guaranteed working surface:
+
+- SciPy-backed functionality is unavailable unless SciPy is installed
+- normal-mode support is unavailable unless its SciPy-based stack is present
+- the =sllg= kernel now imports and runs again under Python 3 on the
+  =dolfin 2017.1.0= transition path
+
+*** Immediate Next Step
+
+Move from the verified Python 3 smoke path:
+
+- =import finmag=
+- =barmini().run_until(1e-12)=
+
+to:
+
+- a first Python 3 execution of the agreed minimal acceptance suite, probably
+  starting with the =barmini=-based subset
+- then broadening to the full agreed suite
+
+*** SLLG Transition Milestone
+
+The =sllg= path is now working again on the Python 3 transition stack.
+
+- =src/finmag/physics/llb/sllg.py= was ported far enough for import and
+  runtime use under Python 3
+- =Simulation(..., kernel='sllg')= now works again in the transition image
+- targeted verification succeeded for:
+  - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg=
+  - =src/finmag/sim/sim_test.py::TestSimulation::test_sim_sllg_time=
+  - =src/finmag/tests/zhangli/zhang_li_test.py=
+  - =src/finmag/physics/llb/sllg_test.py=
+- the active Python 3 core-suite gate now includes
+  =src/finmag/tests/zhangli/zhang_li_test.py=
+- the active Python 3 core-suite gate now also includes
+  =src/finmag/physics/llb/sllg_test.py=, which provides a small native
+  =RandomMT19937.gaussian_random_np= smoke test without enabling the large
+  manual plotting helpers
+- =src/finmag/physics/llb/llb_test.py= now passes under Python 3 without
+  expected failures after restoring LLB interaction setup and regional
+  save-data coverage
+- =src/finmag/tests/test_solid_angle.py= and
+  =src/finmag/tests/test_solid_angle_invariance.py= now pass under Python 3
+  and are included in the active gate
+- =src/finmag/tests/energy_density/test_energy_density.py= now passes under
+  Python 3 with its external =nsim= comparison skipped when =nsim= is absent
+  and is included in the active gate
+- =src/finmag/tests/test_skyrmions.py= passes under Python 3 and is included
+  in the active gate
+- =src/finmag/tests/test_1d_domain_wall_profile_uniaxial_anisotropy.py=
+  passes under Python 3 and is included in the active gate
+- =src/finmag/tests/cython/test_cython.py= now runs under Python 3 using the
+  Debian =cython3= executable and is included in the active gate
+- =src/finmag/physics/tests/neb/neb_test.py= passes under Python 3 and is
+  included in the active gate
+- =src/finmag/tests/zhangli/stt_nonlocal_test.py= passes under Python 3 and is
+  included in the active gate
+- =src/finmag/util/oommf/test_mesh.py= passes under Python 3 and is included
+  in the active gate; the external OOMMF solver comparison tests are now also
+  in the gate and run when the transition image provides =oommf=
+- =src/finmag/util/visualization_test.py= now runs under Python 3 and is
+  included in the active gate; pure flight-path tests pass and GUI/rendering
+  tests remain skipped
+- the old unconditional animation/export skips in =sim/sim_test.py= and
+  =util/helpers_test.py= have been replaced by dependency-based checks:
+  Paraview rendering and movie export are skipped only when their external
+  tools are absent
+- =util/helpers_test.py::test_get_hg_revision_info= now skips only when the
+  external =hg= executable is absent, instead of using an unconditional skip;
+  it is explicitly documented as historical/pre-Git coverage
+- =sim/sim_test.py::test_compute_eigenmode_animations= now runs its non-movie
+  VTK eigenmode export path under Python 3; movie-export subcases remain
+  conditional on Paraview plus =mencoder=
+- =src/finmag/tests/test_sim_parallel.py= now collects under Python 3 and is
+  included in the active gate as an explicit skip in serial CI; it still needs
+  a future MPI/multi-rank verification path
+- =src/finmag/tests/comparison/test_dmdt.py= now collects under Python 3 and
+  is included in the active gate; it now runs in the transition image because
+  =oommf= is installed
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py= passes under
+  Python 3 against checked-in reference data and is included in the active gate
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py= passes
+  under Python 3 against checked-in reference data and is included in the
+  active gate
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py= passes under Python 3
+  against checked-in reference data and is included in the active gate
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py= passes under
+  Python 3 against checked-in reference data and is included in the active gate
+- =src/finmag/tests/oommf/test_anisotropy.py= and
+  =src/finmag/tests/oommf/test_exchange.py= now collect under Python 3 and are
+  included in the active gate; they now run in the transition image because
+  =oommf= is installed
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+  passes under Python 3 and is included in the active gate; it is a slower
+  validation simulation
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py= now collects
+  under Python 3 and is included in the active gate as an explicit skip for the
+  long oscillator validation
+- the older comparison subtrees under =src/finmag/tests/comparison/= now
+  collect under Python 3 and are included in the active gate:
+  =anisotropy/test_anis_magpar.py= is an expected failure because the saved
+  Magpar reference mesh does not match the regenerated Netgen mesh
+- the OOMMF anisotropy/cubic-anisotropy comparison tests now pass under
+  Python 3 in the transition image
+- =src/finmag/tests/comparison/demag/test_demag_field.py= now passes its
+  analytical demag comparison under Python 3; its saved Magpar mesh comparison
+  is tracked as an expected failure
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py= and
+  the Nmag part of =comparison/exchange/test_exchange_field.py= pass under
+  Python 3; the OOMMF part now also runs in the transition image
+
+*** Full Core Gate Milestone
+
+The active Python 3 core-suite verifier has now completed successfully in the
+=finmag-py3-dolfin2017= transition image.
+
+Verified command:
+
+#+begin_src bash
+dev/bin/verify-python3-core-suite
+#+end_src
+
+Observed result:
+
+- =502 passed=
+- =14 skipped=
+- =3 xfailed=
+- runtime approximately =1547s=
+
+This means the current transition gate is no longer just an import or smoke
+test. It now exercises the broad Finmag test inventory under Python 3, with
+remaining unsupported/external paths tracked explicitly as skips or expected
+failures.
+
+*** M3 Pixi/FEniCS-2019 Increment
+
+The current M3 verifier has been widened further on the =pixi= /=fenics
+2019.1.0= path.
+
+Verified command:
+
+#+begin_src bash
+dev/bin/verify-python3-m3
+#+end_src
+
+Observed result:
+
+- =493 passed=
+- =21 skipped=
+- =5 xfailed=
+- runtime approximately =730s=
+
+The latest increment promoted the remaining checked-reference comparison and
+single-rank-safe boundary files that do not require installing =nsim=:
+
+- =src/finmag/tests/comparison/anisotropy/test_anis_magpar.py=
+- =src/finmag/tests/comparison/demag/test_demag_field.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py=
+- =src/finmag/tests/test_sim_parallel.py=
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py=
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py=
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py=
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
+- =src/finmag/energies/demag/demag_pbc_test.py=
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
+
+The focused promoted subset passes as =12 passed, 2 skipped, 2 xfailed=, and
+the expanded =dev/bin/verify-python3-m3= gate exits successfully. The two new
+xfails are documented Magpar mesh-drift comparisons, the skips are the
+single-rank MPI boundary and the intentionally long Slonczewski oscillator
+validation. [Codex gpt-5.5 high]
+
+The PBC demag file is also in M3 now, but it is an explicit collected skip
+when =finmag.native.treecode_bem= is unavailable. The module-level
+=importorskip= was replaced with a module-level =skipif= marker so focused
+runs report =2 skipped= with exit code 0 instead of pytest's no-tests-collected
+exit code. [Codex gpt-5.5 high]
+
+The deprecated normal-mode file is also in M3 now. The Kittel sphere failure
+was traced to ARPACK's implicit random start vector in SciPy =1.17.1=; the
+deprecated generalised solver now uses a deterministic alternating =v0= when
+callers do not provide one. The focused file passes as =5 passed, 1 skipped=,
+and the pixi/M3 suite now lists all =101= files from
+=dev/bin/verify-python3-core-suite=. [Codex gpt-5.5 high]
+
+The previous increment promoted the conda-forge =oommf= package into the pixi
+environment and moved real OOMMF cross-code comparisons into M3:
+
+- =src/finmag/tests/oommf/test_anisotropy.py=
+- =src/finmag/tests/oommf/test_exchange.py=
+- =src/finmag/tests/comparison/test_dmdt.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+- =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+
+The focused OOMMF/reference-data subset passes as =9 passed=, and the full
+=dev/bin/verify-python3-m3= gate exits successfully with the files above
+included. =nsim= remains intentionally absent: the promoted exchange file
+uses checked-in Nmag reference data and does not require installing the Nmag
+toolchain. [Codex GPT-5.4]
+
+The previous increment promoted:
+
+- =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
+
+This promotes the Zeeman regression file after numerical review of the
+stray-field sphere-vs-dipole comparison. The DOLFIN-2019/Netgen mesh produced
+a slightly larger pointwise absolute tail with the old sphere resolution
+(about =150.9= A/m versus the historical =140.0= A/m guard), while the
+relative checks still passed. The test now refines only the magnetic sphere
+(=maxh_sphere= = =2.0=) so the original absolute tolerance remains a real
+regression guard rather than being relaxed. [Codex GPT-5.4]
+
+It also promotes the non-PBC demag/BEM regression files. The old Magpar
+boundary-element reference helper now has a NumPy fallback for the removed
+=instant= JIT package, and the BEM tests use the same DOLFIN-2019
+=BoundaryMesh=-to-array native fallback as production =FKDemag=. The
+unported legacy GCR branch remains an explicit skip. [Codex GPT-5.4]
+
+Earlier M3 work handled the fact that the DOLFIN-2019 /=pixi= path no longer
+has =dolfin.compile_extension_module=, keeping those tests active by
+providing a small Python fallback for the old
+=Equation=/=terms= wrapper when the legacy native hook is unavailable.
+The legacy Docker path continues to exercise the compiled implementation.
+
+Follow-up validation now also keeps backend confidence alive explicitly:
+
+- direct native-vs-Python parity tests for the low-level =terms= helpers
+- direct native-vs-Python parity tests for =Equation.solve()= and pinning
+- a Python-fallback =jtimes= finite-difference contract test
+- checked-in native reference data in
+  =src/finmag/physics/tests/equation_reference_data.json= so the fallback can
+  still be compared against legacy native results after the container backend
+  disappears
+- a benchmark report on the legacy/native stack showing the Python fallback
+  is substantially slower (roughly two orders of magnitude on a small
+  looped solve micro-benchmark), so it should be treated as a compatibility
+  bridge rather than a production-performance replacement
+
+The newly promoted M3 coverage includes:
+
+- =src/finmag/tests/zhangli/zhang_li_test.py=
+- =src/finmag/tests/zhangli/stt_nonlocal_test.py=
+- =src/finmag/tests/test_skyrmions.py=
+- =src/finmag/tests/test_solid_angle.py=
+- =src/finmag/tests/test_solid_angle_invariance.py=
+- =src/finmag/physics/tests/neb/neb_test.py=
+- =src/finmag/physics/llb/sllg_test.py=
+- =src/finmag/physics/llb/llb_test.py=
+- =src/finmag/util/meshes_test.py=
+- =src/finmag/sim/sim_helpers_test.py=
+- =src/finmag/sim/magnetisation_patterns_test.py=
+- =src/finmag/sim/hysteresis_test.py=
+- =src/finmag/tests/test_meshes.py=
+- =src/finmag/util/mesh_templates_test.py=
+- =src/finmag/util/helpers_test.py=
+- =src/finmag/util/length_scales_test.py=
+- =src/finmag/util/pbc_test.py=
+- =src/finmag/util/plot_helpers_test.py=
+- =src/finmag/util/vtk_saver_test.py=
+- =src/finmag/util/fileio_test.py=
+- =src/finmag/util/dmi_helper_test.py=
+- =src/finmag/util/test_set_function_values.py=
+- =src/finmag/util/test_dmi_from_helix.py=
+- =src/finmag/drivers/tests/sundials_nsteps_test.py=
+- =src/finmag/drivers/tests/sundials_reinit_test.py=
+- =src/finmag/drivers/tests/test_scipy.py=
+- =src/finmag/drivers/tests/test_integrators.py=
+- =src/finmag/util/ode/tests/test_sundials_stiff_ode.py=
+- =src/finmag/tests/jacobean/test_jacobean_computation.py=
+- =src/finmag/tests/jacobean/test_jacobean_integration.py=
+- =src/finmag/tests/jacobean/test_native_llg.py=
+- =src/finmag/util/oommf/test_mesh.py=
+- =src/finmag/util/visualization_test.py=
+- =src/finmag/util/fft_test.py=
+- =src/finmag/energies/dmi_test.py=
+- =src/finmag/energies/magnetostatic_field_test.py=
+- =src/finmag/energies/zeeman_test.py=
+- =src/finmag/tests/demag/test_bem_computation.py=
+- =src/finmag/tests/demag/test_demag_sphere.py=
+- =src/finmag/drivers/tests/test_relaxation.py=
+- =src/finmag/drivers/tests/test_relax_two_times.py=
+- =src/finmag/tests/test_time.py=
+- =src/finmag/scheduler/scheduler_test.py=
+- =src/finmag/tests/test_cyclic_references_in_sim.py=
+- =src/finmag/tests/bugs/test_bug_ndt_file_writing.py=
+- =src/finmag/tests/cython/test_cython.py=
+- =src/finmag/physics/tests/test_effective_field.py=
+- =src/finmag/tests/test_jacobian.py=
+- =src/finmag/normal_modes/eigenmodes/helpers_test.py=
+- =src/finmag/normal_modes/eigenmodes/eigenproblems_test.py=
+- =src/finmag/normal_modes/eigenmodes/eigensolvers_test.py=
+- =src/finmag/field_setters_test.py=
+- =src/finmag/field_test.py=
+- =src/finmag/tests/oommf/test_anisotropy.py=
+- =src/finmag/tests/oommf/test_exchange.py=
+- =src/finmag/tests/comparison/test_dmdt.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_oommf.py=
+- =src/finmag/tests/comparison/anisotropy/test_cubic_anis_oommf.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_field.py=
+- =src/finmag/tests/comparison/anisotropy/test_anis_magpar.py=
+- =src/finmag/tests/comparison/demag/test_demag_field.py=
+- =src/finmag/tests/comparison/exchange/test_exchange_compare_magpar.py=
+- =src/finmag/tests/test_sim_parallel.py=
+- =src/finmag/tests/nmag/anisotropy_1d/test_nmag_1d_anisotropy.py=
+- =src/finmag/tests/nmag/exchange_1d/test_exchange_1d.py=
+- =src/finmag/tests/nmag/exchange_3d/test_dynamics_3D.py=
+- =src/finmag/tests/nmag/spinwaves/test_spinwaves.py=
+- =src/finmag/tests/slonczewski/validation/finmag/test_finmag_validation.py=
+- =src/finmag/tests/slonczewski/oscillator/test_oscillator.py=
+- =src/finmag/energies/demag/demag_pbc_test.py=
+- =src/finmag/normal_modes/deprecated/normal_modes_deprecated_test.py=
+
+The enabling compatibility work in this increment was:
+
+- =finmag.util.helpers.vector_valued_function()= and
+  =scalar_valued_function()= now accept =UserExpression= and initialize
+  callable helper expressions in the DOLFIN 2019-compatible order
+- =finmag.physics.llg_stt.LLG_STT= now reads PETSc-backed vectors through
+  =get_local()= on the M3 path instead of relying on the removed =array()=
+  accessor
+- =test_zhangli_sllg= now skips explicitly when the separate
+  =finmag.native.llb= extension is unavailable, so the deterministic
+  Zhang-Li path can stay in the gate without forcing the stochastic
+  =sllg= native module into the first pixi build
+- =finmag.util.solid_angle_magpar.return_csa_magpar()= now falls back to a
+  NumPy implementation of the Magpar solid-angle reference formula when the
+  old =instant= JIT helper package is unavailable on the pixi path
+- =finmag.physics.neb= now imports without =finmag.native.neb= for helper-only
+  use, and defers the native-module requirement to the actual tangent
+  computation path used by full NEB runs
+- the pixi native build now includes =llb.so= again, and the DOLFIN 2019
+  =sllg= runtime path uses =get_local()= on PETSc-backed vectors instead of
+  the removed =.array()= accessor
+- =finmag.util.meshes.build_mesh()= now opens =MeshEditor= with the DOLFIN
+  2019 cell-type string API, and Gmsh export is forced to =msh2= so the
+  legacy =dolfin-convert= bridge remains usable on the pixi path
+- =finmag.sim.sim_savers.FieldSaver= and the skyrmion-density helper in
+  =finmag.sim.sim_helpers= now use =get_local()= on PETSc-backed vectors
+  instead of relying on the removed =.array()= accessor
+- =finmag.normal_modes.eigenmodes.helpers= now passes =rcond=None= into
+  =numpy.linalg.lstsq()= and uses a raw docstring for the linear-combination
+  helper, which removes NumPy API drift warnings from the promoted M3 slice
+- the normal-mode eigenproblem/eigensolver tests now work on the pixi path
+  after:
+  - switching old pytest =setup()= hooks to =setup_method()=
+  - replacing positional Matplotlib =legend(..., 'lower center')= calls with
+    the modern keyword form
+  - adding a local DOLFIN 2019 timing fallback in
+    =finmag.normal_modes.eigenmodes.eigensolvers=
+- the field setter/field regression files now work on the pixi path after:
+  - switching the large =TestField= fixture class to =setup_method()=
+  - replacing removed PETSc vector =.array()= and =.abs()= assumptions in the
+    tests with =get_local()= and NumPy-based comparisons
+  - treating the removed DOLFIN Python =Function.label()= accessor as optional
+- =finmag.sim.Simulation.schedule()= now uses a Python 3.11-safe
+  =inspect.getfullargspec= fallback instead of the removed
+  =inspect.getargspec=
+- =finmag.util.meshes= now falls back to the Netgen Python API when the
+  conda-forge =netgen= package does not ship a legacy CLI executable, and
+  launched-and-hung Netgen probes fail loudly rather than degrading into a
+  skip
+- =finmag.util.meshes= now uses Matplotlib's supported
+  =add_subplot(..., projection='3d')= path on this stack
+- =finmag.util.helpers= and its exercised callers now consistently use
+  =get_local()= on PETSc-backed vectors, accept =UserExpression=-compatible
+  callable helpers, and avoid the removed
+  =df.parameters.reorder_dofs_serial= attribute on the DOLFIN 2019 path
+- =finmag.drivers.sundials_integrator.SundialsIntegrator.advance_steps()=
+  now recognizes the expected "stop after mxstep" condition via actual
+  integrator step counts instead of relying only on older exception text from
+  SUNDIALS wrappers
+- the Robertson stiff-ODE regression in
+  =src/finmag/util/ode/tests/test_sundials_stiff_ode.py= now uses
+  =scipy.integrate.solve_ivp(..., method="BDF")= as the modern SciPy stiff
+  reference instead of the old =ode(..., "vode")= path, whose behaviour has
+  changed substantially between SciPy =0.19.1= and =1.17.1=
+- the two transposed-Robertson cases are now explicit
+  =xfail(strict=True)= coverage of known pathological failure modes instead of
+  passing negative tests that only checked for work-budget exhaustion
+- =src/finmag/tests/jacobean/test_native_llg.py= now uses =get_local()= for
+  the PETSc-backed alpha vector on the DOLFIN 2019 path
+- the OOMMF-backed comparison tests now run in M3 because =oommf= is available
+  from conda-forge; =src/finmag/tests/comparison/test_dmdt.py= and the
+  exchange comparison use =get_local()= for DOLFIN-2019 PETSc vectors instead
+  of the removed =.array()= accessor. [Codex GPT-5.4]
+- the remaining Magpar comparison files now avoid invalid Python string
+  escapes in their reST table labels; this keeps the newly promoted M3 slice
+  warning-clean at the pytest level. [Codex gpt-5.5 high]
+- =compute_normal_modes_generalised()= in the deprecated normal-mode module
+  now uses a deterministic alternating ARPACK start vector when =v0= is not
+  supplied, stabilising the Kittel-mode regression on SciPy =1.17.1=. [Codex
+  gpt-5.5 high]
+
+Current M3 boundaries remain explicit:
+
+- full NEB tangent computations still require =finmag.native.neb=, even
+  though the helper-only regression file =src/finmag/physics/tests/neb/neb_test.py=
+  now runs in M3
+- =nsim= remains outside the pixi environment because it is not reasonable to
+  install on this track; tests promoted here rely on checked-in Nmag reference
+  data rather than executing =nsim=. [Codex GPT-5.4]
+- =src/finmag/energies/demag/demag_pbc_test.py= is included in M3 as an
+  explicit collected skip until the pixi native build provides a working
+  =treecode_bem= extension. The next step is to build and activate the native
+  extension under pixi, not to add a NumPy fallback first. [Codex gpt-5.5
+  high]

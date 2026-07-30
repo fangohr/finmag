@@ -1,5 +1,9 @@
 import numpy as np
-from finmag.native.llg import compute_solid_angle
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: from finmag.native.llg import compute_solid_angle
+    from finmag.native.llg import compute_solid_angle
+except ImportError:
+    compute_solid_angle = None  # not ported (D33): tests below xfail
 import scipy.linalg
 import scipy.stats
 import math
@@ -81,6 +85,8 @@ class SolidAngleInvarianceTests(unittest.TestCase):
     # The solid angle is invariant under 3d rotations that preserve orientation (SO(3))
     # and changes sign for orthogonal transformations that change orientation
     # (O(3) transformations not in SO(3))
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: native solid-angle kernel, no separate DOLFINx solid-angle gate (D33)", strict=True)
     def test_solid_angle(self):
         np.random.seed(1)
         for i in range(1000):

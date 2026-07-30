@@ -1,8 +1,15 @@
 from finmag.util.mesh_templates import Box, Sphere, Nanodisk, EllipticalNanodisk
 from finmag.util.meshes import mesh_info, plot_mesh_with_paraview
-from finmag.normal_modes.deprecated.normal_modes_deprecated import *
+try:  # master: from finmag.normal_modes.deprecated.normal_modes_deprecated import *
+    from finmag.normal_modes.deprecated.normal_modes_deprecated import *
+except ImportError:
+    pass  # not ported (D33): tests below xfail; names below stay undefined
 from finmag import example
-from finmag import sim_with, normal_mode_simulation
+try:  # master: from finmag import sim_with, normal_mode_simulation
+    from finmag import sim_with, normal_mode_simulation
+except (ImportError, NotImplementedError):
+    sim_with = None  # not ported (D33): tests below xfail
+    normal_mode_simulation = None
 from math import pi
 import logging
 import os
@@ -13,6 +20,8 @@ logger = logging.getLogger("finmag")
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_check_Kittel_mode_for_single_sphere(tmpdir, debug=False):
     """
     Compute the eigenmodes of a perfect sphere and check that the
@@ -125,6 +134,8 @@ def test_passing_scipy_eigsh_parameters(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_plot_spatially_resolved_normal_mode(tmpdir):
     os.chdir(str(tmpdir))
     d = 60
@@ -189,6 +200,8 @@ def test_plot_spatially_resolved_normal_mode(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_plot_spatially_resolved_normal_mode2(tmpdir):
     os.chdir(str(tmpdir))
     sim = example.normal_modes.disk(relaxed=True)
@@ -209,6 +222,8 @@ def test_plot_spatially_resolved_normal_mode2(tmpdir):
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     os.chdir(str(tmpdir))
     disk1 = Nanodisk(d=60, h=5, center=(-70, 0, 0), name="sphere1")
@@ -243,6 +258,8 @@ def test_plot_spatially_resolved_normal_mode_in_region(tmpdir):
     assert(os.path.exists('normal_mode_00_disk2.png'))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal modes / eigensolvers (register C17)", strict=True)
 def test_is_hermitian():
     """
     Simple test to check if the helper function `is_hermitian` tests

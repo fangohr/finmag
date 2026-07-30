@@ -1,3 +1,9 @@
+# DOLFINx port (Task 30): pure post-processing script (no dolfin/finmag-runtime
+# dependency), kept as-is. It plots FinMag's dynamics.ndt against the Martinez
+# reference. It is directly runnable (matplotlib works in the env); it requires
+# a FULL std_prob_4 trace -- run `FINMAG_EXAMPLE_FULL=1 python
+# test_std_prob_4.py` first to produce the full 2 ns dynamics.ndt this consumes.
+# [Claude Opus 4.8]
 import os
 import numpy as np
 import matplotlib.pyplot as plt

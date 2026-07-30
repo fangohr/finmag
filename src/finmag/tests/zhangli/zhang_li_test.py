@@ -1,6 +1,9 @@
 import pytest
 import os
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 import matplotlib as mpl
 mpl.use("Agg")
@@ -42,6 +45,8 @@ def init_J(pos):
     return (1e12, 0, 0)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: nonlocal LLG_STT spin-accumulation model, local STT terms covered by dolfinx-src-stt-pytest (register M5/D30)", strict=True)
 def test_zhangli():
 
     #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
@@ -68,10 +73,9 @@ def test_zhangli():
     assert abs(p1[0]) > 1e-3
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: nonlocal LLG_STT spin-accumulation model, local STT terms covered by dolfinx-src-stt-pytest (register M5/D30)", strict=True)
 def test_zhangli_sllg():
-    # Keep the deterministic Zhang-Li path in M3, but only exercise the
-    # stochastic sllg variant when the separate llb native module is built. [Codex GPT-5.4]
-    pytest.importorskip("finmag.native.llb")
 
     #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 1, 1), 50, 1, 1)
     mesh = df.IntervalMesh(50, 0, 100)
@@ -118,10 +122,10 @@ def compare_gradient_field1():
 
     f2 = field.copy()
     f2.shape = (3, -1)
-    print(f2)
+    print(f2)  # py3 syntax fix (D33)
     i = 0
     for c in coords:
-        print(c, field_at(c))
+        print(c, field_at(c))  # py3 syntax fix (D33)
         f2[0][i], f2[1][i], f2[2][i] = field_at(c)
         i += 1
     f2.shape = (-1,)
@@ -131,7 +135,7 @@ def compare_gradient_field1():
     df.plot(v2)
 
     df.interactive()
-    print(field)
+    print(field)  # py3 syntax fix (D33)
 
 
 def init_J_xy(pos):
@@ -193,8 +197,8 @@ def compare_gradient_field2():
     df.plot(v)
     df.plot(v2)
 
-    print(np.abs(field - f2))
-    print(f2)
+    print(np.abs(field - f2))  # py3 syntax fix (D33)
+    print(f2)  # py3 syntax fix (D33)
 
     df.interactive()
 

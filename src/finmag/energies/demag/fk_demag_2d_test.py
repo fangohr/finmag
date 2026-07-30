@@ -1,10 +1,16 @@
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.energies.demag.fk_demag_2d import Demag2D
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    Demag2D = None
 import numpy as np
 import pytest
 from finmag.field import Field
-from finmag.energies.demag.fk_demag_2d import Demag2D
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: Demag2D (register M7)", strict=True)
 def test_create_mesh():
     mesh = df.UnitSquareMesh(20, 2)
 
@@ -24,6 +30,8 @@ def test_create_mesh():
         assert abs(coord1[i][1] - coord2[i + nv][1]) < eps
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: Demag2D (register M7)", strict=True)
 def test_demag_2d(plot=False):
     mesh = df.UnitSquareMesh(4, 4)
 

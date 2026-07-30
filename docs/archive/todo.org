@@ -1,0 +1,9 @@
+> **ARCHIVED (2026-07-29).** Historical record of the porting process; statements reflect their writing date. Current truth: docs/README.md.
+
+* <2026-04-19 Sun> Things to follow up on after transition to python3 / new dolfin
+
+
+** src/finmag/energies/test_energies_in_regions.py
+See XXX 2026-04-18
+
+

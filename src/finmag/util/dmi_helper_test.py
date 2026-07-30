@@ -1,9 +1,13 @@
 import pytest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.dmi_helper import compute_skyrmion_number_2d
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    compute_skyrmion_number_2d = None
 from finmag import Simulation
 from finmag.energies import Exchange, DMI, Zeeman
-from finmag.util.dmi_helper import compute_skyrmion_number_2d
 
 
 def init_skx_down(pos):
@@ -39,6 +43,8 @@ def compute_skyrmion_number_2d_example():
     print(compute_skyrmion_number_2d(sim.m_field.f))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API DMI-helper skyrmion test, capability covered by dolfinx-src-dmi-pytest (D33)", strict=True)
 def test_compute_skyrmion_number_2d_pbc():
 
     mesh = df.RectangleMesh(df.Point(0, 0), df.Point(100, 100), 40, 40)

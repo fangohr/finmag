@@ -1,10 +1,17 @@
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.oommf import mesh
+    from finmag.util.oommf.comparison import compare_anisotropy
+    from finmag.util.helpers import stats
+except ImportError:
+    # not ported (D33): tests below xfail (or skip -- oommf executable is
+    # also unavailable in this environment, see pytestmark below)
+    df = None
+    mesh = compare_anisotropy = None
+    stats = None
 import numpy as np
 import shutil
 import pytest
-from finmag.util.oommf import mesh
-from finmag.util.oommf.comparison import compare_anisotropy
-from finmag.util.helpers import stats
 
 K1 = 45e4  # J/m^31
 Ms = 0.86e6

@@ -1,6 +1,11 @@
 import numpy as np
-import dolfin as df
-from finmag.util.helpers import stats
+import pytest  # D33: added for the not_ported/xfail marker below (master had no pytest import)
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.helpers import stats
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
+    stats = None
 from finmag.energies import UniaxialAnisotropy, CubicAnisotropy
 from finmag import Simulation
 
@@ -12,6 +17,8 @@ mz = 0
 mu0 = 4 * np.pi * 1e-7
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy test, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_anisotropy():
     mesh = df.IntervalMesh(1, 0, 1)
     sim = Simulation(mesh, Ms, unit_length=1e-9)

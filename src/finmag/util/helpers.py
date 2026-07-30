@@ -9,6 +9,31 @@ except Exception:
     render_paraview_scene = None
 from finmag.util.versions import get_version_dolfin
 from finmag.util import ansistrm
+# SR1 P2.1: ``set_logging_level`` now lives in a stdlib-only module so the
+# public ``finmag.set_logging_level`` resolves without legacy dolfin; this
+# re-export keeps the historical ``finmag.util.helpers`` spelling working.
+# SR1 P4-helpers extends the same treatment to the other pure-stdlib logging
+# helpers (``start_logging_to_file`` and the ``logging_*_str`` introspection
+# pair) so DOLFINx callers reach them without importing this dolfin-bound
+# module; the re-export keeps ``from finmag.util.helpers import
+# start_logging_to_file`` working for the legacy lane.
+# [Claude Opus 4.8]
+from finmag.util.logging_helpers import (
+    set_logging_level,
+    start_logging_to_file,
+    logging_status_str,
+    logging_handler_str,
+)
+# SR1 S1b: ``cartesian_to_spherical``/``spherical_to_cartesian`` are pure-numpy
+# vector maths that never touched ``dolfin``; they now live in
+# ``finmag.util.array_helpers`` (no FEM dependency at all) so callers that only
+# need the coordinate conversion can import it dolfin-free. Re-imported here,
+# verbatim behaviour, so the legacy spelling ``from finmag.util.helpers import
+# spherical_to_cartesian`` keeps working. [Claude Sonnet 5]
+from finmag.util.array_helpers import (  # noqa: F401
+    cartesian_to_spherical,
+    spherical_to_cartesian,
+)
 from threading import Timer
 from distutils.version import LooseVersion
 import subprocess as sp
@@ -94,65 +119,12 @@ def create_missing_directory_components(filename):
             os.makedirs(dirname)
 
 
-def logging_handler_str(handler):
-    """
-    Return a string describing the given logging handler.
-
-    """
-    if handler.__class__ == logging.StreamHandler:
-        handlerstr = str(handler.stream)
-    elif handler.__class__ in [logging.FileHandler, logging.handlers.RotatingFileHandler]:
-        handlerstr = str(handler.baseFilename)
-    else:
-        handlerstr = str(handler)
-    return handlerstr
-
-
-def logging_status_str():
-    """
-    Return a string that shows all known loggers and their current levels.
-    This is useful for debugging of the logging module.
-
-    """
-    rootlog = logging.getLogger('')
-    msg = ("Current logging status: "
-           "rootLogger level=%2d\n" % rootlog.level)
-
-    # This keeps the loggers (with the exception of root)
-    loggers = logging.Logger.manager.loggerDict
-    for loggername, logger in [('root', rootlog)] + list(loggers.items()):
-        # check that we have any handlers at all before we attempt
-        # to iterate
-        if hasattr(logger, 'handlers'):
-            for i, handler in enumerate(logger.handlers):
-                handlerstr = logging_handler_str(handler)
-                msg += (" %15s (lev=%2d, eff.lev=%2d) -> handler %d: lev=%2d %s\n"
-                        % (loggername, logger.level, logger.getEffectiveLevel(),
-                           i, handler.level, handlerstr))
-        else:
-                msg += (" %15s -> %s\n"
-                        % (loggername, "no handlers found"))
-
-    return msg
-
-
-def set_logging_level(level):
-    """
-    Set the level for finmag log messages.
-
-    *Arguments*
-
-    level: string
-
-       One of the levels supported by Python's `logging` module.
-       Supported values: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' and
-       the finmag specific level 'EXTREMEDEBUG'.
-    """
-    if level not in ['EXTREMEDEBUG', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
-        raise ValueError("Logging level must be one of: 'DEBUG', 'INFO', "
-                         "'WARNING', 'ERROR', 'CRITICAL'")
-    logger.setLevel(level)
-
+# SR1 P4-helpers: ``logging_handler_str`` / ``logging_status_str`` /
+# ``start_logging_to_file`` were lifted verbatim into the stdlib-only
+# ``finmag.util.logging_helpers`` (they never touched dolfin) and are imported
+# at the top of this module so DOLFINx callers can reach them without importing
+# this dolfin-bound file; the legacy ``from finmag.util.helpers import ...``
+# spelling keeps resolving via that re-export. [Claude Opus 4.8]
 
 supported_color_schemes = ansistrm.level_maps.keys()
 supported_color_schemes_str = ", ".join(
@@ -183,77 +155,9 @@ set_color_scheme.__doc__ = set_color_scheme.__doc__.format(
     supported_color_schemes_str)
 
 
-def start_logging_to_file(filename, formatter=None, mode='a', level=logging.DEBUG, rotating=False, maxBytes=0, backupCount=1):
-    """
-    Add a logging handler to the "finmag" logger which writes all
-    (future) logging output to the given file. It is possible to call
-    this multiple times with different filenames. By default, if the
-    file already exists then new output will be appended at the end
-    (use the 'mode' argument to change this).
-
-    *Arguments*
-
-    formatter: instance of logging.Formatter
-
-        For details, see the section 'Formatter Objectsion' in the
-        documentation of the logging module.
-
-    mode: ['a' | 'w']
-
-        Determines whether new content is appended at the end ('a') or
-        whether logfile contents are overwritten ('w'). Default: 'a'.
-
-    rotating: bool
-
-        If True (default: False), limit the size of the logfile to
-        `maxBytes` (0 means unlimited). Once the file size is near
-        this limit, a 'rollover' will occur. See the docstring of
-        `logging.handlers.RotatingFileHandler` for details.
-
-    *Returns*
-
-    The newly created logging hander is returned.
-    """
-    if formatter is None:
-        formatter = logging.Formatter(
-            '[%(asctime)s] %(levelname)s: %(message)s', datefmt='%H:%M:%S')
-
-    filename = os.path.abspath(os.path.expanduser(filename))
-    dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    h = logging.handlers.RotatingFileHandler(
-        filename, mode=mode, maxBytes=maxBytes, backupCount=backupCount)
-    h.setLevel(level)
-    h.setFormatter(formatter)
-    if mode == 'a':
-        logger.info("Finmag logging output will be appended to file: "
-                    "'{}'".format(filename))
-    else:
-        # XXX FIXME: There is still a small bug here: if we create
-        # multiple simulations with the same name from the same
-        # ipython session, the logging output of the first will not be
-        # deleted. For example:
-        #
-        #    from finmag import sim_with
-        #    import dolfin as df
-        #    import logging
-        #
-        #    logger = logging.getLogger("finmag")
-        #    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(1, 1, 1), 5, 5, 5)
-        #
-        #    logger.debug("Creating first simulation")
-        #    sim = sim_with(mesh, 1e6, m_init=(1,0,0), name="sim1")
-        #
-        #    logger.debug("Creating second simulation")
-        #    sim = sim_with(mesh, 1e6, m_init=(1,0,0), name="sim1")
-        #
-        # At the end the output of the first simulation is still
-        # present in the logfile "sim1.log".
-        logger.info("Finmag logging output will be written to file: '{}' "
-                    "(any old content will be overwritten).".format(filename))
-    logger.addHandler(h)
-    return h
+# SR1 P4-helpers: ``start_logging_to_file`` moved verbatim to
+# ``finmag.util.logging_helpers`` and is re-exported via the top-of-module
+# import. See the note beside that import. [Claude Opus 4.8]
 
 
 def get_hg_revision_info(repo_dir, revision='tip'):
@@ -1129,36 +1033,6 @@ def duplicate_output_to_file(filename, add_timestamp=False, timestamp_fmt='__%Y-
     tee = sp.Popen(["tee", filename], stdin=sp.PIPE)
     os.dup2(tee.stdin.fileno(), sys.stdout.fileno())
     os.dup2(tee.stdin.fileno(), sys.stderr.fileno())
-
-
-def cartesian_to_spherical(vector):
-    """
-    Converts cartesian coordinates to spherical coordinates.
-
-    Returns a tuple (r, theta, phi) where r is the radial distance, theta
-    is the inclination (or elevation) and phi is the azimuth (ISO standard 31-11).
-
-    """
-    r = np.linalg.norm(vector)
-    unit_vector = np.array(vector) / r
-    theta = np.arccos(unit_vector[2])
-    phi = np.arctan2(unit_vector[1], unit_vector[0])
-    return np.array((r, theta, phi))
-
-
-def spherical_to_cartesian(v):
-    """
-    Converts spherical coordinates to cartesian.
-
-    Expects the arguments r for radial distance, inclination theta
-    and azimuth phi.
-
-    """
-    r, theta, phi = v
-    x = r * np.sin(theta) * np.cos(phi)
-    y = r * np.sin(theta) * np.sin(phi)
-    z = r * np.cos(theta)
-    return np.array((x, y, z))
 
 
 def pointing_upwards(coords):

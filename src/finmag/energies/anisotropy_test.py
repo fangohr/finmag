@@ -1,6 +1,9 @@
 import pytest
 import textwrap
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 from finmag.field import Field
 from finmag.energies import UniaxialAnisotropy
@@ -26,6 +29,8 @@ def fixt():
     return {"anis": anis, "m": m, "a": a, "Ms": Ms, "K1": K1}
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy_test.py, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_interaction_accepts_name(fixt):
     """
     Check that the interaction accepts a 'name' argument and has a 'name' attribute.
@@ -39,6 +44,8 @@ def test_interaction_accepts_name(fixt):
 
 @pytest.mark.parametrize(("m", "expected_E"), [
     ((0, 0, 1), 0), ((0, 0, -1), 0), ((0, 1, 0), 1), ((-1, 0, 0), 1)])
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy_test.py, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     """
     Test some parallel and orthogonal configurations of m and a.
@@ -61,6 +68,8 @@ def test_anisotropy_energy_simple_configurations(fixt, m, expected_E):
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy_test.py, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_anisotropy_energy_analytical(fixt):
     """
     Compare one UniaxialAnisotropy energy with the corresponding analytical result.
@@ -89,6 +98,8 @@ def test_anisotropy_energy_analytical(fixt):
     assert np.allclose(E, expected_E, atol=1e-14, rtol=TOLERANCE)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy_test.py, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_anisotropy_field(fixt):
     """
     Compute one anisotropy field by hand and compare with the UniaxialAnisotropy result.
@@ -114,6 +125,8 @@ def test_anisotropy_field(fixt):
     assert np.allclose(H, dE_dm, atol=0, rtol=TOLERANCE)
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API anisotropy_test.py, capability covered by dolfinx-src-energies-pytest (D33)", strict=True)
 def test_anisotropy_field_supported_methods(fixt):
     """
     Check that all supported methods give the same results as the default method.

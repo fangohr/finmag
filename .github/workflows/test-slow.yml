@@ -1,0 +1,61 @@
+# CI T6 review fix (2026-07-28): GitHub only fires `workflow_dispatch` from
+# the repository's DEFAULT branch (main). This workflow is therefore inert
+# on `dolfinx-parity` -- manual dispatch will not work until this branch
+# merges to main. Until then, run the equivalent locally:
+#   FINMAG_EXAMPLE_FULL=1 pixi run -e dolfinx dolfinx-src-examples-pytest
+# [Claude Sonnet 5]
+name: test-slow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-slow:
+    runs-on: ubuntu-latest
+    # GitHub-hosted runners have a hard 360-minute (6h) job ceiling. The FULL
+    # lane currently needs ~10-13h (register P1, per-evaluation form
+    # re-assembly); it will not fit on hosted runners until the post-SR1
+    # performance plan lands. Until then this workflow documents the tier and
+    # will only complete a run that happens to fit within 360 minutes (e.g. a
+    # partial FULL subset); run the full lane locally otherwise. [Claude
+    # Sonnet 5]
+    timeout-minutes: 360
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    # Same documented two-step native story as test-fast.yml's (formerly
+    # dolfinx-m5.yml) verify-dolfinx-m5 runs internally; test-slow calls the
+    # examples gate directly, so the env build happens here instead.
+    # [Claude Sonnet 5]
+    - name: Install editable package
+      run: pixi run -e dolfinx dolfinx-install-editable
+
+    - name: Build native extensions
+      run: pixi run -e dolfinx dolfinx-native-build
+
+    - name: Provenance check
+      run: pixi run -e dolfinx dolfinx-provenance-check
+
+    - name: Run FULL-workload examples (heavy muMAG / long-dynamics cases)
+      run: |
+        set -o pipefail
+        FINMAG_EXAMPLE_FULL=1 pixi run -e dolfinx dolfinx-src-examples-pytest 2>&1 | tee examples.log
+
+    - name: Publish examples summary
+      if: always()
+      run: |
+        {
+          echo "### test-slow (FULL examples) summary"
+          echo
+          echo '```'
+          tail -n 20 examples.log
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"

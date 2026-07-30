@@ -18,6 +18,8 @@ import numpy as np
 
 from dev.dolfinx.prototype import average_nodal_vector
 from dev.dolfinx.prototype import constant_vector_function
+from dev.dolfinx.prototype import cubic_anisotropy_energy
+from dev.dolfinx.prototype import dmi_energy
 from dev.dolfinx.prototype import exchange_energy
 from dev.dolfinx.prototype import explicit_llg_step
 from dev.dolfinx.prototype import uniaxial_anisotropy_energy
@@ -39,6 +41,12 @@ class RelaxationParameters:
 
     anisotropy_axis: tuple = (0.0, 0.0, 1.0)
     anisotropy_constant: float = 0.25
+    cubic_anisotropy_K1: float = 0.0
+    cubic_anisotropy_K2: float = 0.0
+    cubic_anisotropy_K3: float = 0.0
+    cubic_anisotropy_u1: tuple = (1.0, 0.0, 0.0)
+    cubic_anisotropy_u2: tuple = (0.0, 1.0, 0.0)
+    dmi_constant: float = 0.0
     exchange_constant: float = 1.0
     field: tuple = (0.0, 0.0, 1.0)
     saturation_magnetisation: float = 1.0
@@ -48,6 +56,8 @@ class RelaxationParameters:
         """Reject invalid prototype parameters before DOLFINx form assembly."""
         _validate_vector("field", self.field)
         _validate_vector("anisotropy_axis", self.anisotropy_axis)
+        _validate_vector("cubic_anisotropy_u1", self.cubic_anisotropy_u1)
+        _validate_vector("cubic_anisotropy_u2", self.cubic_anisotropy_u2)
         if self.anisotropy_constant < 0:
             raise ValueError("anisotropy_constant must be non-negative")
         if self.exchange_constant < 0:
@@ -97,7 +107,15 @@ def parameters_as_summary(parameters):
 
 
 def total_energy(magnetisation, parameters):
-    """Compute the reduced prototype energy used by the example."""
+    """Compute the reduced prototype energy used by the example.
+
+    ``dmi_constant`` defaults to ``0.0`` so the existing 2D unit-square example
+    stays inert with respect to DMI: ``dmi_energy`` only supports 3D meshes, and
+    a non-zero ``dmi_constant`` on this 2D example will raise explicitly rather
+    than silently doing the wrong thing. Cubic anisotropy has no such
+    dimensionality restriction and can be exercised directly on this example.
+    [GitHub Copilot / Claude Sonnet 5]
+    """
     return (
         exchange_energy(
             magnetisation,
@@ -114,6 +132,20 @@ def total_energy(magnetisation, parameters):
             magnetisation,
             axis=parameters.anisotropy_axis,
             anisotropy_constant=parameters.anisotropy_constant,
+            unit_length=parameters.unit_length,
+        )
+        + dmi_energy(
+            magnetisation,
+            dmi_constant=parameters.dmi_constant,
+            unit_length=parameters.unit_length,
+        )
+        + cubic_anisotropy_energy(
+            magnetisation,
+            u1=parameters.cubic_anisotropy_u1,
+            u2=parameters.cubic_anisotropy_u2,
+            K1=parameters.cubic_anisotropy_K1,
+            K2=parameters.cubic_anisotropy_K2,
+            K3=parameters.cubic_anisotropy_K3,
             unit_length=parameters.unit_length,
         )
     )
@@ -223,6 +255,12 @@ def _validate_summary_parameters(parameters):
     RelaxationParameters(
         anisotropy_axis=tuple(parameters["anisotropy_axis"]),
         anisotropy_constant=parameters["anisotropy_constant"],
+        cubic_anisotropy_K1=parameters["cubic_anisotropy_K1"],
+        cubic_anisotropy_K2=parameters["cubic_anisotropy_K2"],
+        cubic_anisotropy_K3=parameters["cubic_anisotropy_K3"],
+        cubic_anisotropy_u1=tuple(parameters["cubic_anisotropy_u1"]),
+        cubic_anisotropy_u2=tuple(parameters["cubic_anisotropy_u2"]),
+        dmi_constant=parameters["dmi_constant"],
         exchange_constant=parameters["exchange_constant"],
         field=tuple(parameters["field"]),
         saturation_magnetisation=parameters["saturation_magnetisation"],

@@ -1,5 +1,8 @@
 from __future__ import division
-from finmag.util.fft import *
+try:  # master: from finmag.util.fft import *
+    from finmag.util.fft import *
+except ImportError:
+    pass  # not ported (D33): tests below xfail; names below stay undefined
 from numpy import sqrt, sin, cos, pi, exp, real, conj
 from finmag.util.consts import gamma
 import numpy as np
@@ -9,6 +12,8 @@ import matplotlib.pyplot as plt
 from finmag.util import fft_test_helpers
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_analytical_inverse_DFT(tmpdir, debug=False):
     """
     We construct a simple signal as a superposition of two sinusoidal
@@ -101,11 +106,15 @@ def test_analytical_inverse_DFT(tmpdir, debug=False):
             plt.savefig('fft_test_02_filtered_signal_for_k_{}.pdf'.format(k))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_wrong_file_suffix_for_power_spectral_density():
     with pytest.raises(ValueError):
         compute_power_spectral_density('datafile.foo')
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     """
     Write a time series of artificial magnetisation data (created from
@@ -167,6 +176,8 @@ def test_power_spectral_density_from_averaged_magnetisation(tmpdir):
     assert(np.allclose(freqs_res, freqs_np, atol=0, rtol=RTOL))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir, debug=False):
     """
     First we write some 'forged' spatially resolved magnetisation
@@ -250,6 +261,8 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation(tmpdir, de
         fig.savefig('psd_m_McMichaelStiles.png')
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_to_mesh_region(tmpdir, debug=False):
     """
     First we write some 'forged' spatially resolved magnetisation
@@ -336,6 +349,8 @@ def test_power_spectral_density_from_spatially_resolved_magnetisation_confined_t
         fig.savefig('psd_m_McMichaelStiles.png')
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_find_peak_near_frequency(tmpdir, debug=False):
     """
     Check that `find_peak_near_frequency` works as expected, including
@@ -388,6 +403,8 @@ def test_find_peak_near_frequency(tmpdir, debug=False):
 
 
 @pytest.mark.requires_X_display
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: normal-mode/FFT analysis (register C17)", strict=True)
 def test_plot_power_spectral_density(tmpdir):
     os.chdir(str(tmpdir))
 

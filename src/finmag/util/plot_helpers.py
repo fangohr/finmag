@@ -5,6 +5,7 @@ Does not offer much flexibility, but can be helpful for quick visualisation
 of data in an ipython notebook for instance.
 
 """
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -12,7 +13,30 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import axes3d  # used in fig.gca(projection="3d")
 from finmag.util.fileio import Tablereader
 import types
-from .helpers import *
+
+# NOTE: this module used to do ``from .helpers import *`` which pulled in
+# ``finmag.util.helpers`` (module-scope ``import dolfin``) and made these
+# backend-neutral matplotlib helpers unimportable in the DOLFINx environment.
+# The wildcard actually supplied exactly two names: the pure-os
+# ``create_missing_directory_components`` (inlined below, used by
+# ``plot_hysteresis_loop``) and the pure-numpy ``components`` (imported
+# narrowly inside the still-deferred ``quiver`` alongside its mayavi/dolfin
+# backends). Sourcing them this way keeps ``import finmag.util.plot_helpers``
+# free of legacy ``dolfin`` while preserving behaviour. [SR1 P4-viz]
+
+
+def create_missing_directory_components(filename):
+    """
+    Creates any directory components in 'filename' which don't exist yet.
+    For example, if filename='/foo/bar/baz.txt' then the directory /foo/bar
+    will be created.
+    """
+    # Create directory part if it does not exist
+    dirname = os.path.dirname(filename)
+    if dirname != '':
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
 
 def surface_2d(x, y, u, labels=("", "", ""), title="",
                ylim=None, xlim=None, clim=None, cmap=cm.coolwarm, path="", **kwargs):
@@ -68,6 +92,10 @@ def quiver(f, mesh, filename=None, title="", **kwargs):
     from mayavi import mlab
     from dolfin.cpp import Mesh as dolfin_mesh
     from finmag.util.oommf.mesh import Mesh as oommf_mesh
+    # ``components`` is a pure-numpy reshape helper; imported here (not at
+    # module scope) so it only pulls legacy ``dolfin`` via helpers on this
+    # already-deferred mayavi/dolfin path, never on plain ``import``.
+    from finmag.util.helpers import components
 
     if isinstance(mesh, dolfin_mesh):
         coords = mesh.coordinates()

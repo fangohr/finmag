@@ -1,3 +1,9 @@
+# DOLFINx port (Task 30): DEFERRED example -- NOT converted.
+# Normal-mode / spin-wave dispersion. Requires Task 25 (normal modes /
+# dispersion, NOT ported). Also uses from_geofile(width_modulated_bar.geo),
+# whose 'multitranslate' CSG construct is intentionally unsupported by the
+# ported Netgen-CSG reader.
+# [Claude Opus 4.8]
 import os
 import subprocess
 import numpy as np

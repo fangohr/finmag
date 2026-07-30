@@ -1,3 +1,10 @@
+# Task 32 (2026-07-22): probes the historical `finmag/finmag` Docker Hub
+# images (:latest, :dependencies). `workflow_dispatch`-only (never fired by
+# push/pull_request) since before this task; left that way deliberately rather
+# than deleted -- those images predate the pixi/dolfinx transition and are not
+# rebuilt by this repo's CI, so an automatic trigger would just be flaky noise
+# unrelated to any branch's changes. Kept for manual/historical use only.
+# [Claude Sonnet 5]
 name: docker-image
 
 on:

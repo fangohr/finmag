@@ -1,147 +1,81 @@
-import os
-import textwrap
-import dolfin as df
-import numpy as np
-from .demag import Demag
+"""Curated by-name deferral: ``FixedEnergyDW`` (Task 19, Task 29 review item).
+
+``FixedEnergyDW`` approximates a fixed domain-wall boundary condition by
+duplicating the mesh some ``repeat_time`` times along ``x`` on either side,
+assigning a saturated ``left``/``right`` magnetisation to each duplicate, and
+summing the resulting stray (demag) field contributions at the original mesh's
+nodes. Unlike :class:`finmag.energies.thin_film_demag.ThinFilmDemag` (Task
+19's other, directly ported class), this is NOT a self-contained port
+candidate on the ported DOLFINx stack:
+
+1. **Untested even on legacy master.** There is no ``dw_fixed_energy_test.py``
+   (or any test) anywhere in the legacy tree; the only usage is an
+   interactive notebook
+   (``doc/ipython_notebooks_src/ref-domain-wall-energy-class.ipynb``) whose
+   own committed output cell is a Python traceback, and legacy's own todo
+   list records: *"[2014-01-16 Thu] The computation with the FixedEnergyDW
+   class is broken."* (``doc/ipython_notebooks_src/
+   todo-notebooks-to-review-fix-write.txt``). There is no verified legacy
+   behavior to port faithfully *to*.
+2. **Depends on an already-deferred demag solver.** ``__compute_field`` always
+   constructs ``Demag(solver='Treecode')``; the DOLFINx port's own
+   ``finmag.energies.demag`` package defers the Treecode/GCR solver variants
+   by name (only Fredkin-Koehler, ``solver='FK'``, is ported) -- porting
+   ``FixedEnergyDW`` would require *also* porting a BEM solver variant that is
+   independently out of scope here.
+3. **Round-trips through legacy dolfin-XML on disk.** ``bias_mesh``/
+   ``write_xml`` serialise a hand-duplicated mesh to a bespoke ``<dolfin>``
+   XML file and immediately re-read it with ``df.Mesh(filename)`` -- a format
+   DOLFINx cannot read, and legacy's own ``write_xml`` docstring already
+   flags the function as broken ("*this function is broken at the moment*",
+   attributed to Weiwei/Max in the source). There is no reference behavior to
+   preserve here, only an admittedly-broken implementation detail to
+   reinvent.
+4. **Uses the raw legacy dolfin ``Function``/vector API directly** (``Ms.
+   vector().array()``, ``m.vector().set_local()``) with no
+   :class:`finmag.field.Field`-mediated equivalent, so a "faithful"
+   translation would require inventing untested semantics rather than
+   transcribing verified ones.
+
+Per the Task 19 escalation guidance ("when in doubt between a shaky port and
+a curated deferral, prefer the deferral"), this module is a curated by-name
+deferral instead: the raw ``import dolfin`` is gone (module-scope import list
+below is now empty of it), but constructing :class:`FixedEnergyDW` raises
+:class:`NotImplementedError` naming the class and this rationale. This is a
+Task 29 review item: a full port would require an accompanying Treecode/GCR
+demag solver port (Task 23 territory) plus inventing the legacy XML-mesh-
+duplication semantics from scratch, with no way to validate the result
+against a working legacy reference. [Claude Sonnet 5]
+"""
+
+import logging
+
+log = logging.getLogger(name="finmag")
+
+_DEFERRAL_MESSAGE = (
+    "FixedEnergyDW is not ported to DOLFINx (Task 19 decision, Task 29 "
+    "review item): it is untested even on legacy master (no "
+    "dw_fixed_energy_test.py exists, and legacy's own todo notes record "
+    "'the computation with the FixedEnergyDW class is broken'), it always "
+    "constructs Demag(solver='Treecode') -- itself a deferred demag "
+    "solver variant in this port (finmag.energies.demag only ports 'FK') "
+    "-- and it round-trips a hand-duplicated mesh through a bespoke, "
+    "legacy-documented-as-broken dolfin-XML writer/reader. There is no "
+    "verified legacy behavior to port faithfully to; see the module "
+    "docstring in finmag/energies/dw_fixed_energy.py for the full "
+    "rationale."
+)
 
 
-class FixedEnergyDW(object):
+class FixedEnergyDW:
+    """Curated by-name deferral; see the module docstring for the rationale.
 
-    def __init__(self, left=(1, 0, 0), right=(-1, 0, 0), repeat_time=5, name='FixedEnergyDW'):
-        self.left = left
-        self.right = right
-        self.repeat_time = repeat_time
-        self.in_jacobian = False
-        self.name = name
+    Constructing this class always raises :class:`NotImplementedError`
+    (Task 19 decision, Task 29 review item) rather than silently accepting
+    arguments it cannot act on.
+    """
 
-    def write_xml(self, filename, coordinates, cells):
-        """
-        XXX TODO: According to Weiwei, this function is broken at the
-                  moment. Its purpose is to duplicate a given mesh
-                  (what for, though?). We should either fix it or
-                  remove it. Probably also move it to a more
-                  appropriate location (since it doesn't seem to have
-                  to do much with the FixedEnergyDW class?).
-                  -- Max, 16 Jan 2014
-
-        """
-        f = open(filename, 'w')
-        f.write("""<?xml version="1.0"?>\n""")
-        f.write("""<dolfin xmlns:dolfin="http://fenicsproject.org">\n""")
-        f.write("""   <mesh celltype="tetrahedron" dim="3">\n""")
-        f.write("""     <vertices size="%d">\n""" % len(coordinates))
-        for i in range(len(coordinates)):
-            f.write("""       <vertex index="%d" x="%0.12f" y="%0.12f" z="%0.12f"/>\n""" % (
-                    i,
-                    coordinates[i][0],
-                    coordinates[i][1],
-                    coordinates[i][2]))
-        f.write("""     </vertices>\n""")
-        f.write("""     <cells size="%d">\n""" % len(cells))
-        for i in range(len(cells)):
-            f.write("""       <tetrahedron index="%d" v0="%d" v1="%d" v2="%d" v3="%d"/>\n""" % (
-                    i,
-                    cells[i][0],
-                    cells[i][1],
-                    cells[i][2],
-                    cells[i][3]))
-        f.write("""     </cells>\n""")
-        f.write("""  </mesh>\n</dolfin>""")
-
-    def bias_mesh(self, step):
-        cds = np.array(self.mesh.coordinates())
-        cells = np.array(self.mesh.cells())
-
-        cells += len(cds)
-        cells = np.concatenate((self.mesh.cells(), cells))
-
-        cds[:, 0] += self.xlength * step
-        cds = np.concatenate((self.mesh.coordinates(), cds))
-
-        return cells, cds
-
-    def setup(self, S3, m, Ms, unit_length=1):
-        self.S3 = S3
-        self.mesh = S3.mesh()
-        self.Ms = Ms
-        n = self.mesh.num_vertices()
-        self.tmp_field = np.zeros(6 * n)
-        self.field = np.zeros((n, 3))
-        self.init_m = np.zeros((2 * n, 3))
-
-        c = self.mesh.coordinates()
-        self.xlength = np.max(c[:, 0]) - np.min(c[:, 0])
-
-        self.__compute_field()
-        tmp = self.tmp_field.reshape((3, -1), order='C')
-        self.field = np.array(tmp[:, :n])
-        self.field.shape = (1, -1)
-        self.field = self.field[0]
-
-    def __compute_field(self):
-        n = self.mesh.num_vertices()
-        self.init_m[:n, 0] = 1
-        self.init_m[n:, :] = self.left
-
-        for i in range(-self.repeat_time, 0):
-            cells, cds = self.bias_mesh(i - 1e-10)
-            filename = "mesh_%d.xml" % i
-            self.write_xml(filename, cds, cells)
-
-            demag = Demag(solver='Treecode')
-            mesh = df.Mesh(filename)
-            Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-
-            dg = df.FunctionSpace(mesh, "DG", 0)
-            Ms_tmp = df.Function(dg)
-            Ms_list = list(self.Ms.vector().array())
-            Ms_tmp.vector().set_local(np.array(Ms_list + Ms_list))
-
-            m = df.Function(Vv)
-            tmp_init_m = self.init_m.reshape((1, -1), order='F')[0]
-            m.vector().set_local(tmp_init_m)
-            demag.setup(Vv, m, Ms_tmp)
-            self.tmp_field += demag.compute_field()
-
-            os.remove(filename)
-
-        self.init_m[:n, 0] = -1
-        self.init_m[n:, :] = self.right
-
-        for i in range(1, self.repeat_time + 1):
-            cells, cds = self.bias_mesh(i + 1e-10)
-            filename = "mesh_%d.xml" % i
-            self.write_xml(filename, cds, cells)
-
-            demag = Demag(solver='Treecode')
-            mesh = df.Mesh(filename)
-            Vv = df.VectorFunctionSpace(mesh, 'Lagrange', 1)
-
-            dg = df.FunctionSpace(mesh, "DG", 0)
-            Ms_tmp = df.Function(dg)
-            Ms_list = list(self.Ms.vector().array())
-            Ms_tmp.vector().set_local(np.array(Ms_list + Ms_list))
-
-            m = df.Function(Vv)
-            tmp_init_m = self.init_m.reshape((1, -1), order='F')[0]
-            m.vector().set_local(tmp_init_m)
-            demag.setup(Vv, m, Ms_tmp)
-            self.tmp_field += demag.compute_field()
-
-            os.remove(filename)
-
-    def compute_field(self):
-        return self.field
-
-
-if __name__ == '__main__':
-    mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(500, 20, 5), 100, 4, 1)
-
-    dw = FixedEnergyDW(repeat_time=5)
-    S3 = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-    m = df.Function(S3)
-    dw.setup(S3, 1, 8.6e5, unit_length=1)
-    m.vector().set_local(dw.compute_field())
-    print(dw.compute_field().reshape((3, -1)))
-    for x in range(100):
-        print(x * 5 + 2.5, m(x * 5 + 2.5, 17.5, 2.5))
+    def __init__(self, left=(1, 0, 0), right=(-1, 0, 0), repeat_time=5,
+                 name="FixedEnergyDW"):
+        del left, right, repeat_time, name
+        raise NotImplementedError(_DEFERRAL_MESSAGE)

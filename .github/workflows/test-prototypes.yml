@@ -1,0 +1,28 @@
+# master's test-prototypes tier: the frozen early-DOLFINx prototype gate
+# (formerly dolfinx-m4.yml). [Claude Sonnet 5]
+name: test-prototypes
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-prototypes:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.62.1
+        cache: true
+
+    - name: Verify frozen DOLFINx M4 prototype
+      run: |
+        # M4 is a frozen prototype witness; direct src/finmag port slices get
+        # separate focused tasks and gates. [Codex GPT-5]
+        dev/bin/verify-dolfinx-m4

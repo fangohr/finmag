@@ -5,9 +5,12 @@ import subprocess
 import os
 import sys
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.util.visualization import *
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 from glob import glob
-from finmag.util.visualization import *
 from finmag.util.visualization_impl import *
 
 # Skipping this test for now because it still doesn't work on aleph0
@@ -71,6 +74,8 @@ def test_render_paraview_scene(tmpdir):
         subprocess.check_call(['xpra', 'stop', ':{}'.format(display)])
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API visualization test, selected plotting N12; renderer/movie decisions deferred (D33)", strict=True)
 def test_flight_path_rotation():
     # Random starting position and axis
     p0 = [-1, 3, 2]
@@ -97,6 +102,8 @@ def test_flight_path_rotation():
         assert(np.allclose(f(t), p0))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API visualization test, selected plotting N12; renderer/movie decisions deferred (D33)", strict=True)
 def test_flight_path_straight_line():
     # Random starting position and axis
     P0 = np.array([-1, 3, 2])

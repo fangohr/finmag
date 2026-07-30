@@ -1,4 +1,7 @@
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+except ImportError:
+    df = None  # not ported (D33): tests below xfail
 import numpy as np
 import pytest
 import os
@@ -36,6 +39,8 @@ def test_mesh_size():
         np.isclose(mesh_size(sphere_mesh, unit_length=2e4), 48e4, rtol=NETGEN_RTOL))
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_line_mesh():
     """
     Create vertices lying on a spiral in 3D space, build a line-mesh from it
@@ -46,6 +51,8 @@ def test_line_mesh():
     assert np.allclose(vertices, mesh.coordinates())
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_embed3d():
     # Create a 2D mesh which we want to embed in 3D space
     mesh_2d = df.RectangleMesh(df.Point(0, 0), df.Point(20, 10), 10, 5)
@@ -87,6 +94,8 @@ def test_sphere_inside_box(tmpdir, debug=False):
         del f
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_build_mesh():
     """
     Create a few meshes, extract the vertices and cells from them and pass them
@@ -163,6 +172,8 @@ def create_periodic_mesh(periodicity='none', dim=3):
     return mesh
 
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_mesh_is_periodic(tmpdir):
     """
 
@@ -223,6 +234,8 @@ def test_mesh_is_periodic(tmpdir):
     #assert mesh_is_periodic(mesh_box, 'y')
     assert mesh_is_periodic(mesh_box, 'xy')
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_regular_polygon():
     if shutil.which("gmsh") is None:
         pytest.skip("gmsh is required for this mesh-generation test")
@@ -231,6 +244,8 @@ def test_regular_polygon():
     assert np.max(testmesh.coordinates()) == 50
     assert np.min(testmesh.coordinates()) == -50
 
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API mesh-generation test, dolfinx-src-meshes-pytest covers selected generators not this bundled file (D33)", strict=True)
 def test_regular_polygon_extruded():
     if shutil.which("gmsh") is None:
         pytest.skip("gmsh is required for this mesh-generation test")

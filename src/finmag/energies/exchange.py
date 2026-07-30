@@ -1,104 +1,49 @@
-import logging
-import dolfin as df
+"""DOLFINx exchange interaction."""
+
+import numpy as np
 from aeon import timer
-from .energy_base import EnergyBase
+from dolfinx import fem
+from ufl import grad, inner
+
 from finmag.field import Field
 
-logger = logging.getLogger('finmag')
+from .energy_base import EnergyBase, _require_cg1_magnetisation, scalar_coefficient
 
 
 class Exchange(EnergyBase):
-    """
-    Compute the exchange field.
+    """Compute exchange energy and its lumped-box effective field.
 
-    .. math::
-
-        E_{\\text{exch}} = \\int_\\Omega A (\\nabla M)^2  dx
-
-
-    *Arguments*
-
-        A
-            the exchange constant
-
-        method
-            See documentation of EnergyBase class for details.
-
-        name
-            name of the object
-
-    *Example of Usage*
-
-        .. code-block:: python
-
-            import dolfin as df
-            from finmag.energies.exchange import Exchange
-            from finmag.field import Field
-
-            # Define a mesh representing a cube with edge length L
-            L = 1e-8  # m
-            n = 5
-            mesh = df.BoxMesh(df.Point(0, L, 0), df.Point(L, 0, L), n, n, n)
-
-            A = 1.3e-11  # J/m exchange constant
-            Ms = 0.8e6  # A/m saturation magnetisation
-
-            # Initial magnetisation
-            S3 = df.VectorFunctionSpace(mesh, 'CG', 1)
-            m = Field(S3, (1, 0, 0))
-
-            exchange = Exchange(A)
-            exchange.setup(m, Ms)
-
-            # Compute exchange energy.
-            E_ex = exchange.compute_energy()
-
-            # Compute exchange effective field.
-            H_ex = exchange.compute_field()
-
-            # Using 'box-matrix-numpy' method (fastest for small matrices)
-            exchange_np = Exchange(A, method='box-matrix-numpy')
-            exchange_np.setup(m, Ms)
-            H_exch_np = exchange_np.compute_field()
-
+    Supports a constant scalar ``A`` or a spatially varying ``A`` (a callable,
+    :class:`~finmag.field.Field` or ``dolfinx.fem.Function``), placed -- exactly
+    as legacy did -- into a **DG0** (cellwise-constant) coefficient space; and
+    the ``box-assemble`` method. Coordinates are converted with
+    ``unit_length**-2`` inside the gradient energy density.
     """
 
-    def __init__(self, A, method='box-matrix-petsc', name='Exchange'):
-        self.A_value = A  # Value of A, later converted to a Field object.
+    def __init__(self, A, method="box-assemble", name="Exchange"):
+        self.A_value = scalar_coefficient(A, "A")
         self.name = name
-
-        super(Exchange, self).__init__(method, in_jacobian=True)
+        super().__init__(method=method, in_jacobian=True)
 
     @timer.method
-    def setup(self, m, Ms, unit_length=1):
-        """
-        Function to be called after the energy object has been constructed.
+    def setup(self, m, Ms, unit_length=1.0):
+        if not isinstance(m, Field):
+            raise TypeError("m must be a finmag.Field")
+        if m.value_dim() != 3 or m.is_scalar_field():
+            raise ValueError("Exchange requires a three-component m Field")
+        _require_cg1_magnetisation(m)
 
-        *Arguments*
+        unit_length = float(unit_length)
+        if not np.isfinite(unit_length) or unit_length <= 0.0:
+            raise ValueError("unit_length must be a positive finite number")
 
-            m
-                magnetisation field (usually normalised)
-
-            Ms
-                Saturation magnetisation (scalar, or scalar dolfin function)
-
-            unit_length
-                real length of 1 unit in the mesh
-
-        """
-        assert isinstance(m, Field)
-        assert isinstance(Ms, Field)
-
-        # Create an exchange constant Field object A in DG0 function space.
-        dg_functionspace = df.FunctionSpace(m.mesh(), 'DG', 0)
-        self.A = Field(dg_functionspace, self.A_value, name='A')
-        del(self.A_value)
-
-        # Multiplication factor used for exchange energy computation.
-        self.exchange_factor = df.Constant(1.0/unit_length**2)
-
-        # An expression for computing the exchange energy.
-        E_integrand = self.exchange_factor * self.A.f * \
-            df.inner(df.grad(m.f), df.grad(m.f))
-
-        super(Exchange, self).setup(E_integrand, m, Ms, unit_length)
+        coefficient_space = fem.functionspace(m.mesh(), ("DG", 0))
+        self.A = Field(coefficient_space, self.A_value, name="A")
+        self.exchange_factor = fem.Constant(m.mesh(), 1.0 / unit_length**2)
+        E_integrand = (
+            self.exchange_factor
+            * self.A.f
+            * inner(grad(m.f), grad(m.f))
+        )
+        super().setup(E_integrand, m, Ms, unit_length)
+        return self

@@ -1,773 +1,1121 @@
-"""
-Representation of scalar and vector fields, as well as
-operations on them backed by a dolfin function.
+"""Scalar and vector fields backed by DOLFINx functions.
 
-This module exists because things like per-node operations or exporting of
-field values to convenient formats are awkward to do in dolfin currently.
-Additionally, some things are non-trivial to get right, especially in parallel.
-This class therefore acts as a "single point of contant", so that we don't
-duplicate code all over the FinMag code base.
-
+This module preserves Finmag's public Field shape while making MPI ownership
+and the legacy ``xyz``/``xxx`` array views explicit.
 """
-import logging
-import dolfin as df
-import numpy as np
+
 import numbers
-import os
-try:
-    import dolfinh5tools
-except ImportError:
-    dolfinh5tools = None
-from finmag.util import helpers
-from finmag.util.helpers import expression_from_python_function
-try:
-    from finmag.util.visualization import plot_dolfin_function
-except Exception:
-    plot_dolfin_function = None
 
-log = logging.getLogger(name="finmag")
-
-# DOLFIN 2017 only exposes Expression, while newer paths also expose UserExpression. [Codex GPT-5.4]
-_DOLFIN_EXPRESSION_TYPES = tuple(
-    t for t in (df.Expression, getattr(df, "UserExpression", None)) if t is not None
-)
+import numpy as np
+from dolfinx import fem, geometry, io, la
+from mpi4py import MPI
+from ufl import dx
 
 
-def _dolfin_vector_array(vector):
-    if hasattr(vector, "get_local"):
-        return vector.get_local()
-    return vector.array()
+# On-disk format tag for the single-file HDF5 Field checkpoint written by
+# ``Field.save_hdf5`` / read by ``Field.from_hdf5``. Bumped only on an
+# incompatible layout change.
+FIELD_HDF5_FORMAT = "finmag-field-hdf5"
+FIELD_HDF5_FORMAT_VERSION = 1
 
-try:
-    basestring
-except NameError:
-    basestring = str
+# Coordinate matching tolerance (decimals) used when remapping a stored
+# coordinate/value table onto a target function space, matching the restart v2
+# coordinate-aware convention (``sim_helpers._COORD_DECIMALS``).
+_FIELD_HDF5_COORD_DECIMALS = 12
 
-try:
-    xrange
-except NameError:
-    xrange = range
+
+def _ensure_h5_suffix(filename):
+    return filename if filename.endswith(".h5") else filename + ".h5"
 
 
 def associated_scalar_space(functionspace):
+    """Return the exact scalar element underlying a scalar/blocked space."""
+    element = functionspace.ufl_element()
+    if not element.reference_value_shape:
+        scalar_element = element
+    elif element.sub_elements:
+        scalar_element = element.sub_elements[0]
+        if any(sub_element != scalar_element for sub_element in element.sub_elements):
+            raise NotImplementedError(
+                "associated_scalar_space does not support mixed elements"
+            )
+    else:
+        raise NotImplementedError(
+            "associated_scalar_space requires a scalar or blocked DOLFINx element"
+        )
+    if scalar_element.reference_value_shape:
+        raise NotImplementedError(
+            "associated_scalar_space does not support tensor-valued sub-elements"
+        )
+    return fem.functionspace(functionspace.mesh, scalar_element)
+
+
+class Field:
+    """Wrap a DOLFINx ``fem.Function`` with Finmag-compatible helpers.
+
+    Raw and coordinate-ordered NumPy views contain rank-local owned values;
+    ghost entries are exposed only by :meth:`local_array_with_ghosts`.
+    Methods that reduce values or refresh ghosts are collective over the mesh
+    communicator and must be called by every participating rank.
     """
-    Given any dolfin function space (which may be a scalar or vector space),
-    return a scalar function space on the same mesh defined by the same finite
-    element family and degree.
 
-    """
-    fs_family = functionspace.ufl_element().family()
-    fs_degree = functionspace.ufl_element().degree()
-    return df.FunctionSpace(functionspace.mesh(), fs_family, fs_degree)
-
-
-class Field(object):
-    """
-    Representation of scalar and vector fields using a dolfin function.
-
-    You can set the field values using a wide range of object types:
-        - tuples, lists, ints, floats, basestrings, numpy arrrays
-        - dolfin constants, expressions and functions
-        - callables
-        - files in hdf5
-
-    The Field class provides raw access to the field at some particular point
-    or all nodes. It also computes derived entities of the field, such as
-    spatially averaged energy. It outputs data suited for visualisation
-    or storage.
-
-    """
-    def __init__(self, functionspace, value=None, normalised=False, name=None, unit=None):
+    def __init__(
+        self, functionspace, value=None, normalised=False, name=None, unit=None
+    ):
         self.functionspace = functionspace
-        self.f = df.Function(self.functionspace)
+        self.f = fem.Function(functionspace)
         self.name = name
-
+        self.unit = unit
+        if name is not None:
+            self.f.name = name
         if value is not None:
             self.value = value
             self.set(value, normalised=normalised)
 
-        if name is not None:
-            self.f.rename(name, name)  # set function's name and label
-
-        self.unit = unit
-
-        functionspace_family = self.f.ufl_element().family()
-        if functionspace_family == 'Lagrange':
-            dim = self.value_dim()
-            self.v2d_xyz, self.v2d_xxx, self.d2v_xyz, self.d2v_xxx = helpers.build_maps(self.functionspace, dim)
-
     def __call__(self, x):
+        """Shorthand so user can do ``field(x)`` instead of ``field.f(x)``.
+
+        Legacy (pixi ``ba928093`` ``Field.__call__``) simply forwarded to
+        dolfin's ``Function.__call__``, ``return self.f(x)``. DOLFINx
+        ``fem.Function`` objects are not directly callable at a point, so
+        this restores the equivalent point-in-cell evaluation via
+        :func:`probe` (Task 26a).
         """
-        Shorthand so user can do field(x) instead of field.f(x) to interpolate.
-
-        """
-        return self.f(x)
-
-    def assert_is_scalar_field(self):
-        if self.value_dim() != 1:
-            raise ValueError(
-                "This operation is only defined for scalar fields.")
-
-    def from_array(self, arr):
-        assert isinstance(arr, np.ndarray)
-        if arr.shape == (3,) and (isinstance(self.functionspace, df.FunctionSpace) and
-                                  self.functionspace.num_sub_spaces() == self.value_dim()):
-            self.from_constant(df.Constant(arr))
-        else:
-            if arr.shape[0] == self.f.vector().local_size():
-                self.f.vector().set_local(arr)
-            else:
-                # in serial, local_size == size, so this will only warn in parallel
-                log.warning("Global setting of field values by overwriting with np.array.")
-                self.f.vector()[:] = arr
-
-    def from_callable(self, func):
-        assert hasattr(func, "__call__") and not isinstance(func, df.Function)
-        expr = expression_from_python_function(func, self.functionspace)
-        self.from_expression(expr)
-
-    def from_constant(self, constant):
-        assert isinstance(constant, df.Constant)
-        self.f.assign(constant)
-
-    def from_expression(self, expr, **kwargs):
-        """
-        Set field values using dolfin expression or the ingredients for one,
-        in which case it will build the dolfin expression for you.
-
-        """
-        if not isinstance(expr, _DOLFIN_EXPRESSION_TYPES):
-            if isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == 0:
-                assert (isinstance(expr, basestring) or
-                        isinstance(expr, (tuple, list)) and len(expr) == 1)
-                expr = str(expr)  # dolfin does not like unicode in the expression
-            if isinstance(self.functionspace, df.FunctionSpace) and \
-               self.functionspace.num_sub_spaces() == 3:
-                assert isinstance(expr, (tuple, list)) and len(expr) == 3
-                assert all(isinstance(item, basestring) for item in expr)
-                expr = tuple(map(str, expr))  # dolfin does not like unicode in the expression
-            expr = df.Expression(expr, degree=1, **kwargs)
-        temp_function = df.interpolate(expr, self.functionspace)
-        self.f.vector().set_local(temp_function.vector().get_local())
-
-    def from_field(self, field):
-        assert isinstance(field, Field)
-        if self.functionspace == field.functionspace:
-            self.f.vector().set_local(field.f.vector().get_local())
-        else:
-            temp_function = df.interpolate(field.f, self.functionspace)
-            self.f.vector().set_local(temp_function.vector().get_local())
-
-    def from_function(self, function):
-        assert isinstance(function, df.Function)
-        self.f.vector().set_local(function.vector().get_local())
-
-    def from_generic_vector(self, vector):
-        assert isinstance(vector, df.GenericVector)
-        self.f.vector().set_local(vector.get_local())
-
-    def from_sequence(self, seq):
-        assert isinstance(seq, (tuple, list))
-        self._check_can_set_vector_value(seq)
-        self.from_constant(df.Constant(seq))
-
-    def _check_can_set_scalar_value(self):
-        if not self.functionspace.num_sub_spaces() == 0:
-            raise ValueError("Cannot set vector field with scalar value.")
-
-    def _check_can_set_vector_value(self, seq):
-        if not (isinstance(self.functionspace, df.FunctionSpace) and self.functionspace.num_sub_spaces() == self.value_dim()):
-            raise ValueError("Cannot set scalar field with vector value.")
-        if len(seq) != self.functionspace.num_sub_spaces():
-            raise ValueError(
-                "Cannot set vector field with value of non-matching dimension "
-                "({} != {})", len(seq), self.functionspace.num_sub_spaces())
+        return self.probe(x)
 
     def set(self, value, normalised=False, **kwargs):
-        """
-        Set field values using `value` and normalise if `normalised` is True.
-
-        The parameter `value` can be one of many different types,
-        as described in the class docstring. This method avoids the user
-        having to find the correct `from_*` method to call.
-
-        """
-        if isinstance(value, df.Constant):
-            self.from_constant(value)
-        elif isinstance(value, _DOLFIN_EXPRESSION_TYPES):
-            self.from_expression(value)
-        elif isinstance(value, df.Function):
-            self.from_function(value)
-        elif isinstance(value, Field):
+        """Set from a scalar/vector constant, callable, Function, Field, or array."""
+        if kwargs:
+            raise NotImplementedError(
+                "legacy Expression parameters are not supported; pass a callable"
+            )
+        if isinstance(value, Field):
             self.from_field(value)
-        elif isinstance(value, df.GenericVector):
+        elif isinstance(value, fem.Function):
+            self.from_function(value)
+        elif isinstance(value, fem.Constant):
+            self.from_constant(value)
+        elif isinstance(value, la.Vector) or hasattr(value, "getArray"):
+            # A backend distributed vector object (dolfinx.la.Vector or
+            # PETSc.Vec), mirroring legacy's df.GenericVector dispatch branch.
             self.from_generic_vector(value)
-        elif isinstance(value, (int, float)):
-            self._check_can_set_scalar_value()
-            self.from_constant(df.Constant(value))
-        elif isinstance(value, basestring):
-            self._check_can_set_scalar_value()
-            self.from_expression(value, **kwargs)
-        elif (isinstance(value, (tuple, list)) and
-              all(isinstance(item, basestring) for item in value)):
-            self._check_can_set_vector_value(value)
-            self.from_expression(value, **kwargs)
-        elif isinstance(value, (tuple, list)):
-            self.from_sequence(value)
+        elif isinstance(value, str) or (
+            isinstance(value, (tuple, list))
+            and any(isinstance(item, str) for item in value)
+        ):
+            raise NotImplementedError(
+                "legacy string Expressions are not supported; pass a callable"
+            )
         elif isinstance(value, np.ndarray):
-            self.from_array(value)
-        elif hasattr(value, '__call__'):
-            # this matches df.Function as well, so this clause needs to
-            # be after the one checking for df.Function
+            if value.shape == (self.value_dim(),) and not self.is_scalar_field():
+                self.from_constant(value)
+            else:
+                self.from_array(value)
+        elif callable(value):
             self.from_callable(value)
+        elif isinstance(value, numbers.Real) or isinstance(value, (tuple, list)):
+            self.from_constant(value)
         else:
             raise TypeError("Can't set field values using {}.".format(type(value)))
 
         if normalised:
             self.normalise()
+        return self
+
+    def from_callable(self, func):
+        """Collectively interpolate a vectorized or point-at-a-time callable."""
+        self.f.interpolate(self._interpolation_callable(func))
+        self.f.x.scatter_forward()
+        return self
+
+    def from_constant(self, constant):
+        """Interpolate a scalar or vector constant."""
+        if isinstance(constant, fem.Constant):
+            constant = constant.value
+        constant_arr = np.asarray(constant, dtype=np.float64)
+        if self.is_scalar_field():
+            if constant_arr.size != 1:
+                raise ValueError("cannot set scalar field with vector value")
+            scalar = float(constant_arr.reshape(-1)[0])
+            self.f.interpolate(lambda x: np.full(x.shape[1], scalar))
+        else:
+            if constant_arr.ndim != 1 or constant_arr.size != self.value_dim():
+                raise ValueError(
+                    "vector value has {} components, but the field expects {}".format(
+                        constant_arr.size, self.value_dim()
+                    )
+                )
+            self.f.interpolate(
+                lambda x: np.repeat(constant_arr[:, None], x.shape[1], axis=1)
+            )
+        self.f.x.scatter_forward()
+        return self
+
+    def from_function(self, function):
+        """Copy a DOLFINx Function, interpolating if it is on another space.
+
+        A Function on the identical function space is copied dof-for-dof
+        (matching the legacy same-space contract); a Function on a *different*
+        space is interpolated into this Field's space (mirroring
+        :meth:`from_field`), so a coefficient handed in on, say, a DG0 space
+        can be placed into a CG1 coefficient space.
+        """
+        if not isinstance(function, fem.Function):
+            raise TypeError("from_function requires a dolfinx.fem.Function")
+        if function.function_space == self.functionspace:
+            owned = self._owned_scalar_dofs()
+            self.f.x.array[:owned] = function.x.array[:owned]
+        else:
+            self.f.interpolate(function)
+        self.f.x.scatter_forward()
+        return self
+
+    def from_field(self, field):
+        """Copy another Field, interpolating between compatible spaces."""
+        if not isinstance(field, Field):
+            raise TypeError("from_field requires another Field")
+        if field.functionspace == self.functionspace:
+            self.from_array(field.as_array())
+        else:
+            self.f.interpolate(field.f)
+            self.f.x.scatter_forward()
+        return self
+
+    def from_array(self, arr):
+        """Collectively set flat owned backend-order dofs and refresh ghosts."""
+        arr = np.asarray(arr, dtype=np.float64)
+        expected = (self._owned_scalar_dofs(),)
+        if arr.shape != expected:
+            raise ValueError(
+                "from_array expects the raw dof array (owned) shape {}, got {}".format(
+                    expected, arr.shape
+                )
+            )
+        self.f.x.array[: expected[0]] = arr
+        self.f.x.scatter_forward()
+        return self
+
+    def from_expression(self, *args, **kwargs):
+        raise NotImplementedError(
+            "DOLFINx has no legacy Expression/UserExpression compatibility; "
+            "pass a callable"
+        )
+
+    def from_generic_vector(self, vector):
+        """Copy owned dofs from a backend distributed vector object.
+
+        Legacy ``from_generic_vector`` took a dolfin ``GenericVector`` (a
+        backend PETSc vector *object*) and did ``set_local(get_local())`` -- a
+        raw backend-order copy of the rank-local owned entries. The
+        DOLFINx-native equivalents are the backend vector objects this Field
+        exposes: :meth:`vector` (a ``dolfinx.la.Vector``) and
+        :meth:`petsc_vector` (a ``PETSc.Vec``). This is a genuinely distinct
+        surface from :meth:`from_array`, which accepts a NumPy array.
+
+        Only the source's *owned* portion ``[:owned]`` is read (any ghost tail
+        it carries is ignored); this Field's ghosts are then repopulated by its
+        own :meth:`scatter_forward`, exactly mirroring legacy's owned-only
+        ``set_local``. Pass a NumPy array to :meth:`from_array` instead.
+        """
+        owned = self._owned_scalar_dofs()
+        if isinstance(vector, la.Vector):
+            source = np.asarray(vector.array)
+        elif hasattr(vector, "getArray"):  # PETSc.Vec
+            source = np.asarray(vector.getArray(readonly=True))
+        else:
+            raise TypeError(
+                "from_generic_vector requires a backend vector object "
+                "(dolfinx.la.Vector or PETSc.Vec); pass a NumPy array to "
+                "from_array instead. Got: {}".format(type(vector))
+            )
+        # Guard the owned-size mismatch that would otherwise SILENTLY truncate:
+        # a source from a larger space (e.g. a vector-space vector read into a
+        # scalar-space target) would let ``source[:owned]`` succeed with a
+        # wrong-but-finite result. Require the source to carry at least this
+        # Field's owned dofs, and reject an oversized source outright so a
+        # different-space vector cannot be misread node-for-node. [Claude Opus 4.8]
+        if source.shape[0] < owned:
+            raise ValueError(
+                "from_generic_vector source has {} entries but this Field owns "
+                "{} dofs".format(source.shape[0], owned))
+        ghost = self.f.x.array.shape[0] - owned
+        if source.shape[0] not in (owned, owned + ghost):
+            raise ValueError(
+                "from_generic_vector source has {} entries, which matches "
+                "neither this Field's owned ({}) nor owned+ghost ({}) dof count "
+                "-- it likely comes from a different function space".format(
+                    source.shape[0], owned, owned + ghost))
+        self.f.x.array[:owned] = source[:owned]
+        self.f.x.scatter_forward()
+        return self
+
+    def from_sequence(self, seq):
+        return self.from_constant(seq)
 
     def set_with_numpy_array_debug(self, value, normalised=False):
-        """ONLY for debugging"""
-        self.f.vector().set_local(value)
+        """Set from a legacy component-blocked (``xxx``) owned-vertex array.
 
+        Kept the exact inverse of :meth:`get_numpy_array_debug` (Task 31):
+        legacy's ``set_local``/``get_local`` pair both operated on the blocked
+        local vector, so the debug getter/setter must round-trip. Use
+        :meth:`from_array` for a raw backend-order owned array.
+        """
+        self.set_with_ordered_numpy_array_xxx(value)
         if normalised:
             self.normalise()
-
-    def get_ordered_numpy_array(self):
-        """
-        For a scalar field, return the dolfin function as an ordered
-        numpy array, such that the field values are in the same order
-        as the vertices of the underlying mesh (as returned by
-        `mesh.coordinates()`).
-
-        Note:
-
-        This function is only defined for scalar fields and raises an
-        error if it is applied to a vector field. For the latter, use
-        either
-
-            get_ordered_numpy_array_xxx
-
-        or
-
-            get_ordered_numpy_array_xyz
-
-        depending on the order in which you want the values to be returned.
-
-        """
-        self.assert_is_scalar_field()
-        return self.get_ordered_numpy_array_xxx()
-
-    def get_ordered_numpy_array_xyz(self):
-        """
-        Returns the dolfin function as an ordered numpy array, so that
-        all components at the same node are grouped together. For example,
-        for a 3d vector field the values are returned in the following order:
-
-          [f_1x, f_1y, f_1z,  f_2x, f_2y, f_2z,  f_3x, f_3y, f_3z,  ...]
-
-        Note: In the case of a scalar field this function is equivalent to
-        `get_ordered_numpy_array_xxx` (but for vector fields they yield
-        different results).
-        """
-        return self.get_numpy_array_debug()[self.v2d_xyz]
-
-    def get_ordered_numpy_array_xxx(self):
-        """
-        Returns the dolfin function as an ordered numpy array, so that
-        all x-components at different nodes are grouped together, and
-        similarly for the other components. For example, for a 3d
-        vector field the values are returned in the following order:
-
-          [f_1x, f_2x, f_3x, ...,  f_1y, f_2y, f_3y, ...,  f_1z, f_2z, f_3z, ...]
-
-        Note: In the case of a scalar field this function is equivalent to
-        `get_ordered_numpy_array_xyz` (but for vector fields they yield
-        different results).
-        """
-        return self.get_numpy_array_debug()[self.v2d_xxx]
-
-    # def order2_to_order1(self, order2):
-    #     """Returns the dolfin function as an ordered numpy array, so that
-    #     in the case of vector fields all components of different nodes
-    #     are grouped together."""
-    #     n = len(order2)
-    #     return ((order2.reshape(3, n/3)).transpose()).reshape(n)
-    #
-    # def order1_to_order2(self, order1):
-    #     """Returns the dolfin function as an ordered numpy array, so that
-    #     in the case of vector fields all components of different nodes
-    #     are grouped together."""
-    #     n = len(order1)
-    #     return ((order1.reshape(n/3, 3)).transpose()).reshape(n)
-
-    def set_with_ordered_numpy_array(self, ordered_array):
-        """
-        Set the scalar field using an ordered numpy array (where the field
-        values have the same ordering as the vertices in the underlying
-        mesh).
-
-        This function raises an error if the field is not a scalar field.
-        """
-        self.assert_is_scalar_field()
-        self.set_with_ordered_numpy_array_xxx(ordered_array)
-
-    def set_with_ordered_numpy_array_xyz(self, ordered_array):
-        """
-        Set the field using an ordered numpy array in "xyz" order.
-        For example, for a 3d vector field the values should be
-        arranged as follows:
-
-          [f_1x, f_1y, f_1z, f_2x, f_2y, f_2z, f_3x, f_3y, f_3z, ...]
-
-        For a scalar field this function is equivalent to
-        `set_with_ordered_numpy_array_xxx`.
-        """
-        self.set(ordered_array[self.d2v_xyz])
-
-    def set_with_ordered_numpy_array_xxx(self, ordered_array):
-        """
-        Set the field using an ordered numpy array in "xxx" order.
-        For example, for a 3d vector field the values should be
-        arranged as follows:
-
-          [f_1x, f_2x, f_3x, ..., f_1y, f_2y, f_3y, ..., f_1z, f_2z, f_3z, ...]
-
-        For a scalar field this function is equivalent to
-        `set_with_ordered_numpy_array_xyz`.
-        """
-        self.set(ordered_array[self.d2v_xxx])
-
-    def set_random_values(self, vrange=[-1, 1]):
-        """
-        This is a helper function useful for debugging. It fills the array
-        with random values where each coordinate is uniformly distributed
-        from the half-open interval `vrange` (default: vrange=[-1, 1)).
-
-        """
-        shape = _dolfin_vector_array(self.f.vector()).shape
-        a, b = vrange
-        vals = np.random.random_sample(shape) * float(b - a) + a
-        self.set(vals)
+        return self
 
     def as_array(self):
-        return _dolfin_vector_array(self.f.vector())
-
-    def as_vector(self):
-        return self.f.vector()
+        """Return a flat copy of rank-local owned dofs in backend order."""
+        return self.f.x.array[: self._owned_scalar_dofs()].copy()
 
     def get_numpy_array_debug(self):
-        """ONLY for debugging"""
-        return _dolfin_vector_array(self.f.vector())
+        """Return the legacy component-blocked (``xxx``) owned-vertex array.
+
+        Restored to legacy semantics (Task 31): legacy dolfin's local vector
+        was component-blocked, so every historical consumer that reshaped this
+        as ``(3, -1)`` expected blocked ordering. The raw backend-order owned
+        dofs remain available through :meth:`as_array`.
+        """
+        return self.get_ordered_numpy_array_xxx()
+
+    def local_array_with_ghosts(self):
+        """Return rank-local DOLFINx storage, including ghost entries."""
+        return self.f.x.array.copy()
+
+    def as_vector(self):
+        return self.f.x
+
+    def vector(self):
+        return self.f.x
+
+    def petsc_vector(self):
+        return self.f.x.petsc_vec
+
+    def assert_is_scalar_field(self):
+        if not self.is_scalar_field():
+            raise ValueError("This operation is only defined for scalar fields.")
 
     def is_scalar_field(self):
-        """
-        Return `True` if the Field is a scalar field and `False` otherwise.
-        """
-        if self.functionspace.num_sub_spaces() == 0:
-            return True
+        return not self.functionspace.ufl_element().reference_value_shape
+
+    def value_dim(self):
+        value_shape = tuple(
+            self.functionspace.ufl_element().reference_value_shape
+        )
+        return 1 if not value_shape else int(np.prod(value_shape))
+
+    def mesh(self):
+        return self.functionspace.mesh
+
+    def mesh_dim(self):
+        return self.mesh().topology.dim
+
+    def mesh_dofmap(self):
+        return self.functionspace.dofmap
 
     def is_constant(self, eps=1e-14):
-        """
-        Return `True` if the Field has a unique constant value across the mesh
-        and `False` otherwise.
-
-        """
-        # Scalar field
-        if self.is_scalar_field():
-            maxval = self.f.vector().max()  # global (!) maximum value
-            minval = self.f.vector().min()  # global (!) minimum value
-            return (maxval - minval) < eps
-        # Vector field
-        else:
-            raise NotImplementedError()
+        """Collectively test whether a scalar field has one global value."""
+        self.assert_is_scalar_field()
+        owned = self.as_array()
+        local_max = float(np.max(owned)) if owned.size else -np.inf
+        local_min = float(np.min(owned)) if owned.size else np.inf
+        global_max = self.mesh().comm.allreduce(local_max, op=MPI.MAX)
+        global_min = self.mesh().comm.allreduce(local_min, op=MPI.MIN)
+        return (global_max - global_min) < eps
 
     def as_constant(self, eps=1e-14):
-        """
-        If the Field has a unique constant value across the mesh, return this value.
-        Otherwise a RuntimeError is raised.
-        """
+        """Collectively return a scalar field's unique global value."""
+        self.assert_is_scalar_field()
+        owned = self.as_array()
+        local_max = float(np.max(owned)) if owned.size else -np.inf
+        local_min = float(np.min(owned)) if owned.size else np.inf
+        global_max = self.mesh().comm.allreduce(local_max, op=MPI.MAX)
+        global_min = self.mesh().comm.allreduce(local_min, op=MPI.MIN)
+        if (global_max - global_min) >= eps:
+            raise RuntimeError("Field does not have a unique constant value.")
+        return global_max
+
+    def average(self, dx=dx):
+        """Collectively return the global FEM average over the passed measure."""
+        domain = self.mesh()
+        volume = _assemble_scalar(domain, fem.Constant(domain, 1.0) * dx)
+        if volume == 0.0:
+            raise ValueError("cannot average over a zero-volume measure")
         if self.is_scalar_field():
-            maxval = self.f.vector().max()  # global (!) maximum value
-            minval = self.f.vector().min()  # global (!) minimum value
-            if (maxval - minval) < eps:
-                return maxval
-            else:
-                raise RuntimeError("Field does not have a unique constant value.")
-        else:
-            raise NotImplementedError()
+            return _assemble_scalar(domain, self.f * dx) / volume
+        return np.array(
+            [
+                _assemble_scalar(domain, self.f[i] * dx) / volume
+                for i in range(self.value_dim())
+            ]
+        )
 
-    def average(self, dx=df.dx):
-        """
-        Return the spatial field average.
-
-        Returns:
-          f_average (float for scalar and np.ndarray for vector field)
-
-        """
-        # Compute the mesh "volume". For 1D mesh "volume" is the length and
-        # for 2D mesh is the area of the mesh.
-        volume = df.assemble(df.Constant(1) * dx(self.mesh()))
-
-        # Scalar field.
+    def normalise(self):
+        """Collectively normalise owned nodal vectors and refresh ghosts."""
         if self.is_scalar_field():
-            return df.assemble(self.f * dx) / volume
+            raise ValueError("normalise() is only defined for vector fields.")
+        owned = self._owned_scalar_dofs()
+        values = self.f.x.array[:owned].reshape((-1, self.value_dim()))
+        norms = np.linalg.norm(values, axis=1)
+        has_zero = self.mesh().comm.allreduce(
+            bool(np.any(norms == 0)), op=MPI.LOR
+        )
+        if has_zero:
+            raise ValueError("cannot normalise a zero vector field value")
+        values[:] /= norms[:, None]
+        self.f.x.scatter_forward()
+        return self
 
-        # Vector field.
+    def normalise_dofmap(self):
+        return self.normalise()
+
+    def set_random_values(self, vrange=(-1.0, 1.0)):
+        low, high = vrange
+        owned = self._owned_scalar_dofs()
+        self.f.x.array[:owned] = np.random.uniform(low, high, size=owned)
+        self.f.x.scatter_forward()
+        return self
+
+    def allclose(self, other, rtol=1e-7, atol=0.0):
+        """Collectively compare Fields on the same DOLFINx function space."""
+        if not isinstance(other, Field):
+            raise TypeError("Argument `other` must be of type Field.")
+        communicator_compatible = self.mesh().comm.Compare(
+            other.mesh().comm
+        ) in (MPI.IDENT, MPI.CONGRUENT)
+        locally_compatible = (
+            communicator_compatible
+            and self.mesh() is other.mesh()
+            and self.functionspace is other.functionspace
+        )
+        compatible = self.mesh().comm.allreduce(
+            locally_compatible, op=MPI.LAND
+        )
+        if not compatible:
+            raise ValueError(
+                "allclose requires Fields on the same mesh and function space"
+            )
+        local_close = np.allclose(
+            self.as_array(), other.as_array(), rtol=rtol, atol=atol
+        )
+        return bool(self.mesh().comm.allreduce(local_close, op=MPI.LAND))
+
+    def get_ordered_numpy_array(self):
+        self.assert_is_scalar_field()
+        return self.get_ordered_numpy_array_xyz()
+
+    def get_ordered_numpy_array_xyz(self):
+        """Return flat coordinate-ordered values for rank-local owned vertices."""
+        permutation = _owned_vertex_to_dof(self.functionspace)
+        return self._owned_nodal_values()[permutation].reshape(-1)
+
+    def get_ordered_numpy_array_xxx(self):
+        """Return the flat component-blocked compatibility view."""
+        xyz = self.get_ordered_numpy_array_xyz()
+        if self.is_scalar_field():
+            return xyz
+        return xyz.reshape((-1, self.value_dim())).T.reshape(-1)
+
+    def set_with_ordered_numpy_array(self, ordered_array):
+        self.assert_is_scalar_field()
+        return self.set_with_ordered_numpy_array_xyz(ordered_array)
+
+    def set_with_ordered_numpy_array_xyz(self, ordered_array):
+        """Set owned values from a flat coordinate-ordered array."""
+        permutation = _owned_vertex_to_dof(self.functionspace)
+        ordered_array = np.asarray(ordered_array, dtype=np.float64)
+        expected = (permutation.size * self.value_dim(),)
+        if ordered_array.shape != expected:
+            raise ValueError(
+                "set_with_ordered_numpy_array_xyz expects shape {}, got {}".format(
+                    expected, ordered_array.shape
+                )
+            )
+        self._owned_nodal_values()[permutation] = ordered_array.reshape(
+            (-1, self.value_dim())
+        )
+        self.f.x.scatter_forward()
+        return self
+
+    def set_with_ordered_numpy_array_xxx(self, ordered_array):
+        """Set owned values from a flat component-blocked array."""
+        ordered_array = np.asarray(ordered_array, dtype=np.float64)
+        if self.is_scalar_field():
+            xyz = ordered_array
         else:
-            f_average = []
-            # Compute the average for every vector component independently.
-            for i in xrange(self.value_dim()):
-                f_average.append(df.assemble(self.f[i] * dx))
-
-            return np.array(f_average) / volume
+            if ordered_array.size % self.value_dim():
+                raise ValueError(
+                    "component-blocked array size must be divisible by {}".format(
+                        self.value_dim()
+                    )
+                )
+            xyz = ordered_array.reshape((self.value_dim(), -1)).T.reshape(-1)
+        return self.set_with_ordered_numpy_array_xyz(xyz)
 
     def coords_and_values(self, t=None):
-        """
-        If the field is defined on a function space with degrees of freedom
-        at mesh vertices only, return a list of mesh coordinates and associated
-        field values (in the same order).
-
-        """
-        # The function values are defined at mesh nodes only for
-        # specific function space families. In finmag, the only families
-        # of interest are Lagrange (CG) and Discontinuous Lagrange (DG).
-        # Therefore, if the function space is not CG-family-type,
-        # values cannot be associated to mesh nodes.
-        functionspace_family = self.f.ufl_element().family()
-        if functionspace_family == 'Discontinuous Lagrange':
-            # Function values are not defined at nodes.
-            raise TypeError('The function space is Discontinuous Lagrange '
-                            '(DG) family type, for which the function values '
-                            'are not defined at mesh nodes.')
-
-        elif functionspace_family == 'Lagrange':
-            # Function values are defined at nodes.
-            coords = self.functionspace.mesh().coordinates()
-            num_nodes = self.functionspace.mesh().num_vertices()
-            f_array = _dolfin_vector_array(self.f.vector())  # numpy array
-            vtd_map = df.vertex_to_dof_map(self.functionspace)
-
-            value_dim = self.value_dim()
-            values = np.empty((num_nodes, value_dim))
-            for i in xrange(num_nodes):
-                try:
-                    values[i, :] = f_array[vtd_map[value_dim * i:
-                                                   value_dim * (i + 1)]]
-                except IndexError:
-                    # This only occurs in parallel and is probably related
-                    # to ghost nodes. I thought we could ignore those, but
-                    # this doesn't seem to be true since the resulting
-                    # array of function values has the wrong size. Need to
-                    # investigate.  (Max, 15/05/2014)
-                    raise NotImplementedError("TODO")
-
-            if value_dim == 1:
-                values.shape = (num_nodes,)  # convert to scalar field
-            return coords, values
-
-        else:
-            raise NotImplementedError('This method is not implemented '
-                                      'for {} family type function '
-                                      'spaces.'.format(functionspace_family))
-
-    def __add__(self, other):
-        result = Field(self.functionspace)
-        result.set(self.f.vector() + other.f.vector())
-        return result
-
-    def coerce_scalar_field(self, value):
-        """
-        Coerce `value` into a scalar field defined over the same mesh
-        (and using the same finite element family) as the current field.
-
-        """
-        if not isinstance(value, Field):
-            S1 = associated_scalar_space(self.functionspace)
-            try:
-                # Try to coerce 'value' into a scalar function space
-                # on the same mesh.
-                res = Field(S1, value)
-            except:
-                print("Error: cannot coerce into scalar field: {}".format(value))
-                raise
-        else:
-            value.assert_is_scalar_field()
-            res = value
-        return res
-
-    def __mul__(self, other):
-        # We use Claas Abert's 'point measure hack' to multiply the dolfin
-        # function self.f with the scalar function a.f at each vertex.
-        # Note that if 'other' is just a number, it should be possible to
-        # say: result.set(self.f.vector() * other), but this currently throws
-        # a PETSc error.  -- Max, 20.3.2015
-        a = self.coerce_scalar_field(other)
-        w = df.TestFunction(self.functionspace)
-        v_res = df.assemble(df.dot(self.f * a.f, w) * df.dP)
-        return Field(self.functionspace, value=v_res)
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
-
-    def __div__(self, other):
-        # We use Claas Abert's 'point measure hack' for the vertex-wise operation.
-        a = self.coerce_scalar_field(other)
-        w = df.TestFunction(self.functionspace)
-        v_res = df.assemble(df.dot(self.f / a.f, w) * df.dP)
-        return Field(self.functionspace, value=v_res)
-
-    __truediv__ = __div__
-
-    def cross(self, other):
-        """
-        Return vector field representing the cross product of this field with `other`.
-        """
-        if not isinstance(other, Field):
-            raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
-        if not (self.value_dim() == 3 and other.value_dim() == 3):
-            raise ValueError("The cross product is only defined for 3d vector fields.")
-        # We use Claas Abert's 'point measure hack' for the vertex-wise cross product.
-        w = df.TestFunction(self.functionspace)
-        v_res = df.assemble(df.dot(df.cross(self.f, other.f), w) * df.dP)
-        return Field(self.functionspace, value=v_res)
-
-    def dot(self, other):
-        """
-        Return scalar field representing the dot product of this field with `other`.
-
-        """
-        if not isinstance(other, Field):
-            raise TypeError("Argument must be a Field. Got: {} ({})".format(other, type(other)))
-        if not (self.value_dim() == other.value_dim()):
-            raise ValueError("The cross product is only defined for vector fields of the same dimension.")
-        # We use Claas Abert's 'point measure hack' for the vertex-wise cross product.
-        w = df.TestFunction(associated_scalar_space(self.functionspace))
-        v_res = df.assemble(df.dot(df.dot(self.f, other.f), w) * df.dP)
-        return self.coerce_scalar_field(v_res)
-
-    def allclose(self, other, rtol=1e-7, atol=0):
-        """
-        Returns `True` if the two fields are element-wise equal up to the
-        given tolerance.
-
-        It compares the difference between 'self' and 'other' to
-        `atol + rtol * abs(self)`
-
-        This calls `np.allclose()` underneath, but with different
-        default tolerances (in particular, we use atol=0 so that
-        comparison also returns sensible results if the field values
-        are very small numbers.
-
-        The argument `other` must be either a scalar value or of type
-        `Field`. Passing a numpy array raises an error because it is
-        unclear in which order the values should be compares if the
-        degrees of freedom of the underlying dolfin vector are
-        re-ordered.
-
-        """
-        if not isinstance(other, Field):
-            raise TypeError("Argument `other` must be of type'Field'. "
-                            "Got: {} (type {}).".format(other, type(other)))
-
-        a = _dolfin_vector_array(other.f.vector())
-        b = _dolfin_vector_array(self.f.vector())
-
-        return np.allclose(a, b, rtol=rtol, atol=atol)
+        """Return rank-local owned coordinates and matching nodal values."""
+        del t
+        permutation = _owned_vertex_to_dof(self.functionspace)
+        num_vertices = self.mesh().geometry.index_map().size_local
+        geometric_dim = self.mesh().geometry.dim
+        coordinates = self.mesh().geometry.x[
+            :num_vertices, :geometric_dim
+        ].copy()
+        values = self._owned_nodal_values()[permutation].copy()
+        if self.is_scalar_field():
+            values = values.reshape(-1)
+        return coordinates, values
 
     @property
     def np(self):
         if self.value_dim() == 1:
-            # TODO: We should also rearrange these vector entries according to the dofmap.
             return self.get_ordered_numpy_array_xxx()
-        elif self.value_dim() == 3:
-            return self.get_ordered_numpy_array_xxx().reshape(3, -1)
-        else:
-            raise NotImplementedError("Numpy representation is only implemented for scalar and 3d vector fields.")
+        if self.value_dim() == 3:
+            return self.get_ordered_numpy_array_xxx().reshape((3, -1))
+        raise NotImplementedError(
+            "Field.np is only implemented for scalar and 3-component fields"
+        )
 
-    def probe(self, coord):
-        return self.f(coord)
+    def save_pvd(self, filename, t=0.0):
+        """Append the function to a DOLFINx VTK/PVD time series."""
+        if not filename.endswith(".pvd"):
+            filename += ".pvd"
+        if not hasattr(self, "_pvd_file"):
+            self._pvd_file = io.VTKFile(self.mesh().comm, filename, "w")
+            self._pvd_filename = filename
+        elif filename != self._pvd_filename:
+            raise ValueError(
+                "this Field is already writing VTK output to {}".format(
+                    self._pvd_filename
+                )
+            )
+        self._pvd_file.write_function(self.f, float(t))
+        return self
 
-    def mesh(self):
-        return self.functionspace.mesh()
+    def close_pvd(self):
+        if hasattr(self, "_pvd_file"):
+            self._pvd_file.close()
+            del self._pvd_file
+            del self._pvd_filename
 
-    def mesh_dim(self):
-        return self.functionspace.mesh().topology().dim()
+    def save_xdmf(self, filename, t=0.0):
+        """Append the mesh/function to a DOLFINx XDMF/HDF5 time series."""
+        if not filename.endswith(".xdmf"):
+            filename += ".xdmf"
+        if not hasattr(self, "_xdmf_file"):
+            self._xdmf_file = io.XDMFFile(self.mesh().comm, filename, "w")
+            self._xdmf_filename = filename
+            self._xdmf_file.write_mesh(self.mesh())
+        elif filename != self._xdmf_filename:
+            raise ValueError(
+                "this Field is already writing XDMF output to {}".format(
+                    self._xdmf_filename
+                )
+            )
+        self._xdmf_file.write_function(self.f, float(t))
+        return self
 
-    def mesh_dofmap(self):
-        return self.functionspace.dofmap()
+    def close_xdmf(self):
+        if hasattr(self, "_xdmf_file"):
+            self._xdmf_file.close()
+            del self._xdmf_file
+            del self._xdmf_filename
 
-    def value_dim(self):
-        if self.is_scalar_field():
-            # Scalar field.
-            return 1
-        else:
-            # value_shape() returns a tuple (N,) and int is required.
-            return self.functionspace.num_sub_spaces()#ufl_element().value_shape()[0]
+    def save_hdf5(self, filename, t=None, unit_length=None):
+        """Write this Field to a single, self-describing HDF5 checkpoint.
 
-    def vector(self):
-        return self.f.vector()
+        The legacy ``Field.save_hdf5`` used the external ``dolfinh5tools``
+        package to write a ``.h5`` (mesh + a function timeseries) plus a
+        ``.json`` sidecar listing the saved times. That package is not part of
+        the DOLFINx port. This replacement writes ONE ``.h5`` file (no sidecar)
+        holding a single snapshot in the port's coordinate-aware format -- the
+        same philosophy as the ``.npy`` restart archive
+        (``sim_helpers.save_restart_data``): store the owned mesh-vertex
+        coordinates alongside the coordinate-ordered nodal values, so a load
+        remaps by physical coordinate and is robust to FEM/vertex reordering
+        (never a raw dof-index copy). This is a serial-only, single-snapshot
+        checkpoint -- not the legacy dolfinh5tools timeseries.
 
-    def petsc_vector(self):
-        return df.as_backend_type(self.f.vector()).vec()
+        On-disk layout (``h5py``), read back by :meth:`from_hdf5`:
 
-    def save_pvd(self, filename):
-        """Save to pvd file using dolfin code"""
-        if filename[-4:] != '.pvd':
-            filename += '.pvd'
-        pvd_file = df.File(filename)
-        pvd_file << self.f
-
-    def save_hdf5(self, filename, t):
-        """
-        Save field to h5 file and corresponding metadata (times at which field is saved),
-        which is saved to a json file.
-
-        Note, the mesh is automatically saved into this file as it is required by
-        load_hdf5.
+        - root attrs:
+            - ``format`` = ``"finmag-field-hdf5"``;
+            - ``format_version`` = ``1``;
+            - ``value_dim`` : number of components per node (1 for scalar);
+            - ``is_scalar`` : bool;
+            - ``name`` : the Field's name (``""`` if unset);
+            - ``t`` : the snapshot time, only if ``t`` was supplied;
+            - ``unit_length`` : mesh unit length, only if supplied;
+        - dataset ``coordinates`` : owned mesh-vertex coordinates ``(n, gdim)``;
+        - dataset ``values`` : coordinate-ordered nodal values ``(n, value_dim)``
+          matching ``coordinates`` row-for-row.
 
         Arguments:
-        filename - filename of data to be saved (no extensions)
-
-        t        - time at which the file is being save
-                   it is recomended that this is taken from sim.t
-
-        This function creates to files with filename.h5 and filename.json names.
-
-        When simulation/field saving is finished, it is recomended that close_hdf5() is
-        called.
-
-        To load a file, do so as:
-        
-        ```
-        from dolfinh5tools import openh5
-        h5file = openh5(filename, field_name='fieldname', mode='r')
-        h5file.read(t=t)
-        ```
-
-        See explanatory notebook tutorial-saving-field-in-hdf5-file.ipynb
-        for more details.
+            filename : output path; a missing ``.h5`` suffix is appended.
+            t : optional snapshot time, recorded as an attribute for reference.
+            unit_length : optional mesh unit length, recorded as an attribute.
         """
-        # ask if file has already been created. If not, create it.
-        if not hasattr(self, 'h5fileWrite'):
-            self.h5fileWrite = dolfinh5tools.Create(filename, self.functionspace)
-            self.h5fileWrite.save_mesh()
-        self.h5fileWrite.write(self.f, self.name, t)
+        import h5py
+
+        filename = _ensure_h5_suffix(filename)
+        value_dim = self.value_dim()
+        coordinates, values = self.coords_and_values()
+        coordinates = np.asarray(coordinates, dtype=np.float64)
+        values = np.asarray(values, dtype=np.float64).reshape((-1, value_dim))
+
+        with h5py.File(filename, "w") as h5file:
+            h5file.attrs["format"] = FIELD_HDF5_FORMAT
+            h5file.attrs["format_version"] = FIELD_HDF5_FORMAT_VERSION
+            h5file.attrs["value_dim"] = value_dim
+            h5file.attrs["is_scalar"] = self.is_scalar_field()
+            h5file.attrs["name"] = self.name if self.name is not None else ""
+            if t is not None:
+                h5file.attrs["t"] = float(t)
+            if unit_length is not None:
+                h5file.attrs["unit_length"] = float(unit_length)
+            h5file.create_dataset("coordinates", data=coordinates)
+            h5file.create_dataset("values", data=values)
+        return self
 
     def close_hdf5(self):
-        """Close hdf5 file. Delete the saving object variable."""
+        """No-op: :meth:`save_hdf5` writes a complete file per call.
 
-        if hasattr(self, 'h5fileWrite'):
-            self.h5fileWrite.close()
-            del self.h5fileWrite
-
-    def plot_with_dolfin(self, interactive=True):
-        df.plot(self.f, interactive=interactive)
-
-    def plot_with_paraview(self, **kwargs):
+        The legacy API kept a ``dolfinh5tools`` writer open across a timeseries
+        and required an explicit close. The single-file checkpoint written by
+        :meth:`save_hdf5` opens and closes the file on each call, so there is no
+        handle to release; this method exists only for legacy call-site
+        compatibility.
         """
-        Render the field using Paraview and return an `IPython.display.Image`
-        object with the resulting plot (which is displayed as a regular image
-        in an IPython notebook). All keyword arguments are passed on to the
-        function `finmag.util.visualization.render_paraview_scene`, which is
-        used internally. This currently only works for 3D vector fields.
+        return None
 
+    @classmethod
+    def from_hdf5(cls, functionspace, filename):
+        """Rebuild a Field on ``functionspace`` from a :meth:`save_hdf5` file.
+
+        The stored coordinate/value table is remapped onto the target space's
+        owned vertices by physical coordinate (rounded to
+        ``_FIELD_HDF5_COORD_DECIMALS`` decimals), mirroring
+        ``sim_helpers.apply_restart_magnetisation``. A one-to-one coordinate
+        match is required: any target vertex missing from the file, or a
+        component-count / coordinate-shape mismatch, is a loud ``ValueError``
+        (never a silent misassignment).
         """
-        return plot_dolfin_function(self.f, **kwargs)
+        import h5py
 
-    def normalise_dofmap(self):
+        filename = _ensure_h5_suffix(filename)
+        with h5py.File(filename, "r") as h5file:
+            fmt = h5file.attrs.get("format")
+            if fmt != FIELD_HDF5_FORMAT:
+                raise ValueError(
+                    "'{}' is not a finmag Field HDF5 checkpoint (format={!r}, "
+                    "expected {!r})".format(filename, fmt, FIELD_HDF5_FORMAT)
+                )
+            version = int(h5file.attrs.get("format_version", -1))
+            if version != FIELD_HDF5_FORMAT_VERSION:
+                raise ValueError(
+                    "'{}' has HDF5 format_version={!r}, but this port only "
+                    "supports version {}".format(
+                        filename, version, FIELD_HDF5_FORMAT_VERSION
+                    )
+                )
+            stored_value_dim = int(h5file.attrs["value_dim"])
+            name = h5file.attrs.get("name", "")
+            stored_coords = np.asarray(h5file["coordinates"], dtype=np.float64)
+            stored_values = np.asarray(h5file["values"], dtype=np.float64)
+
+        name = name or None
+        field = cls(functionspace, name=name)
+        if field.value_dim() != stored_value_dim:
+            raise ValueError(
+                "checkpoint value_dim {} does not match the target function "
+                "space value_dim {}".format(stored_value_dim, field.value_dim())
+            )
+        stored_values = stored_values.reshape((-1, stored_value_dim))
+
+        stored_coords_r = np.round(stored_coords, _FIELD_HDF5_COORD_DECIMALS)
+        target_coords, _ = field.coords_and_values()
+        target_coords_r = np.round(
+            np.asarray(target_coords, dtype=np.float64),
+            _FIELD_HDF5_COORD_DECIMALS,
+        )
+
+        if stored_coords_r.shape != target_coords_r.shape:
+            raise ValueError(
+                "HDF5 mesh mismatch: stored {} coordinates but the target field "
+                "has {}".format(stored_coords_r.shape, target_coords_r.shape)
+            )
+
+        lookup = {
+            tuple(coord): index
+            for index, coord in enumerate(stored_coords_r)
+        }
+        if len(lookup) != stored_coords_r.shape[0]:
+            raise ValueError("HDF5 checkpoint has duplicate vertex coordinates")
+
+        remapped = np.empty_like(stored_values)
+        for target_index, coord in enumerate(target_coords_r):
+            try:
+                source_index = lookup[tuple(coord)]
+            except KeyError:
+                raise ValueError(
+                    "HDF5 mesh mismatch: target vertex {} is absent from the "
+                    "checkpoint".format(coord.tolist())
+                )
+            remapped[target_index] = stored_values[source_index]
+
+        field.set_with_ordered_numpy_array_xyz(remapped.reshape(-1))
+        return field
+
+    def probe(self, point):
+        """Evaluate the field at a physical mesh-coordinate point.
+
+        Legacy (pixi ``ba928093`` ``Field.probe``) was ``return self.f(coord)``
+        -- a thin forward to dolfin's built-in ``Function.__call__`` point
+        evaluation. DOLFINx removed that convenience (``fem.Function`` objects
+        are not callable), so this restores it via the documented DOLFINx
+        point-in-cell mechanic: a geometry bounding-box tree locates the
+        (rank-local) cell containing the point, then ``Function.eval``
+        evaluates the interpolated value there -- exactly the mechanic
+        promoted from the Task 30 exchange_demag density-comparison
+        workaround into the shared :func:`evaluate_at_point` helper (Task 26a).
+
+        Returns a Python ``float`` for a scalar field or a ``(value_dim,)``
+        NumPy array for a vector field, matching legacy's return shape.
+        Raises ``RuntimeError`` if the point is not inside this rank's local
+        mesh partition, mirroring legacy dolfin's "point not inside domain"
+        failure (legacy's default ``allow_extrapolation=False``).
+
+        Only a single point per call is supported, matching every legacy
+        call site (e.g. ``exch_energy([15, 15, i])`` called once per point in
+        a Python loop) -- legacy dolfin's ``Function.__call__`` never
+        vectorised over many points either.
+
+        Serial-only (inherited limitation, consistent with the rest of this
+        module's MPI documentation): this only searches cells owned/ghosted
+        by the calling rank, so it is not collective across ranks. In a
+        multi-rank run a point owned only by another rank raises here even
+        though it exists in the global mesh -- restrict parallel use to
+        points known to be locally resident, or run in serial as every
+        legacy call site did.
         """
-        Overwrite own field values with normalised ones.
+        return evaluate_at_point(self.f, point)
 
-        """
-        dofmap = df.vertex_to_dof_map(self.functionspace)
-        reordered = _dolfin_vector_array(self.f.vector())[dofmap]  # [x1, y1, z1, ..., xn, yn, zn]
-        vectors = reordered.reshape((3, -1))  # [[x1, y1, z1], ..., [xn, yn, zn]]
-        lengths = np.sqrt(np.add.reduce(vectors * vectors, axis=1))
-        normalised = np.dot(vectors.T, np.diag(1 / lengths)).T.ravel()
-        vertexmap = df.dof_to_vertex_map(self.functionspace)
-        normalised_original_order = normalised[vertexmap]
-        self.from_array(normalised_original_order)
+    def plot_with_dolfin(self, *args, **kwargs):
+        raise NotImplementedError("legacy dolfin plotting is unavailable under DOLFINx")
 
-    def normalise(self):
-        """
-        Normalises the Field, so that the norm at every mesh node is 1.
-        """
-        S1 = df.FunctionSpace(self.functionspace.mesh(), 'CG', 1)
-
-        norm_squared = 0
-        for i in range(self.value_dim()):
-            norm_squared += self.f[i]*self.f[i]
-
-        norm = df.Function(S1)
-        norm_vector = df.assemble(df.dot(df.sqrt(norm_squared), df.TestFunction(S1))*df.dP)
-        norm.vector().set_local(norm_vector.get_local())
-
-        #self.f = df.project(self.f/norm, self.functionspace)
-        self.f = (self / norm).f
+    def plot_with_paraview(self, *args, **kwargs):
+        raise NotImplementedError(
+            "automatic Paraview rendering is unavailable; write VTK/XDMF output"
+        )
 
     def get_spherical(self):
+        """Return the (theta, phi) spherical angles of a 3-component field.
+
+        Faithful transcription of legacy's ``Field.get_spherical`` (pixi
+        ``ba928093``):
+
+        - ``theta = atan2(m_r, m_z)``, the polar angle from the +z axis, with
+          ``m_r = sqrt(m_x**2 + m_y**2)`` the cylindrical radius;
+        - ``phi = atan2(m_y, m_x)``, the azimuthal angle;
+
+        both in radians on ``numpy.arctan2``'s ``(-pi, pi]`` branch (``theta``
+        is non-negative since ``m_r >= 0``, so it in fact lies in ``[0, pi]``).
+        There is no legacy ``set_spherical``/radius surface: legacy only ever
+        computed and returned these two angles (no magnitude), so none is
+        added here either.
+
+        Legacy assembled ``dot(expr, TestFunction(S1)) * dP`` -- dolfin's
+        point measure, which for Lagrange-1 elements is EXACT node-by-node
+        evaluation (not an L2 projection: the point measure is a Dirac comb at
+        the mesh vertices, and each basis function is 1 at its own vertex and
+        0 at every other). This DOLFINx port computes the identical result
+        directly as a NumPy expression on the owned nodal array, which is
+        mathematically identical to (and cheaper than) reproducing dolfin's
+        ``dP`` trick via DOLFINx's point-measure equivalent.
+
+        Sets ``self.theta``/``self.phi`` (each a raw ``dolfinx.fem.Function``
+        on the CG1 scalar space associated with this field's function space,
+        matching legacy's raw ``dolfin.Function`` attributes -- not a
+        ``finmag.Field``) and returns the pair, exactly mirroring legacy's
+        ``return self.theta, self.phi``.
         """
-        Transform magnetisation coordinates to spherical coordinates
-        
-        theta = arctan(m_r / m_z) ; m_r = sqrt(m_x ^ 2 + m_y ^ 2)
-        phi = arctan(m_y / m_x)        
+        if self.value_dim() != 3:
+            raise ValueError(
+                "get_spherical is only defined for 3-component vector fields."
+            )
+        owned = self._owned_nodal_values()
+        mx, my, mz = owned[:, 0], owned[:, 1], owned[:, 2]
+        m_r = np.sqrt(mx * mx + my * my)
+        theta_values = np.arctan2(m_r, mz)
+        phi_values = np.arctan2(my, mx)
 
-        The theta and phi generalised coordinates are stored in
-        self.theta and self.phi respectively.
-        
-        When this function is called, the two dolfin functions
-        are returned
-
-        """
-
-        # Create an scalar Function Space to compute the cylindrical radius (x^2 + y^2)
-        # and the angles phi and theta
-        S1 = df.FunctionSpace(self.functionspace.mesh(), 'CG', 1)
-
-        # Create a dolfin function from the FS
-        m_r = df.Function(S1)
-        # Compute the radius using the assemble method with dolfin dP
-        # (like a dirac delta to get values on every node of the mesh)
-        # This returns a dolfin vector
-        cyl_vector = df.assemble(df.dot(df.sqrt(self.f[0] * self.f[0] + self.f[1] * self.f[1]),
-                                        df.TestFunction(S1)) * df.dP,
-                         
-                                 )
-        # Set the vector values to the dolfin function
-        m_r.vector().set_local(cyl_vector.get_local())
-
-        # Now we compute the theta and phi angles to describe the magnetisation
-        # and save them to the coresponding variables
-        self.theta = df.Function(S1)
-        self.phi = df.Function(S1)
-
-        # We will use the same vector variable than the one used to
-        # compute m_r,  in order to save memory
-
-        # Theta = arctan(m_r / m_z)
-        cyl_vector = df.assemble(df.dot(df.atan_2(m_r, self.f[2]),
-                                        df.TestFunction(S1)) * df.dP,
-                                 tensor=cyl_vector
-                                 )
-
-        # Instead of:
-        # self.theta.vector().set_local(cyl_vector.get_local())
-        # We will use:
-        self.theta.vector().axpy(1, cyl_vector)
-        # which adds:  1 * cyl_vector
-        # to self.theta.vector() and is much faster
-        # (we assume self.theta.vector() is empty, i.e. only made of zeros)
-        # See: Fenics Book, page 44
- 
-        # Phi = arctan(m_y / m_x)
-        cyl_vector = df.assemble(df.dot(df.atan_2(self.f[1], self.f[0]),
-                                                df.TestFunction(S1)) * df.dP,
-                                         tensor=cyl_vector
-                                         )
-
-        # We will save this line just in case:
-        # self.phi.vector().set_local(cyl_vector.get_local())
-        self.phi.vector().axpy(1, cyl_vector)
-
+        scalar_space = associated_scalar_space(self.functionspace)
+        self.theta = fem.Function(scalar_space)
+        self.phi = fem.Function(scalar_space)
+        self.theta.x.array[: theta_values.size] = theta_values
+        self.phi.x.array[: phi_values.size] = phi_values
+        self.theta.x.scatter_forward()
+        self.phi.x.scatter_forward()
         return self.theta, self.phi
+
+    def _owned_scalar_dofs(self):
+        dofmap = self.functionspace.dofmap
+        return dofmap.index_map.size_local * dofmap.index_map_bs
+
+    def _owned_nodal_values(self):
+        owned = self._owned_scalar_dofs()
+        return self.f.x.array[:owned].reshape((-1, self.value_dim()))
+
+    def _interpolation_callable(self, function):
+        value_dim = self.value_dim()
+
+        def coerce_vectorized(value, count):
+            value = np.asarray(value, dtype=np.float64)
+            if value_dim == 1:
+                if value.ndim == 0:
+                    return np.full(count, float(value))
+                if value.shape in ((count,), (1, count)):
+                    return value.reshape(count)
+            else:
+                if value.shape == (value_dim,):
+                    return np.repeat(value[:, None], count, axis=1)
+                if value.shape == (value_dim, count):
+                    return value
+            raise ValueError("callable returned an incompatible value shape")
+
+        def wrapped(x):
+            try:
+                return coerce_vectorized(function(x), x.shape[1])
+            except Exception as vectorized_error:
+                try:
+                    point_values = [function(x[:, i]) for i in range(x.shape[1])]
+                    values = np.asarray(point_values, dtype=np.float64)
+                    if value_dim == 1 and values.shape == (x.shape[1],):
+                        return values
+                    if values.shape == (x.shape[1], value_dim):
+                        return values.T
+                except Exception as pointwise_error:
+                    raise ValueError(
+                        "callable failed for vectorized and pointwise coordinates"
+                    ) from pointwise_error
+                raise ValueError(
+                    "pointwise callable returned an incompatible value shape"
+                ) from vectorized_error
+
+        return wrapped
+
+    @staticmethod
+    def _unsupported_point_arithmetic(name):
+        raise NotImplementedError(
+            "{} used legacy point-measure assembly and is not yet ported".format(name)
+        )
+
+    def _require_same_space(self, other, operation):
+        """Guard that ``other`` is a Field on this exact function space.
+
+        Both operands must share the same dofmap so ``_owned_nodal_values``
+        rows are index-aligned node-for-node -- feeding differently-ordered
+        spaces would silently scramble nodes (the Task-31 failure class).
+        Mirrors the identity check used by :meth:`allclose`.
+        """
+        if not (
+            self.mesh() is other.mesh()
+            and self.functionspace is other.functionspace
+        ):
+            raise ValueError(
+                "{} requires Fields on the same mesh and function space".format(
+                    operation
+                )
+            )
+
+    def coerce_scalar_field(self, value):
+        """Coerce ``value`` into a scalar Field on the associated scalar space.
+
+        Mirrors legacy ``Field.coerce_scalar_field``: a number (or anything the
+        Field constructor accepts) becomes a scalar Field on
+        ``associated_scalar_space(self.functionspace)``; an existing Field must
+        already be scalar and passes straight through.
+        """
+        if not isinstance(value, Field):
+            scalar_space = associated_scalar_space(self.functionspace)
+            try:
+                return Field(scalar_space, value)
+            except Exception:
+                raise ValueError(
+                    "cannot coerce into scalar field: {}".format(value)
+                )
+        value.assert_is_scalar_field()
+        return value
+
+    def __add__(self, other):
+        del other
+        self._unsupported_point_arithmetic("Field addition")
+
+    def _scaled_by_scalar(self, other, operation):
+        """Shared body of ``__mul__``/``__truediv__`` (Claas Abert's pointwise
+        'point measure hack'): scale each nodal value by a coerced scalar.
+
+        For Lagrange-1 the legacy ``dP`` point measure is exact node-by-node,
+        so operate directly on the owned nodal rows (raw backend order, shared
+        dofmap between this field and the coerced scalar field) and scatter the
+        result -- no assembly needed.
+        """
+        scalar = self.coerce_scalar_field(other)
+        nodal = self._owned_nodal_values()
+        scale = scalar._owned_nodal_values().reshape(-1)
+        if operation == "mul":
+            scaled = nodal * scale[:, None]
+        else:
+            scaled = nodal / scale[:, None]
+        result = Field(self.functionspace)
+        owned = self._owned_scalar_dofs()
+        result.f.x.array[:owned] = scaled.reshape(-1)
+        result.f.x.scatter_forward()
+        return result
+
+    def __mul__(self, other):
+        return self._scaled_by_scalar(other, "mul")
+
+    __rmul__ = __mul__
+
+    def __truediv__(self, other):
+        return self._scaled_by_scalar(other, "div")
+
+    __div__ = __truediv__
+
+    def cross(self, other):
+        """Return the pointwise 3-vector cross product as a new vector Field.
+
+        Both operands must be 3-component vector Fields on the same space; the
+        result lives on that same vector space. ``x_hat cross y_hat == z_hat``
+        at every node.
+        """
+        if not isinstance(other, Field):
+            raise TypeError(
+                "Argument must be a Field. Got: {} ({})".format(other, type(other))
+            )
+        if not (self.value_dim() == 3 and other.value_dim() == 3):
+            raise ValueError(
+                "The cross product is only defined for 3d vector fields."
+            )
+        self._require_same_space(other, "cross")
+        a = self._owned_nodal_values()
+        b = other._owned_nodal_values()
+        result = Field(self.functionspace)
+        owned = self._owned_scalar_dofs()
+        result.f.x.array[:owned] = np.cross(a, b).reshape(-1)
+        result.f.x.scatter_forward()
+        return result
+
+    def dot(self, other):
+        """Return the pointwise dot product as a new scalar Field.
+
+        Both operands must be vector Fields of equal dimension on the same
+        space; the result lives on the associated scalar space. ``m dot m == 1``
+        for a unit vector field.
+        """
+        if not isinstance(other, Field):
+            raise TypeError(
+                "Argument must be a Field. Got: {} ({})".format(other, type(other))
+            )
+        if not (self.value_dim() == other.value_dim()):
+            raise ValueError(
+                "The dot product is only defined for vector fields of the "
+                "same dimension."
+            )
+        self._require_same_space(other, "dot")
+        a = self._owned_nodal_values()
+        b = other._owned_nodal_values()
+        result = Field(associated_scalar_space(self.functionspace))
+        owned = result._owned_scalar_dofs()
+        result.f.x.array[:owned] = np.einsum("ij,ij->i", a, b)
+        result.f.x.scatter_forward()
+        return result
+
+
+def evaluate_at_point(function, point):
+    """Evaluate a scalar/vector ``dolfinx.fem.Function`` at a physical point.
+
+    Restores the point-in-cell mechanic legacy got for free from dolfin's
+    ``Function.__call__`` (DOLFINx ``fem.Function`` objects are not directly
+    callable at a point): locate the containing cell with a geometry
+    bounding-box tree (``geometry.bb_tree`` + ``compute_collisions_points`` +
+    ``compute_colliding_cells``), then evaluate there with ``Function.eval``.
+
+    This is the exact mechanic proven by the Task 30 exchange_demag
+    ``_eval_scalar_function`` density-comparison workaround, promoted here
+    into a single shared helper (Task 26a) so both :meth:`Field.probe`/
+    :meth:`Field.__call__` AND any raw ``dolfinx.fem.Function`` -- such as the
+    one returned by ``EnergyBase.energy_density_function()``, which legacy
+    also returned raw "to allow probing" -- share one implementation instead
+    of each call site reinventing it.
+
+    Returns a Python ``float`` for a scalar-valued function or a
+    ``(value_size,)`` NumPy array for a vector-valued function. Raises
+    ``RuntimeError`` if the point is not inside a cell owned/ghosted by the
+    calling rank (not collective; see :meth:`Field.probe` for the parallel
+    caveat).
+    """
+    domain = function.function_space.mesh
+    point_arr = np.asarray(point, dtype=np.float64).reshape(-1)
+    padded = np.zeros(3, dtype=np.float64)
+    padded[: point_arr.size] = point_arr
+    tree = geometry.bb_tree(domain, domain.topology.dim)
+    candidates = geometry.compute_collisions_points(tree, padded.reshape(1, 3))
+    colliding = geometry.compute_colliding_cells(domain, candidates, padded.reshape(1, 3))
+    links = colliding.links(0)
+    if len(links) == 0:
+        raise RuntimeError(
+            "point {} is not inside the mesh".format(tuple(point_arr.tolist()))
+        )
+    value = np.asarray(function.eval(padded, links[0]), dtype=np.float64)
+    if value.size == 1:
+        return float(value[0])
+    return value.copy()
+
+
+class PointEvaluableFunction(fem.Function):
+    """A ``dolfinx.fem.Function`` that is point-callable like legacy dolfin's.
+
+    Legacy dolfin ``Function`` objects evaluated themselves at a physical
+    point when called (``m((x, y, z))`` -> component vector), and legacy
+    finmag exposed that contract directly to users through
+    ``Simulation.get_field_as_dolfin_function``. DOLFINx ``fem.Function``
+    inherits ``__call__`` from ``ufl.Coefficient`` instead, where a call means
+    *symbolic* evaluation: it silently returns a UFL object (warning
+    "Couldn't map 'm' to a float"), and the first Python comparison on the
+    result raises ``ValueError: UFL conditions cannot be evaluated as bool in
+    a Python context`` (register D26).
+
+    This subclass restores the legacy contract by routing ``__call__`` through
+    :func:`evaluate_at_point`, the port's shared point-in-cell evaluator. It
+    is a real ``fem.Function`` (so ``isinstance`` checks, ``.x``, ``.eval``,
+    ``.function_space``, ``.interpolate`` and use inside forms all behave
+    normally), which is why this is a subclass rather than a proxy object.
+
+    Caveat inherited from :func:`evaluate_at_point` (register D22): a point
+    lying exactly on an OUTER mesh face may resolve to the wrong boundary
+    vertex; strictly interior points are correct. Points outside this rank's
+    local mesh partition raise ``RuntimeError``, mirroring legacy dolfin's
+    "point not inside domain" failure.
+
+    Note: ``fem.Function.copy()``, ``.sub()`` and ``.collapse()`` each
+    construct their result with a hardcoded ``Function(...)`` call (not
+    ``type(self)(...)``), so calling any of them on a
+    ``PointEvaluableFunction`` returns a plain ``fem.Function`` -- the
+    point-callable override does NOT survive; re-wrap the result in
+    :func:`as_point_evaluable` if point-calling is needed on it.
+    """
+
+    def __call__(self, *args):
+        """Evaluate at a point given as one coordinate sequence or as scalars.
+
+        Both legacy spellings are accepted: ``f([x, y, z])`` (the one every
+        in-tree caller uses) and ``f(x, y, z)``.
+        """
+        # UFL restriction syntax (f('+')/f('-')) is not point evaluation;
+        # delegate to ufl.Coefficient.__call__ so this subclass stays usable
+        # inside forms (no in-tree caller uses this today; hardening only).
+        if args in (("+",), ("-",)):
+            return super().__call__(*args)
+        if not args:
+            raise TypeError("a point is required to evaluate this function")
+        point = args[0] if len(args) == 1 else args
+        return evaluate_at_point(self, point)
+
+
+def as_point_evaluable(function):
+    """Return ``function`` as a point-callable :class:`PointEvaluableFunction`.
+
+    The returned Function SHARES its degree-of-freedom storage with
+    ``function`` (DOLFINx' documented ``Function(V, x=...)`` constructor), so
+    it is a live view -- not a snapshot copy -- exactly as legacy's
+    ``get_field_as_dolfin_function`` returned the live ``m`` Function itself.
+    Already-callable inputs are returned unchanged.
+    """
+    if isinstance(function, PointEvaluableFunction):
+        return function
+    return PointEvaluableFunction(
+        function.function_space, x=function.x, name=function.name)
+
+
+def _assemble_scalar(domain, expression):
+    local_value = fem.assemble_scalar(fem.form(expression))
+    return domain.comm.allreduce(local_value, op=MPI.SUM)
+
+
+def _owned_vertex_to_dof(functionspace):
+    """Map owned mesh-vertex order to owned blocked dof order by coordinate."""
+    domain = functionspace.mesh
+    dof_coordinates = functionspace.tabulate_dof_coordinates()
+    vertex_coordinates = domain.geometry.x
+    if dof_coordinates.shape[0] != vertex_coordinates.shape[0]:
+        raise ValueError(
+            "coordinate ordering requires exactly one dof per mesh vertex "
+            "(got {} dofs and {} vertices)".format(
+                dof_coordinates.shape[0], vertex_coordinates.shape[0]
+            )
+        )
+
+    num_owned_vertices = domain.geometry.index_map().size_local
+    num_owned_dofs = functionspace.dofmap.index_map.size_local
+
+    # Tolerance-based nearest-vertex match.
+    #
+    # The original implementation matched dof<->vertex coordinates by an exact
+    # 12-decimal-rounded dictionary lookup. That is bit-exact (and works) for
+    # structured meshes such as ``dolfinx.mesh.create_box``, but it is brittle
+    # for meshes carrying floating-point coordinate noise -- notably the
+    # Gmsh/``from_geofile`` meshes exercised by the converted examples (Task 30),
+    # whose vertices differ from the tabulated dof coordinates by ~1e-13. When
+    # such noise straddles a 12th-decimal rounding boundary the exact lookup
+    # raises "could not match DOLFINx dofs to owned mesh vertices" even though a
+    # clean one-to-one correspondence exists. A nearest-neighbour match within a
+    # scale-relative tolerance is robust to that noise and remains exact for
+    # bit-exact structured meshes. (Discovered while running exchange_demag /
+    # std_prob_4 on ``from_geofile`` bar meshes -- see the Task 30 report.)
+    # [Claude Opus 4.8]
+    from scipy.spatial import cKDTree
+
+    tree = cKDTree(dof_coordinates)
+    targets = vertex_coordinates[:num_owned_vertices]
+    distances, permutation = tree.query(targets)
+    permutation = np.asarray(permutation, dtype=np.int64)
+
+    span = dof_coordinates.max(axis=0) - dof_coordinates.min(axis=0)
+    scale = float(np.linalg.norm(span))
+    tol = 1e-9 * scale if scale > 0.0 else 1e-12
+    if distances.size and float(distances.max()) > tol:
+        raise ValueError("could not match DOLFINx dofs to owned mesh vertices")
+    if np.unique(permutation).size != permutation.size:
+        raise ValueError("coordinate ordering requires distinct dof coordinates")
+    if np.any(permutation >= num_owned_dofs):
+        raise ValueError("owned vertices did not map exclusively to owned dofs")
+    return permutation
+
+
+def owned_raw_to_blocked(functionspace, raw_array):
+    """Convert a flat owned backend-order array to the legacy blocked view.
+
+    ``raw_array`` is a flat rank-local **owned** dof array in DOLFINx backend
+    (node-interleaved ``[x0, y0, z0, x1, y1, z1, ...]``) order -- exactly what
+    an interaction's raw box/analytic assembly or ``Field.as_array()`` returns.
+    The result is the legacy component-blocked, owned-vertex-coordinate-ordered
+    ``xxx`` view (``[x(v0), x(v1), ..., y(v0), ..., z(v0), ...]`` over owned
+    vertices), identical to :meth:`Field.get_ordered_numpy_array_xxx`.
+
+    This is the single shared conversion applied at every public field-array
+    boundary (each interaction's ``compute_field``); it reuses the canonical
+    ``_owned_vertex_to_dof`` coordinate permutation -- it is NOT a naive
+    interleave-transpose. Scalar spaces are returned coordinate-ordered.
+    """
+    element = functionspace.ufl_element()
+    value_shape = element.reference_value_shape
+    value_dim = int(np.prod(value_shape)) if value_shape else 1
+    permutation = _owned_vertex_to_dof(functionspace)
+    raw_array = np.asarray(raw_array, dtype=np.float64)
+    xyz = raw_array.reshape((-1, value_dim))[permutation].reshape(-1)
+    if value_dim == 1:
+        return xyz
+    return xyz.reshape((-1, value_dim)).T.reshape(-1)

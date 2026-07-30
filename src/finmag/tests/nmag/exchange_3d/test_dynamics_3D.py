@@ -14,6 +14,8 @@ def setup_module(module):
 
 
 @pytest.mark.slow
+@pytest.mark.not_ported
+@pytest.mark.xfail(reason="not ported: legacy dolfin-API nmag exchange_3d comparison harness (run_dolfin.py), checked Nmag data; serial dynamics covered by dolfinx-src-llg-pytest (D33)", strict=True)
 def test_compare_averages():
     ref = np.loadtxt(os.path.join(MODULE_DIR, "averages_ref.txt"))
     computed = np.loadtxt(os.path.join(MODULE_DIR, "averages.txt"))

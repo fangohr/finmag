@@ -1,5 +1,4 @@
 import finmag
-from finmag.util import helpers
 
 from copy import copy
 import logging
@@ -102,7 +101,7 @@ def initialise_skyrmions(sim, skyrmionRadius, centres="singleCentre"):
     """
 
     if isinstance(centres, str) and centres == "singleCentre":
-        dim = sim.mesh.topology().dim()
+        dim = sim.mesh.topology.dim
         centres = np.array([np.zeros(dim)])
 
     numCentres = len(centres)
@@ -457,7 +456,7 @@ def initialise_vortex(sim, type, center=None, **kwargs):
     arguments.
 
     """
-    coords = np.array(sim.mesh.coordinates())
+    coords = np.asarray(sim.mesh.geometry.x)
     if center is None:
         center = 0.5 * (coords.min(axis=0) + coords.max(axis=0))
 

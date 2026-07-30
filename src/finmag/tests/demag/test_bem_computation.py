@@ -3,15 +3,28 @@ import shutil
 import pytest
 import unittest
 import numpy as np
-import dolfin as df
+try:  # master: import dolfin as df
+    import dolfin as df
+    from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_fk_from_arrays, compute_bem_gcr
+    from finmag.util import helpers
+    from finmag.energies.demag import belement
+except ImportError:
+    # not ported (D33): tests below xfail. `Constant` is stubbed because it's
+    # evaluated as a module-level default-argument value below (`m_expr=
+    # df.Constant(...)`); every other `df.*` access still raises
+    # AttributeError so test bodies fail loudly at call time.
+    class _DolfinPlaceholder:
+        Constant = staticmethod(lambda *a, **kw: None)
+    df = _DolfinPlaceholder()
+    compute_lindholm_L = compute_lindholm_K = compute_bem_fk = None
+    compute_bem_fk_from_arrays = compute_bem_gcr = None
+    helpers = None
+    belement = None
 from finmag.field import Field
 from finmag.util.versions import get_version_dolfin
-from finmag.native.llg import compute_lindholm_L, compute_lindholm_K, compute_bem_fk, compute_bem_fk_from_arrays, compute_bem_gcr
 from finmag.util import time_counter
-from finmag.util import helpers
 from finmag.util.meshes import mesh_volume, sphere, netgen_is_usable
 from finmag.energies.demag import belement_magpar
-from finmag.energies.demag import belement
 from finmag.tests.test_solid_angle_invariance import random_3d_rotation_matrix
 from finmag.energies import Demag
 from finmag.energies.demag import KNOWN_SOLVERS
@@ -120,6 +133,8 @@ def compute_scalar_potential_native_gcr(mesh, m_expr=df.Constant([1, 0, 0]), Ms=
 
 class BemComputationTests(unittest.TestCase):
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_simple(self):
         r1 = np.array([1., 0., 0.])
         r2 = np.array([2., 1., 3.])
@@ -131,6 +146,8 @@ class BemComputationTests(unittest.TestCase):
         self.assertAlmostEqual(
             np.max(np.abs(be_magpar - be_native)), 0, delta=1e-12)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_cell_ordering(self):
         mesh = df.UnitCubeMesh(1, 1, 1)
         centre = np.array([0.5, 0.5, 0.5])
@@ -173,6 +190,8 @@ class BemComputationTests(unittest.TestCase):
         self.run_bem_computation_test(sphere(1., 0.2))
         self.run_bem_computation_test(df.UnitCubeMesh(3, 3, 3))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_bem_perf(self):
         mesh = df.UnitCubeMesh(15, 15, 15)
         boundary_mesh = df.BoundaryMesh(mesh, 'exterior', False)
@@ -194,6 +213,8 @@ class BemComputationTests(unittest.TestCase):
             bem, _ = compute_bem_gcr(boundary_mesh)
         print("GCR BEM computation for %dx%d (%.2f Mnodes/sec): %s" % (n, n, c.calls_per_sec(n * n / 1e6), c))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_bem_netgen(self):
         module_dir = os.path.dirname(os.path.abspath(__file__))
         netgen_mesh = df.Mesh(
@@ -214,6 +235,8 @@ class BemComputationTests(unittest.TestCase):
         self.assertAlmostEqual(
             error, 0, delta=tol, msg="Error is above threshold %g, %s" % (tol, message))
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_compute_scalar_potential_fk(self):
         m1 = df.Constant([1, 0, 0])
         m2 = df.Expression(["x[0]*x[1]+3", "x[2]+5", "x[1]+7"], degree=1)
@@ -281,14 +304,20 @@ class BemComputationTests(unittest.TestCase):
             v4 = func(r, r2, r3, r1)
             self.assertAlmostEqual(np.max(np.abs(v1[[1, 2, 0]] - v4)), 0)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_lindholm_L_symmetry(self):
         # Lindholm formulas should be invariant under rotations and
         # translations
         self.run_symmetry_test("compute_lindholm_L")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_lindholm_K_symmetry(self):
         self.run_symmetry_test("compute_lindholm_K")
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_lindholm_derivative(self):
         # the double layer potential is the derivative of the single layer potential
         # with respect to displacements of the triangle in the normal direction
@@ -307,6 +336,8 @@ class BemComputationTests(unittest.TestCase):
             L2 = differentiate_fd(f, 0)
             self.assertAlmostEqual(np.max(np.abs(L1 - L2)), 0, delta=1e-10)
 
+    @pytest.mark.not_ported
+    @pytest.mark.xfail(reason="not ported: legacy dolfin-API BEM/Lindholm test, native BEM gate covers a selected array contract not this bundled file (D33)", strict=True)
     def test_facet_normal_direction(self):
         mesh = df.UnitCubeMesh(1, 1, 1)
         field = df.Expression(["x[0]", "x[1]", "x[2]"], degree=1)

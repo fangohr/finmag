@@ -1,236 +1,100 @@
+"""Treecode-accelerated Fredkin-Koehler demag, ported to DOLFINx (Task 23).
+
+``TreecodeBEM`` is the ``Demag(solver='Treecode')`` variant.  It rides the
+ported :class:`~finmag.energies.demag.fk_demag.FKDemag` unchanged except for the
+one expensive step -- the boundary-element matrix-vector product
+``phi_2|_bnd = B @ phi_1|_bnd``.  The dense BEM (``O(n^2)`` storage and matvec)
+is replaced by the native octree fast-summation approximation of the *same*
+Lindholm double-layer operator (``finmag.native.treecode_bem.FastSum``), so the
+result converges to the dense FK demag as the accuracy knobs are tightened.
+
+Accuracy knobs (legacy surface preserved):
+
+- ``mac``: multipole acceptance criterion.  In the direct-sum limit the
+  treecode evaluates the boundary sum exactly (matches dense FK to machine
+  precision). Whether tightening/loosening ``mac`` from there measurably moves
+  the error is GEOMETRY-DEPENDENT: on a compact convex boundary (a cube or
+  sphere) the octree's far-field acceptance test is never satisfied at any
+  practical ``mac``, so accuracy stays at machine precision regardless of
+  ``mac``/``p``/``num_limit`` (verified by sweep, see
+  ``test_treecode_pbc_demag_dolfinx.py`` and ``transition-notes.org``); on an
+  elongated, well-separated geometry the approximation regime genuinely
+  activates and the legacy default ``mac=0.3`` measures ``~4.6e-5`` there.
+- ``p``: multipole expansion order -- confirmed (from the C source and
+  empirically) to have NO effect on accuracy: the moment/coefficient arrays in
+  ``common.c`` are hard-coded to a fixed 35-term (4th order) expansion
+  regardless of ``p``.
+- ``num_limit``: max particles per leaf; ``correct_factor``: sets the
+  near-field length scale (``r_eps``) that governs where octree subdivision
+  stops -- this one DOES move accuracy (a larger ``correct_factor`` shrinks the
+  fraction of the sum ever handled by the multipole path).
+- ``type_I``: index scheme.
+
+Validation is by cross-method comparison against the dense FK demag (there are
+no treecode oracle fixtures -- the frozen oracle env never built the module);
+see ``test_treecode_pbc_demag_dolfinx.py`` and ``transition-notes.org`` for the
+full accuracy-regime investigation (round-1 review item) including the C-source
+citations and the elongated-bar approximation-regime witness numbers.
+[Claude Opus 4.8] [Claude Sonnet 5]
+"""
+
 import logging
+
 import numpy as np
-import dolfin as df
-import distutils
-from finmag.field import Field
-from finmag.util.consts import mu0
-from finmag.util.meshes import nodal_volume
-from finmag.native.treecode_bem import FastSum
-from finmag.native.treecode_bem import compute_solid_angle_single
-from finmag.util import helpers
 
-from .fk_demag import FKDemag
+from .fk_demag import FKDemag, boundary_solid_angles, boundary_triangle_normals
 
-logger = logging.getLogger(name='finmag')
+logger = logging.getLogger("finmag")
 
 
 class TreecodeBEM(FKDemag):
+    """Fredkin-Koehler demag with the BEM matvec done by octree fast-summation.
+
+    Constructor preserves the legacy signature
+    ``TreecodeBEM(mac, p, num_limit, correct_factor, type_I, name,
+    macrogeometry, thin_film)``.
+    """
 
     def __init__(self, mac=0.3, p=3, num_limit=100, correct_factor=10,
-                 type_I=True, name='Demag', macrogeometry=None, thin_film=False):
+                 type_I=True, name="Demag", macrogeometry=None,
+                 thin_film=False):
         super(TreecodeBEM, self).__init__(
             name=name, macrogeometry=macrogeometry, thin_film=thin_film)
-
         self.mac = mac
         self.p = p
         self.num_limit = num_limit
         self.correct_factor = correct_factor
         self.type_I = type_I
+        if macrogeometry is not None:
+            # The legacy treecode path ignores the macro-geometry lattice (the
+            # fast-summation kernel builds only the single-sample boundary sum);
+            # preserved here for surface compatibility, with a warning.
+            logger.warning(
+                "TreecodeBEM ignores 'macrogeometry'; use the dense-BEM "
+                "Demag(macrogeometry=...) for periodic demag.")
 
-    def setup(self, m, Ms, unit_length=1):
+    def _setup_bem(self, coords, cells, b2g):
+        """Build the treecode fast-summation operator instead of a dense BEM."""
+        from finmag.native.treecode_bem import FastSum
 
-        self.m = m
-        self.Ms = Ms
-        self.unit_length = unit_length
+        self._b2g_map = np.asarray(b2g, dtype=np.int64)
+        self._bem = None  # no dense matrix in the treecode path
 
-        mesh = m.mesh()
-        self.S1 = df.FunctionSpace(mesh, "Lagrange", 1)
-        self.dim = mesh.topology().dim()
+        coords_c = np.ascontiguousarray(coords, dtype=np.float64)
+        face_nodes = np.ascontiguousarray(cells, dtype=np.int32)
+        t_normals = boundary_triangle_normals(coords_c, face_nodes)
+        vert_bsa = boundary_solid_angles(self.domain, self.S1, self._b2g_map)
 
-        self._test1 = df.TestFunction(self.S1)
-        self._trial1 = df.TrialFunction(self.S1)
-        self._test3 = df.TestFunction(self.m.functionspace)
-        self._trial3 = df.TrialFunction(self.m.functionspace)
+        self._fast_sum = FastSum(
+            p=self.p, mac=self.mac, num_limit=self.num_limit,
+            correct_factor=self.correct_factor, type_I=self.type_I)
+        self._fast_sum.init_mesh(coords_c, t_normals, face_nodes,
+                                 np.ascontiguousarray(vert_bsa))
+        self._phi2_b = np.zeros(coords_c.shape[0])
 
-        # for computation of energy
-        self._nodal_volumes = nodal_volume(self.S1, unit_length)
-        # we will copy field into this when we need the energy
-        self._H_func = df.Function(self.m.functionspace)
-        self._E_integrand = -0.5 * mu0 * \
-            df.dot(self._H_func, self.m.f * self.Ms.f)
-        self._E = self._E_integrand * df.dx
-        self._nodal_E = df.dot(self._E_integrand, self._test1) * df.dx
-        self._nodal_E_func = df.Function(self.S1)
-
-        # for computation of field and scalar magnetic potential
-        self._poisson_matrix = self._poisson_matrix()
-        self._poisson_solver = df.KrylovSolver(self._poisson_matrix.copy(),
-                                               self.parameters['phi_1_solver'], self.parameters['phi_1_preconditioner'])
-        self._poisson_solver.parameters.update(self.parameters['phi_1'])
-        self._laplace_zeros = df.Function(self.S1).vector()
-        self._laplace_solver = df.KrylovSolver(
-            self.parameters['phi_2_solver'], self.parameters['phi_2_preconditioner'])
-        self._laplace_solver.parameters.update(self.parameters['phi_2'])
-        # We're setting 'same_nonzero_pattern=True' to enforce the
-        # same matrix sparsity pattern across different demag solves,
-        # which should speed up things.
-        self._laplace_solver.parameters["preconditioner"][
-            "structure"] = "same_nonzero_pattern"
-
-        # solution of inhomogeneous Neumann problem
-        self._phi_1 = df.Function(self.S1)
-        # solution of Laplace equation inside domain
-        self._phi_2 = df.Function(self.S1)
-        self._phi = df.Function(self.S1)  # magnetic potential phi_1 + phi_2
-
-        # To be applied to the vector field m as first step of computation of _phi_1.
-        # This gives us div(M), which is equal to Laplace(_phi_1), equation
-        # which is then solved using _poisson_solver.
-        self._Ms_times_divergence = df.assemble(
-            self.Ms.f * df.inner(self._trial3, df.grad(self._test1)) * df.dx)
-
-        # we move the bounday condition here to avoid create a instance each time when compute the
-        # magnetic potential
-        self.boundary_condition = df.DirichletBC(
-            self.S1, self._phi_2, df.DomainBoundary())
-        self.boundary_condition.apply(self._poisson_matrix)
-
-        self._setup_gradient_computation()
-
-        self.mesh = self.m.mesh()
-
-        self.bmesh = df.BoundaryMesh(self.mesh, 'exterior', False)
-        #self.b2g_map = self.bmesh.vertex_map().array()
-        self._b2g_map = self.bmesh.entity_map(0).array()
-
-        self.compute_triangle_normal()
-
-        self.__compute_bsa()
-
-        fast_sum = FastSum(p=self.p, mac=self.mac, num_limit=self.num_limit,
-                           correct_factor=self.correct_factor, type_I=self.type_I)
-
-        coords = self.bmesh.coordinates()
-        face_nodes = np.array(self.bmesh.cells(), dtype=np.int32)
-
-        fast_sum.init_mesh(coords, self.t_normals, face_nodes, self.vert_bsa)
-        self.fast_sum = fast_sum
-
-        self.phi2_b = np.zeros(self.bmesh.num_vertices())
-
-    def __compute_bsa(self):
-
-        vert_bsa = np.zeros(self.mesh.num_vertices())
-
-        mc = self.mesh.cells()
-        xyz = self.mesh.coordinates()
-        for i in range(self.mesh.num_cells()):
-            for j in range(4):
-
-                tmp_omega = compute_solid_angle_single(
-                    xyz[mc[i][j]],
-                    xyz[mc[i][(j + 1) % 4]],
-                    xyz[mc[i][(j + 2) % 4]],
-                    xyz[mc[i][(j + 3) % 4]])
-
-                vert_bsa[mc[i][j]] += tmp_omega
-
-        vert_bsa = vert_bsa / (4 * np.pi) - 1
-
-        self.vert_bsa = vert_bsa[self._b2g_map]
-
-    def compute_triangle_normal(self):
-
-        self.t_normals = []
-
-        for face in df.faces(self.mesh):
-            t = face.normal()  # one must call normal() before entities(3),...
-            cells = face.entities(3)
-            if len(cells) == 1:
-                self.t_normals.append([t.x(), t.y(), t.z()])
-
-        self.t_normals = np.array(self.t_normals)
-
-    def _compute_magnetic_potential(self):
-        # compute _phi_1 on the whole domain
-        g_1 = self._Ms_times_divergence * self.m.f.vector()
-
-        self._poisson_solver.solve(self._phi_1.vector(), g_1)
-
-        # compute _phi_2 on the boundary using the Dirichlet boundary
-        # conditions we get from BEM * _phi_1 on the boundary.
-
-        phi_1 = self._phi_1.vector()[self._b2g_map]
-
-        # In dolfin 1.4 and lower to access the array of a dolfin function, '.array()'
-        # is required. This is not needed in dolfin 1.5 and will cause error if is 
-        # present. Need to check with dolfin version are using and act according for the
-        # following line of code.
-        if distutils.version.LooseVersion(df.__version__) >= '1.5.0':
-            self.fast_sum.fastsum(self.phi2_b, phi_1)
-        else:
-            self.fast_sum.fastsum(self.phi2_b, phi_1.array())
-
-        self._phi_2.vector()[self._b2g_map[:]] = self.phi2_b
-
-        A = self._poisson_matrix
-        b = self._laplace_zeros
-        self.boundary_condition.set_value(self._phi_2)
-        self.boundary_condition.apply(A, b)
-
-        # compute _phi_2 on the whole domain
-        self._laplace_solver.solve(A, self._phi_2.vector(), b)
-        # add _phi_1 and _phi_2 to obtain magnetic potential
-        self._phi.vector()[:] = self._phi_1.vector() + self._phi_2.vector()
-
-
-def compare_field(f1, f2):
-    f1.shape = (3, -1)
-    f2.shape = (3, -1)
-    d = f1 - f2
-    res = []
-    for i in range(d.shape[1]):
-        v = f1[0][i] ** 2 + f1[1][i] ** 2 + f1[2][i] ** 2
-        t = d[0][i] ** 2 + d[1][i] ** 2 + d[2][i] ** 2
-        res.append(t / v)
-
-    f1.shape = (-1,)
-    f2.shape = (-1,)
-
-    return np.max(np.sqrt(res))
-
-if __name__ == "__main__":
-
-    n = 4
-    #mesh = UnitCubeMesh(n, n, n)
-    #mesh = BoxMesh(df.Point(-1, 0, 0), df.Point(1, 1, 1), 10, 2, 2)
-    # mesh=sphere(3.0,0.3)
-    # mesh=df.Mesh('tet.xml')
-    #
-    #expr = df.Expression(('4.0*sin(x[0])', '4*cos(x[0])','0'), degree=1)
-    from finmag.util.meshes import elliptic_cylinder, sphere
-    mesh = elliptic_cylinder(100, 150, 5, 4.5, directory='meshes')
-    # mesh=box(0,0,0,5,5,100,5,directory='meshes')
-    #mesh = df.BoxMesh(df.Point(0, 0, 0), df.Point(100, 2, 2), 400, 2, 2)
-    mesh = sphere(15, 1, directory='meshes')
-    Vv = df.VectorFunctionSpace(mesh, "Lagrange", 1)
-
-    Ms = 8.6e5
-    expr = df.Expression(('cos(x[0])', 'sin(x[0])', '0'), degree=1)
-    m = Field(Vv, value=expr)
-    #m = df.interpolate(df.Constant((1, 0, 0)), Vv)
-
-    from finmag.energies.demag.fk_demag import FKDemag
-
-    import time
-
-
-
-    demag = TreecodeBEM(
-        mac=0.4, p=5, num_limit=1, correct_factor=10, type_I=False)
-    demag.setup(m, Ms, unit_length=1e-9)
-    start2 = time.time()
-    f2 = demag.compute_field()
-    stop2 = time.time()
-
-    fk = FKDemag()
-    fk.setup(m, Ms, unit_length=1e-9)
-    start = time.time()
-    f1 = fk.compute_field()
-    stop = time.time()
-
-    f3 = f1 - f2
-    print(f1[0:10], f2[0:10])
-    print(np.average(np.abs(f3[:200] / f1[:200])))
-
-    print('max errror:', compare_field(f1, f2))
+    def _apply_bem(self, phi_1_boundary):
+        """``phi_2|_bnd = B @ phi_1|_bnd`` via the treecode fast-summation."""
+        self._phi2_b[:] = 0.0
+        self._fast_sum.fastsum(
+            self._phi2_b, np.ascontiguousarray(phi_1_boundary, dtype=np.float64))
+        return self._phi2_b
