@@ -1,7 +1,9 @@
 """DOLFINx uniaxial-anisotropy interaction."""
 
+import numpy as np
 from aeon import timer
 from dolfinx import fem
+from mpi4py import MPI
 from ufl import inner
 
 from finmag.field import Field
@@ -27,6 +29,11 @@ class UniaxialAnisotropy(EnergyBase):
     *constant* axis is normalised during construction, restoring the intended
     legacy contract that the dot product represents an angle cosine; a
     spatially varying axis is used as given (legacy did not renormalise it).
+
+    When ``K2`` evaluates to zero everywhere -- its default -- the quartic term
+    is left out of the energy integrand entirely. This is an internal
+    optimisation with no effect on computed values: it avoids the much higher
+    quadrature degree FFCx picks for a degree-8 integrand (register **P1**).
     """
 
     def __init__(
@@ -68,7 +75,25 @@ class UniaxialAnisotropy(EnergyBase):
 
         alignment = inner(self.axis.f, m.f)
         E_integrand = self.K1.f * (1.0 - alignment**2)
-        E_integrand -= self.K2.f * alignment**4
+        # Only carry the quartic term when K2 actually contributes. With CG1
+        # axis and m, ``alignment**4`` is degree 8, so FFCx raises the
+        # quadrature degree for the WHOLE integrand -- measured 60.1 ms against
+        # 8.5 ms for the K1 term alone at 20787 dofs, a 7.0x cost that is
+        # independent of K2's value and therefore pure waste at the default
+        # K2 == 0 (register P1). Dropping it also makes dE_dm linear in m,
+        # which a precomputed-operator fast path requires.
+        #
+        # The test is on VALUES, not on the constant, so a callable or Field K2
+        # that evaluates to zero everywhere is dropped too; and it is
+        # COLLECTIVE, because ranks that disagreed here would build different
+        # forms. K2 is only ever supplied at construction and the integrand is
+        # rebuilt by every setup(), so there is no later mutation to invalidate.
+        # [Claude Opus 5]
+        k2_is_zero = m.mesh().comm.allreduce(
+            bool(np.all(self.K2.as_array() == 0.0)), op=MPI.LAND
+        )
+        if not k2_is_zero:
+            E_integrand -= self.K2.f * alignment**4
 
         super().setup(E_integrand, m, Ms, unit_length)
         return self

@@ -66,6 +66,12 @@ plan does not list account for almost everything:
    ratio is the same whether `K2` is zero or not -- the cost is the term's
    presence, not its value.
 
+   Leaving the term out when `K2` evaluates to zero everywhere took the
+   evaluation from 65.0 ms to **12.5 ms**. The test is on values rather than
+   on the constant, so a callable or `Field` `K2` that is zero everywhere is
+   dropped too, and it is collective, since ranks disagreeing would build
+   different forms.
+
 A precomputed-matrix prototype (legacy's `box-matrix-petsc` mechanism)
 reproduces the current field to 5e-16..6e-15 -- Exchange 16.8x faster,
 UniaxialAnisotropy 133x -- but **is invalid when `K2 != 0`** (relative
@@ -73,9 +79,16 @@ difference 0.78), because the quartic term makes `dE_dm` cubic in m. The fix
 plan's task T4 applies "the same pattern as T3" to `UniaxialAnisotropy` without
 noting this; any implementation must gate the fast path on `K2`.
 
+Together the two changes took one right-hand-side evaluation from **96.8 ms to
+12.5 ms (7.8x)** at 20787 dofs, and from 2.50 ms to 0.87 ms (2.9x) at 528 dofs,
+with no change to any computed value.
+
 These figures exclude demag, whose KSP solves and dense BEM matvec will take a
 larger share once the above is removed; `fk_demag.py` already caches its forms
-and pre-assembles its operators.
+and pre-assembles its operators. The end-to-end `std_prob_3` factor will
+therefore be smaller than 7.8x, and is not yet re-measured -- the plan's task
+T7 remains the place where the FULL-lane budgets and register P1 are closed
+with end-to-end numbers.
 
 ## The fix plan
 

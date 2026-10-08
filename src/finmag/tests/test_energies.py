@@ -579,6 +579,88 @@ def test_anisotropy_reassembles_nonlinear_k2_after_m_changes():
     assert np.allclose(second, (0.0, 0.0, expected_z), rtol=1e-13, atol=1e-9)
 
 
+def test_anisotropy_zero_k2_drops_the_quartic_term_without_changing_values():
+    """A zero ``K2`` must not put ``- K2*(axis.m)**4`` into the integrand.
+
+    With CG1 ``axis`` and ``m`` the quartic term is degree 8, so FFCx raises
+    the quadrature degree for the whole form: assembling the full integrand
+    measured 60.1 ms against 8.5 ms for the ``K1`` term alone at 20787 dofs, a
+    7.0x cost for a term that contributes exactly nothing at the default
+    ``K2 = 0`` (register P1). Dropping it must leave the field and energy
+    identical to the pure-``K1`` analytic law.
+    """
+    from ufl.algorithms import extract_coefficients
+
+    _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
+    anisotropy = UniaxialAnisotropy(4.0, (0.0, 0.0, 1.0))  # K2 defaults to 0
+    anisotropy.setup(m, Ms)
+
+    assert anisotropy.K2.f not in extract_coefficients(anisotropy.E)
+
+    expected_z = 2.0 * 4.0 * 0.8 / (mu0 * 2.5)
+    H = _node_rows(anisotropy.compute_field())
+    assert np.allclose(H, (0.0, 0.0, expected_z), rtol=1e-13, atol=1e-9)
+    assert anisotropy.compute_energy() == pytest.approx(
+        4.0 * (1.0 - 0.8**2), rel=1e-13
+    )
+
+
+def test_anisotropy_spatially_varying_all_zero_k2_also_drops_the_term():
+    """The zero test is on values, not on the constant: a callable/Field ``K2``
+    that evaluates to zero everywhere is just as droppable as a literal 0."""
+    from ufl.algorithms import extract_coefficients
+
+    _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
+    anisotropy = UniaxialAnisotropy(
+        4.0, (0.0, 0.0, 1.0), K2=lambda x: np.zeros(x.shape[1])
+    )
+    anisotropy.setup(m, Ms)
+
+    assert anisotropy.K2.f not in extract_coefficients(anisotropy.E)
+
+    expected_z = 2.0 * 4.0 * 0.8 / (mu0 * 2.5)
+    assert np.allclose(
+        _node_rows(anisotropy.compute_field()),
+        (0.0, 0.0, expected_z),
+        rtol=1e-13,
+        atol=1e-9,
+    )
+
+
+def test_anisotropy_partially_nonzero_k2_keeps_the_quartic_term():
+    """A ``K2`` that is zero only on part of the domain is NOT droppable.
+
+    This is the guard against a too-eager "is K2 zero?" test: the quartic
+    contribution must still appear wherever ``K2 != 0``. The decision is also
+    collective, so every rank must agree -- ranks disagreeing on the integrand
+    would build different forms.
+    """
+    from ufl.algorithms import extract_coefficients
+
+    _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
+    anisotropy = UniaxialAnisotropy(
+        4.0,
+        (0.0, 0.0, 1.0),
+        K2=lambda x: np.where(x[0] > 0.5, 1.5, 0.0),
+    )
+    anisotropy.setup(m, Ms)
+
+    assert anisotropy.K2.f in extract_coefficients(anisotropy.E)
+
+    pure_k1_z = 2.0 * 4.0 * 0.8 / (mu0 * 2.5)
+    with_k2_z = (2.0 * 4.0 * 0.8 + 4.0 * 1.5 * 0.8**3) / (mu0 * 2.5)
+    nodal_z = _node_rows(anisotropy.compute_field())[:, 2]
+    # Box assembly lumps the cell integrals onto nodes, so a node surrounded
+    # only by K2 == 0 lands exactly on the pure-K1 law, while a node adjacent
+    # to the K2 == 1.5 region picks up a *fraction* of the quartic term rather
+    # than its full per-node value. So: the K1-only value must still occur,
+    # the quartic must raise some nodes above it, and none may exceed the
+    # fully-K2 value.
+    assert np.any(np.isclose(nodal_z, pure_k1_z, rtol=1e-12))
+    assert np.max(nodal_z) > pure_k1_z * (1.0 + 1e-6)
+    assert np.max(nodal_z) <= with_k2_z * (1.0 + 1e-12)
+
+
 def test_box_field_matches_finite_difference_energy_sign_and_mu0():
     _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
     anisotropy = UniaxialAnisotropy(4.0, (0.0, 0.0, 1.0), K2=1.5)
