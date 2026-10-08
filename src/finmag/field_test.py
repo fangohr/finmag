@@ -2092,3 +2092,113 @@ def test_field_coordinate_roundtrip_on_generated_mesh():
     assert coords.shape[0] == domain.geometry.index_map().size_local
     assert np.allclose(values[:, 0], 1.0)
     assert np.allclose(values[:, 1:], 0.0)
+
+
+def test_vertex_permutation_is_built_once_per_function_space(monkeypatch):
+    """The owned-vertex->dof permutation must be computed once per function
+    space, not once per field-array conversion.
+
+    ``_owned_vertex_to_dof`` builds a ``scipy.spatial.cKDTree`` over every dof
+    coordinate and queries it. The permutation it returns is a pure function of
+    the function space, but it sits on the hottest path in the port: every
+    interaction's ``compute_field`` (via ``owned_raw_to_blocked``),
+    ``EffectiveField``'s write-back and ``LLG``'s ``m``/``dm/dt`` conversions
+    all call it, so an uncached version rebuilt the tree six times per
+    right-hand-side evaluation -- measured at ~34% of one RHS evaluation on a
+    20787-dof mesh (register P1 performance work). This pins the tree as
+    built once and reused thereafter.
+    """
+    import scipy.spatial
+
+    builds = []
+    original_tree = scipy.spatial.cKDTree
+
+    def counting_tree(*args, **kwargs):
+        builds.append(1)
+        return original_tree(*args, **kwargs)
+
+    monkeypatch.setattr(scipy.spatial, "cKDTree", counting_tree)
+
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 3, 3, 3)
+    vector = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    field = Field(vector, (1.0, 0.0, 0.0), name="m")
+
+    first = field.get_ordered_numpy_array_xyz()
+    assert len(builds) == 1
+
+    for _ in range(5):
+        repeat = field.get_ordered_numpy_array_xyz()
+        assert np.array_equal(repeat, first)
+        field.coords_and_values()
+        field.set_with_ordered_numpy_array_xyz(repeat)
+    assert len(builds) == 1, (
+        "the vertex->dof permutation was rebuilt {} times; it must be cached "
+        "per function space".format(len(builds))
+    )
+
+
+def test_vertex_permutation_cache_is_per_space_and_value_identical():
+    """Caching must not leak a permutation across function spaces, and the
+    cached permutation must be value-identical to a freshly computed one.
+
+    A second, separately constructed space over the same mesh is a distinct
+    cache entry; its conversion must agree element-for-element with the first
+    space's (the spaces are equal, so the permutations must be too). A wrong
+    cache key here would silently scramble components -- the failure mode
+    ``tests/test_ordering_contract.py`` exists to catch.
+    """
+    from finmag.field import _owned_vertex_to_dof
+
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 3, 3, 3)
+    first_space = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    second_space = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+
+    first = _owned_vertex_to_dof(first_space)
+    second = _owned_vertex_to_dof(second_space)
+    assert np.array_equal(first, second)
+    assert np.array_equal(_owned_vertex_to_dof(first_space), first)
+
+    asymmetric = Field(first_space)
+    asymmetric.set(
+        lambda x: np.vstack((x[0], 2.0 * x[1], 3.0 * x[2] + 0.5))
+    )
+    on_second = Field(second_space)
+    on_second.set(
+        lambda x: np.vstack((x[0], 2.0 * x[1], 3.0 * x[2] + 0.5))
+    )
+    assert np.array_equal(
+        asymmetric.get_ordered_numpy_array_xxx(),
+        on_second.get_ordered_numpy_array_xxx(),
+    )
+
+
+def test_vertex_permutation_cache_does_not_outlive_its_function_space():
+    """The cache must not pin function spaces (and their meshes) in memory.
+
+    A long simulation that rebinds interactions to new meshes
+    (``setup``-on-a-new-mesh is a supported surface) would otherwise grow the
+    cache without bound, holding every retired mesh alive.
+    """
+    import gc
+    import weakref
+
+    from finmag.field import _PERMUTATION_CACHE
+
+    domain = mesh.create_unit_cube(MPI.COMM_WORLD, 3, 3, 3)
+
+    transient = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    field = Field(transient, (1.0, 0.0, 0.0))
+    field.get_ordered_numpy_array_xyz()
+
+    # Assert on this space's own entry, not on the cache size: entries for
+    # spaces built by earlier tests may be evicted at any collection, so a
+    # length comparison would race with the garbage collector.
+    key = id(transient)
+    assert key in _PERMUTATION_CACHE
+
+    witness = weakref.ref(transient)
+    del field, transient
+    gc.collect()
+
+    assert witness() is None, "test precondition: the space must be collectable"
+    assert key not in _PERMUTATION_CACHE

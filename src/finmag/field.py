@@ -5,6 +5,7 @@ and the legacy ``xyz``/``xxx`` array views explicit.
 """
 
 import numbers
+import weakref
 
 import numpy as np
 from dolfinx import fem, geometry, io, la
@@ -1045,8 +1046,52 @@ def _assemble_scalar(domain, expression):
     return domain.comm.allreduce(local_value, op=MPI.SUM)
 
 
+# Cache of computed owned-vertex->dof permutations, keyed by the identity of
+# the function space they belong to (``dolfinx`` function spaces are neither
+# hashable nor cheaply comparable, so they cannot key a dict directly and
+# ``WeakKeyDictionary`` is unavailable). Each entry is dropped by a
+# ``weakref.finalize`` callback when its space is collected, so the cache never
+# pins a retired space -- or its mesh -- in memory. [Claude Opus 5]
+_PERMUTATION_CACHE = {}
+
+
 def _owned_vertex_to_dof(functionspace):
-    """Map owned mesh-vertex order to owned blocked dof order by coordinate."""
+    """Map owned mesh-vertex order to owned blocked dof order by coordinate.
+
+    The permutation is a pure function of ``functionspace`` -- its dof
+    coordinates and its mesh geometry -- so it is computed once per space and
+    cached. This matters because it sits on the hottest path in the port: every
+    interaction's ``compute_field`` (through :func:`owned_raw_to_blocked`),
+    ``EffectiveField``'s write-back and ``LLG``'s ``m``/``dm/dt`` conversions
+    all need it, and computing it builds and queries a ``cKDTree`` over every
+    dof coordinate. Uncached, that was rebuilt six times per right-hand-side
+    evaluation and measured ~34% of one evaluation on a 20787-dof mesh
+    (register **P1**).
+
+    The returned array is read-only: it is shared between every caller holding
+    this space, and callers use it only as an index.
+
+    The cache assumes mesh geometry is not mutated in place after a space is
+    built, which no supported finmag surface does -- rebinding to a different
+    mesh constructs new function spaces, and therefore new cache entries.
+    """
+    key = id(functionspace)
+    cached = _PERMUTATION_CACHE.get(key)
+    if cached is not None:
+        return cached
+
+    permutation = _compute_owned_vertex_to_dof(functionspace)
+    permutation.flags.writeable = False
+    _PERMUTATION_CACHE[key] = permutation
+    # Evict on collection of the space. The callback cannot outlive its space,
+    # so it can never drop an entry belonging to a later space that happens to
+    # reuse the address; a missed eviction would only cost a recomputation.
+    weakref.finalize(functionspace, _PERMUTATION_CACHE.pop, key, None)
+    return permutation
+
+
+def _compute_owned_vertex_to_dof(functionspace):
+    """Compute (uncached) the owned-vertex-to-dof coordinate permutation."""
     domain = functionspace.mesh
     dof_coordinates = functionspace.tabulate_dof_coordinates()
     vertex_coordinates = domain.geometry.x

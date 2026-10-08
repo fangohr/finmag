@@ -31,6 +31,52 @@ where legacy used a compiled `Equation`/`terms` backend (tracked separately
 as register **M3**). Re-assembling from scratch on every call, in an
 uncompiled RHS, is the combination that produces the ~17.6x gap.
 
+## Measured attribution (2026-10-08)
+
+The root cause above is real, but profiling showed it is **not** the dominant
+cost. Measured serially at 20787 dofs (a 12x12x40 bar with Exchange,
+UniaxialAnisotropy and Zeeman; no demag), one LLG right-hand-side evaluation
+cost 96.8 ms:
+
+| Component | Cost | Share |
+|---|---|---|
+| `UniaxialAnisotropy` assembly | 60.1 ms | 62% |
+| vertex->dof permutation rebuilds (6 per evaluation) | 33.1 ms | 34% |
+| `Exchange` assembly | 3.4 ms | 3.5% |
+| per-evaluation `fem.form(...)` | ~0.4 ms | 0.4% |
+
+So the re-assembly named above costs 0.4%, and its cost is flat
+(~110-130 us per call) rather than growing with the mesh. Two causes the fix
+plan does not list account for almost everything:
+
+1. **An uncached coordinate permutation.** `finmag.field._owned_vertex_to_dof`
+   built and queried a scipy `cKDTree` over every dof coordinate on each call,
+   for a permutation that is a pure function of the function space. It is
+   reached from every interaction's `compute_field`, from `EffectiveField`'s
+   write-back and from `LLG`'s `m`/`dm/dt` conversions -- six rebuilds per
+   right-hand-side evaluation. Caching it per function space took the
+   evaluation from 96.8 ms to **65.0 ms**. (The plan has this as task T5,
+   probe-gated "ONLY if ... >= 10%"; it was 34% before anything else changed.)
+
+2. **A quartic term that is almost always zero.** `UniaxialAnisotropy` always
+   put `- K2*(axis.m)**4` into the energy integrand, including for its default
+   `K2 = 0`. With CG1 axis and m that is degree 8, so FFCx raises the
+   quadrature degree for the whole form: assembling the full integrand cost
+   60.1 ms against 8.5 ms for the `K1` term alone, a measured **7.0x**, and the
+   ratio is the same whether `K2` is zero or not -- the cost is the term's
+   presence, not its value.
+
+A precomputed-matrix prototype (legacy's `box-matrix-petsc` mechanism)
+reproduces the current field to 5e-16..6e-15 -- Exchange 16.8x faster,
+UniaxialAnisotropy 133x -- but **is invalid when `K2 != 0`** (relative
+difference 0.78), because the quartic term makes `dE_dm` cubic in m. The fix
+plan's task T4 applies "the same pattern as T3" to `UniaxialAnisotropy` without
+noting this; any implementation must gate the fast path on `K2`.
+
+These figures exclude demag, whose KSP solves and dense BEM matvec will take a
+larger share once the above is removed; `fk_demag.py` already caches its forms
+and pre-assembles its operators.
+
 ## The fix plan
 
 Detailed task-by-task in
