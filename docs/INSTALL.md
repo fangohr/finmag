@@ -110,6 +110,41 @@ of them (see `testing.md` for the heavy `FINMAG_EXAMPLE_FULL=1` lane).
   environment's libraries (Boost.Python ABI tag, SUNDIALS 7 sonames, etc.)
   and are not portable/redistributable the way a wheel implies.
 
+## Troubleshooting the native build
+
+**Symptom:** the native modules import fine, but every call into them fails
+with `Boost.Python.ArgumentError: ... did not match C++ signature` for
+arguments that are plainly the right dtype, and longer signatures segfault
+(`Error: signal 11` with a stack trace through
+`boost::python::objects::find_instance_impl`). Typically
+`dolfinx-src-native-bem-pytest`, `dolfinx-src-demag-pytest` and
+`dolfinx-src-sundials-pytest` fail while the pure-Python gates pass.
+
+**Cause:** `native/Makefile` was compiling against the **wrong CPython
+headers**. It derives the Python include/link flags from `python-config`, but
+conda/pixi environments ship `python3-config` and `pythonX.Y-config` and often
+no bare `python-config` — so an unchecked lookup found the *system* one (for
+example `/usr/include/python3.14` on Arch) while the module was linked against
+this environment's `libboost_pythonXY` and imported by this environment's
+interpreter. Boost.Python compiled against a different CPython C-API sees a
+different `PyTuple`/vectorcall layout, so arguments arrive shifted by one.
+Nothing fails at import, which is what makes it hard to spot.
+
+The Makefile now accepts a `python-config` only when its `--prefix` matches the
+active interpreter's `sys.prefix`, and otherwise derives the flags from
+`sysconfig`. To check what your build will use:
+
+    pixi run -e dolfinx make -C native print-PYTHON_CONFIG_EXISTS   # 0 = fallback
+    pixi run -e dolfinx make -C native print-CFLAGS_PYTHON
+
+`CFLAGS_PYTHON` must name this environment's `include/pythonX.Y` and
+`-lpythonX.Y`, never a path under `/usr`. After any toolchain change, rebuild
+from scratch — the object tree is keyed on the Python prefix, not on the flags,
+so a flag-only change does not invalidate it:
+
+    pixi run -e dolfinx make -C native clean
+    pixi run -e dolfinx dolfinx-native-build
+
 ## Next steps
 
 - [`SUPPORTED.md`](SUPPORTED.md) — what is supported, to what tolerance.

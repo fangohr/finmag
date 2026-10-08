@@ -21,8 +21,26 @@ all : parallel
 PYTHON ?= python
 PYTHON_CONFIG ?= $(PYTHON)-config
 PYTHON_BOOST_TAG := py$(shell $(PYTHON) -c 'import sys; print("{}{}".format(sys.version_info[0], sys.version_info[1]))')
-PYTHON_CONFIG_EXISTS := $(shell command -v $(PYTHON_CONFIG) >/dev/null 2>&1 && echo 1 || echo 0)
 PYTHON_PREFIX := $(shell $(PYTHON) -c 'import sys; print(sys.prefix)')
+# A `python-config` is usable ONLY if it belongs to the same interpreter as
+# $(PYTHON). Conda/pixi environments ship `python3-config` and
+# `pythonX.Y-config` but often NOT a bare `python-config`, so an unchecked
+# `command -v python-config` silently finds the SYSTEM one. That is not a
+# cosmetic mismatch: its `--includes` then point at the system Python headers
+# (e.g. /usr/include/python3.14 on Arch) while the module is linked against
+# this environment's libboost_pythonXY and imported by this environment's
+# interpreter (3.12). Boost.Python compiled against the wrong CPython C-API
+# sees a different PyTuple/vectorcall layout, so arguments arrive SHIFTED BY
+# ONE -- every np_array converter then rejects its argument ("did not match
+# C++ signature") and longer signatures segfault in find_instance_impl. The
+# modules still import cleanly, so the damage only surfaces as unexplained
+# native test failures. CI never hit this because its runners have no system
+# `python-config` at all and so already took the sysconfig branch below.
+# Comparing --prefix rejects a foreign python-config and falls back to that
+# same (CI-proven) branch; a venv whose python-config reports the base prefix
+# also lands on the fallback, which is correct there too. [Claude Opus 5]
+PYTHON_CONFIG_EXISTS := $(shell command -v $(PYTHON_CONFIG) >/dev/null 2>&1 && \
+    [ "$$($(PYTHON_CONFIG) --prefix 2>/dev/null)" = "$(PYTHON_PREFIX)" ] && echo 1 || echo 0)
 # Per-environment build tag keyed on the active Python prefix. The legacy
 # (libdolfin, NumPy-1 ABI) and DOLFINx (NumPy-2, -DFINMAG_NO_DOLFIN) builds
 # compile shared units such as np_array.cc with incompatible ABIs; keying the
