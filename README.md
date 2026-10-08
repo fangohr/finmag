@@ -23,7 +23,22 @@ Marc-Antonio Bisotti<sup>1</sup>, Marijan Beg<sup>1,2</sup>, Weiwei Wang<sup>1</
 
 We are working towards a python3 version of finmag making use of the newer dolfinx. That is now on `main`, and not necessarily usable (yet). Details are available in [dolfinx-transition.md](dolfinx-transition.md). What is already supported is documented in [docs/SUPPORTED.md](docs/SUPPORTED.md).
 
-For production computation, use the Python2 version (see next section).
+For production computation, use either the python3 version with dolfin 2019 or the python2 version (see the next two sections).
+
+## About the python3 version with dolfin 2019 (pixi)
+
+There is a working python3 version that still uses the *old* dolfin (FEniCS 2019.1.0) rather than dolfinx. It is tagged [`python3`](https://github.com/fangohr/finmag/releases/tag/python3) and came out of the pixi branch ([PR #50](https://github.com/fangohr/finmag/pull/50)). It is the python2 code moved to python3, with dolfin updated from 2017 to 2019: the same algorithms and interface, and the compiled native extensions (`llg`, `sundials`, `llb`) are still built and used. A broad python3 core test suite was recorded green (356 passed, 16 skipped, 6 xfailed); the porting record is preserved in [docs/archive/transition-notes.org](docs/archive/transition-notes.org).
+
+It installs with [pixi](https://pixi.sh) and needs no container (Linux only, at present):
+
+    $ git checkout python3
+    $ pixi install
+    $ pixi run barmini-smoke      # a small simulation
+    $ pixi run barmini-suite      # the physics test suite (~30 min)
+
+You do have to check out the tag. On `main` the `src/finmag` tree is the dolfinx port, so the pixi `default` (FEniCS 2019) environment there can `import finmag` but cannot run a simulation.
+
+This version is not affected by the dolfinx port's known performance problem (see [docs/performance.md](docs/performance.md)): it keeps legacy's default field operator, which is assembled once and then applied, and its compiled right-hand side. It is therefore also the convenient baseline for comparing dolfinx-port performance against the pre-port code, without needing the python2 container.
 
 ## About the python2 version
 
