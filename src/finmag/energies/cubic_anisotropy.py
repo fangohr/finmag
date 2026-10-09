@@ -6,11 +6,10 @@ from aeon import timer
 from dolfinx import fem
 from ufl import TestFunction, dx, inner
 
-from finmag.field import Field
+from finmag.field import Field, assemble_owned
 
 from .energy_base import (
     EnergyBase,
-    _assemble_vector_owned,
     _require_cg1_magnetisation,
     axis_coefficient,
     mu0,
@@ -191,15 +190,15 @@ class CubicAnisotropy(EnergyBase):
             # ~1e-15 relative error, asserted at the fixture's rtol=1e-11).
             scalar_test = TestFunction(self.S1)
             self._K1_nodal = (
-                _assemble_vector_owned(self.K1.f * scalar_test * dx, self.S1)
+                assemble_owned(self.K1.f * scalar_test * dx, self.S1)
                 / self.nodal_volume_S1
             )
             self._K2_nodal = (
-                _assemble_vector_owned(self.K2.f * scalar_test * dx, self.S1)
+                assemble_owned(self.K2.f * scalar_test * dx, self.S1)
                 / self.nodal_volume_S1
             )
             self._K3_nodal = (
-                _assemble_vector_owned(self.K3.f * scalar_test * dx, self.S1)
+                assemble_owned(self.K3.f * scalar_test * dx, self.S1)
                 / self.nodal_volume_S1
             )
         return self

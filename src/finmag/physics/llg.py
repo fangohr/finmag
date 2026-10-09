@@ -39,10 +39,10 @@ import math
 
 import numpy as np
 import ufl
-from dolfinx import fem, la
+from dolfinx import fem
 
 import finmag.util.consts as consts
-from finmag.field import Field, _assemble_scalar
+from finmag.field import Field, _assemble_scalar, assemble_owned
 from finmag.physics.effective_field import EffectiveField
 
 # default settings for logger 'finmag' set in __init__.py
@@ -55,21 +55,6 @@ _E_CHARGE = 1.602176565e-19       # elementary charge, As      (llg.cc:21)
 _H_BAR = 1.054571726e-34          # reduced Planck constant, Js (llg.cc:22)
 _MU_B = 9.27400968e-24            # Bohr magneton               (llg.cc:24)
 _MU_0 = math.pi * 4e-7            # vacuum permeability, Vs/(Am)(llg.cc:25)
-
-
-def _assemble_owned_vector(form_expr, function_space):
-    """Assemble a linear form and return its owned rank-local dof array.
-
-    Mirrors ``finmag.energies.energy_base._assemble_vector_owned`` so the STT
-    lumped-box gradient/projection assemblies use the identical owner+ghost
-    accumulation the ported energies use.
-    """
-    vector = fem.assemble_vector(fem.form(form_expr))
-    vector.scatter_reverse(la.InsertMode.add)
-    vector.scatter_forward()
-    dofmap = function_space.dofmap
-    owned = dofmap.index_map.size_local * dofmap.index_map_bs
-    return vector.array[:owned].copy()
 
 
 class LLG(object):
@@ -544,8 +529,8 @@ class LLG(object):
         ``Ms`` this is exactly the constant at every node.
         """
         v1 = ufl.TestFunction(self.S1)
-        lumped = _assemble_owned_vector(self._Ms_dg.f * v1 * ufl.dx, self.S1)
-        volume = _assemble_owned_vector(v1 * ufl.dx, self.S1)
+        lumped = assemble_owned(self._Ms_dg.f * v1 * ufl.dx, self.S1)
+        volume = assemble_owned(v1 * ufl.dx, self.S1)
         ms_dof = lumped / volume
         ms_field = Field(self.S1)
         ms_field.from_array(ms_dof)
@@ -639,7 +624,7 @@ class LLG(object):
         self.dim = self.mesh.topology.dim
         sigma = ufl.TestFunction(self.S3)
         ones = fem.Constant(self.mesh, np.ones(3))
-        raw_volume = _assemble_owned_vector(
+        raw_volume = assemble_owned(
             ufl.inner(sigma, ones) * ufl.dx, self.S3
         )
         self._nodal_volume_S3 = raw_volume * self.unit_length
@@ -663,7 +648,7 @@ class LLG(object):
         integrand = self._J.f[0] * ufl.dot(grad_m[:, 0], sigma)
         for k in range(1, self.dim):
             integrand = integrand + self._J.f[k] * ufl.dot(grad_m[:, k], sigma)
-        assembled = _assemble_owned_vector(integrand * ufl.dx, self.S3)
+        assembled = assemble_owned(integrand * ufl.dx, self.S3)
         h_gradm = assembled / self._nodal_volume_S3
         hg_field = Field(self.S3)
         hg_field.from_array(h_gradm)

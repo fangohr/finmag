@@ -25,9 +25,10 @@ import logging
 import numpy as np
 from ufl import TestFunction, dx
 
-from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
+from finmag.field import (Field, assemble_owned, associated_scalar_space,
+                          owned_raw_to_blocked)
 
-from .energy_base import _assemble_vector_owned, _nodal_volume_owned, _require_cg1_magnetisation
+from .energy_base import _nodal_volume_owned, _require_cg1_magnetisation
 
 log = logging.getLogger(name="finmag")
 
@@ -88,7 +89,7 @@ class ThinFilmDemag:
             # EnergyBase's box-assemble path uses elsewhere in this port.
             self.S1 = associated_scalar_space(m.functionspace)
             scalar_test = TestFunction(self.S1)
-            nodal_ms = _assemble_vector_owned(Ms.f * scalar_test * dx, self.S1)
+            nodal_ms = assemble_owned(Ms.f * scalar_test * dx, self.S1)
             nodal_volume = _nodal_volume_owned(self.S1)
             self.strength = nodal_ms / nodal_volume
         return self

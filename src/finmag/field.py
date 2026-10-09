@@ -761,8 +761,7 @@ class Field:
         return self.theta, self.phi
 
     def _owned_scalar_dofs(self):
-        dofmap = self.functionspace.dofmap
-        return dofmap.index_map.size_local * dofmap.index_map_bs
+        return owned_scalar_dofs(self.functionspace)
 
     def _owned_nodal_values(self):
         owned = self._owned_scalar_dofs()
@@ -1138,6 +1137,40 @@ def _compute_owned_vertex_to_dof(functionspace):
     if np.any(permutation >= num_owned_dofs):
         raise ValueError("owned vertices did not map exclusively to owned dofs")
     return permutation
+
+
+def owned_scalar_dofs(functionspace):
+    """Number of owned (non-ghost) scalar dof entries of ``functionspace``.
+
+    ``index_map.size_local * index_map_bs``: the length of the leading, owned
+    slice of ``Function.x.array`` and of any assembled vector over this space.
+    """
+    dofmap = functionspace.dofmap
+    return dofmap.index_map.size_local * dofmap.index_map_bs
+
+
+def assemble_owned(expression, functionspace):
+    """Assemble a linear form and return its owned rank-local dof array.
+
+    ``expression`` is a UFL form, or an already-compiled :class:`dolfinx.fem.Form`
+    when the caller caches the compiled form across evaluations (the hot paths
+    do; recompiling per call is what register **P1** removed).
+
+    The owner/ghost accumulation is the part worth having in one place: an
+    assembled vector holds only each rank's own cell contributions, so owned
+    entries on a shared node are incomplete until the ghost contributions are
+    scattered back (``scatter_reverse`` with ``add``) and the now-complete owned
+    values are pushed out again (``scatter_forward``). Getting this wrong gives
+    results that are right in serial and silently wrong on a partition
+    boundary, which is why every caller must use this rather than assembling
+    inline.
+    """
+    compiled = (expression if isinstance(expression, fem.Form)
+                else fem.form(expression))
+    vector = fem.assemble_vector(compiled)
+    vector.scatter_reverse(la.InsertMode.add)
+    vector.scatter_forward()
+    return vector.array[: owned_scalar_dofs(functionspace)].copy()
 
 
 def owned_raw_to_blocked(functionspace, raw_array):

@@ -45,7 +45,8 @@ from dolfinx.fem import petsc as fem_petsc
 from mpi4py import MPI
 from petsc4py import PETSc
 
-from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
+from finmag.field import (Field, assemble_owned, associated_scalar_space,
+                          owned_raw_to_blocked)
 from finmag.util.configuration import get_config_option
 
 from .fk_demag_boundary import boundary_bem_arrays, boundary_solid_angles
@@ -181,8 +182,8 @@ class FKDemag(object):
         v3 = ufl.TestFunction(self.S3)
 
         # lumped nodal volumes (mesh-coordinate units, no unit_length factor).
-        self._nodal_volumes_S1 = _assemble_owned(v1 * ufl.dx, self.S1)
-        self._nodal_volumes_S3 = _assemble_owned(
+        self._nodal_volumes_S1 = assemble_owned(v1 * ufl.dx, self.S1)
+        self._nodal_volumes_S3 = assemble_owned(
             ufl.inner(v3, fem.Constant(self.domain, np.ones(3))) * ufl.dx,
             self.S3,
         )
@@ -356,7 +357,7 @@ class FKDemag(object):
         return self._compute_gradient()
 
     def _compute_gradient(self):
-        H = _assemble_owned(None, self.S3, form=self._gradient_form)
+        H = assemble_owned(self._gradient_form, self.S3)
         return H / self._nodal_volumes_S3
 
     def average_field(self):
@@ -390,7 +391,7 @@ class FKDemag(object):
         which multiplied *and* divided by ``unit_length**dim``).
         """
         self._load_H_func()
-        nodal_E = _assemble_owned(None, self.S1, form=self._nodal_E_form)
+        nodal_E = assemble_owned(self._nodal_E_form, self.S1)
         return nodal_E / self._nodal_volumes_S1
 
     def energy_density_function(self):
@@ -399,23 +400,3 @@ class FKDemag(object):
         self._nodal_E_func.x.array[: density.size] = density
         self._nodal_E_func.x.scatter_forward()
         return self._nodal_E_func
-
-
-def _owned_scalar_dofs(function_space):
-    dofmap = function_space.dofmap
-    return dofmap.index_map.size_local * dofmap.index_map_bs
-
-
-def _assemble_owned(expression, function_space, form=None):
-    """Assemble a linear form and return owned entries (ghosts accumulated)."""
-    if form is None:
-        form = fem.form(expression)
-    vec = fem_petsc.assemble_vector(form)
-    vec.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
-                    mode=PETSc.ScatterMode.REVERSE)
-    vec.ghostUpdate(addv=PETSc.InsertMode.INSERT_VALUES,
-                    mode=PETSc.ScatterMode.FORWARD)
-    owned = np.array(vec.array[: _owned_scalar_dofs(function_space)],
-                     dtype=np.float64)
-    vec.destroy()
-    return owned

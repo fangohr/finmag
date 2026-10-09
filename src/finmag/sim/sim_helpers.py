@@ -43,8 +43,8 @@ from dolfinx import fem, mesh as dmesh
 from mpi4py import MPI
 
 import finmag
-from finmag.energies.energy_base import _assemble_vector_owned, _nodal_volume_owned
-from finmag.field import associated_scalar_space
+from finmag.energies.energy_base import _nodal_volume_owned
+from finmag.field import assemble_owned, associated_scalar_space
 
 log = logging.getLogger("finmag")
 
@@ -415,7 +415,7 @@ def skyrmion_number_density_function(self):
     ``nodal_volume(S1, unit_length)``. Legacy scaled numerator and denominator
     by the same ``unit_length ** dim`` factor, which cancels exactly, so the
     resulting VALUE is identical whether or not that scaling is applied; it is
-    dropped here (``_assemble_vector_owned``/``_nodal_volume_owned``, the same
+    dropped here (``assemble_owned``/``_nodal_volume_owned``, the same
     unscaled mesh-coordinate lumped pair already used throughout
     ``finmag.energies.energy_base`` -- e.g. ``thin_film_demag.py`` reuses the
     identical pair for the same reason).
@@ -429,7 +429,7 @@ def skyrmion_number_density_function(self):
     S1 = associated_scalar_space(self.S3)
     scalar_test = ufl.TestFunction(S1)
     nodal_form = integrand * scalar_test * ufl.dx
-    nodal_values = _assemble_vector_owned(nodal_form, S1)
+    nodal_values = assemble_owned(nodal_form, S1)
     nodal_volume = _nodal_volume_owned(S1)
     density = nodal_values / nodal_volume
 

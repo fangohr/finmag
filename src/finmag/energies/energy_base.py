@@ -11,11 +11,12 @@ from math import pi
 import numpy as np
 import ufl
 from aeon import timer
-from dolfinx import fem, la
+from dolfinx import fem
 from mpi4py import MPI
 from ufl import TestFunction, dx, inner
 
-from finmag.field import Field, associated_scalar_space, owned_raw_to_blocked
+from finmag.field import (Field, assemble_owned, associated_scalar_space,
+                          owned_raw_to_blocked)
 
 
 mu0 = 4.0 * pi * 1e-7
@@ -142,7 +143,7 @@ class EnergyBase:
     @timer.method
     def energy_density(self):
         """Collectively return owned lumped nodal energy-density values."""
-        nodal_energy = _assemble_vector_owned(self.nodal_E, self.S1)
+        nodal_energy = assemble_owned(self.nodal_E, self.S1)
         return nodal_energy / self.nodal_volume_S1
 
     def energy_density_function(self):
@@ -177,7 +178,7 @@ class EnergyBase:
         mean). Kept raw because it pairs elementwise with the raw
         ``nodal_volume_S3`` weights.
         """
-        derivative = _assemble_vector_owned(self.dE_dm, self.m.functionspace)
+        derivative = assemble_owned(self.dE_dm, self.m.functionspace)
         return derivative / self.nodal_volume_S3
 
     def average_field(self):
@@ -188,19 +189,6 @@ class EnergyBase:
         self.m.mesh().comm.Allreduce(local_sum, global_sum, op=MPI.SUM)
         global_count = self.m.mesh().comm.allreduce(values.shape[0], op=MPI.SUM)
         return global_sum / global_count
-
-
-def _assembled_vector(expression):
-    """Assemble a linear form with complete owner and ghost values."""
-    vector = fem.assemble_vector(fem.form(expression))
-    vector.scatter_reverse(la.InsertMode.add)
-    vector.scatter_forward()
-    return vector
-
-
-def _assemble_vector_owned(expression, function_space):
-    vector = _assembled_vector(expression)
-    return vector.array[: _owned_scalar_dofs(function_space)].copy()
 
 
 def _assemble_scalar(domain, expression):
@@ -217,17 +205,12 @@ def _nodal_volume_owned(function_space):
     else:
         ones = fem.Constant(function_space.mesh, np.ones(value_size))
         expression = inner(test, ones) * dx
-    volumes = _assemble_vector_owned(expression, function_space)
+    volumes = assemble_owned(expression, function_space)
     local_invalid = bool(np.any(~np.isfinite(volumes)) or np.any(volumes <= 0.0))
     invalid = function_space.mesh.comm.allreduce(local_invalid, op=MPI.LOR)
     if invalid:
         raise ValueError("box assembly requires positive owned nodal volumes")
     return volumes
-
-
-def _owned_scalar_dofs(function_space):
-    dofmap = function_space.dofmap
-    return dofmap.index_map.size_local * dofmap.index_map_bs
 
 
 def _is_string_expression(value):
