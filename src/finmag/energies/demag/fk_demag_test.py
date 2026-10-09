@@ -603,5 +603,44 @@ def test_finmagrc_solver_type_option_raises_by_name(tmp_path, monkeypatch):
     FKDemag()
 
 
+def test_repeated_solves_carry_no_state_between_evaluations():
+    """Solving repeatedly must be stateless: the same ``m`` must give the same
+    field, whatever was solved in between.
+
+    The phi_2 Laplace right-hand side is built once at setup and zeroed per
+    solve rather than re-assembled from a zero-valued form every time
+    (register P1: assembling that zero vector measured 723 us at 6929 S1 dofs,
+    on top of 270 us to rebuild the form). Reusing a *ghosted* vector is the
+    one way that optimisation could go wrong -- zeroing only the owned entries
+    would leave the ghost region holding the previous solve's lifting
+    contribution, which the following ``ghostUpdate(ADD, REVERSE)`` would then
+    accumulate. That corrupts the field only in parallel and only after the
+    first evaluation, so pin it here: interleaving a different ``m`` must not
+    perturb the result for the original one.
+    """
+    mesh = box(0, 0, 0, 10, 10, 10, maxh=4.0, save_result=False)
+    Ms_field = Field(fem.functionspace(mesh, ("DG", 0)), 8.6e5)
+    S3 = fem.functionspace(mesh, ("Lagrange", 1, (3,)))
+    m = Field(S3, (1, 0, 0))
+    demag = FKDemag()
+    demag.setup(m, Ms_field, unit_length=1e-9)
+
+    first = demag.compute_field().copy()
+
+    # An asymmetric intermediate state, so a leaked contribution would not
+    # cancel by symmetry.
+    m.set(lambda x: np.vstack(
+        (np.sin(0.7 * x[0]), np.cos(0.4 * x[1]), 0.3 + 0.1 * x[2])))
+    m.normalise()
+    between = demag.compute_field().copy()
+    assert not np.allclose(first, between), (
+        "test precondition: the intermediate m must change the field"
+    )
+
+    m.set((1, 0, 0))
+    again = demag.compute_field().copy()
+    assert np.allclose(again, first, rtol=1e-12, atol=1e-12 * np.max(np.abs(first)))
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

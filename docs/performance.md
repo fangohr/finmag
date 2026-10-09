@@ -91,12 +91,82 @@ read the factor as roughly **7-8x** rather than exactly 7.8x. The conclusion is
 insensitive to that spread; precise before/after numbers are the job of the
 committed harness the plan's task T1 defines, which does not exist yet.
 
-These figures exclude demag, whose KSP solves and dense BEM matvec will take a
-larger share once the above is removed; `fk_demag.py` already caches its forms
-and pre-assembles its operators. The end-to-end `std_prob_3` factor will
-therefore be smaller than 7.8x, and is not yet re-measured -- the plan's task
-T7 remains the place where the FULL-lane budgets and register P1 are closed
-with end-to-end numbers.
+Those figures exclude demag, which is measured separately below. The
+end-to-end `std_prob_3` factor is smaller than any of them and is not yet
+re-measured -- the plan's task T7 remains the place where the FULL-lane budgets
+and register P1 are closed with end-to-end numbers.
+
+## FK demag is the dominant term (2026-10-09)
+
+Measured once the native build was fixed (see
+[`INSTALL.md`](INSTALL.md)), which had blocked demag measurement locally.
+Same configuration plus FK demag, serial:
+
+| Mesh | dofs | RHS without demag | with demag | demag share |
+|---|---|---|---|---|
+| 3x3x10 | 528 | 0.85 ms | 1.92 ms | 56% |
+| 6x6x20 | 3087 | 2.06 ms | 4.71 ms | 56% |
+| 12x12x40 | 20787 | 12.85 ms | 32.53 ms | 61% |
+
+Inside demag's 19.68 ms at 20787 dofs (2210 boundary nodes):
+
+| Component | Cost | Share of demag |
+|---|---|---|
+| Krylov solves + lifting (two solves) | 13.61 ms | 69% |
+| dense BEM matvec | 2.95 ms | 15% |
+| gradient assembly | 1.55 ms | 8% |
+| rebuilding a zero-valued `fem.form` per evaluation | 0.43 ms | 2% |
+| ordering conversion | 0.06 ms | <1% |
+
+**This caps what the energy-term work can achieve.** A precomputed-matrix fast
+path for Exchange and UniaxialAnisotropy addresses ~38% of a realistic
+right-hand side, so even reducing those terms to nothing is worth roughly
+1.6x end-to-end, not the ~10x the demag-free numbers suggest.
+
+### The zero right-hand side is no longer assembled
+
+The phi_2 Laplace solve has no source term -- its entire right-hand side comes
+from `apply_lifting`/`set_bc` writing in the Dirichlet boundary contribution --
+yet the port rebuilt and assembled a zero-valued form for it on every
+evaluation. At 6929 S1 dofs that measured 270 us to compile the form plus
+723 us to assemble the zeros, and it also allocated and freed a ghosted PETSc
+vector each time. The vector is now created once at setup and zeroed per solve:
+
+| Mesh | demag per evaluation, before | after |
+|---|---|---|
+| 3x3x10 | 855 us | **334 us** (2.6x) |
+| 6x6x20 | 2608 us | **1975 us** (1.3x) |
+| 12x12x40 | 19385 us | **16786 us** (1.15x) |
+
+The gain is largest on small meshes because the removed cost was mostly flat.
+
+Reusing a *ghosted* vector is the one way this could go wrong: clearing only
+its owned entries leaves the previous solve's lifting contribution in the ghost
+region for the following `ghostUpdate(ADD, REVERSE)` to accumulate. Measured
+with owned-only zeroing, that corrupts the demag field by **54%** under two
+ranks while a serial run stays clean. FK demag had no multi-rank coverage at
+all, so a repeated-solve statelessness check was added to
+`energies_dolfinx_mpi_probe.py` (gate `dolfinx-src-energies-mpi`); it was
+confirmed to fail with the wrong zeroing and pass with the right one.
+
+### What is left in demag
+
+- **The Krylov solves never warm-start.** `_ksp()` sets no
+  `setInitialGuessNonzero`, so both solves begin from a zero guess on every
+  evaluation even though consecutive right-hand-side calls change `m` only
+  slightly and the previous `phi_1`/`phi_2` would be an excellent guess. This
+  is the largest remaining item at 42% of the whole right-hand side, **but it
+  is the first change that would not be value-exact**: a solve converged to
+  `rtol=1e-6` lands within ~1e-6 of exact whatever its starting point, so
+  results shift six orders above the 1e-12 bound the rest of this work holds
+  to. It therefore needs an owner decision -- tighten the tolerance so the
+  warm-started result is strictly more accurate than today's, or grant
+  solver-level changes a different bound.
+- **The gradient assembly** (1.55 ms) is linear in `phi`, so the same
+  precomputed-operator treatment applies as for the energy terms.
+- **The dense BEM matvec** (2.95 ms) is inherent to the dense Fredkin-Koehler
+  operator; `TreecodeBEM` already exists as the approximate alternative, so
+  this is a user choice rather than an optimisation.
 
 ## The fix plan
 

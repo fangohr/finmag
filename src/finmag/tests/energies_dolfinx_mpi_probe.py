@@ -56,6 +56,53 @@ def _assert_function_ghosts_match_owners(field):
         assert np.allclose(ghost_value, owner_values[int(global_index)])
 
 
+def _assert_demag_repeated_solves_are_stateless(comm):
+    """FK demag must give the same field for the same ``m``, however often and
+    in whatever order it is solved.
+
+    The phi_2 Laplace right-hand side is built once at setup and zeroed per
+    solve (register P1). That vector is *ghosted*, so clearing only its owned
+    entries would leave the previous solve's lifting contribution in the ghost
+    region for the following ``ghostUpdate(ADD, REVERSE)`` to accumulate.
+    This is a parallel-only corruption -- measured at 54% of the field with
+    owned-only zeroing under two ranks, while a serial run is clean -- and FK
+    demag has no other multi-rank coverage, so it is pinned here.
+    """
+    from finmag.energies.demag.fk_demag import FKDemag
+    from finmag.util.meshes import box
+
+    domain = box(0, 0, 0, 10, 10, 10, maxh=4.0, save_result=False)
+    Ms = Field(fem.functionspace(domain, ("DG", 0)), 8.6e5)
+    S3 = fem.functionspace(domain, ("Lagrange", 1, (3,)))
+    m = Field(S3, (1, 0, 0))
+    demag = FKDemag()
+    demag.setup(m, Ms, unit_length=1e-9)
+
+    first = demag.compute_field().copy()
+
+    # An asymmetric intermediate state, so a leaked contribution cannot cancel.
+    m.set(lambda x: np.vstack(
+        (np.sin(0.7 * x[0]), np.cos(0.4 * x[1]), 0.3 + 0.1 * x[2])))
+    m.normalise()
+    between = demag.compute_field().copy()
+
+    m.set((1, 0, 0))
+    again = demag.compute_field().copy()
+
+    scale = max(float(np.max(np.abs(first))), 1e-300)
+    changed = comm.allreduce(
+        float(np.max(np.abs(between - first))) / scale, op=MPI.MAX)
+    drift = comm.allreduce(
+        float(np.max(np.abs(again - first))) / scale, op=MPI.MAX)
+    assert changed > 1e-6, (
+        "probe precondition: the intermediate m must change the demag field"
+    )
+    assert drift < 1e-12, (
+        "demag repeated solves are not stateless: relative drift {:.3e} "
+        "(the phi_2 right-hand side's ghost region was not cleared)".format(drift)
+    )
+
+
 def run_probe():
     comm = MPI.COMM_WORLD
     if comm.size != 2:
@@ -206,6 +253,8 @@ def run_probe():
         assert "Ms must be positive" in str(error)
     else:
         raise AssertionError("a rank-local zero Ms value was not rejected")
+
+    _assert_demag_repeated_solves_are_stateless(comm)
 
     owned_blocks = vector_space.dofmap.index_map.size_local
     ghost_blocks = vector_space.dofmap.index_map.num_ghosts

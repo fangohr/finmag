@@ -362,6 +362,15 @@ class FKDemag(object):
             self._poisson_form, bcs=[self._bc])
         self._A_dirichlet.assemble()
 
+        # Right-hand side for the phi_2 Laplace solve. Its source term is zero
+        # -- the whole right-hand side comes from `apply_lifting`/`set_bc`
+        # writing in the Dirichlet boundary contribution -- so there is no form
+        # to compile and no integral to assemble: the vector is created once
+        # here and zeroed per solve. Re-assembling a zero-valued form every
+        # evaluation instead measured 270 us to rebuild the form plus 723 us to
+        # assemble it at 6929 S1 dofs (register P1). [Claude Opus 5]
+        self._b2 = fem_petsc.create_vector(self.S1)
+
         self._poisson_solver = _ksp(
             self._A_neumann, self.parameters["phi_1_solver"],
             self.parameters["phi_1_preconditioner"], self.parameters["phi_1"],
@@ -419,16 +428,18 @@ class FKDemag(object):
         self._g_bc.x.array[self._b2g_map] = bem_values
         self._g_bc.x.scatter_forward()
 
-        b2 = fem_petsc.assemble_vector(
-            fem.form(fem.Constant(self.domain, 0.0)
-                     * ufl.TestFunction(self.S1) * ufl.dx))
-        fem_petsc.apply_lifting(b2, [self._poisson_form], bcs=[[self._bc]])
-        b2.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
-                       mode=PETSc.ScatterMode.REVERSE)
-        fem_petsc.set_bc(b2, [self._bc])
-        self._laplace_solver.solve(b2, self._phi_2.x.petsc_vec)
+        # Zero through the local form, not `zeroEntries()`: the ghost region
+        # must be cleared too, or the following reverse scatter would add this
+        # vector's previous lifting contribution on top of the new one.
+        with self._b2.localForm() as b2_local:
+            b2_local.set(0.0)
+        fem_petsc.apply_lifting(
+            self._b2, [self._poisson_form], bcs=[[self._bc]])
+        self._b2.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES,
+                             mode=PETSc.ScatterMode.REVERSE)
+        fem_petsc.set_bc(self._b2, [self._bc])
+        self._laplace_solver.solve(self._b2, self._phi_2.x.petsc_vec)
         self._phi_2.x.scatter_forward()
-        b2.destroy()
 
         # phi = phi_1 + phi_2
         self._phi.x.array[:] = self._phi_1.x.array + self._phi_2.x.array
