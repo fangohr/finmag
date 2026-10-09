@@ -90,8 +90,9 @@ from finmag.field import Field, evaluate_at_point
 from finmag.sim.sim import Simulation
 from finmag.energies import Demag
 from finmag.energies.demag import MacroGeometry, Demag2D
-from finmag.energies.demag.fk_demag import (
-    FKDemag, boundary_bem_arrays, boundary_solid_angles)
+from finmag.energies.demag.fk_demag import FKDemag
+from finmag.energies.demag.fk_demag_boundary import (
+    boundary_bem_arrays, boundary_solid_angles)
 from finmag.energies.demag.treecode_bem import TreecodeBEM
 from finmag.energies.demag.fk_demag_pbc import BMatrixPBC
 from finmag.native.bem_arrays import compute_bem_fk_from_arrays

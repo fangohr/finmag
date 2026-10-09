@@ -65,7 +65,8 @@ import dolfinx.mesh as dm
 from finmag.field import Field, associated_scalar_space, evaluate_at_point
 from finmag.energies import Demag
 from finmag.energies.demag import Demag2D, MacroGeometry
-from finmag.energies.demag.fk_demag import FKDemag, boundary_bem_arrays
+from finmag.energies.demag.fk_demag import FKDemag
+from finmag.energies.demag.fk_demag_boundary import boundary_bem_arrays
 from finmag.native.bem_arrays import compute_bem_fk_from_arrays
 from finmag.tests.test_native_bem_arrays import (
     CUBE_COORDS, CUBE_CELLS, GOLDEN_BEM_FK)

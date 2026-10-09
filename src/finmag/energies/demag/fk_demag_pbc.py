@@ -9,8 +9,9 @@ solid-angle diagonal is added exactly once.
 
 ``MacroGeometry`` builds the (in-plane) translation lattice; ``build_periodic_bem``
 assembles the periodic dense BEM from the ported, coordinate-driven boundary
-arrays (:func:`finmag.energies.demag.fk_demag.boundary_bem_arrays`) using the
-native ``finmag.native.treecode_bem`` Lindholm kernels (``build_boundary_matrix``);
+arrays (:func:`finmag.energies.demag.fk_demag_boundary.boundary_bem_arrays`)
+using the native ``finmag.native.treecode_bem`` Lindholm kernels
+(``build_boundary_matrix``);
 ``BMatrixPBC`` preserves the legacy ``BMatrixPBC(mesh, Ts)`` construction surface
 on top of a DOLFINx mesh.
 
@@ -130,7 +131,8 @@ class BMatrixPBC(object):
     def __init__(self, mesh, Ts=[(0.0, 0.0, 0.0)]):
         from dolfinx import fem
 
-        from .fk_demag import boundary_bem_arrays, boundary_solid_angles
+        from .fk_demag_boundary import (boundary_bem_arrays,
+                                       boundary_solid_angles)
 
         self.mesh = mesh
         S1 = fem.functionspace(mesh, ("Lagrange", 1))

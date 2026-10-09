@@ -42,7 +42,9 @@ import logging
 
 import numpy as np
 
-from .fk_demag import FKDemag, boundary_solid_angles, boundary_triangle_normals
+from .fk_demag import FKDemag
+from .fk_demag_boundary import (boundary_solid_angles,
+                               boundary_triangle_normals)
 
 logger = logging.getLogger("finmag")
 
