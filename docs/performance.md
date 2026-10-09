@@ -11,10 +11,16 @@ The `std_prob_3` example, run at full workload, measures roughly 3161
 seconds per relax simulation and about 8.8 hours for its full ten-simulation
 bisection — against the script's own header comment estimating "~30
 minutes" for the whole bisection. That is a **~17.6x gap**. It is real
-measured evidence: nobody has re-run legacy master on the same hardware to
-confirm the comment was ever accurate rather than aspirational, but the
-timeout budgets used in CI were sized to the measured rate, not to the
-comment.
+measured evidence, but it is a comparison against a *comment*: the timeout
+budgets used in CI were sized to the measured rate, not to the comment, and
+the comment itself was never validated.
+
+Legacy has since been measured directly, at matched mesh and physics, rather
+than inferred from that comment — see
+[Measured against legacy](#measured-against-legacy-2026-10-09) below. The
+real pre-fix factor on a realistic right-hand side was **7.8x**, and it is
+**1.76x** after the fixes landed so far. The header comment was pessimistic
+as a proxy; the gap it implied was never the gap.
 
 ## Root cause
 
@@ -26,10 +32,19 @@ on **every single field evaluation** — `fem.form(...)` followed by
 setup, and merely *applied* it on each subsequent evaluation
 (`energy_base.py:214-222` in the original `master` at commit `b5015c5a`).
 
-A second, compounding factor: the port's LLG right-hand side is plain numpy,
-where legacy used a compiled `Equation`/`terms` backend (tracked separately
-as register **M3**). Re-assembling from scratch on every call, in an
-uncompiled RHS, is the combination that produces the ~17.6x gap.
+A second factor was recorded here as compounding: the port's LLG right-hand
+side is plain numpy, where legacy calls the compiled `native_llg.calc_llg_dmdt`
+(tracked separately as register **M3**; note M3's own text names
+`Equation`/`terms`, which is the wrong module — the compiled entry point the
+port actually lost is `llg.so`/`calc_llg_dmdt`).
+
+**Direct measurement does not support calling it a significant factor at
+these sizes.** After the fixes below, one right-hand-side evaluation at 20787
+dofs costs 12.41 ms, of which Exchange and `UniaxialAnisotropy` assembly are
+11.0 ms — leaving ~1.4 ms for the numpy cross products and everything else,
+which is *less* than legacy's entire 2.41 ms evaluation including its
+compiled kernel. Re-assembly, not the uncompiled right-hand side, is what
+remains to be recovered.
 
 ## Measured attribution (2026-10-08)
 
@@ -90,6 +105,13 @@ on the same machine spanned 12.36-14.10 ms (about 13% run-to-run variance), so
 read the factor as roughly **7-8x** rather than exactly 7.8x. The conclusion is
 insensitive to that spread; precise before/after numbers are the job of the
 committed harness the plan's task T1 defines, which does not exist yet.
+
+Re-measuring the same meshes with a warm-up call and an average over several
+calls — rather than one timed call — puts the *pre-fix* evaluation at
+125.41 ms and the post-fix one at 12.41 ms, a **10.1x** improvement. The
+single-shot method understated the before figure; the averaged numbers in
+[Measured against legacy](#measured-against-legacy-2026-10-09) are the better
+ones.
 
 Those figures exclude demag, which is measured separately below. The
 end-to-end `std_prob_3` factor is smaller than any of them and is not yet
@@ -167,6 +189,98 @@ confirmed to fail with the wrong zeroing and pass with the right one.
 - **The dense BEM matvec** (2.95 ms) is inherent to the dense Fredkin-Koehler
   operator; `TreecodeBEM` already exists as the approximate alternative, so
   this is a user choice rather than an optimisation.
+
+## Measured against legacy (2026-10-09)
+
+Everything above is a port-internal before/after. This section is the first
+direct comparison against legacy at matched mesh and physics, so it replaces
+the header-comment inference at the top of this document as the authoritative
+statement of the gap.
+
+Per LLG right-hand-side evaluation, serial, milliseconds:
+
+| mesh | dofs | legacy `box-matrix-petsc` | legacy `box-assemble` | port, pre-fix | port, now |
+|---|---|---|---|---|---|
+| 3x3x10 | 528 | 0.10 | 1.01 | 2.67 | 0.96 |
+| 6x6x20 | 3087 | 0.39 | 4.04 | 14.09 | 2.19 |
+| 12x12x40 | 20787 | 2.41 | 23.43 | 125.41 | 12.41 |
+
+The same, with FK demag added:
+
+| mesh | dofs | legacy `box-matrix-petsc` | legacy `box-assemble` | port, pre-fix | port, now |
+|---|---|---|---|---|---|
+| 3x3x10 | 528 | 0.36 | 1.21 | 3.66 | 1.38 |
+| 6x6x20 | 3087 | 2.12 | 5.51 | 20.94 | 4.45 |
+| 12x12x40 | 20787 | 17.31 | 35.89 | 135.81 | 30.48 |
+
+Against legacy's real default (`box-matrix-petsc`), the port's factor is:
+
+| mesh | pre-fix, no demag | now, no demag | pre-fix, with demag | now, with demag |
+|---|---|---|---|---|
+| 528 | 26.7x | 9.6x | 10.2x | 3.8x |
+| 3087 | 36.1x | 5.6x | 9.9x | 2.1x |
+| 20787 | 52.0x | 5.1x | 7.8x | **1.76x** |
+
+Three conclusions follow.
+
+1. **The fixes so far closed most of the gap.** On a realistic right-hand side
+   (with demag) at 20787 dofs the port went from 7.8x slower than legacy to
+   **1.76x** slower.
+
+2. **The port is now faster than legacy at the same assembly mechanism.**
+   Against legacy's `box-assemble` — which is what the port actually
+   implements — the port is **1.89x faster** at 20787 dofs, 1.84x at 3087, and
+   at parity at 528. The remaining gap to legacy is therefore not something
+   intrinsic to DOLFINx; it is entirely the one mechanism legacy's default has
+   and the port does not: assemble once at setup, apply per evaluation.
+
+3. **The planned matrix fast path should reach rough parity, not merely
+   approach it.** Of the port's 12.41 ms, 11.0 ms is Exchange plus
+   `UniaxialAnisotropy` assembly; removing it leaves ~1.4 ms against legacy's
+   whole 2.41 ms. Demag-inclusive, that predicts about 20.5 ms against legacy's
+   17.31 ms — consistent with the ~1.6x end-to-end estimate recorded above for
+   tasks T3/T4.
+
+Demag itself is the one place the port is still slower in isolation: legacy's
+demag contribution is 14.90 ms at 20787 dofs against the port's 18.07 ms
+(1.21x). Both use a compiled dense BEM.
+
+### How this was measured
+
+Same mesh extent and divisions on both sides (`BoxMesh`/`create_box` over
+`[0,0,0]`-`[3,3,10]`, identical dof counts), `Ms=0.86e6`, `unit_length=1e-9`,
+`alpha=0.5`, `m=(1,0,1)`, `Exchange(13e-12)`,
+`UniaxialAnisotropy(520e3, (0,0,1))`, `Zeeman((0,0,1e5))`, optionally
+`Demag(solver="FK")`, SciPy integrator backend. The timed call is
+`sim.llg.solve_for` on both sides, after one warm-up call, averaged over
+50/20/5 calls by mesh size.
+
+Caveats, in the order they matter:
+
+- Legacy is the frozen oracle source (`ba928093`, dolfin 2019.1.0,
+  Python 3.11.15, numpy 1.26.4) run through `dev/bin/run-legacy-oracle`. The
+  *environment* was the active tree's already-installed pixi `default` env
+  rather than one materialised inside the oracle worktree; its
+  `[dependencies]` block is byte-identical to the oracle's, but it resolves
+  against the current lock, not a lock frozen at that commit.
+- The oracle's native extensions had to be built with `PYTHON_CONFIG` pinned
+  to the environment's own `python3.11-config`, because the oracle-era
+  `native/Makefile` predates the fix in [`INSTALL.md`](INSTALL.md) and would
+  otherwise have silently compiled against a system Python.
+- Legacy's totals include its compiled `calc_llg_dmdt`; the port's include the
+  numpy right-hand side (register **M3**).
+- Both legacy rows pay the K2 quartic assembly too, but only once at setup, so
+  it never appears in these per-call numbers.
+- The pre-fix port column is commit `237f2630` in a throwaway worktree with the
+  current prebuilt native modules copied in, so only Python-level changes
+  differ from the `now` column.
+- One run per cell, and ~13% run-to-run variance was measured earlier, so read
+  these as factors rather than exact figures. Do not read the pre-fix columns'
+  with-minus-without difference as a demag cost: the uncached permutation
+  inflates both legs non-additively there.
+
+These are still ad-hoc probes, not the committed harness the plan's task T1
+defines.
 
 ## The fix plan
 

@@ -40,6 +40,8 @@ You do have to check out the tag. On `main` the `src/finmag` tree is the dolfinx
 
 This version is not affected by the dolfinx port's known performance problem (see [docs/performance.md](docs/performance.md)): it keeps legacy's default field operator, which is assembled once and then applied, and its compiled right-hand side. It is therefore also the convenient baseline for comparing dolfinx-port performance against the pre-port code, without needing the python2 container.
 
+That comparison has now been run (2026-10-09, recorded in [docs/performance.md](docs/performance.md)). On one magnetisation right-hand-side evaluation at 20787 dofs with demag, this dolfin-2019 lane takes 17.3 ms where the dolfinx port on `main` takes 30.5 ms — **1.8x** — down from 7.8x before the current round of performance fixes. Against the *same* assembly mechanism (`box-assemble`) the dolfinx port is already the faster of the two; the remaining gap is legacy's assemble-once-and-apply default, which the port has yet to rebuild.
+
 ## About the python2 version
 
 - Finmag was intended to be a thin (and mostly) Python layer on top of [FEniCS](https://fenicsproject.org/) to enable Python-scripted multi-physics micromagnetic simulations. Accordingly, the name FINmag originates from the dolFIN interface to FEniCS. Some compiled code moved into the project.
