@@ -605,9 +605,16 @@ def test_anisotropy_zero_k2_drops_the_quartic_term_without_changing_values():
     )
 
 
-def test_anisotropy_spatially_varying_all_zero_k2_also_drops_the_term():
-    """The zero test is on values, not on the constant: a callable/Field ``K2``
-    that evaluates to zero everywhere is just as droppable as a literal 0."""
+def test_anisotropy_spatially_varying_zero_k2_keeps_the_quartic_term():
+    """The optimisation is scoped to a CONSTANT zero ``K2``, by design.
+
+    A callable/Field ``K2`` keeps the quartic term even when it evaluates to
+    zero everywhere: testing the declared constant instead of the assembled
+    values keeps the decision rank-invariant by construction, and the constant
+    case is the default and the one that matters. The *values* must of course
+    still come out as the pure-``K1`` law -- a zero coefficient contributes
+    nothing either way; only the quadrature cost differs.
+    """
     from ufl.algorithms import extract_coefficients
 
     _, m, Ms = _fields(2, m=(0.6, 0.0, 0.8), Ms=2.5)
@@ -616,7 +623,7 @@ def test_anisotropy_spatially_varying_all_zero_k2_also_drops_the_term():
     )
     anisotropy.setup(m, Ms)
 
-    assert anisotropy.K2.f not in extract_coefficients(anisotropy.E)
+    assert anisotropy.K2.f in extract_coefficients(anisotropy.E)
 
     expected_z = 2.0 * 4.0 * 0.8 / (mu0 * 2.5)
     assert np.allclose(
@@ -628,12 +635,11 @@ def test_anisotropy_spatially_varying_all_zero_k2_also_drops_the_term():
 
 
 def test_anisotropy_partially_nonzero_k2_keeps_the_quartic_term():
-    """A ``K2`` that is zero only on part of the domain is NOT droppable.
+    """A ``K2`` that is non-zero on part of the domain still contributes.
 
-    This is the guard against a too-eager "is K2 zero?" test: the quartic
-    contribution must still appear wherever ``K2 != 0``. The decision is also
-    collective, so every rank must agree -- ranks disagreeing on the integrand
-    would build different forms.
+    The physics guard behind the optimisation: wherever ``K2 != 0`` the quartic
+    contribution must appear in the field, so no "is K2 zero?" test may ever
+    drop the term for a coefficient like this one.
     """
     from ufl.algorithms import extract_coefficients
 

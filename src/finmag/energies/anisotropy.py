@@ -1,9 +1,7 @@
 """DOLFINx uniaxial-anisotropy interaction."""
 
-import numpy as np
 from aeon import timer
 from dolfinx import fem
-from mpi4py import MPI
 from ufl import inner
 
 from finmag.field import Field
@@ -30,10 +28,11 @@ class UniaxialAnisotropy(EnergyBase):
     legacy contract that the dot product represents an angle cosine; a
     spatially varying axis is used as given (legacy did not renormalise it).
 
-    When ``K2`` evaluates to zero everywhere -- its default -- the quartic term
-    is left out of the energy integrand entirely. This is an internal
-    optimisation with no effect on computed values: it avoids the much higher
-    quadrature degree FFCx picks for a degree-8 integrand (register **P1**).
+    When ``K2`` is the constant ``0`` -- its default -- the quartic term is left
+    out of the energy integrand entirely. This is an internal optimisation with
+    no effect on computed values: it avoids the much higher quadrature degree
+    FFCx picks for a degree-8 integrand (register **P1**). A spatially varying
+    ``K2`` keeps the term, even where it evaluates to zero.
     """
 
     def __init__(
@@ -83,15 +82,18 @@ class UniaxialAnisotropy(EnergyBase):
         # K2 == 0 (register P1). Dropping it also makes dE_dm linear in m,
         # which a precomputed-operator fast path requires.
         #
-        # The test is on VALUES, not on the constant, so a callable or Field K2
-        # that evaluates to zero everywhere is dropped too; and it is
-        # COLLECTIVE, because ranks that disagreed here would build different
-        # forms. K2 is only ever supplied at construction and the integrand is
-        # rebuilt by every setup(), so there is no later mutation to invalidate.
-        # [Claude Opus 5]
-        k2_is_zero = m.mesh().comm.allreduce(
-            bool(np.all(self.K2.as_array() == 0.0)), op=MPI.LAND
-        )
+        # Deliberately only the CONSTANT K2 == 0 case, which is the default and
+        # the one that matters: `scalar_coefficient` returns a float for every
+        # constant form of K2 and the original object for a callable/Field/
+        # Function, so this is exactly "K2 was given as a constant zero". A
+        # spatially varying K2 keeps the term even where it evaluates to zero.
+        # Testing the constant rather than the assembled values also keeps the
+        # decision rank-invariant by construction -- no collective is needed,
+        # where a value-based test would have to agree across ranks to avoid
+        # building different forms. K2 is only ever supplied at construction and
+        # the integrand is rebuilt by every setup(), so there is no later
+        # mutation to invalidate. [Claude Opus 5]
+        k2_is_zero = isinstance(self.K2_value, float) and self.K2_value == 0.0
         if not k2_is_zero:
             E_integrand -= self.K2.f * alignment**4
 
